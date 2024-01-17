@@ -18,3 +18,14 @@ One solution might be:
 
 Concerns:
   - ease of use. Is text OK for most users? Are complicated searches difficult to understand? Might be addressable w/ an additional, optional GUI component that helps users compose queries
+
+Todo:
+
+- [x] Scanning
+- [ ] String ranges in scanned tokens
+- [ ] Parsing
+- [ ] Typeahead
+- [ ] ScalaJS to provide parser in web env
+- [ ] Web component - environment and first pass at webcomponent
+- [ ] Web component - syntax highlighting
+- [ ] Web component - typeahead
