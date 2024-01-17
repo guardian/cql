@@ -19,6 +19,8 @@ One solution might be:
 Concerns:
   - ease of use. Is text OK for most users? Are complicated searches difficult to understand? Might be addressable w/ an additional, optional GUI component that helps users compose queries
 
+An example, mostly incorrect grammar [here.]([url](https://github.com/jonathonherbert/cql/blob/main/src/main/scala/grammar/grammar.txt))
+
 Todo:
 
 - [x] Scanning
