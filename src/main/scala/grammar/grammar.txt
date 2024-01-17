@@ -1,0 +1,25 @@
+Logs for examples of queries: https://logs.gutools.co.uk/s/content-platforms/app/discover#/?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-15m,to:now))&_a=(columns:!(request),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b0be43a0-59d7-11e8-a75a-b7af20e8f748,key:Name,negate:!f,params:(query:Kong-PROD),type:phrase),query:(match_phrase:(Name:Kong-PROD)))),index:b0be43a0-59d7-11e8-a75a-b7af20e8f748,interval:auto,query:(language:kuery,query:%2Fsearch),sort:!(!('@timestamp',desc)))
+
+We should sample e.g. 200 queries and translate them into CQL.
+
+Toy examples:
+
+sausages
+"hot dog" OR "hottest dog"
+"hot dog" +tag:dogs -tags:food
+"hot dog" +section:film
+"hot dog" +from:2024-01-12 +to:2024-02-12
+
+Grammar:
+
+query              -> (search_expr | search_param_expr)* EOF
+search_expr        -> (quoted_search_expr | basic_search_expr)
+quoted_search_expr -> '"' string '"'
+basic_search_expr  -> /\w/ ' '
+search_param_expr  -> '+' search_param
+search_param       -> search_param_basic | search_param_date
+search_param_basic -> ('tag' | 'section'...) ':' /\w/
+search_param_date  -> ('from' | 'to') ':' ...iso8601 date fmt :D
+
+How do we disambiguate search params from strings in the tokeniser?
+Or is '+tag:', '+section:' the lexeme, not '+' 'tag' ':'?
