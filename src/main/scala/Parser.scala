@@ -1,7 +1,8 @@
 package cql
 
-import TokenType._
-import cql.grammar._
+import TokenType.*
+import cql.grammar.*
+
 import scala.util.Try
 import scala.util.Success
 
@@ -29,9 +30,32 @@ class Parser(tokens: List[Token]):
   private def queryList =
     var queries = List.empty[SearchExprQuoted | SearchExprBasic | SearchParam]
     while (peek().tokenType != EOF) {
-      queries = List()
+      queries = queries :+ searchExpr
     }
     QueryList(queries)
+
+  // SearchExpr -> SearchExprQuoted | SearchExprBasic | SearchParam
+  private def searchExpr: SearchExprQuoted | SearchExprBasic | SearchParam =
+    if (matchTokens(TokenType.PLUS)) searchParamExpr
+    else if (matchTokens(TokenType.STRING)) searchStr
+    else throw Parser.error(peek(), "wtf is this?")
+
+  private def searchStr: SearchExprBasic =
+    val token = consume(TokenType.STRING, "Expected a string")
+    SearchExprBasic(token.lexeme)
+
+  private def searchParamExpr =
+    consume(TokenType.PLUS, "Expected a plus sign")
+    val key = () match {
+      case () if matchTokens(TAG) => "tag"
+      case () if matchTokens(SECTION) => "section"
+      case () => throw Parser.error(peek(), s"We don't current support the search param ${peek().lexeme}")
+    }
+    consume(TokenType.COLON, "Expected a colon after +param")
+    val valueToken = consume(TokenType.STRING, "Expected a string following the colon")
+    SearchParam(SearchParamBasic(key, valueToken.lexeme))
+
+
 //
 //  // declaration  -> varDecl | statement
 //  private def declaration: Option[Stmt] =

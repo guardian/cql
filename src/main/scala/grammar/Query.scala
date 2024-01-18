@@ -8,5 +8,5 @@ case class QueryList(exprs: List[SearchExprQuoted | SearchExprBasic | SearchPara
 case class SearchExprQuoted(searchExpr: String) extends Query
 case class SearchExprBasic(searchExpr: String) extends Query
 case class SearchParam(searchParam: SearchParamBasic | SearchParamDate) extends Query
-case class SearchParamBasic(key: Token | Token, value: String) extends Query
-case class SearchParamDate(key: Token | Token, value: String) extends Query
+case class SearchParamBasic(key: String, value: String) extends Query
+case class SearchParamDate(key: String, value: String) extends Query

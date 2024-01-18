@@ -16,7 +16,7 @@ class Cql:
       .takeWhile(_ != "exit")
       .foreach(run)
 
-  def run(program: String): QueryList =
+  def run(program: String) =
     val scanner = new Scanner(program)
     val tokens = scanner.scanTokens
     val parser = new Parser(tokens)
@@ -25,9 +25,9 @@ class Cql:
         println(s"Parsed to: \n${AstPrinter.programToString(expr)}")
         println("Running program:")
         expr
-//        val results = Interpreter.evaluate(expr)
-//        println(("lol", results))
-//        results
+        val results = Interpreter.evaluate(expr)
+        println(("lol", results))
+        results
       case Failure(e) =>
         println(e.getMessage)
         QueryList(List.empty)
