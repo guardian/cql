@@ -23,39 +23,23 @@ import scala.collection.mutable.ListBuffer
 //    s"${values} ${parent.map(p => s"${p.mkString}").getOrElse("END")}"
 //
 //class InterpreterError(message: String) extends Exception(message)
-//
-//object Interpreter {
-//
-//  def evaluate(
-//      program: List[Stmt],
-//      environment: Environment = new Environment()
-//  ): List[String] =
-//    program.flatMap {
-//      case Expression(expr) =>
-//        evaluateExpr(expr, environment)
-//        None
-//      case Print(expr) =>
-//        val result = evaluateExpr(expr, environment)
-//        println(result)
-//        Some(result.toString())
-//      case VarDecl(name, expr) =>
-//        environment.set(name.lexeme, evaluateExpr(expr, environment))
-//        None
-//      case Block(stmts) =>
-//        evaluate(stmts, new Environment(Some(environment)))
-//      case IfStmt(expr, thenStmt, elseStmt) =>
-//        if (isTruthy(evaluateExpr(expr, environment)))
-//          evaluate(List(thenStmt), new Environment(Some(environment)))
-//        else
-//          elseStmt.toList.map(stmt =>
-//            evaluate(List(stmt), new Environment(Some(environment)))
-//          ).flatten
-//      case WhileStmt(expr, stmt) =>
-//        val results = ListBuffer.empty[List[String]]
-//        while (isTruthy(evaluateExpr(expr, environment)))
-//          results.addOne(evaluate(List(stmt), environment))
-//        results.toList.flatten
-//    }
+object Interpreter {
+
+  def evaluate(
+                program: QueryList,
+              ): String =
+    val (searchStrs, otherQueries) = program.exprs.partitionMap {
+      case SearchExprQuoted(str) => Left(str)
+      case SearchExprBasic(str) => Left(str)
+      case SearchParam(searchParam) => searchParam match {
+        case SearchParamBasic(key, value) => Right(s"&$key=$value")
+        case SearchParamDate(key, value) => Right(s"&$key=$value")
+      }
+    }
+
+    s"q=${searchStrs.concat(" ")}&${otherQueries.concat("")}"
+}
+
 //
 //  def evaluateExpr(expr: Expr, env: Environment): cqlValue = expr match
 //    case ExprList(left, right) =>
