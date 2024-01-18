@@ -12,14 +12,18 @@ sausages
 
 Grammar:
 
-query              -> (search_expr | search_param_expr)* EOF
-search_expr        -> (quoted_search_expr | basic_search_expr)
-quoted_search_expr -> '"' string '"'
-basic_search_expr  -> /\w/ ' '
-search_param_expr  -> '+' search_param
-search_param       -> search_param_basic | search_param_date
-search_param_basic -> ('tag' | 'section'...) ':' /\w/
-search_param_date  -> ('from' | 'to') ':' ...iso8601 date fmt :D
+query              -> (search_expr)* EOF
+search_expr        -> (search_str | quoted_search_str | search_param)
+quoted_search_str  -> '"' string '"'
+basic_search_str   -> /\w/
+search_param       -> '+' search_key ':' search_value
+search_key         -> 'tag' | 'section' | ...etc
+search_value       -> /\w/
 
 How do we disambiguate search params from strings in the tokeniser?
 Or is '+tag:', '+section:' the lexeme, not '+' 'tag' ':'?
+
+Scanning tokens – should + (or :) be its own token, or part of search param token? No – there's no context where they're used in another combination, we can think of them as assymetrical quote marks for a particular token type.
+
+Should search_key or search_value be recognised as tokens, or just the literals ':', '+' and strings – you can then build the grammar from '+' string ':' string? No – +tag:hai and +tag: hai would parse as the same thing, which would be incorrect. Search key/value pairs and their separators are contiguous.
+

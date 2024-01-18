@@ -9,10 +9,12 @@ enum TokenType:
     LESS, LESS_EQUAL,
 
     // Literals.
-    STRING, NUMBER,
+    STRING, NUMBER, SEARCH_PARAM,
 
     // Keywords.
     TAG, SECTION, FROM, TO, EOF
+
+
 
 case class Token(
     tokenType: TokenType,

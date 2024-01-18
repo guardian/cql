@@ -29,12 +29,9 @@ object Interpreter {
                 program: QueryList,
               ): String =
     val (searchStrs, otherQueries) = program.exprs.partitionMap {
-      case SearchExprQuoted(str) => Left(str)
-      case SearchExprBasic(str) => Left(str)
-      case SearchParam(searchParam) => searchParam match {
-        case SearchParamBasic(key, value) => Right(s"&$key=$value")
-        case SearchParamDate(key, value) => Right(s"&$key=$value")
-      }
+      case SearchStrQuoted(str) => Left(str)
+      case SearchStr(str) => Left(str)
+      case SearchParam(key, value) => Right(s"&$key=$value")
     }
 
     s"q=${searchStrs.concat(" ")}&${otherQueries.concat("")}"

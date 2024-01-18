@@ -26,7 +26,7 @@ class Scanner(program: String):
       case '+' =>
         addSearchKey
       case ':' =>
-        addToken(TokenType.COLON)
+        addSearchValue
       case ' '  => ()
       case '\r' => ()
       case '\t' => ()
@@ -38,12 +38,20 @@ class Scanner(program: String):
     }
 
   def addSearchKey =
-    while (peek.isLetterOrDigit) advance
-    val text = program.substring(start + 1, current)
-    Token.reservedWords.get(text) match {
+    while ((peek != ':') && !isAtEnd)
+      advance
+    val key = program.substring(start + 1, current)
+    Token.reservedWords.get(key) match {
       case Some(token) => addToken(token)
-      case None => error(line, "Expected identifier")
+      case None => error(line, "Expected a valid search key")
     }
+
+  def addSearchValue =
+    while ((peek != ' ') && !isAtEnd)
+      advance
+
+    val value = program.substring(start + 1, current)
+    addToken(TokenType.SEARCH_PARAM, value)
 
   def addIdentifier =
     while (peek.isLetterOrDigit) advance

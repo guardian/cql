@@ -8,7 +8,7 @@ object AstPrinter {
   def programToString(query: QueryList) =
     query.exprs.map(exprToString).mkString(";\n")
 
-  def exprToString(expr: SearchExprQuoted | SearchExprBasic | SearchParam): String = expr match
+  def exprToString(expr: SearchStrQuoted | SearchStr | SearchParam): String = expr match
     case _ => s"Not implemented for $expr"
 //    case Variable(name) => s"var ${name.lexeme}".trim
 //    case Assign(name, expr) =>

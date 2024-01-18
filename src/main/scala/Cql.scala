@@ -23,8 +23,7 @@ class Cql:
     parser.parse() match
       case Success(expr) =>
         println(s"Parsed to: \n${AstPrinter.programToString(expr)}")
-        println("Running program:")
-        expr
+        println(s"Running program:")
         val results = Interpreter.evaluate(expr)
         println(("lol", results))
         results

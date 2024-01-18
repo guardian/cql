@@ -24,25 +24,25 @@ class Parser(tokens: List[Token]):
   val skipTypes = List()
 
   def parse(): Try[QueryList] =
+    println(s"Parse $tokens")
     Try { queryList }
 
   // program    -> statement* EOF
   private def queryList =
-    var queries = List.empty[SearchExprQuoted | SearchExprBasic | SearchParam]
+    var queries = List.empty[SearchStrQuoted | SearchStr | SearchParam]
     while (peek().tokenType != EOF) {
       queries = queries :+ searchExpr
     }
     QueryList(queries)
 
   // SearchExpr -> SearchExprQuoted | SearchExprBasic | SearchParam
-  private def searchExpr: SearchExprQuoted | SearchExprBasic | SearchParam =
+  private def searchExpr: SearchStrQuoted | SearchStr | SearchParam =
     if (matchTokens(TokenType.PLUS)) searchParamExpr
-    else if (matchTokens(TokenType.STRING)) searchStr
-    else throw Parser.error(peek(), "wtf is this?")
+    else searchStr
 
-  private def searchStr: SearchExprBasic =
+  private def searchStr: SearchStr =
     val token = consume(TokenType.STRING, "Expected a string")
-    SearchExprBasic(token.lexeme)
+    SearchStr(token.lexeme)
 
   private def searchParamExpr =
     consume(TokenType.PLUS, "Expected a plus sign")
@@ -53,7 +53,7 @@ class Parser(tokens: List[Token]):
     }
     consume(TokenType.COLON, "Expected a colon after +param")
     val valueToken = consume(TokenType.STRING, "Expected a string following the colon")
-    SearchParam(SearchParamBasic(key, valueToken.lexeme))
+    SearchParam(key, valueToken.lexeme)
 
 
 //

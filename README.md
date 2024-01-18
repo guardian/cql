@@ -8,7 +8,8 @@ At the moment at the Guardian, there are a few ways to query CAPI:
 
 Problems:
   - API/query string provides all the affordances of CAPI search, but features are not discoverable
-  - GUIs are inconsistent
+  - API/query string requires user to understand query strings
+  - GUIs are inconsistent across estate
   - GUIs do not provide all the affordances of CAPI search
   - There is no way to move queries between API/GUI or GUI/GUI
 
@@ -26,8 +27,13 @@ Todo:
 - [x] Scanning
 - [ ] String ranges in scanned tokens
 - [ ] Parsing
+- [ ] Interpreting
 - [ ] Typeahead
+- [ ] Add group syntax
 - [ ] ScalaJS to provide parser in web env
 - [ ] Web component - environment and first pass at webcomponent
 - [ ] Web component - syntax highlighting
 - [ ] Web component - typeahead
+
+Notes
+

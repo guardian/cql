@@ -57,8 +57,7 @@ class ScannerTest extends BaseTest {
       val tokens = scanner.scanTokens
       val expectedTokens = List(
         Token(TokenType.TAG, "+tag", null, 1),
-        Token(TokenType.COLON, ":", null, 1),
-        unquotedStringToken("tone/news"),
+        Token(TokenType.SEARCH_PARAM, ":tone/news",  "tone/news", 1),
         eofToken
       )
       assert(tokens === expectedTokens)
@@ -69,8 +68,7 @@ class ScannerTest extends BaseTest {
       val tokens = scanner.scanTokens
       val expectedTokens = List(
         Token(TokenType.SECTION, "+section", null, 1),
-        Token(TokenType.COLON, ":", null, 1),
-        unquotedStringToken("commentisfree"),
+        Token(TokenType.SEARCH_PARAM, ":commentisfree", "commentisfree", 1),
         eofToken
       )
       assert(tokens === expectedTokens)
