@@ -37,23 +37,17 @@ class Parser(tokens: List[Token]):
 
   // SearchExpr -> SearchExprQuoted | SearchExprBasic | SearchParam
   private def searchExpr: SearchStrQuoted | SearchStr | SearchParam =
-    if (matchTokens(TokenType.PLUS)) searchParamExpr
+    if (peek().tokenType == TokenType.SEARCH_KEY) searchParamExpr
     else searchStr
 
   private def searchStr: SearchStr =
     val token = consume(TokenType.STRING, "Expected a string")
-    SearchStr(token.lexeme)
+    SearchStr(token.literal.toString)
 
   private def searchParamExpr =
-    consume(TokenType.PLUS, "Expected a plus sign")
-    val key = () match {
-      case () if matchTokens(TAG) => "tag"
-      case () if matchTokens(SECTION) => "section"
-      case () => throw Parser.error(peek(), s"We don't current support the search param ${peek().lexeme}")
-    }
-    consume(TokenType.COLON, "Expected a colon after +param")
-    val valueToken = consume(TokenType.STRING, "Expected a string following the colon")
-    SearchParam(key, valueToken.lexeme)
+    val key = consume(TokenType.SEARCH_KEY, "Expected a search key")
+    val valueToken = consume(TokenType.SEARCH_VALUE, "Expected a search value, e.g. +tag:tone/news")
+    SearchParam(key.literal.toString, valueToken.literal.toString)
 
 
 //

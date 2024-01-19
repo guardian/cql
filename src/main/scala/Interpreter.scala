@@ -34,7 +34,17 @@ object Interpreter {
       case SearchParam(key, value) => Right(s"&$key=$value")
     }
 
-    s"q=${searchStrs.concat(" ")}&${otherQueries.concat("")}"
+    val maybeSearchParam = searchStrs match {
+      case Nil => None
+      case strs => Some(s"q=${strs.mkString("%20")}")
+    }
+
+    val maybeOtherQueries = otherQueries match {
+      case Nil => None
+      case strs => Some(strs.mkString(""))
+    }
+
+    List(maybeSearchParam, maybeOtherQueries).flatten.mkString("&")
 }
 
 //

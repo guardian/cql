@@ -4,7 +4,6 @@ class ScannerTest extends BaseTest {
   val eofToken = Token(TokenType.EOF, "", null, 1)
   def unquotedStringToken(str: String) = Token(TokenType.STRING, str, str, 1)
   def quotedStringToken(str: String) = Token(TokenType.STRING, s"\"$str\"", str, 1)
-  def tagToken(path: String) = Token(TokenType.TAG, path, null, 1)
 //
 //  describe("unquoted strings") {
 //    it("should parse plain strings") {
@@ -56,8 +55,8 @@ class ScannerTest extends BaseTest {
       val scanner = new Scanner("""+tag:tone/news""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
-        Token(TokenType.TAG, "+tag", null, 1),
-        Token(TokenType.SEARCH_PARAM, ":tone/news",  "tone/news", 1),
+        Token(TokenType.SEARCH_KEY, "+tag", "tag", 1),
+        Token(TokenType.SEARCH_VALUE, ":tone/news",  "tone/news", 1),
         eofToken
       )
       assert(tokens === expectedTokens)
@@ -67,8 +66,24 @@ class ScannerTest extends BaseTest {
       val scanner = new Scanner("""+section:commentisfree""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
-        Token(TokenType.SECTION, "+section", null, 1),
-        Token(TokenType.SEARCH_PARAM, ":commentisfree", "commentisfree", 1),
+        Token(TokenType.SEARCH_KEY, "+section", "section", 1),
+        Token(TokenType.SEARCH_VALUE, ":commentisfree", "commentisfree", 1),
+        eofToken
+      )
+      assert(tokens === expectedTokens)
+    }
+
+    it("should tokenise groups and boolean operators") {
+      val scanner = new Scanner("""one AND (two OR three)""")
+      val tokens = scanner.scanTokens
+      val expectedTokens = List(
+        unquotedStringToken("one"),
+        Token(TokenType.AND, "AND", null, 1),
+        Token(TokenType.LEFT_BRACKET, "(", null, 1),
+        unquotedStringToken("two"),
+        Token(TokenType.OR, "OR", null, 1),
+        unquotedStringToken("three"),
+        Token(TokenType.RIGHT_BRACKET, ")", null, 1),
         eofToken
       )
       assert(tokens === expectedTokens)

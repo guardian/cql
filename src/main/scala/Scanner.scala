@@ -27,6 +27,10 @@ class Scanner(program: String):
         addSearchKey
       case ':' =>
         addSearchValue
+      case '(' =>
+        addToken(TokenType.LEFT_BRACKET)
+      case ')' =>
+        addToken(TokenType.RIGHT_BRACKET)
       case ' '  => ()
       case '\r' => ()
       case '\t' => ()
@@ -34,6 +38,7 @@ class Scanner(program: String):
         line = line + 1
       case c if c.isDigit         => addNumber
       case '"'                    => addString
+      case _ if isReservedWord    => addIdentifier
       case _ => addUnquotedString
     }
 
@@ -41,17 +46,19 @@ class Scanner(program: String):
     while ((peek != ':') && !isAtEnd)
       advance
     val key = program.substring(start + 1, current)
-    Token.reservedWords.get(key) match {
-      case Some(token) => addToken(token)
-      case None => error(line, "Expected a valid search key")
-    }
+    addToken(TokenType.SEARCH_KEY, key)
 
   def addSearchValue =
     while ((peek != ' ') && !isAtEnd)
       advance
 
     val value = program.substring(start + 1, current)
-    addToken(TokenType.SEARCH_PARAM, value)
+    addToken(TokenType.SEARCH_VALUE, value)
+
+  def isReservedWord =
+    Token.reservedWords.exists {
+      case (str, _) => program.substring(start).startsWith(str)
+    }
 
   def addIdentifier =
     while (peek.isLetterOrDigit) advance
@@ -71,7 +78,7 @@ class Scanner(program: String):
     addToken(TokenType.NUMBER, program.substring(start, current).toDouble)
 
   def addUnquotedString =
-    while (peek != ' ' && !isAtEnd)
+    while (peek != ' ' && peek != ')' && !isAtEnd)
       advance
 
     addToken(TokenType.STRING, program.substring(start, current))
