@@ -9,7 +9,7 @@ enum TokenType:
     LESS, LESS_EQUAL,
 
     // Literals.
-    STRING, NUMBER, SEARCH_KEY, SEARCH_VALUE,
+    STRING, NUMBER, QUERY_META_KEY, QUERY_META_VALUE,
 
     // Keywords.
     AND, OR, EOF

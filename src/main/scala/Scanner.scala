@@ -46,14 +46,14 @@ class Scanner(program: String):
     while ((peek != ':') && !isAtEnd)
       advance
     val key = program.substring(start + 1, current)
-    addToken(TokenType.SEARCH_KEY, key)
+    addToken(TokenType.QUERY_META_KEY, key)
 
   def addSearchValue =
     while ((peek != ' ') && !isAtEnd)
       advance
 
     val value = program.substring(start + 1, current)
-    addToken(TokenType.SEARCH_VALUE, value)
+    addToken(TokenType.QUERY_META_VALUE, value)
 
   def isReservedWord =
     Token.reservedWords.exists {

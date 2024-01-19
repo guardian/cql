@@ -29,24 +29,45 @@ class Parser(tokens: List[Token]):
 
   // program    -> statement* EOF
   private def queryList =
-    var queries = List.empty[QueryQuotedStr | QueryStr | QueryMeta]
+    var queries = List.empty[QueryBinary | QueryMeta]
     while (peek().tokenType != EOF) {
-      queries = queries :+ searchExpr
+      queries = queries :+ query
     }
     QueryList(queries)
 
-  // SearchExpr -> SearchExprQuoted | SearchExprBasic | SearchParam
-  private def searchExpr: QueryQuotedStr | QueryStr | QueryMeta =
-    if (peek().tokenType == TokenType.SEARCH_KEY) searchParamExpr
-    else searchStr
+  private def query: QueryBinary | QueryMeta =
+    if (peek().tokenType == TokenType.QUERY_META_KEY) queryMeta
+    else queryBinary
 
-  private def searchStr: QueryStr =
+  private def queryBinary =
+    val left = queryContent
+    peek().tokenType match {
+      case TokenType.AND => QueryBinary(left, Some((peek(), queryContent)))
+      case TokenType.OR => QueryBinary(left, Some((peek(), queryContent)))
+      case _ => QueryBinary(left)
+    }
+
+  private def queryContent: QueryContent =
+    val content: QueryGroup | QueryStr | QueryBinary =
+      if (peek().tokenType == TokenType.LEFT_BRACKET) queryGroup
+      else if (peek().tokenType == TokenType.STRING) queryStr
+      else queryBinary
+
+    QueryContent(content)
+
+  private def queryGroup: QueryGroup =
+    consume(TokenType.LEFT_BRACKET, "Groups should start with a left bracket")
+    val content = queryContent
+    consume(TokenType.RIGHT_BRACKET, "Groups must end with a right bracket")
+    QueryGroup(content)
+
+  private def queryStr: QueryStr =
     val token = consume(TokenType.STRING, "Expected a string")
     QueryStr(token.literal.toString)
 
-  private def searchParamExpr =
-    val key = consume(TokenType.SEARCH_KEY, "Expected a search key")
-    val valueToken = consume(TokenType.SEARCH_VALUE, "Expected a search value, e.g. +tag:tone/news")
+  private def queryMeta =
+    val key = consume(TokenType.QUERY_META_KEY, "Expected a search key")
+    val valueToken = consume(TokenType.QUERY_META_VALUE, "Expected a search value, e.g. +tag:tone/news")
     QueryMeta(key.literal.toString, valueToken.literal.toString)
 
 //

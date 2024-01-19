@@ -29,8 +29,7 @@ object Interpreter {
                 program: QueryList,
               ): String =
     val (searchStrs, otherQueries) = program.exprs.partitionMap {
-      case QueryQuotedStr(str) => Left(str)
-      case QueryStr(str) => Left(str)
+      case q: QueryBinary => Left(strFromBinary(q))
       case QueryMeta(key, value) => Right(s"&$key=$value")
     }
 
@@ -45,6 +44,19 @@ object Interpreter {
     }
 
     List(maybeSearchParam, maybeOtherQueries).flatten.mkString("&")
+
+  def strFromContent(queryContent: QueryContent): String = queryContent.content match {
+    case QueryStr(str) => str
+    case QueryGroup(content) => s"(${strFromContent(content)})"
+    case q: QueryBinary => strFromBinary(q)
+  }
+
+  def strFromBinary(queryBinary: QueryBinary): String =
+    val leftStr = strFromContent(queryBinary.left)
+    val rightStr = queryBinary.right.map {
+      case (op, content) => s" ${op.tokenType.toString} ${strFromContent(content)}"
+    }.getOrElse("")
+    leftStr + rightStr
 }
 
 //

@@ -18,5 +18,10 @@ class ProgramTest extends BaseTest {
       val str = cql.run("\"marina\" +section:commentisfree")
       str shouldBe "q=marina&&section=commentisfree"
     }
+
+    it("should permit groups") {
+      val str = cql.run("\"marina\" AND hyde +section:commentisfree")
+      str shouldBe "q=marina&&section=commentisfree"
+    }
   }
 }

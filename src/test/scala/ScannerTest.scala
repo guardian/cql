@@ -55,8 +55,8 @@ class ScannerTest extends BaseTest {
       val scanner = new Scanner("""+tag:tone/news""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
-        Token(TokenType.SEARCH_KEY, "+tag", "tag", 1),
-        Token(TokenType.SEARCH_VALUE, ":tone/news",  "tone/news", 1),
+        Token(TokenType.QUERY_META_KEY, "+tag", "tag", 1),
+        Token(TokenType.QUERY_META_VALUE, ":tone/news",  "tone/news", 1),
         eofToken
       )
       assert(tokens === expectedTokens)
@@ -66,8 +66,8 @@ class ScannerTest extends BaseTest {
       val scanner = new Scanner("""+section:commentisfree""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
-        Token(TokenType.SEARCH_KEY, "+section", "section", 1),
-        Token(TokenType.SEARCH_VALUE, ":commentisfree", "commentisfree", 1),
+        Token(TokenType.QUERY_META_KEY, "+section", "section", 1),
+        Token(TokenType.QUERY_META_VALUE, ":commentisfree", "commentisfree", 1),
         eofToken
       )
       assert(tokens === expectedTokens)
