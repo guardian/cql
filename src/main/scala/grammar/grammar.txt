@@ -12,9 +12,9 @@ sausages
 
 Grammar:
 
-query_list         -> (query_content | query_meta)* EOF
+query_list         -> (query_binary | query_meta)* EOF
+query_binary       -> query_content ('AND' | 'OR' query_content)?
 query_content      -> query_group | query_str | query_quoted_str | query_binary
-query_binary       -> query_content ('AND' | 'OR' query_content)
 query_group        -> '(' query_content* ')'
 query_quoted_str   -> '"' string '"'
 query_str          -> /\w/

@@ -26,10 +26,10 @@ Todo:
 
 - [x] Scanning
 - [ ] String ranges in scanned tokens
-- [ ] Parsing
-- [ ] Interpreting
+- [x] Parsing
+- [x] Interpreting
+- [ ] Add group syntax - in progress
 - [ ] Typeahead
-- [ ] Add group syntax
 - [ ] ScalaJS to provide parser in web env
 - [ ] Web component - environment and first pass at webcomponent
 - [ ] Web component - syntax highlighting
@@ -37,3 +37,4 @@ Todo:
 
 Notes
 
+Logical OR and AND come high up the grammar – see the Lox grammar for an example.
