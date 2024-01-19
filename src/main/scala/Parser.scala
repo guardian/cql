@@ -29,26 +29,25 @@ class Parser(tokens: List[Token]):
 
   // program    -> statement* EOF
   private def queryList =
-    var queries = List.empty[SearchStrQuoted | SearchStr | SearchParam]
+    var queries = List.empty[QueryQuotedStr | QueryStr | QueryMeta]
     while (peek().tokenType != EOF) {
       queries = queries :+ searchExpr
     }
     QueryList(queries)
 
   // SearchExpr -> SearchExprQuoted | SearchExprBasic | SearchParam
-  private def searchExpr: SearchStrQuoted | SearchStr | SearchParam =
+  private def searchExpr: QueryQuotedStr | QueryStr | QueryMeta =
     if (peek().tokenType == TokenType.SEARCH_KEY) searchParamExpr
     else searchStr
 
-  private def searchStr: SearchStr =
+  private def searchStr: QueryStr =
     val token = consume(TokenType.STRING, "Expected a string")
-    SearchStr(token.literal.toString)
+    QueryStr(token.literal.toString)
 
   private def searchParamExpr =
     val key = consume(TokenType.SEARCH_KEY, "Expected a search key")
     val valueToken = consume(TokenType.SEARCH_VALUE, "Expected a search value, e.g. +tag:tone/news")
-    SearchParam(key.literal.toString, valueToken.literal.toString)
-
+    QueryMeta(key.literal.toString, valueToken.literal.toString)
 
 //
 //  // declaration  -> varDecl | statement

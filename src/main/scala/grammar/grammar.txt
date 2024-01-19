@@ -12,10 +12,10 @@ sausages
 
 Grammar:
 
-query_list         -> (search_expr)* EOF
-query              -> (query_content | query_meta)
-query_content      -> query_group | query_str | query_quoted_str ('AND' | 'OR' query_content)?
-query_group        -> '(' query_content ')'
+query_list         -> (query_content | query_meta)* EOF
+query_content      -> query_group | query_str | query_quoted_str | query_binary
+query_binary       -> query_content ('AND' | 'OR' query_content)
+query_group        -> '(' query_content* ')'
 query_quoted_str   -> '"' string '"'
 query_str          -> /\w/
 query_meta         -> '+' query_meta_key ':' query_meta_value

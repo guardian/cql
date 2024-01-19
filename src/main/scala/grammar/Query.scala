@@ -4,7 +4,10 @@ import cql.Token
 
 trait Query
 
-case class QueryList(exprs: List[SearchStrQuoted | SearchStr | SearchParam]) extends Query
-case class SearchStrQuoted(searchExpr: String) extends Query
-case class SearchStr(searchExpr: String) extends Query
-case class SearchParam(key: String, value: String) extends Query
+case class QueryList(exprs: List[QueryContent | QueryMeta]) extends Query
+case class QueryContent(content: QueryQuotedStr | QueryStr | QueryBinary | QueryGroup)
+case class QueryBinary(left: QueryContent, operator: Token, right: QueryContent)
+case class QueryGroup(content: List[QueryContent])
+case class QueryQuotedStr(searchExpr: String) extends Query
+case class QueryStr(searchExpr: String) extends Query
+case class QueryMeta(key: String, value: String) extends Query

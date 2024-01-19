@@ -29,9 +29,9 @@ object Interpreter {
                 program: QueryList,
               ): String =
     val (searchStrs, otherQueries) = program.exprs.partitionMap {
-      case SearchStrQuoted(str) => Left(str)
-      case SearchStr(str) => Left(str)
-      case SearchParam(key, value) => Right(s"&$key=$value")
+      case QueryQuotedStr(str) => Left(str)
+      case QueryStr(str) => Left(str)
+      case QueryMeta(key, value) => Right(s"&$key=$value")
     }
 
     val maybeSearchParam = searchStrs match {
