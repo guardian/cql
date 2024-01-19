@@ -12,13 +12,15 @@ sausages
 
 Grammar:
 
-query              -> (search_expr)* EOF
-search_expr        -> (search_str | quoted_search_str | search_param)
-quoted_search_str  -> '"' string '"'
-basic_search_str   -> /\w/
-search_param       -> '+' search_key ':' search_value
-search_key         -> 'tag' | 'section' | ...etc
-search_value       -> /\w/
+query_list         -> (search_expr)* EOF
+query              -> (query_content | query_meta)
+query_content      -> query_group | query_str | query_quoted_str ('AND' | 'OR' query_content)?
+query_group        -> '(' query_content ')'
+query_quoted_str   -> '"' string '"'
+query_str          -> /\w/
+query_meta         -> '+' query_meta_key ':' query_meta_value
+query_meta_key     -> 'tag' | 'section' | ...etc
+query_meta_value   -> /\w/
 
 How do we disambiguate search params from strings in the tokeniser?
 Or is '+tag:', '+section:' the lexeme, not '+' 'tag' ':'?
