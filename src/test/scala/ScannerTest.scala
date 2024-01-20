@@ -73,6 +73,29 @@ class ScannerTest extends BaseTest {
       assert(tokens === expectedTokens)
     }
 
+    it("should yield a plus token when a search key is incomplete") {
+      val scanner = new Scanner("""example +""")
+      val tokens = scanner.scanTokens
+      val expectedTokens = List(
+        unquotedStringToken("example"),
+        Token(TokenType.PLUS, "+", null, 8, 8),
+        eofToken(9)
+      )
+      assert(tokens === expectedTokens)
+    }
+
+    it("should yield a colon token when a query meta value is incomplete") {
+      val scanner = new Scanner("""example +tag:""")
+      val tokens = scanner.scanTokens
+      val expectedTokens = List(
+        unquotedStringToken("example"),
+        Token(TokenType.QUERY_META_KEY, "+tag", "tag", 8, 11),
+        Token(TokenType.COLON, ":", null, 12, 12),
+        eofToken(13)
+      )
+      assert(tokens === expectedTokens)
+    }
+
     it("should tokenise groups and boolean operators") {
       val scanner = new Scanner("""one AND (two OR three)""")
       val tokens = scanner.scanTokens

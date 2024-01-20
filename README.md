@@ -38,6 +38,7 @@ Todo:
 - [x] Query string builder
 - [x] Add group and binary syntax
 - [x] String ranges in scanned tokens
+- [x] Parse hints for typeahead
 - [ ] ScalaJS to provide parser in web env
 - [ ] Web component - environment and first pass at component infra
 - [ ] Web component - syntax highlighting
@@ -84,4 +85,4 @@ Should search_key or search_value be recognised as tokens, or just the literals 
 
 Logical OR and AND come high up the grammar – see the Lox grammar for an example.
 
-Is typeahead a language feature? We could implement cheaply by matching `+\w` or `:\w` on client. But hey, be nice to do this in the language. One way: add `+` and `:` tokens, and consider them part of the grammar, but not part of a valid expression. If the cursor is at a `+` or `:` token, or a key or value token, open the relevant typeahead. Value typeahead will need to backtrack to figure out correct key.    
+Is typeahead a language feature? We could implement cheaply by matching `+\w` or `:\w` on client. But hey, be nice to do this in the language. One way: add `+` and `:` tokens, and consider them part of the grammar (parser), but consider their presence invalid (interpreter). If the cursor is at a `+` or `:` token, or a key or value token, open the relevant typeahead. Value typeahead will need to backtrack to figure out correct key.
