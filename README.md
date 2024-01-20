@@ -37,7 +37,7 @@ Todo:
 - [x] Parsing
 - [x] Query string builder
 - [x] Add group and binary syntax
-- [ ] String ranges in scanned tokens
+- [x] String ranges in scanned tokens
 - [ ] Typeahead
 - [ ] ScalaJS to provide parser in web env
 - [ ] Web component - environment and first pass at component infra

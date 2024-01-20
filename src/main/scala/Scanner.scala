@@ -17,7 +17,7 @@ class Scanner(program: String):
       scanToken
     }
 
-    tokens :+ Token(TokenType.EOF, "", null, line)
+    tokens :+ Token(TokenType.EOF, "", null, current, current)
 
   def isAtEnd = current == program.size
 
@@ -94,7 +94,8 @@ class Scanner(program: String):
 
   def addToken(tokenType: TokenType, literal: Double | String | Null = null) =
     val text = program.substring(start, current)
-    tokens = tokens :+ Token(tokenType, text, literal, line)
+    println(s"\"$text\"")
+    tokens = tokens :+ Token(tokenType, text, literal, start, current - 1)
 
   def addCommentBlock: Unit =
     while (!(peek == '*' && peekNext == '/') && !isAtEnd)

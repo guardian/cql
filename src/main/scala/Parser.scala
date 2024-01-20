@@ -11,9 +11,9 @@ class ParseError extends Exception
 object Parser:
   def error(token: Token, message: String) =
     if (token.tokenType == EOF)
-      report(token.line, " at end of file", message)
+      report(token.start, " at end of file", message)
     else
-      report(token.line, s" at '${token.lexeme}'", message)
+      report(token.start, s" at '${token.lexeme}'", message)
     new ParseError
 
   def report(line: Int, location: String, message: String) =

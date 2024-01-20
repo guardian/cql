@@ -2,11 +2,7 @@ package cql
 
 enum TokenType:
   // Single-character tokens.
-  case PLUS, COLON, LEFT_BRACKET, RIGHT_BRACKET,
-
-    // One or two character tokens.
-    GREATER, GREATER_EQUAL,
-    LESS, LESS_EQUAL,
+  case COLON, LEFT_BRACKET, RIGHT_BRACKET,
 
     // Literals.
     STRING, NUMBER, QUERY_META_KEY, QUERY_META_VALUE,
@@ -14,15 +10,14 @@ enum TokenType:
     // Keywords.
     AND, OR, EOF
 
-
-
 case class Token(
     tokenType: TokenType,
     lexeme: String,
     literal: Double | String | Null,
-    line: Int
+    start: Int,
+    end: Int
 ):
-  override def toString = s"${tokenType} ${lexeme} ${literal} ${line}"
+  override def toString = s"${tokenType} ${lexeme} ${literal} ${start}-${end}"
 
 object Token:
   val reservedWords = Map(
