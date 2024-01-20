@@ -25,10 +25,10 @@ An example, mostly incorrect grammar [here.](https://github.com/jonathonherbert/
 Todo:
 
 - [x] Scanning
-- [ ] String ranges in scanned tokens
 - [x] Parsing
-- [x] Interpreting
-- [ ] Add group syntax - in progress
+- [x] Query string builder
+- [x] Add group and binary syntax
+- [ ] String ranges in scanned tokens
 - [ ] Typeahead
 - [ ] ScalaJS to provide parser in web env
 - [ ] Web component - environment and first pass at webcomponent

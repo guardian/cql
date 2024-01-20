@@ -30,12 +30,12 @@ object Interpreter {
               ): String =
     val (searchStrs, otherQueries) = program.exprs.partitionMap {
       case q: QueryBinary => Left(strFromBinary(q))
-      case QueryMeta(key, value) => Right(s"&$key=$value")
+      case QueryMeta(key, value) => Right(s"$key=$value")
     }
 
-    val maybeSearchParam = searchStrs match {
+    val maybeSearchStr = searchStrs match {
       case Nil => None
-      case strs => Some(s"q=${strs.mkString("%20")}")
+      case strs => Some(s"q=${strs.mkString(" ")}")
     }
 
     val maybeOtherQueries = otherQueries match {
@@ -43,16 +43,16 @@ object Interpreter {
       case strs => Some(strs.mkString(""))
     }
 
-    List(maybeSearchParam, maybeOtherQueries).flatten.mkString("&")
+    List(maybeSearchStr, maybeOtherQueries).flatten.mkString("&")
 
   def strFromContent(queryContent: QueryContent): String = queryContent.content match {
     case QueryStr(str) => str
-    case QueryGroup(content) => s"(${strFromContent(content)})"
+    case QueryGroup(content) => s"(${strFromBinary(content)})"
     case q: QueryBinary => strFromBinary(q)
   }
 
   def strFromBinary(queryBinary: QueryBinary): String =
-    val leftStr = strFromContent(queryBinary.left)
+    val leftStr = queryBinary.left.searchExpr
     val rightStr = queryBinary.right.map {
       case (op, content) => s" ${op.tokenType.toString} ${strFromContent(content)}"
     }.getOrElse("")

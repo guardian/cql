@@ -40,10 +40,10 @@ class Parser(tokens: List[Token]):
     else queryBinary
 
   private def queryBinary =
-    val left = queryContent
+    val left = queryStr
     peek().tokenType match {
-      case TokenType.AND => QueryBinary(left, Some((peek(), queryContent)))
-      case TokenType.OR => QueryBinary(left, Some((peek(), queryContent)))
+      case TokenType.AND => QueryBinary(left, Some((consume(TokenType.AND), queryContent)))
+      case TokenType.OR => QueryBinary(left, Some((consume(TokenType.OR), queryContent)))
       case _ => QueryBinary(left)
     }
 
@@ -57,7 +57,7 @@ class Parser(tokens: List[Token]):
 
   private def queryGroup: QueryGroup =
     consume(TokenType.LEFT_BRACKET, "Groups should start with a left bracket")
-    val content = queryContent
+    val content = queryBinary
     consume(TokenType.RIGHT_BRACKET, "Groups must end with a right bracket")
     QueryGroup(content)
 
@@ -282,7 +282,7 @@ class Parser(tokens: List[Token]):
     if (!isAtEnd) current = current + 1
     previous()
 
-  private def consume(tokenType: TokenType, message: String) = {
+  private def consume(tokenType: TokenType, message: String = "") = {
     if (check(tokenType)) advance()
     else throw Parser.error(peek(), message)
   }
