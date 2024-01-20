@@ -38,7 +38,6 @@ Todo:
 - [x] Query string builder
 - [x] Add group and binary syntax
 - [x] String ranges in scanned tokens
-- [ ] Typeahead
 - [ ] ScalaJS to provide parser in web env
 - [ ] Web component - environment and first pass at component infra
 - [ ] Web component - syntax highlighting
@@ -84,3 +83,5 @@ Scanning tokens – should `+` (or `:`) be its own token, or part of search para
 Should search_key or search_value be recognised as tokens, or just the literals `:`, `+` and strings – you can then build the grammar from `+` string `:` string? No – +tag:hai and +tag: hai would parse as the same thing, which would be incorrect. Search key/value pairs and their separators are contiguous.
 
 Logical OR and AND come high up the grammar – see the Lox grammar for an example.
+
+Is typeahead a language feature? We could implement cheaply by matching `+\w` or `:\w` on client. But hey, be nice to do this in the language. One way: add `+` and `:` tokens, and consider them part of the grammar, but not part of a valid expression. If the cursor is at a `+` or `:` token, or a key or value token, open the relevant typeahead. Value typeahead will need to backtrack to figure out correct key.    
