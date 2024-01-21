@@ -3,7 +3,6 @@ package cql
 import scala.util.Try
 
 class Scanner(program: String):
-  println(s"Scanning program: $program")
   var tokens: List[Token] = List.empty
   var start = 0
   var current = 0
