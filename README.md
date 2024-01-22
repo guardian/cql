@@ -39,7 +39,8 @@ Todo:
 - [x] Add group and binary syntax
 - [x] String ranges in scanned tokens
 - [x] Parse hints for typeahead
-~- [x] ScalaJS to provide parser in web env~ ScalaJS adds 180kb to your bundle as the price of entry? Yeah we're not doing that
+- [x] ~~ScalaJS to provide parser in web env~~ ScalaJS adds 180kb to your bundle as the price of entry? Yeah we're not doing that
+- [x] Add a language server for funsies
 - [ ] Web component - environment and first pass at component infra
 - [ ] Web component - syntax highlighting
 - [ ] Web component - typeahead
