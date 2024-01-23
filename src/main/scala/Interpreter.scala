@@ -6,14 +6,18 @@ import cql.grammar._
 import scala.collection.mutable.Map
 import scala.collection.mutable.ListBuffer
 
-object Interpreter {
+class InterpreterError(message: String) extends Error(message)
 
+object Interpreter {
   def evaluate(
                 program: QueryList,
               ): String =
     val (searchStrs, otherQueries) = program.exprs.partitionMap {
       case q: QueryBinary => Left(strFromBinary(q))
-      case QueryMeta(key, value) => Right(s"$key=$value")
+      case QueryMeta(Some(key), Some(value)) => Right(s"$key=$value")
+      case QueryMeta(Some(key), None) => throw new InterpreterError(s"The key '+$key' needs a value after it (e.g. +$key:tone/news)")
+      case QueryMeta(None, Some(value)) => throw new InterpreterError(s"The value ':$value' needs a key before it (e.g. +tag:$value)")
+      case QueryMeta(None, None) => throw new InterpreterError(s"I encountered an empty query")
     }
 
     val maybeSearchStr = searchStrs match {

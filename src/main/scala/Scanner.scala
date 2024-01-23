@@ -90,7 +90,6 @@ class Scanner(program: String):
 
   def addToken(tokenType: TokenType, literal: Option[String] = None) =
     val text = program.substring(start, current)
-    println(s"\"$text\"")
     tokens = tokens :+ Token(tokenType, text, literal, start, current - 1)
 
   def addCommentBlock: Unit =

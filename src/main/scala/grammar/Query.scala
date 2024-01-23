@@ -15,7 +15,7 @@ case class QueryBinary(left: QueryStr, right: Option[(Token, QueryContent)] = No
 case class QueryContent(content: QueryStr | QueryBinary | QueryGroup)
 case class QueryGroup(content: QueryBinary)
 case class QueryStr(searchExpr: String) extends Query
-case class QueryMeta(key: String, value: String) extends Query
+case class QueryMeta(key: Option[String], value: Option[String]) extends Query
 
 trait QueryJson {
   implicit val cqlResultEncoder: Encoder[CqlResult] = deriveEncoder[CqlResult]
@@ -24,13 +24,21 @@ trait QueryJson {
       case q: QueryBinary => q.asJson
       case q: QueryMeta => q.asJson
     }
-    Json.obj("content" -> Json.arr(arr: _*))
+    Json.obj("type" -> "QueryList".asJson, "content" -> Json.arr(arr: _*))
   }
-  implicit val queryGroupEncoder: Encoder[QueryGroup] = deriveEncoder[QueryGroup]
-  implicit val queryStrEncoder: Encoder[QueryStr] = deriveEncoder[QueryStr]
-  implicit val queryMetaEncoder: Encoder[QueryMeta] = deriveEncoder[QueryMeta]
+  implicit val queryGroupEncoder: Encoder[QueryGroup] = Encoder.instance { group =>
+    group.content.asJson.deepMerge(Json.obj("type" -> "QueryGroup".asJson))
+  }
+  implicit val queryStrEncoder: Encoder[QueryStr] = Encoder.instance { queryStr =>
+    Json.obj("type" -> "QueryStr".asJson, "searchExpr" -> queryStr.searchExpr.asJson)
+  }
+  implicit val queryMetaEncoder: Encoder[QueryMeta] = Encoder.instance { queryMeta =>
+    Json.obj("type" -> "QueryMeta".asJson, "key" -> queryMeta.key.map(_.asJson).orNull, "value" -> queryMeta.value.map(_.asJson).orNull)
+  }
   implicit val tokenEncoder: Encoder[Token] = Encoder.instance { token =>
     Json.obj(
+      "type" -> "Token".asJson,
+      "tokenType" -> token.tokenType.toString.asJson,
       "lexeme" -> token.lexeme.asJson,
       "start" -> token.start.asJson,
       "end" -> token.end.asJson,
@@ -38,14 +46,17 @@ trait QueryJson {
     )
   }
   implicit val queryContentEncoder: Encoder[QueryContent] = Encoder.instance { queryContent =>
-    queryContent.content match {
+    val content = queryContent.content match {
       case q: QueryStr => q.asJson
       case q: QueryBinary => q.asJson
       case q: QueryGroup => q.asJson
     }
+
+    content.deepMerge(Json.obj("type" -> "QueryContent".asJson))
   }
   implicit val queryBinaryEncoder: Encoder[QueryBinary] = Encoder.instance { queryBinary =>
     Json.obj(
+      "type" -> "QueryBinary".asJson,
       ("left", queryBinary.left.asJson),
       ("right", queryBinary.right.asJson)
     )

@@ -6,7 +6,7 @@ import cql.grammar.*
 import scala.util.Try
 import scala.util.Success
 
-class ParseError extends Exception
+class ParseError(message: String) extends Error(message)
 
 object Parser:
   def error(token: Token, message: String) =
@@ -14,17 +14,16 @@ object Parser:
       report(token.start, " at end of file", message)
     else
       report(token.start, s" at '${token.lexeme}'", message)
-    new ParseError
 
   def report(line: Int, location: String, message: String) =
-    println(s"${message} ${location} on line ${line}")
+    val msg = s"${message} ${location} on line $line"
+    new ParseError(msg)
 
 class Parser(tokens: List[Token]):
   var current: Int = 0;
   val skipTypes = List()
 
   def parse(): Try[QueryList] =
-    println(s"Parse $tokens")
     Try { queryList }
 
   // program    -> statement* EOF
@@ -35,8 +34,10 @@ class Parser(tokens: List[Token]):
     }
     QueryList(queries)
 
+  val startOfQueryMeta = List(TokenType.QUERY_META_KEY, TokenType.PLUS)
+
   private def query: QueryBinary | QueryMeta =
-    if (peek().tokenType == TokenType.QUERY_META_KEY) queryMeta
+    if (startOfQueryMeta.contains(peek().tokenType)) queryMeta
     else queryBinary
 
   private def queryBinary =
@@ -66,9 +67,22 @@ class Parser(tokens: List[Token]):
     QueryStr(token.literal.getOrElse(""))
 
   private def queryMeta =
-    val key = consume(TokenType.QUERY_META_KEY, "Expected a search key")
-    val valueToken = consume(TokenType.QUERY_META_VALUE, "Expected a search value, e.g. +tag:tone/news")
-    QueryMeta(key.literal.getOrElse(""), valueToken.literal.getOrElse(""))
+    val key = Try {
+      Some(consume(TokenType.QUERY_META_KEY, "Expected a search key"))
+    }.recoverWith { _ =>
+      consume(TokenType.PLUS, "Expected at least a +")
+      Success(None)
+    }.get
+
+    val value = Try {
+      Some(consume(TokenType.QUERY_META_VALUE, "Expected a search key"))
+    }.recoverWith { _ =>
+      Try { Some(consume(TokenType.COLON, "Expected at least a :")) }.recoverWith { _ =>
+        Success(None)
+      }
+    }.get
+
+    QueryMeta(key.flatMap(_.literal), value.flatMap(_.literal))
 
   private def matchTokens(tokens: TokenType*) =
     tokens.exists(token =>

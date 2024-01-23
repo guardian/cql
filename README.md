@@ -72,7 +72,7 @@ query_content      -> query_group | query_str | query_quoted_str | query_binary
 query_group        -> '(' query_content* ')'
 query_quoted_str   -> '"' string '"'
 query_str          -> /\w/
-query_meta         -> '+' query_meta_key ':' query_meta_value
+query_meta         -> '+' query_meta_key? ':'? query_meta_value? // Permit incomplete meta queries for typeahead
 query_meta_key     -> 'tag' | 'section' | ...etc
 query_meta_value   -> /\w/
 ```
