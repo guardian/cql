@@ -63,12 +63,12 @@ class Parser(tokens: List[Token]):
 
   private def queryStr: QueryStr =
     val token = consume(TokenType.STRING, "Expected a string")
-    QueryStr(token.literal.toString)
+    QueryStr(token.literal.getOrElse(""))
 
   private def queryMeta =
     val key = consume(TokenType.QUERY_META_KEY, "Expected a search key")
     val valueToken = consume(TokenType.QUERY_META_VALUE, "Expected a search value, e.g. +tag:tone/news")
-    QueryMeta(key.literal.toString, valueToken.literal.toString)
+    QueryMeta(key.literal.getOrElse(""), valueToken.literal.getOrElse(""))
 
   private def matchTokens(tokens: TokenType*) =
     tokens.exists(token =>

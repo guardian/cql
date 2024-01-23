@@ -1,9 +1,9 @@
 package cql
 
 class ScannerTest extends BaseTest {
-  def eofToken(start: Int) = Token(TokenType.EOF, "", null, start, start)
-  def unquotedStringToken(str: String, start: Int = 0) = Token(TokenType.STRING, str, str, start, start + str.length - 1)
-  def quotedStringToken(str: String, start: Int = 0) = Token(TokenType.STRING, s"\"$str\"", str, start, start + str.length + 1)
+  def eofToken(start: Int) = Token(TokenType.EOF, "", None, start, start)
+  def unquotedStringToken(str: String, start: Int = 0) = Token(TokenType.STRING, str, Some(str), start, start + str.length - 1)
+  def quotedStringToken(str: String, start: Int = 0) = Token(TokenType.STRING, s"\"$str\"", Some(str), start, start + str.length + 1)
 
   describe("unquoted strings") {
     it("should parse plain strings") {
@@ -55,8 +55,8 @@ class ScannerTest extends BaseTest {
       val scanner = new Scanner("""+tag:tone/news""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
-        Token(TokenType.QUERY_META_KEY, "+tag", "tag", 0, 3),
-        Token(TokenType.QUERY_META_VALUE, ":tone/news",  "tone/news", 4, 13),
+        Token(TokenType.QUERY_META_KEY, "+tag", Some("tag"), 0, 3),
+        Token(TokenType.QUERY_META_VALUE, ":tone/news",  Some("tone/news"), 4, 13),
         eofToken(14)
       )
       assert(tokens === expectedTokens)
@@ -66,8 +66,8 @@ class ScannerTest extends BaseTest {
       val scanner = new Scanner("""+section:commentisfree""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
-        Token(TokenType.QUERY_META_KEY, "+section", "section", 0, 7),
-        Token(TokenType.QUERY_META_VALUE, ":commentisfree", "commentisfree", 8, 21),
+        Token(TokenType.QUERY_META_KEY, "+section", Some("section"), 0, 7),
+        Token(TokenType.QUERY_META_VALUE, ":commentisfree", Some("commentisfree"), 8, 21),
         eofToken(22)
       )
       assert(tokens === expectedTokens)
@@ -78,7 +78,7 @@ class ScannerTest extends BaseTest {
       val tokens = scanner.scanTokens
       val expectedTokens = List(
         unquotedStringToken("example"),
-        Token(TokenType.PLUS, "+", null, 8, 8),
+        Token(TokenType.PLUS, "+", None, 8, 8),
         eofToken(9)
       )
       assert(tokens === expectedTokens)
@@ -89,8 +89,8 @@ class ScannerTest extends BaseTest {
       val tokens = scanner.scanTokens
       val expectedTokens = List(
         unquotedStringToken("example"),
-        Token(TokenType.QUERY_META_KEY, "+tag", "tag", 8, 11),
-        Token(TokenType.COLON, ":", null, 12, 12),
+        Token(TokenType.QUERY_META_KEY, "+tag", Some("tag"), 8, 11),
+        Token(TokenType.COLON, ":", None, 12, 12),
         eofToken(13)
       )
       assert(tokens === expectedTokens)
@@ -101,12 +101,12 @@ class ScannerTest extends BaseTest {
       val tokens = scanner.scanTokens
       val expectedTokens = List(
         unquotedStringToken("one"),
-        Token(TokenType.AND, "AND", null, 4, 6),
-        Token(TokenType.LEFT_BRACKET, "(", null, 8, 8),
+        Token(TokenType.AND, "AND", None, 4, 6),
+        Token(TokenType.LEFT_BRACKET, "(", None, 8, 8),
         unquotedStringToken("two", 9),
-        Token(TokenType.OR, "OR", null, 13, 14),
+        Token(TokenType.OR, "OR", None, 13, 14),
         unquotedStringToken("three", 16),
-        Token(TokenType.RIGHT_BRACKET, ")", null, 21, 21),
+        Token(TokenType.RIGHT_BRACKET, ")", None, 21, 21),
         eofToken(22)
       )
       assert(tokens === expectedTokens)

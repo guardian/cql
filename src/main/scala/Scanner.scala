@@ -16,7 +16,7 @@ class Scanner(program: String):
       scanToken
     }
 
-    tokens :+ Token(TokenType.EOF, "", null, current, current)
+    tokens :+ Token(TokenType.EOF, "", None, current, current)
 
   def isAtEnd = current == program.size
 
@@ -48,7 +48,7 @@ class Scanner(program: String):
       addToken(TokenType.PLUS)
     else
       val key = program.substring(start + 1, current)
-      addToken(TokenType.QUERY_META_KEY, key)
+      addToken(TokenType.QUERY_META_KEY, Some(key))
 
   def addSearchValue =
     while ((peek != ' ') && !isAtEnd)
@@ -58,7 +58,7 @@ class Scanner(program: String):
       addToken(TokenType.COLON)
     else
       val value = program.substring(start + 1, current)
-      addToken(TokenType.QUERY_META_VALUE, value)
+      addToken(TokenType.QUERY_META_VALUE, Some(value))
 
   def isReservedWord =
     Token.reservedWords.exists {
@@ -77,7 +77,7 @@ class Scanner(program: String):
     while (peek != ' ' && peek != ')' && !isAtEnd)
       advance
 
-    addToken(TokenType.STRING, program.substring(start, current))
+    addToken(TokenType.STRING, Some(program.substring(start, current)))
 
   def addString =
     while ((peek != '"') && !isAtEnd)
@@ -86,9 +86,9 @@ class Scanner(program: String):
     if (isAtEnd) error(line, "Unterminated string at end of file")
     else
       advance
-      addToken(TokenType.STRING, program.substring(start + 1, current - 1))
+      addToken(TokenType.STRING, Some(program.substring(start + 1, current - 1)))
 
-  def addToken(tokenType: TokenType, literal: String | Null = null) =
+  def addToken(tokenType: TokenType, literal: Option[String] = None) =
     val text = program.substring(start, current)
     println(s"\"$text\"")
     tokens = tokens :+ Token(tokenType, text, literal, start, current - 1)
