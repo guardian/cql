@@ -35,7 +35,6 @@ class Scanner(program: String):
       case '\t' => ()
       case '\n' =>
         line = line + 1
-      case c if c.isDigit         => addNumber
       case '"'                    => addString
       case _ if isReservedWord    => addIdentifier
       case _ => addUnquotedString
@@ -74,15 +73,6 @@ class Scanner(program: String):
       case None => error(line, "Expected identifier")
     }
 
-  def addNumber =
-    while (peek.isDigit)
-      advance
-    if (peek == '.' && peekNext.isDigit)
-      advance
-      while (peek.isDigit) advance
-
-    addToken(TokenType.NUMBER, program.substring(start, current).toDouble)
-
   def addUnquotedString =
     while (peek != ' ' && peek != ')' && !isAtEnd)
       advance
@@ -98,7 +88,7 @@ class Scanner(program: String):
       advance
       addToken(TokenType.STRING, program.substring(start + 1, current - 1))
 
-  def addToken(tokenType: TokenType, literal: Double | String | Null = null) =
+  def addToken(tokenType: TokenType, literal: String | Null = null) =
     val text = program.substring(start, current)
     println(s"\"$text\"")
     tokens = tokens :+ Token(tokenType, text, literal, start, current - 1)

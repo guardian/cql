@@ -13,7 +13,7 @@ enum TokenType:
 case class Token(
     tokenType: TokenType,
     lexeme: String,
-    literal: Double | String | Null,
+    literal: String | Null,
     start: Int,
     end: Int
 ):

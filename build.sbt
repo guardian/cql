@@ -1,6 +1,8 @@
+scalacOptions += "-Ymacro-annotations"
+
 val PekkoVersion = "1.0.1"
 val PekkoHttpVersion = "1.0.0"
-val circeVersion         = "0.14.4"
+val circeVersion = "0.14.4"
 
 lazy val cql = project.in(file("."))
   .settings(

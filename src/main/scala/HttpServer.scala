@@ -1,30 +1,21 @@
 package cql
 
 import cql.Cql
+import cql.grammar.QueryJson
 import org.apache.pekko
 import pekko.actor.typed.ActorSystem
 import pekko.actor.typed.scaladsl.Behaviors
 import pekko.http.scaladsl.Http
-import pekko.http.scaladsl.model._
-import pekko.http.scaladsl.server.Directives._
-import com.github.pjfanning.pekkohttpcirce._
-import io.circe.Decoder.Result
-import io.circe.{Decoder, Encoder, HCursor, Json}
-import com.github.pjfanning.pekkohttpcirce._
-
+import pekko.http.scaladsl.model.*
+import pekko.http.scaladsl.server.Directives.*
+import io.circe.syntax.*
+import com.github.pjfanning.pekkohttpcirce.*
 import scala.io.StdIn
+import scala.util.{Failure, Success, Try}
 
-trait QueryListSerde extends ErrorAccumulatingCirceSupport {
-  implicit val queryList = deriveDecoder
-  implicit val queryBinary = deriveDecoder
-  implicit val queryContent = deriveDecoder
-  implicit val queryGroup = deriveDecoder
-  implicit val queryStr = deriveDecoder
-  implicit val queryMeta = deriveDecoder
-}
-
-object HttpServer extends QueryListSerde {
+object HttpServer extends QueryJson {
   val cql = new Cql()
+
 
   def run(): Unit = {
 
@@ -37,7 +28,13 @@ object HttpServer extends QueryListSerde {
         post {
           entity(as[String]) { query =>
             complete {
-              cql.run(query)
+              val result = Try { cql.run(query).asJson.toString }
+              result match {
+                case Success(r) =>
+                  HttpEntity(ContentTypes.`application/json`, r)
+                case Failure(e) =>
+                  HttpEntity(ContentTypes.`application/json`, e.getMessage)
+              }
             }
           }
         }
