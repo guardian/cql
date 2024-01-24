@@ -22,7 +22,7 @@ object Interpreter {
 
     val maybeSearchStr = searchStrs match {
       case Nil => None
-      case strs => Some(s"q=${strs.mkString(" ")}")
+      case strs => Some(s"q=${strs.mkString("%20")}")
     }
 
     val maybeOtherQueries = otherQueries match {
@@ -39,9 +39,9 @@ object Interpreter {
   }
 
   def strFromBinary(queryBinary: QueryBinary): String =
-    val leftStr = queryBinary.left.searchExpr
+    val leftStr = strFromContent(queryBinary.left)
     val rightStr = queryBinary.right.map {
-      case (op, content) => s" ${op.tokenType.toString} ${strFromContent(content)}"
+      case (op, content) => s"%20${op.tokenType.toString}%20${strFromContent(content)}"
     }.getOrElse("")
     leftStr + rightStr
 }

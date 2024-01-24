@@ -111,5 +111,19 @@ class ScannerTest extends BaseTest {
       )
       assert(tokens === expectedTokens)
     }
+
+    it("should tokenise groups") {
+      val scanner = new Scanner("""(two OR three)""")
+      val tokens = scanner.scanTokens
+      val expectedTokens = List(
+        Token(TokenType.LEFT_BRACKET, "(", None, 0, 0),
+        unquotedStringToken("two", 1),
+        Token(TokenType.OR, "OR", None, 5, 6),
+        unquotedStringToken("three", 8),
+        Token(TokenType.RIGHT_BRACKET, ")", None, 13, 13),
+        eofToken(14)
+      )
+      assert(tokens === expectedTokens)
+    }
   }
 }

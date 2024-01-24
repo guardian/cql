@@ -41,7 +41,7 @@ class Parser(tokens: List[Token]):
     else queryBinary
 
   private def queryBinary =
-    val left = queryStr
+    val left = queryContent
     peek().tokenType match {
       case TokenType.AND => QueryBinary(left, Some((consume(TokenType.AND), queryContent)))
       case TokenType.OR => QueryBinary(left, Some((consume(TokenType.OR), queryContent)))
