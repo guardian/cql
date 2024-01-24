@@ -23,17 +23,19 @@ object HttpServer extends QueryJson {
     // needed for the future flatMap/onComplete in the end
     implicit val executionContext = system.executionContext
 
+    val responseHeaders: List[HttpHeader] = List(headers.`Access-Control-Allow-Origin`.`*`)
+
     val route =
-      path("query") {
-        post {
-          entity(as[String]) { query =>
+      path("cql") {
+        get {
+          parameters("query") { query =>
             complete {
-              val result = Try { cql.run(query).asJson.toString }
+              val result = Try { cql.run(query).asJson.spaces4 }
               result match {
                 case Success(r) =>
-                  HttpEntity(ContentTypes.`application/json`, r)
+                  HttpResponse(status = 200, entity = r, headers = responseHeaders)
                 case Failure(e) =>
-                  HttpEntity(ContentTypes.`application/json`, e.getMessage)
+                  HttpResponse(status = 400, entity = e.getMessage, headers = responseHeaders)
               }
             }
           }
