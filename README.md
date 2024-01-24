@@ -41,8 +41,8 @@ Todo:
 - [x] Parse hints for typeahead
 - [x] ~~ScalaJS to provide parser in web env~~ ScalaJS adds 180kb to your bundle as the price of entry? Yeah we're not doing that
 - [x] Add a language server for funsies
-- [ ] Web component - environment and first pass at component infra
-- [ ] Web component - syntax highlighting
+- [x] Web component - environment and first pass at component infra
+- [ ] Web component - syntax highlighting (in progress)
 - [ ] Web component - typeahead
 - [ ] Web component - async lookup
 
@@ -87,3 +87,5 @@ Should search_key or search_value be recognised as tokens, or just the literals 
 Logical OR and AND come high up the grammar – see the Lox grammar for an example.
 
 Is typeahead a language feature? We could implement cheaply by matching `+\w` or `:\w` on client. But hey, be nice to do this in the language. One way: add `+` and `:` tokens, and consider them part of the grammar (parser), but consider their presence invalid (interpreter). If the cursor is at a `+` or `:` token, or a key or value token, open the relevant typeahead. Value typeahead will need to backtrack to figure out correct key.
+
+Does this have to be baked into the client? Much nicer to centralise language server features, as the component will proliferate everywhere and updating the estate will be a colossal pain. But: must contend with latency and availability problems 🤔
