@@ -43,6 +43,7 @@ Todo:
 - [x] Add a language server for funsies
 - [x] Web component - environment and first pass at component infra
 - [ ] Web component - syntax highlighting (in progress)
+  - [ ] Ensure untokenised string components still display, we're getting 500s and invisible characters on trailing + chars
 - [ ] Web component - typeahead
 - [ ] Web component - async lookup
 
