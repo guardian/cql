@@ -1,6 +1,6 @@
-<script lang="ts">
-	import { assets } from '$app/paths';
+<svelte:options customElement="cql-input" />
 
+<script lang="ts">
 	import Token from './Token.svelte';
 	import { onMount } from 'svelte';
 
@@ -25,7 +25,7 @@
 
 		ast = await request.json();
 
-		$: tokenisedChars = addTokensToString(cqlQuery, ast.tokens);
+		tokenisedChars = addTokensToString(cqlQuery, ast.tokens);
 	};
 
 	const addTokensToString = (str: string, tokens) => {

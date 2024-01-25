@@ -90,3 +90,7 @@ Logical OR and AND come high up the grammar – see the Lox grammar for an examp
 Is typeahead a language feature? We could implement cheaply by matching `+\w` or `:\w` on client. But hey, be nice to do this in the language. One way: add `+` and `:` tokens, and consider them part of the grammar (parser), but consider their presence invalid (interpreter). If the cursor is at a `+` or `:` token, or a key or value token, open the relevant typeahead. Value typeahead will need to backtrack to figure out correct key.
 
 Does this have to be baked into the client? Much nicer to centralise language server features, as the component will proliferate everywhere and updating the estate will be a colossal pain. But: must contend with latency and availability problems 🤔
+
+Components options:
+ - Svelte will export web components with `customComponent` properties in compiler and component config. However, from-scratch context menus will be a drag.
+ - Preact will work with headlessUI, if we can adapt it for a typeahead menu. It also provides a webcomponent layer.
