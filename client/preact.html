@@ -102,6 +102,7 @@
     import { useState, useEffect } from 'preact/hooks';
     import { html as htm } from 'htm/preact';
     import { Menu } from 'https://esm.sh/@headlessui/react'
+    import { useFloating } from 'https://esm.sh/@floating-ui/react';
 
     const links = [
       { href: '/account-settings', label: 'Account settings' },
@@ -110,25 +111,24 @@
       { href: '/sign-out', label: 'Sign out' },
     ]
 
-    const TypeaheadMenu = () => {
+    const TypeaheadMenu = ({ isOpen, close }) => {
       return (
         htm`<${Menu}>
-          <${Menu.Button}>Options</${Menu.Button}>
-          <${Menu.Items}>
-            ${links.map((link) => (
-          htm`<${Menu.Item} key=${link.href} as=${Fragment}>
-                ${({ active }) => (
-              htm`<a
-                    href={link.href}
-                    className={${active ? 'bg-blue-500 text-white' : 'bg-white text-black'
-                }}
-                  >
-                    ${link.label}
-                  </a>`
-            )}
-              </${Menu.Item}>`
-        ))}
-          </${Menu.Items}>
+            <${Menu.Items} static>
+              ${links.map((link) => (
+                htm`<${Menu.Item} key=${link.href} as=${Fragment}>
+                  ${({ active }) => (
+                    htm`<a
+                      href={link.href}
+                      className={${active ? 'bg-blue-500 text-white' : 'bg-white text-black'
+                      }}
+                    >
+                      ${link.label}
+                    </a>`
+                  )}
+                </${Menu.Item}>`
+              ))}
+            </${Menu.Items}>
         </${Menu}>`
       )
     }
@@ -142,8 +142,12 @@
       const [ast, setAst] = useState('');
       const [tokenisedChars, setTokenisedChars] = useState([]);
       const [overlayOffset, setOverlayOffset] = useState(0);
+      const [charX, setCharX] = useState(0);
 
-      const handleInput = (e) => fetchLanguageServer(e.target.value);
+      const handleInput = (e) => {
+        fetchLanguageServer(e.target.value);
+        console.log(document.getSelection());
+      };
 
       const fetchLanguageServer = async (query) => {
         setCqlQuery(query);
@@ -184,13 +188,13 @@
       )}
             </div>
           </div>
+          <${TypeaheadMenu} />
           ${ast.queryResult && htm`<div class="Cql__output">${ast.queryResult}</div>`}
           ${ast.error && htm`<div class="Cql__error">${ast.error}</div>`}
         </div>
         <div class="debug">
           <pre>${JSON.stringify(ast, null, '\t')}</pre>
         </div>
-        <${TypeaheadMenu} />
     `
     }
 

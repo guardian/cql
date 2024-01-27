@@ -2,7 +2,7 @@
 
 <script lang="ts">
 	import Token from './Token.svelte';
-	import { onMount } from 'svelte';
+	import { onMount, afterUpdate } from 'svelte';
 
 	const exampleQuery = 'an (example AND query) +tag:tags-are-magic';
 
@@ -14,8 +14,18 @@
 	let ast = '';
 	let tokenisedChars = [];
 	let overlayOffset = 0;
+  let cursorOffset = 0;
+  let typeaheadOffset = 0;
+  let cursorMarker;
 
-	const handleInput = (e: InputEvent) => fetchLanguageServer(e.target.value);
+	const handleInput = (e: InputEvent) => {
+    cursorOffset = e.target.selectionStart;
+    fetchLanguageServer(e.target.value);
+  }
+
+  afterUpdate(() => {
+    typeaheadOffset = cursorMarker?.getBoundingClientRect().left;
+  });
 
 	const fetchLanguageServer = async (query: string) => {
 		cqlQuery = query;
@@ -30,12 +40,6 @@
 
 	const addTokensToString = (str: string, tokens) => {
 		return [...str].map((char, index) => {
-			console.log({
-				char,
-				index,
-				tokens,
-				token: tokens.some((token) => token.start <= index && token.end >= index)
-			});
 			return {
 				char,
 				token: tokens.find((token) => token.start <= index && token.end >= index)
@@ -54,11 +58,12 @@
 	<input class="Cql__input" value={cqlQuery} on:input={handleInput} on:scroll={syncScrollState} />
 	<div class="Cql__overlay-container">
 		<div class="Cql__overlay" contenteditable="true"  style="left: -{overlayOffset}px">
-			{#each tokenisedChars || [] as { char, token }}
-				<Token str={char} {token} />
+			{#each tokenisedChars || [] as { char, token }, index}
+				<Token str={char} {token} />{#if index === cursorOffset - 1}<span class="Cql__cursor-marker" bind:this={cursorMarker}></span>{/if}
 			{/each}
 		</div>
 	</div>
+  <div class="Cql__typeahead" style="left: calc({typeaheadOffset}-1em)px"></div>
   {#if ast.queryResult}<div class="Cql__output">{ast.queryResult}</div>{/if}
   {#if ast.error}<div class="Cql__error">{ast.error}</div>{/if}
 </div>
@@ -117,5 +122,16 @@
 
   .Cql__error {
     color: darkred;
+  }
+
+  .Cql__cursor-marker {
+    display: inline;
+    white-space: pre;
+  }
+  .Cql__typeahead {
+    position: absolute;
+    border: 2px solid grey;
+    width: 100px;
+    height: 300px;
   }
 </style>
