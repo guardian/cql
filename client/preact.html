@@ -1,0 +1,206 @@
+<!doctype html>
+
+<head>
+  <style>
+    :root {
+      --input-width: 400px;
+    }
+
+    .Cql__input-container {
+      position: relative;
+    }
+
+    .Cql__overlay-container {
+      position: absolute;
+      pointer-events: none;
+      top: 7px;
+      left: 7px;
+      width: var(--input-width);
+      overflow: hidden;
+      white-space: nowrap;
+    }
+
+    .Cql__overlay {
+      position: relative;
+    }
+
+    .Cql__input {
+      width: var(--input-width);
+      border: 2px solid #666;
+      margin: 0;
+      padding: 5px;
+      color: transparent;
+      caret-color: #333;
+    }
+
+    .Cql__input,
+    .Cql__overlay-container {
+      font-family: sans-serif;
+      font-size: 16px;
+    }
+
+    .debug {
+      background-color: #ddd;
+      margin-top: 10px;
+      padding: 5px;
+      font-family: monospace;
+      color: #333;
+      white-space: pre;
+    }
+
+    .Cql__output,
+    .Cql__error {
+      margin-top: 1rem;
+    }
+
+    .Cql__error {
+      color: darkred;
+    }
+
+    .Char {
+      display: inline;
+      white-space: pre;
+    }
+
+    .Token__STRING {
+      color: #3043a2;
+    }
+
+    .Token__LEFT_BRACKET,
+    .Token__RIGHT_BRACKET {
+      color: #cc6b6b;
+    }
+
+    .Token__AND,
+    .Token__OR {
+      color: purple;
+    }
+
+    .Token__QUERY_META_KEY {
+      color: #977e0a;
+    }
+
+    .Token__QUERY_META_VALUE {
+      color: darkgreen;
+    }
+  </style>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "preact": "https://esm.sh/preact@10.19.2",
+      "preact/": "https://esm.sh/preact@10.19.2/",
+      "htm/preact": "https://esm.sh/htm@3.1.1/preact?external=preact",
+      "https://esm.sh/stable/react@18.2.0/es2022/react.mjs": "https://esm.sh/preact@10.19.2/compat",
+      "https://esm.sh/v135/react-dom@18.2.0/es2022/react-dom.mjs": "https://esm.sh/preact@10.19.2/compat"
+    }
+  }
+</script>
+
+  <script type="module">
+    import { h, render, Fragment } from 'preact';
+    import { useState, useEffect } from 'preact/hooks';
+    import { html as htm } from 'htm/preact';
+    import { Menu } from 'https://esm.sh/@headlessui/react'
+
+    const links = [
+      { href: '/account-settings', label: 'Account settings' },
+      { href: '/support', label: 'Support' },
+      { href: '/license', label: 'License' },
+      { href: '/sign-out', label: 'Sign out' },
+    ]
+
+    const TypeaheadMenu = () => {
+      return (
+        htm`<${Menu}>
+          <${Menu.Button}>Options</${Menu.Button}>
+          <${Menu.Items}>
+            ${links.map((link) => (
+          htm`<${Menu.Item} key=${link.href} as=${Fragment}>
+                ${({ active }) => (
+              htm`<a
+                    href={link.href}
+                    className={${active ? 'bg-blue-500 text-white' : 'bg-white text-black'
+                }}
+                  >
+                    ${link.label}
+                  </a>`
+            )}
+              </${Menu.Item}>`
+        ))}
+          </${Menu.Items}>
+        </${Menu}>`
+      )
+    }
+
+    const Token = ({ token, str }) => htm`<span class="Char Token__${token?.tokenType || 'None'}">${str}</span>`
+
+    const Cql = () => {
+      const exampleQuery = 'an (example AND query) +tag:tags-are-magic';
+
+      const [cqlQuery, setCqlQuery] = useState(exampleQuery);
+      const [ast, setAst] = useState('');
+      const [tokenisedChars, setTokenisedChars] = useState([]);
+      const [overlayOffset, setOverlayOffset] = useState(0);
+
+      const handleInput = (e) => fetchLanguageServer(e.target.value);
+
+      const fetchLanguageServer = async (query) => {
+        setCqlQuery(query);
+        const urlParams = new URLSearchParams();
+        urlParams.append('query', query);
+        const request = await fetch(`http://localhost:5050/cql?${urlParams}`);
+
+        const newAst = await request.json();
+        setAst(newAst);
+
+        setTokenisedChars(addTokensToString(cqlQuery, ast.tokens));
+      };
+
+      const addTokensToString = (str, tokens) => {
+        return [...str].map((char, index) => {
+          return {
+            char,
+            token: tokens?.find((token) => token.start <= index && token.end >= index)
+          };
+        });
+      };
+
+      const syncScrollState = (e) => {
+        overlayOffset = e.target.scrollLeft;
+      };
+
+      useEffect(() => {
+        fetchLanguageServer(exampleQuery);
+      }, [])
+
+      return htm`
+        <div class="Cql__input-container">
+          <input class="Cql__input" value=${cqlQuery} onInput=${handleInput} onScroll=${syncScrollState} />
+          <div class="Cql__overlay-container">
+            <div class="Cql__overlay" style="left: -${overlayOffset}px">
+              ${tokenisedChars.map(({ char, token }) =>
+        htm`<${Token} str=${char} token=${token} />`
+      )}
+            </div>
+          </div>
+          ${ast.queryResult && htm`<div class="Cql__output">${ast.queryResult}</div>`}
+          ${ast.error && htm`<div class="Cql__error">${ast.error}</div>`}
+        </div>
+        <div class="debug">
+          <pre>${JSON.stringify(ast, null, '\t')}</pre>
+        </div>
+        <${TypeaheadMenu} />
+    `
+    }
+
+    // Create your app
+    const app = h(Cql);
+
+    render(app, document.body);
+  </script>
+
+
+</head>
+
+<body></body>
