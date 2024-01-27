@@ -2,7 +2,7 @@
 
 <script lang="ts">
 	import Token from './Token.svelte';
-	import { onMount, afterUpdate } from 'svelte';
+	import { onMount, afterUpdate, tick } from 'svelte';
 
 	const TYPEAHEAD_TOKENS = ['QUERY_META_KEY', 'QUERY_META_VALUE'];
 
@@ -17,10 +17,10 @@
 	let ast = '';
 	let tokenisedChars = [];
 	let typeaheadTokens = [];
-	let typeaheadOffsetChars = undefined;
+	let typeaheadOffsetChars: undefined | number = undefined;
   let typeaheadOffsetPx = 0;
-	let inputElement;
-	let cursorMarker;
+	let inputElement: HTMLInputElement;
+	let cursorMarker: HTMLSpanElement;
   let menuIndex = 0;
   let menuItems = [{ key: "One", value: "one"}, {key: "Two", value: "two"}, {key: "Three", value: "three"}];
 
@@ -45,7 +45,7 @@
         if (menuIndex < menuItems.length - 1) menuIndex++;
         break;
       case "Enter":
-        console.log("I'm done!")
+        replaceToken();
         break;
       case "Escape":
         console.log("I want out!");
@@ -59,6 +59,25 @@
     }
   }
 
+  const replaceToken = () => {
+    const token = typeaheadTokens.find(token => token.start === typeaheadOffsetChars)
+    if (!token) {
+      console.log(`No token found at ${typeaheadOffsetChars}`);
+      return;
+    }
+    // Assumption here: the +1s bake in the idea of a single + or : char leading the token.
+    const strToInsert = menuItems[menuIndex].value;
+    cqlQuery = `${cqlQuery.slice(0, token.start + 1)}${menuItems[menuIndex].value}${cqlQuery.slice(token.end + 1)}`
+
+    const newCaretPosition = token.start + 1 + strToInsert.length;
+
+    // Is there a better way of waiting for Svelte to update the DOM?
+    requestAnimationFrame(() => {
+      inputElement.setSelectionRange(newCaretPosition, newCaretPosition);
+    })
+
+    fetchLanguageServer(cqlQuery);
+  }
 
 
 	const watchSelectionChange = () => {
@@ -67,6 +86,7 @@
 
 	const unwatchSelectionChange = () => {
 		document.removeEventListener('selectionchange', handleSelection);
+    typeaheadOffsetChars = undefined;
 	};
 
 	const handleSelection = (e: InputEvent) => {
@@ -96,9 +116,12 @@
 
 		ast = await request.json();
 		typeaheadTokens = ast.tokens.filter((token) => TYPEAHEAD_TOKENS.includes(token.tokenType));
-
-		tokenisedChars = addTokensToString(cqlQuery, ast.tokens);
+    applyTokens(cqlQuery, ast.tokens);
 	};
+
+  const applyTokens = (query, tokens) => {
+    tokenisedChars = addTokensToString(query, tokens);
+  }
 
 	const addTokensToString = (str: string, tokens) => {
 		return [...str].map((char, index) => {
@@ -228,6 +251,11 @@
     list-style: none;
     padding: 5px;
     margin: initial;
+  }
+
+  .Cql__typeahead li:hover {
+    background-color: #eee;
+    cursor: pointer;
   }
 
   .Cql__typeahead li.--selected {
