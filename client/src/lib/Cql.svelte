@@ -2,14 +2,15 @@
 
 <script lang="ts">
 	import Token from './Token.svelte';
-	import { onMount, afterUpdate, tick } from 'svelte';
+	import { onMount, afterUpdate } from 'svelte';
+  import { fade } from 'svelte/transition';
 
 	const TYPEAHEAD_TOKENS = ['QUERY_META_KEY', 'QUERY_META_VALUE'];
 
 	const exampleQuery = 'an (example AND query) +tag:tags-are-magic';
 
 	onMount(async () => {
-    fetchLanguageServer(exampleQuery);
+		fetchLanguageServer(exampleQuery);
 	});
 
 	let overlayOffset = 0;
@@ -18,75 +19,85 @@
 	let tokenisedChars = [];
 	let typeaheadTokens = [];
 	let typeaheadOffsetChars: undefined | number = undefined;
-  let typeaheadOffsetPx = 0;
+	let typeaheadOffsetPx = 0;
 	let inputElement: HTMLInputElement;
 	let cursorMarker: HTMLSpanElement;
-  let menuIndex = 0;
-  let menuItems = [{ key: "One", value: "one"}, {key: "Two", value: "two"}, {key: "Three", value: "three"}];
+  let inputContainerElement: HTMLDivElement;
+	let menuIndex = 0;
+	let menuItems = [
+		{ key: 'One', value: 'one' },
+		{ key: 'Two', value: 'two' },
+		{ key: 'Three', value: 'three' }
+	];
 
 	const handleInput = (e: InputEvent) => {
 		applyTypeahead(inputElement.selectionStart);
 		fetchLanguageServer(e.target.value);
 	};
 
-  const handleKeydown = (e) => {
-    if (typeaheadOffsetChars === undefined) {
-      // Only active when menu is active
-      return;
-    }
+	const handleKeydown = (e) => {
+		if (typeaheadOffsetChars === undefined) {
+			// Only active when menu is active
+			return;
+		}
 
-    let handled = true;
+		let handled = true;
 
-    switch(e.key) {
-      case "ArrowUp":
-        if (menuIndex > 0) menuIndex--;
-        break;
-        case "ArrowDown":
-        if (menuIndex < menuItems.length - 1) menuIndex++;
-        break;
-      case "Enter":
-        replaceToken();
-        break;
-      case "Escape":
-        console.log("I want out!");
-        break;
-      default:
-        handled = false;
-    }
+		switch (e.key) {
+			case 'ArrowUp':
+				if (menuIndex > 0) menuIndex--;
+				break;
+			case 'ArrowDown':
+				if (menuIndex < menuItems.length - 1) menuIndex++;
+				break;
+			case 'Enter':
+				replaceToken(menuIndex);
+				break;
+			case 'Escape':
+				typeaheadOffsetChars = undefined;
+				break;
+			default:
+				handled = false;
+		}
 
-    if (handled) {
-      e.preventDefault();
-    }
-  }
+		if (handled) {
+			e.preventDefault();
+		}
+	};
 
-  const replaceToken = () => {
-    const token = typeaheadTokens.find(token => token.start === typeaheadOffsetChars)
-    if (!token) {
-      console.log(`No token found at ${typeaheadOffsetChars}`);
-      return;
-    }
-    // Assumption here: the +1s bake in the idea of a single + or : char leading the token.
-    const strToInsert = menuItems[menuIndex].value;
-    cqlQuery = `${cqlQuery.slice(0, token.start + 1)}${menuItems[menuIndex].value}${cqlQuery.slice(token.end + 1)}`
+	const replaceToken = (index: number) => {
+		const token = typeaheadTokens.find((token) => token.start === typeaheadOffsetChars);
+		if (!token) {
+			console.log(`No token found at ${typeaheadOffsetChars}`);
+			return;
+		}
+		// Assumption here: the +1s bake in the idea of a single + or : char leading the token.
+		const strToInsert = menuItems[index].value;
+		cqlQuery = `${cqlQuery.slice(0, token.start + 1)}${menuItems[index].value}${cqlQuery.slice(token.end + 1)}`;
 
-    const newCaretPosition = token.start + 1 + strToInsert.length;
+		const newCaretPosition = token.start + 1 + strToInsert.length;
 
-    // Is there a better way of waiting for Svelte to update the DOM?
-    requestAnimationFrame(() => {
-      inputElement.setSelectionRange(newCaretPosition, newCaretPosition);
-    })
+		// Is there a better way of waiting for Svelte to update the DOM?
+		requestAnimationFrame(() => {
+			inputElement.setSelectionRange(newCaretPosition, newCaretPosition);
+		});
 
-    fetchLanguageServer(cqlQuery);
-  }
+    typeaheadOffsetChars = undefined;
 
+		fetchLanguageServer(cqlQuery);
+	};
 
 	const watchSelectionChange = () => {
 		document.addEventListener('selectionchange', handleSelection);
 	};
 
-	const unwatchSelectionChange = () => {
+	const unwatchSelectionChange = (e) => {
+    if (inputContainerElement.contains(e.relatedTarget)) {
+      // We're within the input element – do not lose focus.
+      return;
+    }
 		document.removeEventListener('selectionchange', handleSelection);
-    typeaheadOffsetChars = undefined;
+		typeaheadOffsetChars = undefined;
 	};
 
 	const handleSelection = (e: InputEvent) => {
@@ -116,12 +127,12 @@
 
 		ast = await request.json();
 		typeaheadTokens = ast.tokens.filter((token) => TYPEAHEAD_TOKENS.includes(token.tokenType));
-    applyTokens(cqlQuery, ast.tokens);
+		applyTokens(cqlQuery, ast.tokens);
 	};
 
-  const applyTokens = (query, tokens) => {
-    tokenisedChars = addTokensToString(query, tokens);
-  }
+	const applyTokens = (query, tokens) => {
+		tokenisedChars = addTokensToString(query, tokens);
+	};
 
 	const addTokensToString = (str: string, tokens) => {
 		return [...str].map((char, index) => {
@@ -137,12 +148,12 @@
 	};
 </script>
 
-<div class="Cql__input-container">
+<div class="Cql__input-container" bind:this={inputContainerElement}>
 	<input
 		class="Cql__input"
 		value={cqlQuery}
 		on:input={handleInput}
-    on:keydown={handleKeydown}
+		on:keydown={handleKeydown}
 		on:focus={watchSelectionChange}
 		on:blur={unwatchSelectionChange}
 		on:scroll={syncScrollState}
@@ -161,15 +172,16 @@
 	{#if typeaheadOffsetChars !== undefined}<div
 			class="Cql__typeahead"
 			style="left: {typeaheadOffsetPx - 7}px"
+      transition:fade={{ duration: 100 }}
 		>
-    <ul>
-      {#each menuItems as { key, value }, index}
-      <li class:--selected={menuIndex === index}>
-        {key}
-      </li>
-      {/each}
-    </ul>
-  </div>{/if}
+			<ul>
+				{#each menuItems as { key }, index}
+					<li>
+						<button class:--selected={menuIndex === index} on:click={() => replaceToken(index)}>{key}</button>
+					</li>
+				{/each}
+			</ul>
+		</div>{/if}
 	{#if ast.queryResult}<div class="Cql__output">{ast.queryResult}</div>{/if}
 	{#if ast.error}<div class="Cql__error">{ast.error}</div>{/if}
 </div>
@@ -239,26 +251,32 @@
 		position: absolute;
 		border: 2px solid grey;
 		width: 100px;
-    background-color: white;
+		background-color: white;
 	}
 
-  .Cql__typeahead ul {
-    list-style: none;
-    padding: initial;
-    margin: initial;
-  }
+	.Cql__typeahead ul,
   .Cql__typeahead li {
-    list-style: none;
-    padding: 5px;
-    margin: initial;
-  }
+		list-style: none;
+		padding: initial;
+		margin: initial;
+	}
 
-  .Cql__typeahead li:hover {
-    background-color: #eee;
+	.Cql__typeahead li button:hover {
+		background-color: #eee;
+		cursor: pointer;
+	}
+
+  .Cql__typeahead li button {
+    width: 100%;
+    padding: 5px;
+    border: none;
+    outline: none;
+    background-color: white;
+    text-align: left;
     cursor: pointer;
   }
 
-  .Cql__typeahead li.--selected {
-    background-color: #ddd;
-  }
+	.Cql__typeahead li button.--selected {
+		background-color: #ddd;
+	}
 </style>
