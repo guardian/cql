@@ -42,9 +42,9 @@ Todo:
 - [x] ~~ScalaJS to provide parser in web env~~ ScalaJS adds 180kb to your bundle as the price of entry? Yeah we're not doing that
 - [x] Add a language server for funsies
 - [x] Web component - environment and first pass at component infra
-- [ ] Web component - syntax highlighting (in progress)
-  - [ ] Ensure untokenised string components still display, we're getting 500s and invisible characters on trailing + chars
-- [ ] Web component - typeahead
+- [x] Web component - syntax highlighting
+  - [] Ensure untokenised string components still display, we're getting 500s and invisible characters on trailing + chars
+- [x] Web component - typeahead
 - [ ] Web component - async lookup
 
 ### Notes
