@@ -14,7 +14,8 @@ lazy val cql = project.in(file("."))
       "io.circe" %% "circe-parser" % circeVersion,
       "io.circe" %% "circe-generic" % circeVersion,
       "com.github.pjfanning" %% "pekko-http-circe" % "2.3.3",
-      "org.scalatest" %% "scalatest" % "3.2.9" % "test"
+      "org.scalatest" %% "scalatest" % "3.2.9" % "test",
+      "com.gu" % "content-api-client-default_2.13" % "20.0.2"
     )
   )
 

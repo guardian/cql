@@ -94,3 +94,5 @@ Does this have to be baked into the client? Much nicer to centralise language se
 Components options:
  - Svelte will export web components with `customComponent` properties in compiler and component config. However, from-scratch context menus will be a drag.
  - Preact will work with headlessUI, if we can adapt it for a typeahead menu. It also provides a webcomponent layer.
+
+Typeahead will require parsing AST nodes, not just tokens, as typeahead for query_meta_value will require knowing query_meta_key, which we only know in a query_meta node.
