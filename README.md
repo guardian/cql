@@ -95,4 +95,17 @@ Components options:
  - Svelte will export web components with `customComponent` properties in compiler and component config. However, from-scratch context menus will be a drag.
  - Preact will work with headlessUI, if we can adapt it for a typeahead menu. It also provides a webcomponent layer.
 
-Typeahead will require parsing AST nodes, not just tokens, as typeahead for query_meta_value will require knowing query_meta_key, which we only know in a query_meta node.
+Typeahead will require parsing AST nodes, not just tokens, as typeahead for query_meta_value will require knowing query_meta_key, which we only know in a query_meta node. We currently have no way of mapping from a position to a node. We'll need to keep positions when we consume tokens, every node should probably have a start and end.
+
+Checking out Grid repo – QuerySyntax has a grammar for search queries. Actual string search limited to tokens or quoted strings. Chips can refer to nested fields. Good polish on dates, e.g. today, yesterday, multiple formats. Love the ambition in the tests, e.g.
+
+```
+// TODO: date:"last week"
+// TODO: date:last.week
+// TODO: date:last.three.hours
+// TODO: date:two.days.ago (?)
+// TODO: date:2.days.ago (?)
+// TODO: date:2.january (this year)
+```
+
+NB: query_meta will only be parseable at the top level. We could use `-` rather than `+` for negation. (`NOT` is used in the binary syntax for negation. Not added yet.)
