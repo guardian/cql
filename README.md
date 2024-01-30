@@ -46,6 +46,8 @@ Todo:
   - [] Ensure untokenised string components still display, we're getting 500s and invisible characters on trailing + chars
 - [x] Web component - typeahead
 - [ ] Web component - async lookup
+  - [ ] Implement async lookup in language server
+  - [ ] UI
 
 ### Notes
 
@@ -96,6 +98,14 @@ Components options:
  - Preact will work with headlessUI, if we can adapt it for a typeahead menu. It also provides a webcomponent layer.
 
 Typeahead will require parsing AST nodes, not just tokens, as typeahead for query_meta_value will require knowing query_meta_key, which we only know in a query_meta node. We currently have no way of mapping from a position to a node. We'll need to keep positions when we consume tokens, every node should probably have a start and end.
+
+Typeahead happens on server. Rationale: typeahead must hit CAPI anyhow, so it's dependent on some server somewhere, and making it an LS feature keeps the client simpler.
+
+What do we serve for typeahead? 
+1. Provide values for every incomplete query_meta node for every query. Client then keeps those values for display when selection is in right place. 
+2. Provide typehead as combination of position and query to server. Store less data upfront, but must query every time position changes.
+
+Option 1. preferable to avoid high request volumes, keep typeahead in sync with query, and keep latency low (chance that typeahead result will be cached, when for example clicking into existing incomplete query_meta)
 
 Checking out Grid repo – QuerySyntax has a grammar for search queries. Actual string search limited to tokens or quoted strings. Chips can refer to nested fields. Good polish on dates, e.g. today, yesterday, multiple formats. Love the ambition in the tests, e.g.
 
