@@ -1,8 +1,6 @@
 package cql
 
-import com.gu.contentapi.client.ContentApiClient
 import cql.TokenType
-
 import scala.concurrent.Future
 
 case class TypeaheadSuggestion(label: String, value: String)
@@ -22,10 +20,10 @@ class Typeahead(client: TypeaheadQueryCapiClient) {
 
   private val typeaheadResolverEntries = typeaheadResolverMap.map {
     case (value, (label, _)) => TypeaheadSuggestion(label, value)
-  }
+  }.toList
 
   def getSuggestions(tokens: List[Token]): Future[List[TypeaheadSuggestion]] = tokens.lastOption match {
-    case Some(token) => typeaheadTokenMap.get(token.tokenType).map { _(token.literal) }
+    case Some(token) => typeaheadTokenMap.get(token.tokenType).map { _(token) }.getOrElse(Future.failed(new Error("whups")))
     case None => Future.successful(List.empty)
   }
 
@@ -37,10 +35,14 @@ class Typeahead(client: TypeaheadQueryCapiClient) {
 
     Future.successful(suggestions)
 
-  private def suggestMetaValue(token: Token): Future[List[TypeaheadSuggestion]] = typeaheadResolverMap.get(token.literal).map(_._2(token))
+  private def suggestMetaValue(token: Token): Future[List[TypeaheadSuggestion]] =
+    typeaheadResolverMap.get(token.literal.getOrElse("")).map(_._2(token)).getOrElse(Future.failed(new Error("whups")))
 
   private def suggestTags(token: Token) =
-    val tagStr = token.literal.getOrElse("");
-    val query = ContentApiLogic
-    client.
+    val tagStr = token.literal.getOrElse("")
+    client.getTags(tagStr)
+
+  private def suggestSections(token: Token) =
+    val sectionStr = token.literal.getOrElse("")
+    client.getSections(sectionStr)
 }

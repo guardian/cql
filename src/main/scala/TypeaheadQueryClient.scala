@@ -1,16 +1,17 @@
-import cql.TypeaheadSuggestion
+package cql
 
+import cql.TypeaheadSuggestion
 import scala.concurrent.Future
 
 trait TypeaheadQueryClient {
-  def getTags: Future[List[TypeaheadSuggestion]]
-  def getSections: Future[List[TypeaheadSuggestion]]
+  def getTags(str: String): Future[List[TypeaheadSuggestion]]
+  def getSections(str: String): Future[List[TypeaheadSuggestion]]
 }
 
 class TypeaheadQueryCapiClient extends TypeaheadQueryClient {
-  def getTags =
+  def getTags(str: String) =
     Future.successful(List(TypeaheadSuggestion("tags-are-magic", "Tags are magic")))
 
-  def getSections =
+  def getSections(str: String) =
     Future.successful(List(TypeaheadSuggestion("sections-are-magic", "Also sections")))
 }
