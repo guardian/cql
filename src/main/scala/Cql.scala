@@ -8,7 +8,8 @@ import io.circe.Encoder
 import scala.concurrent.Future
 
 class Cql:
-  implicit val ec: scala.concurrent.ExecutionContext = scala.concurrent.ExecutionContext.global
+  implicit val ec: scala.concurrent.ExecutionContext =
+    scala.concurrent.ExecutionContext.global
   val typeaheadClient = new TypeaheadQueryCapiClient()
   val typeahead = new Typeahead(typeaheadClient)
 
@@ -22,7 +23,8 @@ class Cql:
         Try { Interpreter.evaluate(expr) } match {
           case Success(capiQuery) =>
             CqlResult(tokens, Some(expr), Some(capiQuery), Map.empty)
-          case Failure(e) => CqlResult(tokens, Some(expr), None, Map.empty, Some(e.getMessage))
+          case Failure(e) =>
+            CqlResult(tokens, Some(expr), None, Map.empty, Some(e.getMessage))
         }
       case Failure(e) =>
         CqlResult(tokens, None, None, Map.empty, Some(e.getMessage))

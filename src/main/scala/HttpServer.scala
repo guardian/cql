@@ -16,14 +16,15 @@ import scala.util.{Failure, Success, Try}
 object HttpServer extends QueryJson {
   val cql = new Cql()
 
-
   def run(): Unit = {
 
     implicit val system = ActorSystem(Behaviors.empty, "my-system")
     // needed for the future flatMap/onComplete in the end
     implicit val executionContext = system.executionContext
 
-    val responseHeaders: List[HttpHeader] = List(headers.`Access-Control-Allow-Origin`.`*`)
+    val responseHeaders: List[HttpHeader] = List(
+      headers.`Access-Control-Allow-Origin`.`*`
+    )
 
     val route =
       path("cql") {
@@ -31,11 +32,21 @@ object HttpServer extends QueryJson {
           parameters("query") { query =>
             complete {
               val result = cql.run(query)
-              result.map { r =>
-                  HttpResponse(status = 200, entity = r.asJson.spaces2, headers = responseHeaders)
-              }.recover { e =>
-                  HttpResponse(status = 400, entity = e.getMessage(), headers = responseHeaders)
-              }
+              result
+                .map { r =>
+                  HttpResponse(
+                    status = 200,
+                    entity = r.asJson.spaces2,
+                    headers = responseHeaders
+                  )
+                }
+                .recover { e =>
+                  HttpResponse(
+                    status = 400,
+                    entity = e.getMessage(),
+                    headers = responseHeaders
+                  )
+                }
             }
           }
         }
@@ -43,7 +54,9 @@ object HttpServer extends QueryJson {
 
     val bindingFuture = Http().newServerAt("localhost", 5050).bind(route)
 
-    println(s"Server now online. Please navigate to http://localhost:5050/query\nPress RETURN to stop...")
+    println(
+      s"Server now online. Please navigate to http://localhost:5050/query\nPress RETURN to stop..."
+    )
     StdIn.readLine() // let it run until user presses return
     bindingFuture
       .flatMap(_.unbind()) // trigger unbinding from the port

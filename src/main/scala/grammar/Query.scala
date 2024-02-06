@@ -31,7 +31,8 @@ case class QueryStr(searchExpr: String) extends Query
 case class QueryMeta(key: Option[String], value: Option[String]) extends Query
 
 trait QueryJson {
-  implicit val typeaheadSuggestion: Encoder[TypeaheadSuggestion] = deriveEncoder[TypeaheadSuggestion]
+  implicit val typeaheadSuggestion: Encoder[TypeaheadSuggestion] =
+    deriveEncoder[TypeaheadSuggestion]
   implicit val cqlResultEncoder: Encoder[CqlResult] = deriveEncoder[CqlResult]
   implicit val queryListEncoder: Encoder[QueryList] = Encoder.instance { list =>
     val arr = list.exprs.map {

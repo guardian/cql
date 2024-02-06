@@ -43,8 +43,10 @@ class Parser(tokens: List[Token]):
   private def queryBinary =
     val left = queryContent
     peek().tokenType match {
-      case TokenType.AND => QueryBinary(left, Some((consume(TokenType.AND), queryContent)))
-      case TokenType.OR => QueryBinary(left, Some((consume(TokenType.OR), queryContent)))
+      case TokenType.AND =>
+        QueryBinary(left, Some((consume(TokenType.AND), queryContent)))
+      case TokenType.OR =>
+        QueryBinary(left, Some((consume(TokenType.OR), queryContent)))
       case _ => QueryBinary(left)
     }
 
@@ -77,9 +79,10 @@ class Parser(tokens: List[Token]):
     val value = Try {
       Some(consume(TokenType.QUERY_META_VALUE, "Expected a search key"))
     }.recoverWith { _ =>
-      Try { Some(consume(TokenType.COLON, "Expected at least a :")) }.recoverWith { _ =>
-        Success(None)
-      }
+      Try { Some(consume(TokenType.COLON, "Expected at least a :")) }
+        .recoverWith { _ =>
+          Success(None)
+        }
     }.get
 
     QueryMeta(key.flatMap(_.literal), value.flatMap(_.literal))

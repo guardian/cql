@@ -35,17 +35,16 @@ class Scanner(program: String):
       case '\t' => ()
       case '\n' =>
         line = line + 1
-      case '"'                    => addString
-      case _ if isReservedWord    => addIdentifier
-      case _ => addUnquotedString
+      case '"'                 => addString
+      case _ if isReservedWord => addIdentifier
+      case _                   => addUnquotedString
     }
 
   def addSearchKey =
     while ((peek != ':' && peek != ' ') && !isAtEnd)
       advance
 
-    if (current - start == 1)
-      addToken(TokenType.PLUS)
+    if (current - start == 1) addToken(TokenType.PLUS)
     else
       val key = program.substring(start + 1, current)
       addToken(TokenType.QUERY_META_KEY, Some(key))
@@ -54,15 +53,14 @@ class Scanner(program: String):
     while ((peek != ' ') && !isAtEnd)
       advance
 
-    if (current - start == 1)
-      addToken(TokenType.COLON)
+    if (current - start == 1) addToken(TokenType.COLON)
     else
       val value = program.substring(start + 1, current)
       addToken(TokenType.QUERY_META_VALUE, Some(value))
 
   def isReservedWord =
-    Token.reservedWords.exists {
-      case (str, _) => program.substring(start).startsWith(str)
+    Token.reservedWords.exists { case (str, _) =>
+      program.substring(start).startsWith(str)
     }
 
   def addIdentifier =
@@ -70,7 +68,7 @@ class Scanner(program: String):
     val text = program.substring(start, current)
     Token.reservedWords.get(text) match {
       case Some(token) => addToken(token)
-      case None => error(line, "Expected identifier")
+      case None        => error(line, "Expected identifier")
     }
 
   def addUnquotedString =
@@ -86,7 +84,10 @@ class Scanner(program: String):
     if (isAtEnd) error(line, "Unterminated string at end of file")
     else
       advance
-      addToken(TokenType.STRING, Some(program.substring(start + 1, current - 1)))
+      addToken(
+        TokenType.STRING,
+        Some(program.substring(start + 1, current - 1))
+      )
 
   def addToken(tokenType: TokenType, literal: Option[String] = None) =
     val text = program.substring(start, current)
