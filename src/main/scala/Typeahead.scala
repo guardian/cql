@@ -2,11 +2,12 @@ package cql
 
 import cql.TokenType
 import scala.concurrent.Future
+import concurrent.ExecutionContext.Implicits.global // Todo: sticking plaster
 
 case class TypeaheadSuggestion(label: String, value: String)
 
 class Typeahead(client: TypeaheadQueryCapiClient) {
-  private val typeaheadTokenMap = Map(
+  private val typeaheadTokenResolverMap = Map(
     TokenType.QUERY_META_KEY -> suggestMetaKey,
     TokenType.PLUS -> suggestMetaKey,
     TokenType.COLON -> suggestMetaValue,
@@ -22,10 +23,22 @@ class Typeahead(client: TypeaheadQueryCapiClient) {
     case (value, (label, _)) => TypeaheadSuggestion(label, value)
   }.toList
 
-  def getSuggestions(tokens: List[Token]): Future[List[TypeaheadSuggestion]] = tokens.lastOption match {
-    case Some(token) => typeaheadTokenMap.get(token.tokenType).map { _(token) }.getOrElse(Future.failed(new Error("whups")))
-    case None => Future.successful(List.empty)
-  }
+  def getSuggestions(tokens: List[Token]): Future[Map[String, Map[String, List[cql.TypeaheadSuggestion]]]] =
+    val suggestionFtrs = tokens.map { token =>
+      typeaheadTokenResolverMap.get(token.tokenType).map { resolver =>
+        resolver(token).map { suggestions =>
+          (token, suggestions)
+        }
+      }.getOrElse(Future.failed(new Error("whups")))
+    }
+
+    Future.sequence(suggestionFtrs).map { suggestionsForToken =>
+      suggestionsForToken.foldLeft(Map.empty[String, Map[String, List[TypeaheadSuggestion]]]) {
+        case (acc, (token, suggestions)) =>
+          val existingSuggestions = acc.getOrElse(token.tokenType.toString, Map.empty[String, List[TypeaheadSuggestion]])
+          acc + (token.tokenType.toString -> (existingSuggestions + (token.lexeme -> suggestions)))
+      }
+    }
 
   private def suggestMetaKey(token: Token): Future[List[TypeaheadSuggestion]] =
     val suggestions = token.literal match {

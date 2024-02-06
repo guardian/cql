@@ -9,9 +9,9 @@ trait TypeaheadQueryClient {
 }
 
 class TypeaheadQueryCapiClient extends TypeaheadQueryClient {
-  def getTags(str: String) =
+  def getTags(str: String): Future[List[TypeaheadSuggestion]] =
     Future.successful(List(TypeaheadSuggestion("tags-are-magic", "Tags are magic")))
 
-  def getSections(str: String) =
+  def getSections(str: String): Future[List[TypeaheadSuggestion]] =
     Future.successful(List(TypeaheadSuggestion("sections-are-magic", "Also sections")))
 }
