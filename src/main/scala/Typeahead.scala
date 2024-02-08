@@ -44,7 +44,7 @@ class Typeahead(client: TypeaheadQueryCapiClient) {
           token.tokenType.toString,
           Map.empty[String, List[TypeaheadSuggestion]]
         )
-        acc + (token.tokenType.toString -> (existingSuggestions + (token.lexeme -> suggestions)))
+        acc + (token.tokenType.toString -> (existingSuggestions + (token.literal.getOrElse("") -> suggestions)))
       }
     }
 
