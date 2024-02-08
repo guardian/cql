@@ -48,6 +48,8 @@ Todo:
 - [ ] Web component - async lookup
   - [ ] Implement async lookup in language server
   - [ ] UI
+- [ ] Ensure content is displayed when server does not respond
+- [ ] Error handling for 4/5xx
 
 ### Notes
 
@@ -119,3 +121,5 @@ Checking out Grid repo – QuerySyntax has a grammar for search queries. Actual 
 ```
 
 NB: query_meta will only be parseable at the top level. We could use `-` rather than `+` for negation. (`NOT` is used in the binary syntax for negation. Not added yet.)
+
+Re: Typeahead – this requires a parse phase, no? B/c we do not know whether we are 

@@ -26,7 +26,7 @@ class Typeahead(client: TypeaheadQueryCapiClient) {
   def getSuggestions(
       tokens: List[Token]
   ): Future[Map[String, Map[String, List[cql.TypeaheadSuggestion]]]] =
-    val suggestionFtrs = tokens.map { token =>
+    val suggestionFtrs = tokens.flatMap { token =>
       typeaheadTokenResolverMap
         .get(token.tokenType)
         .map { resolver =>
@@ -34,7 +34,6 @@ class Typeahead(client: TypeaheadQueryCapiClient) {
             (token, suggestions)
           }
         }
-        .getOrElse(Future.failed(new Error("whups")))
     }
 
     Future.sequence(suggestionFtrs).map { suggestionsForToken =>
@@ -64,7 +63,7 @@ class Typeahead(client: TypeaheadQueryCapiClient) {
     typeaheadResolverMap
       .get(token.literal.getOrElse(""))
       .map(_._2(token))
-      .getOrElse(Future.failed(new Error("whups")))
+      .getOrElse(Future.successful(List.empty))
 
   private def suggestTags(token: Token) =
     val tagStr = token.literal.getOrElse("")
