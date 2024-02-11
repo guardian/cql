@@ -34,11 +34,20 @@ object HttpServer extends QueryJson {
               val result = cql.run(query)
               result
                 .map { r =>
-                  HttpResponse(
-                    status = 200,
-                    entity = r.asJson.spaces2,
-                    headers = responseHeaders
-                  )
+                  Try {
+                    HttpResponse(
+                      status = 200,
+                      entity = r.asJson.spaces2,
+                      headers = responseHeaders
+                    )
+                  }.recover { e =>
+                    e.printStackTrace()
+                    HttpResponse(
+                      status = 500,
+                      entity = e.getMessage(),
+                      headers = responseHeaders
+                    )
+                  }.get
                 }
                 .recover { e =>
                   HttpResponse(

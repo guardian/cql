@@ -24,14 +24,9 @@
 	let cursorMarker: HTMLSpanElement;
   let inputContainerElement: HTMLDivElement;
 	let menuIndex = 0;
-	let menuItems = [
-		{ key: 'One', value: 'one' },
-		{ key: 'Two', value: 'two' },
-		{ key: 'Three', value: 'three' }
-	];
+	let menuItems = [];
 
 	const handleInput = (e: InputEvent) => {
-		applyTypeahead(inputElement.selectionStart);
 		fetchLanguageServer(e.target.value);
 	};
 
@@ -110,6 +105,8 @@
 		);
 		if (firstValidTypeaheadToken) {
 			typeaheadOffsetChars = firstValidTypeaheadToken.start;
+      const options = ast.suggestions[firstValidTypeaheadToken.tokenType]?.[firstValidTypeaheadToken.literal]
+      menuItems = options || [];
 		} else {
 			typeaheadOffsetChars = undefined;
 		}
@@ -128,6 +125,7 @@
 		ast = await request.json();
 		typeaheadTokens = ast.tokens.filter((token) => TYPEAHEAD_TOKENS.includes(token.tokenType));
 		applyTokens(cqlQuery, ast.tokens);
+		applyTypeahead(inputElement.selectionStart);
 	};
 
 	const applyTokens = (query, tokens) => {
@@ -175,9 +173,9 @@
       transition:fade={{ duration: 100 }}
 		>
 			<ul>
-				{#each menuItems as { key }, index}
+				{#each menuItems as { label }, index}
 					<li>
-						<button class:--selected={menuIndex === index} on:click={() => replaceToken(index)}>{key}</button>
+						<button class:--selected={menuIndex === index} on:click={() => replaceToken(index)}>{label}</button>
 					</li>
 				{/each}
 			</ul>

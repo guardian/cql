@@ -17,16 +17,15 @@ class Cql:
     val scanner = new Scanner(program)
     val tokens = scanner.scanTokens
     val parser = new Parser(tokens)
+
     parser.parse() match
       case Success(expr) =>
-        Try { Interpreter.evaluate(expr) } match
-          case Success(InterpreterResult(capiQuery, typeaheadNodes)) =>
-            typeahead.getSuggestions(expr).map { suggestions =>
-              CqlResult(tokens, Some(expr), Some(capiQuery), suggestions)
-            }
-
+        typeahead.getSuggestions(expr).map { suggestions =>
+        Try { CapiQueryString.build(expr) } match
+          case Success(capiQueryStr) =>
+            CqlResult(tokens, Some(expr), Some(capiQueryStr), suggestions)
           case Failure(e) =>
-            Future.successful(CqlResult(tokens, Some(expr), None, Map.empty, Some(e.getMessage)))
-
+            CqlResult(tokens, Some(expr), None, suggestions, Some(e.getMessage))
+        }
       case Failure(e) =>
         Future.successful(CqlResult(tokens, None, None, Map.empty, Some(e.getMessage)))

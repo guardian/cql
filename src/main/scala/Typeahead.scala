@@ -61,7 +61,7 @@ class Typeahead(client: TypeaheadQueryCapiClient) {
       str: String
   ): Future[List[TypeaheadSuggestion]] =
     typeaheadResolverMap
-      .get(str)
+      .get(key)
       .map(_._2(str))
       .getOrElse(Future.successful(List.empty))
 

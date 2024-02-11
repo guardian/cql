@@ -57,7 +57,7 @@ trait QueryJson {
       Json.obj(
         "type" -> "QueryMeta".asJson,
         "key" -> queryMeta.key.asJson,
-        "value" -> queryMeta.value.map(_.asJson).orNull
+        "value" -> queryMeta.value.asJson
       )
   }
   implicit val tokenEncoder: Encoder[Token] = Encoder.instance { token =>
