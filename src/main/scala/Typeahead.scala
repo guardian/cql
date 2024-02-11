@@ -3,6 +3,8 @@ package cql
 import cql.TokenType
 import scala.concurrent.Future
 import concurrent.ExecutionContext.Implicits.global // Todo: sticking plaster
+import cql.grammar.QueryMeta
+import cql.grammar.QueryList
 
 case class TypeaheadSuggestion(label: String, value: String)
 
@@ -24,52 +26,48 @@ class Typeahead(client: TypeaheadQueryCapiClient) {
   }.toList
 
   def getSuggestions(
-      tokens: List[Token]
+      program: QueryList
   ): Future[Map[String, Map[String, List[cql.TypeaheadSuggestion]]]] =
-    val suggestionFtrs = tokens.flatMap { token =>
-      typeaheadTokenResolverMap
-        .get(token.tokenType)
-        .map { resolver =>
-          resolver(token).map { suggestions =>
-            (token, suggestions)
-          }
-        }
+    val suggestionFtrs = program.exprs.collect {
+      case q: QueryMeta => q
+    }.map {
+      case QueryMeta(key, None) => suggestMetaKey(key).map((TokenType.QUERY_META_KEY, key, _))
+      case QueryMeta(key, Some(value)) => suggestMetaValue(key, value).map((TokenType.QUERY_META_VALUE, value, _))
     }
 
     Future.sequence(suggestionFtrs).map { suggestionsForToken =>
       suggestionsForToken.foldLeft(
         Map.empty[String, Map[String, List[TypeaheadSuggestion]]]
-      ) { case (acc, (token, suggestions)) =>
+      ) { case (acc, (tokenType, value, suggestions)) =>
         val existingSuggestions = acc.getOrElse(
-          token.tokenType.toString,
+          tokenType.toString,
           Map.empty[String, List[TypeaheadSuggestion]]
         )
-        acc + (token.tokenType.toString -> (existingSuggestions + (token.literal.getOrElse("") -> suggestions)))
+        acc + (tokenType.toString -> (existingSuggestions + (value -> suggestions)))
       }
     }
 
-  private def suggestMetaKey(token: Token): Future[List[TypeaheadSuggestion]] =
-    val suggestions = token.literal match {
-      case Some("") => typeaheadResolverEntries
-      case Some(str) =>
+  private def suggestMetaKey(str: String): Future[List[TypeaheadSuggestion]] =
+    val suggestions = str match {
+      case "" => typeaheadResolverEntries
+      case str =>
         typeaheadResolverEntries.filter(_.value.contains(str.toLowerCase()))
     }
 
     Future.successful(suggestions)
 
   private def suggestMetaValue(
-      token: Token
+      key: String,
+      str: String
   ): Future[List[TypeaheadSuggestion]] =
     typeaheadResolverMap
-      .get(token.literal.getOrElse(""))
-      .map(_._2(token))
+      .get(str)
+      .map(_._2(str))
       .getOrElse(Future.successful(List.empty))
 
-  private def suggestTags(token: Token) =
-    val tagStr = token.literal.getOrElse("")
-    client.getTags(tagStr)
+  private def suggestTags(str: String) =
+    client.getTags(str)
 
-  private def suggestSections(token: Token) =
-    val sectionStr = token.literal.getOrElse("")
-    client.getSections(sectionStr)
+  private def suggestSections(str: String) =
+    client.getSections(str)
 }

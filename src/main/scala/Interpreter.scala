@@ -8,25 +8,21 @@ import java.nio.charset.Charset
 import scala.collection.mutable.Map
 import scala.collection.mutable.ListBuffer
 
-class InterpreterError(message: String) extends Error(message)
+case class InterpreterResult(queryStr: String, typeaheadNodes: List[QueryMeta])
+
+case class InterpreterError(message: String) extends Error(message)
 
 object Interpreter {
   def evaluate(
       program: QueryList
-  ): String =
+  ): InterpreterResult =
     val (searchStrs, otherQueries) = program.exprs.partitionMap {
       case q: QueryBinary                    => Left(strFromBinary(q))
-      case QueryMeta(Some(key), Some(value)) => Right(s"$key=$value")
-      case QueryMeta(Some(key), None) =>
+      case QueryMeta(key, Some(value)) => Right(s"$key=$value")
+      case QueryMeta(key, None) =>
         throw new InterpreterError(
           s"The key '+$key' needs a value after it (e.g. +$key:tone/news)"
         )
-      case QueryMeta(None, Some(value)) =>
-        throw new InterpreterError(
-          s"The value ':$value' needs a key before it (e.g. +tag:$value)"
-        )
-      case QueryMeta(None, None) =>
-        throw new InterpreterError(s"I encountered an empty query")
     }
 
     val maybeSearchStr = searchStrs match {
@@ -42,7 +38,10 @@ object Interpreter {
       case strs => Some(strs.mkString(""))
     }
 
-    List(maybeSearchStr, maybeOtherQueries).flatten.mkString("&")
+    val queryStr = List(maybeSearchStr, maybeOtherQueries).flatten.mkString("&")
+    val typeaheadNodes = program.exprs.collect { case n: QueryMeta => n }
+
+    InterpreterResult(queryStr, typeaheadNodes)
 
   def strFromContent(queryContent: QueryContent): String =
     queryContent.content match {

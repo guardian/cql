@@ -28,7 +28,7 @@ case class QueryBinary(
 case class QueryContent(content: QueryStr | QueryBinary | QueryGroup)
 case class QueryGroup(content: QueryBinary)
 case class QueryStr(searchExpr: String) extends Query
-case class QueryMeta(key: Option[String], value: Option[String]) extends Query
+case class QueryMeta(key: String, value: Option[String]) extends Query
 
 trait QueryJson {
   implicit val typeaheadSuggestion: Encoder[TypeaheadSuggestion] =
@@ -56,7 +56,7 @@ trait QueryJson {
     queryMeta =>
       Json.obj(
         "type" -> "QueryMeta".asJson,
-        "key" -> queryMeta.key.map(_.asJson).orNull,
+        "key" -> queryMeta.key.asJson,
         "value" -> queryMeta.value.map(_.asJson).orNull
       )
   }

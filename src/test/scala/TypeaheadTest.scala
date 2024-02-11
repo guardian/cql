@@ -1,5 +1,7 @@
 package cql
 
+import cql.grammar.{QueryMeta, QueryList}
+
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
@@ -9,25 +11,25 @@ class TypeaheadTest extends BaseTest {
     val typeahead = new Typeahead(typeaheadQueryClient)
 
     it("should give no typeahead where none is warranted") {
-      typeahead.getSuggestions(List.empty).map { result =>
+      typeahead.getSuggestions(QueryList(List.empty)).map { result =>
         result shouldBe Map.empty
       }
 
       typeahead
         .getSuggestions(
-          List(Token(TokenType.STRING, "example", Some("example"), 0, 7))
+          QueryList(List(QueryMeta("example", None)))
         )
-        .map { result => result shouldBe Map.empty }
+        .map { result => result shouldBe Map("QUERY_META_KEY" -> Map("example" -> List())) }
     }
 
     it("should give typeahead suggestions for query meta keys") {
-      typeahead.getSuggestions(List.empty).map { result =>
+      typeahead.getSuggestions(QueryList(List.empty)).map { result =>
         result shouldBe Map.empty
       }
 
       typeahead
         .getSuggestions(
-          List(Token(TokenType.QUERY_META_KEY, "ta", Some("ta"), 0, 7))
+          QueryList(List(QueryMeta("ta", None)))
         )
         .map { result => result shouldBe Map(
           "QUERY_META_KEY" -> Map(

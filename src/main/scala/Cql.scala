@@ -16,19 +16,17 @@ class Cql:
   def run(program: String): Future[CqlResult] =
     val scanner = new Scanner(program)
     val tokens = scanner.scanTokens
-    val eventuallySuggestions = typeahead.getSuggestions(tokens)
     val parser = new Parser(tokens)
-    val result = parser.parse() match
+    parser.parse() match
       case Success(expr) =>
-        Try { Interpreter.evaluate(expr) } match {
-          case Success(capiQuery) =>
-            CqlResult(tokens, Some(expr), Some(capiQuery), Map.empty)
-          case Failure(e) =>
-            CqlResult(tokens, Some(expr), None, Map.empty, Some(e.getMessage))
-        }
-      case Failure(e) =>
-        CqlResult(tokens, None, None, Map.empty, Some(e.getMessage))
+        Try { Interpreter.evaluate(expr) } match
+          case Success(InterpreterResult(capiQuery, typeaheadNodes)) =>
+            typeahead.getSuggestions(expr).map { suggestions =>
+              CqlResult(tokens, Some(expr), Some(capiQuery), suggestions)
+            }
 
-    eventuallySuggestions.map { suggestions =>
-      result.copy(suggestions = suggestions)
-    }
+          case Failure(e) =>
+            Future.successful(CqlResult(tokens, Some(expr), None, Map.empty, Some(e.getMessage)))
+
+      case Failure(e) =>
+        Future.successful(CqlResult(tokens, None, None, Map.empty, Some(e.getMessage)))
