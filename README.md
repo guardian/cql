@@ -43,11 +43,12 @@ Todo:
 - [x] Add a language server for funsies
 - [x] Web component - environment and first pass at component infra
 - [x] Web component - syntax highlighting
-  - [] Ensure untokenised string components still display, we're getting 500s and invisible characters on trailing + chars
-- [x] Web component - typeahead
+  - [x] Ensure untokenised string components still display, we're getting 500s and invisible characters on trailing + chars
+- [ ] Web component - typeahead
+  - [x] First pass at implementation
+  - [ ] Handle typing on the trailing edge (off by one) 
 - [ ] Web component - async lookup
   - [ ] Implement async lookup in language server
-  - [ ] UI
 - [ ] Ensure content is displayed when server does not respond
 - [ ] Error handling for 4/5xx
 

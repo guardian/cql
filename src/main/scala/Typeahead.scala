@@ -11,8 +11,6 @@ case class TypeaheadSuggestion(label: String, value: String)
 class Typeahead(client: TypeaheadQueryCapiClient) {
   private val typeaheadTokenResolverMap = Map(
     TokenType.QUERY_META_KEY -> suggestMetaKey,
-    TokenType.PLUS -> suggestMetaKey,
-    TokenType.COLON -> suggestMetaValue,
     TokenType.QUERY_META_VALUE -> suggestMetaValue
   )
 
@@ -30,9 +28,12 @@ class Typeahead(client: TypeaheadQueryCapiClient) {
   ): Future[Map[String, Map[String, List[cql.TypeaheadSuggestion]]]] =
     val suggestionFtrs = program.exprs.collect {
       case q: QueryMeta => q
-    }.map {
-      case QueryMeta(key, None) => suggestMetaKey(key).map((TokenType.QUERY_META_KEY, key, _))
-      case QueryMeta(key, Some(value)) => suggestMetaValue(key, value).map((TokenType.QUERY_META_VALUE, value, _))
+    }.flatMap {
+      case QueryMeta(key, None) => List(Future.successful((TokenType.QUERY_META_KEY, key, suggestMetaKey(key))))
+      case QueryMeta(key, Some(value)) => List(
+        Future.successful((TokenType.QUERY_META_KEY, key, suggestMetaKey(key))),
+        suggestMetaValue(key, value).map((TokenType.QUERY_META_VALUE, value, _)),
+      )
     }
 
     Future.sequence(suggestionFtrs).map { suggestionsForToken =>
@@ -47,14 +48,12 @@ class Typeahead(client: TypeaheadQueryCapiClient) {
       }
     }
 
-  private def suggestMetaKey(str: String): Future[List[TypeaheadSuggestion]] =
-    val suggestions = str match {
+  private def suggestMetaKey(str: String): List[TypeaheadSuggestion] =
+    str match {
       case "" => typeaheadResolverEntries
       case str =>
         typeaheadResolverEntries.filter(_.value.contains(str.toLowerCase()))
     }
-
-    Future.successful(suggestions)
 
   private def suggestMetaValue(
       key: String,
