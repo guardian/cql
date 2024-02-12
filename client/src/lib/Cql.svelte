@@ -3,9 +3,15 @@
 <script lang="ts">
 	import Token from './Token.svelte';
 	import { onMount, afterUpdate } from 'svelte';
-  import { fade } from 'svelte/transition';
+	import { fade } from 'svelte/transition';
 
 	const TYPEAHEAD_TOKENS = ['QUERY_META_KEY', 'QUERY_META_VALUE', 'COLON', 'PLUS'];
+
+	// todo: mega hack to deal with flawed token-based suggestion lookup. See notes on moving typeahead ranges to server.
+	const TYPEAHEAD_TOKEN_MAP = {
+		PLUS: 'QUERY_META_KEY',
+		COLON: 'QUERY_META_VALUE'
+	};
 
 	const exampleQuery = 'an (example AND query) +tag:tags-are-magic';
 
@@ -22,7 +28,7 @@
 	let typeaheadOffsetPx = 0;
 	let inputElement: HTMLInputElement;
 	let cursorMarker: HTMLSpanElement;
-  let inputContainerElement: HTMLDivElement;
+	let inputContainerElement: HTMLDivElement;
 	let menuIndex = 0;
 	let menuItems = [];
 
@@ -77,7 +83,7 @@
 			inputElement.setSelectionRange(newCaretPosition, newCaretPosition);
 		});
 
-    typeaheadOffsetChars = undefined;
+		typeaheadOffsetChars = undefined;
 
 		fetchLanguageServer(cqlQuery);
 	};
@@ -87,10 +93,10 @@
 	};
 
 	const unwatchSelectionChange = (e) => {
-    if (inputContainerElement.contains(e.relatedTarget)) {
-      // We're within the input element – do not lose focus.
-      return;
-    }
+		if (inputContainerElement.contains(e.relatedTarget)) {
+			// We're within the input element – do not lose focus.
+			return;
+		}
 		document.removeEventListener('selectionchange', handleSelection);
 		typeaheadOffsetChars = undefined;
 	};
@@ -100,17 +106,20 @@
 	};
 
 	const applyTypeahead = (cursorOffset: number) => {
-    const typeaheadCharPos = cursorOffset - 1;
+		const typeaheadCharPos = cursorOffset - 1;
 		const firstValidTypeaheadToken = typeaheadTokens.find(
 			(token) => typeaheadCharPos >= token.start && typeaheadCharPos <= token.end
 		);
 		if (firstValidTypeaheadToken) {
 			typeaheadOffsetChars = firstValidTypeaheadToken.start;
 
-      // Some tokens won't have a literal, e.g. '+', ':'
-      const literal = firstValidTypeaheadToken.literal || "";
-      const options = ast.suggestions[firstValidTypeaheadToken.tokenType]?.[literal]
-      menuItems = options || [];
+			// Some tokens won't have a literal, e.g. '+', ':'
+			const literal = firstValidTypeaheadToken.literal || '';
+			const tokenType =
+				TYPEAHEAD_TOKEN_MAP[firstValidTypeaheadToken.tokenType] ||
+				firstValidTypeaheadToken.tokenType;
+			const options = ast.suggestions[tokenType]?.[literal];
+			menuItems = options || [];
 		} else {
 			typeaheadOffsetChars = undefined;
 		}
@@ -174,12 +183,14 @@
 	{#if typeaheadOffsetChars !== undefined}<div
 			class="Cql__typeahead"
 			style="left: {typeaheadOffsetPx - 7}px"
-      transition:fade={{ duration: 100 }}
+			transition:fade={{ duration: 100 }}
 		>
 			<ul>
 				{#each menuItems as { label }, index}
 					<li>
-						<button class:--selected={menuIndex === index} on:click={() => replaceToken(index)}>{label}</button>
+						<button class:--selected={menuIndex === index} on:click={() => replaceToken(index)}
+							>{label}</button
+						>
 					</li>
 				{/each}
 			</ul>
@@ -257,7 +268,7 @@
 	}
 
 	.Cql__typeahead ul,
-  .Cql__typeahead li {
+	.Cql__typeahead li {
 		list-style: none;
 		padding: initial;
 		margin: initial;
@@ -268,15 +279,15 @@
 		cursor: pointer;
 	}
 
-  .Cql__typeahead li button {
-    width: 100%;
-    padding: 5px;
-    border: none;
-    outline: none;
-    background-color: white;
-    text-align: left;
-    cursor: pointer;
-  }
+	.Cql__typeahead li button {
+		width: 100%;
+		padding: 5px;
+		border: none;
+		outline: none;
+		background-color: white;
+		text-align: left;
+		cursor: pointer;
+	}
 
 	.Cql__typeahead li button.--selected {
 		background-color: #ddd;

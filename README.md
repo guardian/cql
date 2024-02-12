@@ -134,3 +134,5 @@ We can have it know less:
 Why would we like it to know less? B/c less coupling with language means
  - we can iterate on server and update n) clients across estate simultaneously
  - we can potentially use component with other language servers, languages 
+
+Future refactor. Connect a typeahead client first.
