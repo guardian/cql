@@ -5,7 +5,7 @@
 	import { onMount, afterUpdate } from 'svelte';
   import { fade } from 'svelte/transition';
 
-	const TYPEAHEAD_TOKENS = ['QUERY_META_KEY', 'QUERY_META_VALUE'];
+	const TYPEAHEAD_TOKENS = ['QUERY_META_KEY', 'QUERY_META_VALUE', 'COLON', 'PLUS'];
 
 	const exampleQuery = 'an (example AND query) +tag:tags-are-magic';
 
@@ -100,12 +100,16 @@
 	};
 
 	const applyTypeahead = (cursorOffset: number) => {
+    const typeaheadCharPos = cursorOffset - 1;
 		const firstValidTypeaheadToken = typeaheadTokens.find(
-			(token) => cursorOffset >= token.start && cursorOffset <= token.end
+			(token) => typeaheadCharPos >= token.start && typeaheadCharPos <= token.end
 		);
 		if (firstValidTypeaheadToken) {
 			typeaheadOffsetChars = firstValidTypeaheadToken.start;
-      const options = ast.suggestions[firstValidTypeaheadToken.tokenType]?.[firstValidTypeaheadToken.literal]
+
+      // Some tokens won't have a literal, e.g. '+', ':'
+      const literal = firstValidTypeaheadToken.literal || "";
+      const options = ast.suggestions[firstValidTypeaheadToken.tokenType]?.[literal]
       menuItems = options || [];
 		} else {
 			typeaheadOffsetChars = undefined;
@@ -248,7 +252,7 @@
 	.Cql__typeahead {
 		position: absolute;
 		border: 2px solid grey;
-		width: 100px;
+		width: 200px;
 		background-color: white;
 	}
 

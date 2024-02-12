@@ -60,7 +60,32 @@ class TypeaheadTest extends BaseTest {
             ),
             "QUERY_META_VALUE" -> Map(
               "tags-are-magi" -> List(
-                TypeaheadSuggestion("tags-are-magic", "Tags are magic")
+                TypeaheadSuggestion("Tags are magic", "tags-are-magic")
+              )
+            )
+          )
+        }
+    }
+
+    it(
+      "should give value suggestions for an empty string"
+    ) {
+      typeahead.getSuggestions(QueryList(List.empty)).map { result =>
+        result shouldBe Map.empty
+      }
+
+      typeahead
+        .getSuggestions(
+          QueryList(List(QueryMeta("tag", Some(""))))
+        )
+        .map { result =>
+          result shouldBe Map(
+            "QUERY_META_KEY" -> Map(
+              "tag" -> List(TypeaheadSuggestion("Tag", "tag"))
+            ),
+            "QUERY_META_VALUE" -> Map(
+              "" -> List(
+                TypeaheadSuggestion("Tags are magic", "tags-are-magic")
               )
             )
           )

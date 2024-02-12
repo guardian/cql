@@ -76,15 +76,17 @@ class Parser(tokens: List[Token]):
     }.get
 
     val value = Try {
-      Some(consume(TokenType.QUERY_META_VALUE, "Expected a search key"))
+      Some(consume(TokenType.QUERY_META_VALUE, "Expected a search key").literal.getOrElse(""))
     }.recoverWith { _ =>
-      Try { Some(consume(TokenType.COLON, "Expected at least a :")) }
-        .recoverWith { _ =>
-          Success(None)
-        }
+      Try {
+        consume(TokenType.COLON, "Expected at least a :")
+        Some("")
+      }.recover { _ =>
+        None
+      }
     }.get
 
-    QueryMeta(key.literal.getOrElse(""), value.flatMap(_.literal))
+    QueryMeta(key.literal.getOrElse(""), value)
 
   private def matchTokens(tokens: TokenType*) =
     tokens.exists(token =>
