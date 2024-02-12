@@ -123,4 +123,14 @@ Checking out Grid repo – QuerySyntax has a grammar for search queries. Actual 
 
 NB: query_meta will only be parseable at the top level. We could use `-` rather than `+` for negation. (`NOT` is used in the binary syntax for negation. Not added yet.)
 
-Re: Typeahead – this requires a parse phase, no? B/c we do not know whether we are 
+Re: Typeahead – this requires a parse phase, no? B/c we must associate key value pairs for value lookups.
+
+Currently the client knows a lot about tokens in order to facilitate
+ - syntax highlighting
+ - typeahead
+We can have it know less:
+ - explicit ranges for syntax highlighting
+ - explicit ranges for typeahead
+Why would we like it to know less? B/c less coupling with language means
+ - we can iterate on server and update n) clients across estate simultaneously
+ - we can potentially use component with other language servers, languages 
