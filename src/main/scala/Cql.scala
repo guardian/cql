@@ -5,12 +5,15 @@ import scala.util.{Failure, Success, Try}
 import cql.grammar.{CqlResult, QueryList}
 import io.circe.generic.semiauto.*
 import io.circe.Encoder
+
 import scala.concurrent.Future
+import com.gu.contentapi.client.GuardianContentClient
 
 class Cql:
   implicit val ec: scala.concurrent.ExecutionContext =
     scala.concurrent.ExecutionContext.global
-  val typeaheadClient = new TypeaheadQueryCapiClient()
+  val guardianContentClient = new GuardianContentClient("test")
+  val typeaheadClient = new TypeaheadQueryCapiClient(guardianContentClient)
   val typeahead = new Typeahead(typeaheadClient)
 
   def run(program: String): Future[CqlResult] =

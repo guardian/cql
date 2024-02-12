@@ -1,14 +1,15 @@
 package cql
 
 import cql.TokenType
+
 import scala.concurrent.Future
-import concurrent.ExecutionContext.Implicits.global // Todo: sticking plaster
+import concurrent.ExecutionContext.Implicits.global
 import cql.grammar.QueryMeta
 import cql.grammar.QueryList
 
 case class TypeaheadSuggestion(label: String, value: String)
 
-class Typeahead(client: TypeaheadQueryCapiClient) {
+class Typeahead(client: TypeaheadQueryClient) {
   private val typeaheadTokenResolverMap = Map(
     TokenType.QUERY_META_KEY -> suggestMetaKey,
     TokenType.QUERY_META_VALUE -> suggestMetaValue

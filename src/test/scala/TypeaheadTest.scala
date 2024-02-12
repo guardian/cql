@@ -1,13 +1,14 @@
 package cql
 
-import cql.grammar.{QueryMeta, QueryList}
+import cql.grammar.{QueryList, QueryMeta}
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
+
 class TypeaheadTest extends BaseTest {
   describe("typeahead") {
-    val typeaheadQueryClient = new TypeaheadQueryCapiClient()
+    val typeaheadQueryClient = new TypeaheadQueryClientTest()
     val typeahead = new Typeahead(typeaheadQueryClient)
 
     it("should give no typeahead where none is warranted") {

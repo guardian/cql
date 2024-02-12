@@ -46,9 +46,10 @@ Todo:
   - [x] Ensure untokenised string components still display, we're getting 500s and invisible characters on trailing + chars
 - [ ] Web component - typeahead
   - [x] First pass at implementation
-  - [ ] Handle typing on the trailing edge (off by one) 
+  - [x] Handle typing on the trailing edge (off by one) 
 - [ ] Web component - async lookup
-  - [ ] Implement async lookup in language server
+  - [x] Implement async lookup in language server
+  - [ ] Add loading state
 - [ ] Ensure content is displayed when server does not respond
 - [ ] Error handling for 4/5xx
 
