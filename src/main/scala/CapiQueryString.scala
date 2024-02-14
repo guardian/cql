@@ -16,7 +16,7 @@ object CapiQueryString {
   ): String =
     val (searchStrs, otherQueries) = program.exprs.partitionMap {
       case q: QueryBinary                    => Left(strFromBinary(q))
-      case QueryMeta(key, Some(value)) => Right(s"$key=$value")
+      case QueryMeta(key, Some(value)) => Right(s"${key.literal.getOrElse("")}=${value.literal.getOrElse("")}")
       case QueryMeta(key, None) =>
         throw new CapiQueryStringError(
           s"The key '+$key' needs a value after it (e.g. +$key:tone/news)"

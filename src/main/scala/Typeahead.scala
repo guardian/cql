@@ -71,15 +71,16 @@ class Typeahead(client: TypeaheadQueryClient) {
     Future.sequence(eventuallySuggestions)
 
   private def suggestMetaKey(str: String): List[TypeaheadSuggestion] =
-    str match {
+    val suggestions = str match {
       case "" => typeaheadResolverEntries
       case str =>
         typeaheadResolverEntries
           .filter(_.value.contains(str.toLowerCase()))
-          .map { suggestion =>
-            // Add a trailing ':' to move us into the 'value' typeahead
-            suggestion.copy(value = s"${suggestion.value}:")
-          }
+    }
+
+    suggestions.map { suggestion =>
+      // Add a trailing ':' to move us into the 'value' typeahead
+      suggestion.copy(value = s"${suggestion.value}:")
     }
 
   private def suggestMetaValue(
