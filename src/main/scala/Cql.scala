@@ -31,4 +31,4 @@ class Cql:
             CqlResult(tokens, Some(expr), None, suggestions, Some(e.getMessage))
         }
       case Failure(e) =>
-        Future.successful(CqlResult(tokens, None, None, Map.empty, Some(e.getMessage)))
+        Future.successful(CqlResult(tokens, None, None, List.empty, Some(e.getMessage)))

@@ -107,19 +107,15 @@
 
 	const applyTypeahead = (cursorOffset: number) => {
 		const typeaheadCharPos = cursorOffset - 1;
-		const firstValidTypeaheadToken = typeaheadTokens.find(
-			(token) => typeaheadCharPos >= token.start && typeaheadCharPos <= token.end
+		const firstValidSuggestions = ast.suggestions.find(
+			(suggestion) => typeaheadCharPos >= suggestion.from && typeaheadCharPos <= suggestion.to
 		);
-		if (firstValidTypeaheadToken) {
-			typeaheadOffsetChars = firstValidTypeaheadToken.start;
 
-			// Some tokens won't have a literal, e.g. '+', ':'
-			const literal = firstValidTypeaheadToken.literal || '';
-			const tokenType =
-				TYPEAHEAD_TOKEN_MAP[firstValidTypeaheadToken.tokenType] ||
-				firstValidTypeaheadToken.tokenType;
-			const options = ast.suggestions[tokenType]?.[literal];
-			menuItems = options || [];
+    console.log(!!firstValidSuggestions)
+		if (firstValidSuggestions) {
+			typeaheadOffsetChars = firstValidSuggestions.from;
+			menuItems = firstValidSuggestions.suggestions;
+      console.log({menuItems})
 		} else {
 			typeaheadOffsetChars = undefined;
 		}

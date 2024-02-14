@@ -76,17 +76,14 @@ class Parser(tokens: List[Token]):
     }.get
 
     val value = Try {
-      Some(consume(TokenType.QUERY_META_VALUE, "Expected a search key").literal.getOrElse(""))
+      consume(TokenType.QUERY_META_VALUE, "Expected a search key")
     }.recoverWith { _ =>
       Try {
         consume(TokenType.COLON, "Expected at least a :")
-        Some("")
-      }.recover { _ =>
-        None
       }
-    }.get
+    }.toOption
 
-    QueryMeta(key.literal.getOrElse(""), value)
+    QueryMeta(key, value)
 
   private def matchTokens(tokens: TokenType*) =
     tokens.exists(token =>
