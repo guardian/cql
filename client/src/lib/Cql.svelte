@@ -5,14 +5,6 @@
 	import { onMount, afterUpdate } from 'svelte';
 	import { fade } from 'svelte/transition';
 
-	const TYPEAHEAD_TOKENS = ['QUERY_META_KEY', 'QUERY_META_VALUE', 'COLON', 'PLUS'];
-
-	// todo: mega hack to deal with flawed token-based suggestion lookup. See notes on moving typeahead ranges to server.
-	const TYPEAHEAD_TOKEN_MAP = {
-		PLUS: 'QUERY_META_KEY',
-		COLON: 'QUERY_META_VALUE'
-	};
-
 	const exampleQuery = 'an (example AND query) +tag:tags-are-magic';
 
 	onMount(async () => {
@@ -23,21 +15,19 @@
 	let cqlQuery = exampleQuery;
 	let ast = '';
 	let tokenisedChars = [];
-	let typeaheadTokens = [];
-	let typeaheadOffsetChars: undefined | number = undefined;
+	let currentSuggestions = undefined;
 	let typeaheadOffsetPx = 0;
 	let inputElement: HTMLInputElement;
 	let cursorMarker: HTMLSpanElement;
 	let inputContainerElement: HTMLDivElement;
 	let menuIndex = 0;
-	let menuItems = [];
 
 	const handleInput = (e: InputEvent) => {
 		fetchLanguageServer(e.target.value);
 	};
 
 	const handleKeydown = (e) => {
-		if (typeaheadOffsetChars === undefined) {
+		if (currentSuggestions === undefined) {
 			// Only active when menu is active
 			return;
 		}
@@ -49,13 +39,13 @@
 				if (menuIndex > 0) menuIndex--;
 				break;
 			case 'ArrowDown':
-				if (menuIndex < menuItems.length - 1) menuIndex++;
+				if (menuIndex < currentSuggestions.suggestions.length - 1) menuIndex++;
 				break;
 			case 'Enter':
 				replaceToken(menuIndex);
 				break;
 			case 'Escape':
-				typeaheadOffsetChars = undefined;
+        currentSuggestions = undefined;
 				break;
 			default:
 				handled = false;
@@ -67,23 +57,28 @@
 	};
 
 	const replaceToken = (index: number) => {
-		const token = typeaheadTokens.find((token) => token.start === typeaheadOffsetChars);
+		const token = ast.tokens.find((token) => token.start === currentSuggestions.from);
 		if (!token) {
-			console.log(`No token found at ${typeaheadOffsetChars}`);
+			console.log(`No token found at ${currentSuggestions.from}`);
 			return;
 		}
 		// Assumption here: the +1s bake in the idea of a single + or : char leading the token.
-		const strToInsert = menuItems[index].value;
-		cqlQuery = `${cqlQuery.slice(0, token.start + 1)}${menuItems[index].value}${cqlQuery.slice(token.end + 1)}`;
+    const currentSuggestion = currentSuggestions.suggestions[index];
+		const strToInsert = currentSuggestion.value;
+		const beforeStr = cqlQuery.slice(0, token.start + 1);
+		const afterStr = cqlQuery.slice(token.end + 1);
+		const applySuffix = /^\s*$/.test(afterStr);
+    console.log({strToInsert, beforeStr, afterStr, applySuffix, currentSuggestions})
+		cqlQuery = `${beforeStr}${currentSuggestion.value}${applySuffix ? currentSuggestions.suffix : afterStr}`;
 
-		const newCaretPosition = token.start + 1 + strToInsert.length;
+		const newCaretPosition = token.start + 1 + strToInsert.length + (applySuffix ? 1 : 0);
 
 		// Is there a better way of waiting for Svelte to update the DOM?
 		requestAnimationFrame(() => {
 			inputElement.setSelectionRange(newCaretPosition, newCaretPosition);
 		});
 
-		typeaheadOffsetChars = undefined;
+		currentSuggestions = undefined;
 
 		fetchLanguageServer(cqlQuery);
 	};
@@ -98,7 +93,7 @@
 			return;
 		}
 		document.removeEventListener('selectionchange', handleSelection);
-		typeaheadOffsetChars = undefined;
+		currentSuggestions = undefined;
 	};
 
 	const handleSelection = (e: InputEvent) => {
@@ -111,13 +106,10 @@
 			(suggestion) => typeaheadCharPos >= suggestion.from && typeaheadCharPos <= suggestion.to
 		);
 
-    console.log(!!firstValidSuggestions)
 		if (firstValidSuggestions) {
-			typeaheadOffsetChars = firstValidSuggestions.from;
-			menuItems = firstValidSuggestions.suggestions;
-      console.log({menuItems})
+			currentSuggestions = firstValidSuggestions;
 		} else {
-			typeaheadOffsetChars = undefined;
+			currentSuggestions = undefined;
 		}
 	};
 
@@ -132,7 +124,6 @@
 		const request = await fetch(`http://localhost:5050/cql?${urlParams}`);
 
 		ast = await request.json();
-		typeaheadTokens = ast.tokens.filter((token) => TYPEAHEAD_TOKENS.includes(token.tokenType));
 		applyTokens(cqlQuery, ast.tokens);
 		applyTypeahead(inputElement.selectionStart);
 	};
@@ -169,20 +160,20 @@
 	<div class="Cql__overlay-container">
 		<div class="Cql__overlay" contenteditable="true" style="left: -calc({overlayOffset}px - 1em)">
 			{#each tokenisedChars || [] as { char, token }, index}
-				<Token str={char} {token} />{#if index === typeaheadOffsetChars - 1}<span
+				<Token str={char} {token} />{#if index === currentSuggestions?.from - 1}<span
 						class="Cql__cursor-marker"
 						bind:this={cursorMarker}
 					></span>{/if}
 			{/each}
 		</div>
 	</div>
-	{#if typeaheadOffsetChars !== undefined}<div
+	{#if currentSuggestions !== undefined}<div
 			class="Cql__typeahead"
 			style="left: {typeaheadOffsetPx - 7}px"
 			transition:fade={{ duration: 100 }}
 		>
 			<ul>
-				{#each menuItems as { label }, index}
+				{#each currentSuggestions.suggestions as { label }, index}
 					<li>
 						<button class:--selected={menuIndex === index} on:click={() => replaceToken(index)}
 							>{label}</button

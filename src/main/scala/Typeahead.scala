@@ -8,6 +8,10 @@ import cql.grammar.QueryList
 case class TypeaheadSuggestions(
     from: Int,
     to: Int,
+    // The suffix to apply if this suggestion is accepted at the trailing edge of the query.
+    // E.g. when we have typed '+ta' accept the key suggestion 'tag', we'll want to apply '+tag:'
+    // to trigger typeahead for the value.
+    suffix: String = "",
     suggestions: List[TypeaheadSuggestion]
 )
 case class TypeaheadSuggestion(label: String, value: String)
@@ -41,6 +45,7 @@ class Typeahead(client: TypeaheadQueryClient) {
               TypeaheadSuggestions(
                 keyToken.start,
                 keyToken.end,
+                ":",
                 suggestMetaKey(keyToken.literal.getOrElse(""))
               )
             )
@@ -50,6 +55,7 @@ class Typeahead(client: TypeaheadQueryClient) {
             TypeaheadSuggestions(
               keyToken.start,
               keyToken.end,
+              ":",
               suggestMetaKey(keyToken.literal.getOrElse(""))
             )
           )
@@ -62,6 +68,7 @@ class Typeahead(client: TypeaheadQueryClient) {
                 TypeaheadSuggestions(
                   valueToken.start,
                   valueToken.end,
+                  " ",
                   suggestions
                 )
               }
@@ -71,17 +78,11 @@ class Typeahead(client: TypeaheadQueryClient) {
     Future.sequence(eventuallySuggestions)
 
   private def suggestMetaKey(str: String): List[TypeaheadSuggestion] =
-    val suggestions = str match {
+    str match
       case "" => typeaheadResolverEntries
       case str =>
         typeaheadResolverEntries
           .filter(_.value.contains(str.toLowerCase()))
-    }
-
-    suggestions.map { suggestion =>
-      // Add a trailing ':' to move us into the 'value' typeahead
-      suggestion.copy(value = s"${suggestion.value}:")
-    }
 
   private def suggestMetaValue(
       key: String,
@@ -91,10 +92,6 @@ class Typeahead(client: TypeaheadQueryClient) {
       .get(key)
       .map(_._2(str))
       .getOrElse(Future.successful(List.empty))
-      .map { suggestions =>
-        // Add a trailing space to move us into the next query list
-        suggestions.map { suggestion => suggestion.copy(value = s"${suggestion.value} ") }
-      }
 
   private def suggestTags(str: String) =
     client.getTags(str)
