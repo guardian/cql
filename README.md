@@ -44,12 +44,13 @@ Todo:
 - [x] Web component - environment and first pass at component infra
 - [x] Web component - syntax highlighting
   - [x] Ensure untokenised string components still display, we're getting 500s and invisible characters on trailing + chars
-- [ ] Web component - typeahead
+- [x] Web component - typeahead
   - [x] First pass at implementation
   - [x] Handle typing on the trailing edge (off by one) 
 - [ ] Web component - async lookup
   - [x] Implement async lookup in language server
   - [ ] Add loading state
+- [ ] Fix tests
 - [ ] Ensure content is displayed when server does not respond
 - [ ] Error handling for 4/5xx
 
@@ -134,6 +135,6 @@ We can have it know less:
  - explicit ranges for typeahead
 Why would we like it to know less? B/c less coupling with language means
  - we can iterate on server and update n) clients across estate simultaneously
- - we can potentially use component with other language servers, languages 
+ - we can potentially use component with other language servers, languages
 
 Future refactor. Connect a typeahead client first.
