@@ -45,7 +45,7 @@
 				replaceToken(menuIndex);
 				break;
 			case 'Escape':
-        currentSuggestions = undefined;
+				currentSuggestions = undefined;
 				break;
 			default:
 				handled = false;
@@ -63,15 +63,16 @@
 			return;
 		}
 		// Assumption here: the +1s bake in the idea of a single + or : char leading the token.
-    const currentSuggestion = currentSuggestions.suggestions[index];
+		const currentSuggestion = currentSuggestions.suggestions[index];
 		const strToInsert = currentSuggestion.value;
 		const beforeStr = cqlQuery.slice(0, token.start + 1);
 		const afterStr = cqlQuery.slice(token.end + 1);
 		const applySuffix = /^\s*$/.test(afterStr);
-    console.log({strToInsert, beforeStr, afterStr, applySuffix, currentSuggestions})
+		console.log({ strToInsert, beforeStr, afterStr, applySuffix, currentSuggestions });
 		cqlQuery = `${beforeStr}${currentSuggestion.value}${applySuffix ? currentSuggestions.suffix : afterStr}`;
 
-		const newCaretPosition = token.start + 1 + strToInsert.length + (applySuffix ? 1 : 0);
+    // +1 for + or :, +1 to get us past the end of the current position
+		const newCaretPosition = token.start + strToInsert.length + 2;
 
 		// Is there a better way of waiting for Svelte to update the DOM?
 		requestAnimationFrame(() => {
@@ -101,6 +102,10 @@
 	};
 
 	const applyTypeahead = (cursorOffset: number) => {
+    if (!ast) {
+      return;
+    }
+
 		const typeaheadCharPos = cursorOffset - 1;
 		const firstValidSuggestions = ast.suggestions.find(
 			(suggestion) => typeaheadCharPos >= suggestion.from && typeaheadCharPos <= suggestion.to
@@ -110,6 +115,11 @@
 			currentSuggestions = firstValidSuggestions;
 		} else {
 			currentSuggestions = undefined;
+		}
+
+		// Reset the menu if the previous selection falls off the edge of the new suggestion list.
+		if (currentSuggestions && menuIndex > currentSuggestions.suggestions.length - 1) {
+			menuIndex = 0;
 		}
 	};
 
