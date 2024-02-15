@@ -50,6 +50,7 @@ Todo:
 - [ ] Web component - async lookup
   - [x] Implement async lookup in language server
   - [ ] Add loading state
+- [ ] Bug: open parentheses crashes the server 🙃
 - [ ] Fix tests
 - [ ] Ensure content is displayed when server does not respond
 - [ ] Error handling for 4/5xx

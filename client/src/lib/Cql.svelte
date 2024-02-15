@@ -199,7 +199,7 @@
 
 <style>
 	:root {
-		--input-width: 400px;
+		--input-width: 600px;
 	}
 
 	.Cql__input-container {
