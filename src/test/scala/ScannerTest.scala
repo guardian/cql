@@ -1,17 +1,6 @@
 package cql
 
 class ScannerTest extends BaseTest {
-  def eofToken(start: Int) = Token(TokenType.EOF, "", None, start, start)
-  def unquotedStringToken(str: String, start: Int = 0) =
-    Token(TokenType.STRING, str, Some(str), start, start + str.length - 1)
-  def quotedStringToken(str: String, start: Int = 0) = Token(
-    TokenType.STRING,
-    s"\"$str\"",
-    Some(str),
-    start,
-    start + str.length + 1
-  )
-
   describe("unquoted strings") {
     it("should parse plain strings") {
       val scanner = new Scanner("""sausages""")

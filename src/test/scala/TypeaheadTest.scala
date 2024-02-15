@@ -5,8 +5,13 @@ import cql.grammar.{QueryList, QueryMeta}
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
-
 class TypeaheadTest extends BaseTest {
+  def queryMeta(key: String, value: Option[String], start: Int = 0): QueryMeta =
+    QueryMeta(
+      queryMetaKeyToken(key, start),
+      value.map { str => queryMetaValueToken(str, start + key.length + 2) }
+    )
+
   describe("typeahead") {
     val typeaheadQueryClient = new TypeaheadQueryClientTest()
     val typeahead = new Typeahead(typeaheadQueryClient)
@@ -18,10 +23,17 @@ class TypeaheadTest extends BaseTest {
 
       typeahead
         .getSuggestions(
-          QueryList(List(QueryMeta("example", None)))
+          QueryList(List(queryMeta("example", None)))
         )
         .map { result =>
-          result shouldBe Map("QUERY_META_KEY" -> Map("example" -> List()))
+          result shouldBe List(
+            TypeaheadSuggestions(
+              0,
+              7,
+              ":",
+              List.empty
+            )
+          )
         }
     }
 
@@ -32,12 +44,17 @@ class TypeaheadTest extends BaseTest {
 
       typeahead
         .getSuggestions(
-          QueryList(List(QueryMeta("ta", None)))
+          QueryList(List(queryMeta("ta", None)))
         )
         .map { result =>
-          result shouldBe Map(
-            "QUERY_META_KEY" -> Map(
-              "ta" -> List(TypeaheadSuggestion("Tag", "tag"))
+          result shouldBe List(
+            TypeaheadSuggestions(
+              0,
+              2,
+              ":",
+              List(
+                TypeaheadSuggestion("Tag", "tag")
+              )
             )
           )
         }
@@ -52,15 +69,23 @@ class TypeaheadTest extends BaseTest {
 
       typeahead
         .getSuggestions(
-          QueryList(List(QueryMeta("tag", Some("tags-are-magi"))))
+          QueryList(List(queryMeta("tag", Some("tags-are-magi"))))
         )
         .map { result =>
-          result shouldBe Map(
-            "QUERY_META_KEY" -> Map(
-              "tag" -> List(TypeaheadSuggestion("Tag", "tag"))
+          result shouldBe List(
+            TypeaheadSuggestions(
+              0,
+              3,
+              ":",
+              List(
+                TypeaheadSuggestion("Tag", "tag")
+              )
             ),
-            "QUERY_META_VALUE" -> Map(
-              "tags-are-magi" -> List(
+            TypeaheadSuggestions(
+              5,
+              18,
+              " ",
+              List(
                 TypeaheadSuggestion("Tags are magic", "tags-are-magic")
               )
             )
@@ -77,15 +102,23 @@ class TypeaheadTest extends BaseTest {
 
       typeahead
         .getSuggestions(
-          QueryList(List(QueryMeta("tag", Some(""))))
+          QueryList(List(queryMeta("tag", Some(""))))
         )
         .map { result =>
-          result shouldBe Map(
-            "QUERY_META_KEY" -> Map(
-              "tag" -> List(TypeaheadSuggestion("Tag", "tag"))
+          result shouldBe List(
+            TypeaheadSuggestions(
+              0,
+              3,
+              ":",
+              List(
+                TypeaheadSuggestion("Tag", "tag")
+              )
             ),
-            "QUERY_META_VALUE" -> Map(
-              "" -> List(
+            TypeaheadSuggestions(
+              5,
+              5,
+              " ",
+              List(
                 TypeaheadSuggestion("Tags are magic", "tags-are-magic")
               )
             )

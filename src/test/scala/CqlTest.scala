@@ -2,7 +2,7 @@ package cql
 
 import concurrent.ExecutionContext.Implicits.global // Todo: sticking plaster
 
-class ProgramTest extends BaseTest {
+class CqlTest extends BaseTest {
   describe("a program") {
     val cql = new Cql()
     it("should produce a query string") {
