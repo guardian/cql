@@ -52,9 +52,9 @@ Todo:
   - [ ] Add loading state
 - [x] Bug: open parentheses crashes the server 🙃
 - [x] Fix tests
+- [ ] Fix input scrolling
 - [ ] Add typeahead for binaries
 - [ ] Add '@' syntax for content return format (e.g. show-fields)
-- [ ] Fix input scrolling
 - [ ] Fill out additional fields:
   - [ ] Dates!
   - [ ] Other, less fancy fields
