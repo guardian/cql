@@ -50,8 +50,14 @@ Todo:
 - [ ] Web component - async lookup
   - [x] Implement async lookup in language server
   - [ ] Add loading state
-- [ ] Bug: open parentheses crashes the server 🙃
-- [ ] Fix tests
+- [x] Bug: open parentheses crashes the server 🙃
+- [x] Fix tests
+- [ ] Add typeahead for binaries
+- [ ] Add '@' syntax for content return format (e.g. show-fields)
+- [ ] Fix input scrolling
+- [ ] Fill out additional fields:
+  - [ ] Dates!
+  - [ ] Other, less fancy fields
 - [ ] Ensure content is displayed when server does not respond
 - [ ] Error handling for 4/5xx
 

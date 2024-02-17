@@ -44,9 +44,17 @@ class Parser(tokens: List[Token]):
     val left = queryContent
     peek().tokenType match {
       case TokenType.AND =>
-        QueryBinary(left, Some((consume(TokenType.AND), queryContent)))
+        val andToken = consume(TokenType.AND)
+        if (isAtEnd) {
+          throw new ParseError("There must be a query following 'AND'")
+        }
+        QueryBinary(left, Some((andToken), queryContent))
       case TokenType.OR =>
-        QueryBinary(left, Some((consume(TokenType.OR), queryContent)))
+        val orToken = consume(TokenType.OR)
+        if (isAtEnd) {
+          throw new ParseError("There must be a query following 'OR'")
+        }
+        QueryBinary(left, Some((orToken, queryContent)))
       case _ => QueryBinary(left)
     }
 
@@ -60,8 +68,14 @@ class Parser(tokens: List[Token]):
 
   private def queryGroup: QueryGroup =
     consume(TokenType.LEFT_BRACKET, "Groups should start with a left bracket")
+
+    if (isAtEnd) {
+      throw Parser.error(peek(), "Groups must contain some content")
+    }
+
     val content = queryBinary
     consume(TokenType.RIGHT_BRACKET, "Groups must end with a right bracket")
+
     QueryGroup(content)
 
   private def queryStr: QueryStr =
@@ -110,13 +124,3 @@ class Parser(tokens: List[Token]):
   }
 
   private def previous() = tokens(current - 1)
-
-  private def synchronize(): Unit =
-    advance()
-    while (!isAtEnd) {
-      if (previous().tokenType == COLON)
-        return
-      if (skipTypes.contains(peek().tokenType))
-        return
-      advance()
-    }

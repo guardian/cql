@@ -6,11 +6,7 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TypeaheadTest extends BaseTest {
-  def queryMeta(key: String, value: Option[String], start: Int = 0): QueryMeta =
-    QueryMeta(
-      queryMetaKeyToken(key, start),
-      value.map { str => queryMetaValueToken(str, start + key.length + 2) }
-    )
+
 
   describe("typeahead") {
     val typeaheadQueryClient = new TypeaheadQueryClientTest()
