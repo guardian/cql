@@ -168,7 +168,7 @@
 		bind:this={inputElement}
 	/>
 	<div class="Cql__overlay-container">
-		<div class="Cql__overlay" contenteditable="true" style="left: -calc({overlayOffset}px - 1em)">
+		<div class="Cql__overlay" contenteditable="true" style="left: -{overlayOffset}px">
 			{#each tokenisedChars || [] as { char, token }, index}
 				<Token str={char} {token} />{#if index === currentSuggestions?.from - 1}<span
 						class="Cql__cursor-marker"

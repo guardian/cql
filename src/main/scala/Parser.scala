@@ -42,15 +42,18 @@ class Parser(tokens: List[Token]):
 
   private def queryBinary =
     val left = queryContent
+
     peek().tokenType match {
       case TokenType.AND =>
         val andToken = consume(TokenType.AND)
+        guardAgainstQueryMeta("after 'AND'.")
         if (isAtEnd) {
           throw new ParseError("There must be a query following 'AND'")
         }
         QueryBinary(left, Some((andToken), queryContent))
       case TokenType.OR =>
         val orToken = consume(TokenType.OR)
+        guardAgainstQueryMeta("after 'OR'.")
         if (isAtEnd) {
           throw new ParseError("There must be a query following 'OR'")
         }
@@ -73,6 +76,8 @@ class Parser(tokens: List[Token]):
       throw Parser.error(peek(), "Groups must contain some content")
     }
 
+    guardAgainstQueryMeta("within a group. Try putting this query outside of the parentheses!")
+
     val content = queryBinary
     consume(TokenType.RIGHT_BRACKET, "Groups must end with a right bracket")
 
@@ -82,7 +87,7 @@ class Parser(tokens: List[Token]):
     val token = consume(TokenType.STRING, "Expected a string")
     QueryStr(token.literal.getOrElse(""))
 
-  private def queryMeta =
+  private def queryMeta: QueryMeta =
     val key = Try {
       consume(TokenType.QUERY_META_KEY, "Expected a search key")
     }.recover { _ =>
@@ -106,6 +111,16 @@ class Parser(tokens: List[Token]):
         true
       } else false
     )
+
+  private def guardAgainstQueryMeta(errorLocation: String) =
+    peek().tokenType match {
+      case TokenType.PLUS =>
+        throw Parser.error(peek(), s"You cannot put queries for tags, sections etc. ${errorLocation}")
+      case TokenType.QUERY_META_KEY =>
+        val queryMetaNode = queryMeta
+        throw Parser.error(peek(), s"You cannot query for ${queryMetaNode.key.literal.getOrElse("")}s ${errorLocation}. Try putting this query outside of the parentheses!")
+      case _ => ()
+    }
 
   private def check(tokenType: TokenType) =
     if (isAtEnd) false else peek().tokenType == tokenType

@@ -52,7 +52,8 @@ Todo:
   - [ ] Add loading state
 - [x] Bug: open parentheses crashes the server 🙃
 - [x] Fix tests
-- [ ] Fix input scrolling
+- [x] Fix input scrolling
+- [x] Bug: fix crash on adding query meta within parentheses or after binary operators (with useful error state)
 - [ ] Add typeahead for binaries
 - [ ] Add '@' syntax for content return format (e.g. show-fields)
 - [ ] Fill out additional fields:
