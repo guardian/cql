@@ -54,11 +54,12 @@ Todo:
 - [x] Fix tests
 - [x] Fix input scrolling
 - [x] Bug: fix crash on adding query meta within parentheses or after binary operators (with useful error state)
-- [ ] Add typeahead for binaries
-- [ ] Add '@' syntax for content return format (e.g. show-fields)
+- [x] Add '@' syntax for content return format (e.g. show-fields)
+  - [ ] Fix issue with incomplete binaries and output modifiers
 - [ ] Fill out additional fields:
   - [ ] Dates!
   - [ ] Other, less fancy fields
+- [ ] Add typeahead for binaries
 - [ ] Ensure content is displayed when server does not respond
 - [ ] Error handling for 4/5xx
 
