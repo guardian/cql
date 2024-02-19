@@ -1,6 +1,6 @@
 package cql
 
-import cql.grammar.{QueryList, QueryMeta}
+import cql.grammar.{QueryList, QueryField}
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
@@ -19,7 +19,7 @@ class TypeaheadTest extends BaseTest {
 
       typeahead
         .getSuggestions(
-          QueryList(List(queryMeta("example", None)))
+          QueryList(List(queryField("example", None)))
         )
         .map { result =>
           result shouldBe List(
@@ -40,7 +40,7 @@ class TypeaheadTest extends BaseTest {
 
       typeahead
         .getSuggestions(
-          QueryList(List(queryMeta("ta", None)))
+          QueryList(List(queryField("ta", None)))
         )
         .map { result =>
           result shouldBe List(
@@ -65,7 +65,7 @@ class TypeaheadTest extends BaseTest {
 
       typeahead
         .getSuggestions(
-          QueryList(List(queryMeta("tag", Some("tags-are-magi"))))
+          QueryList(List(queryField("tag", Some("tags-are-magi"))))
         )
         .map { result =>
           result shouldBe List(
@@ -98,7 +98,7 @@ class TypeaheadTest extends BaseTest {
 
       typeahead
         .getSuggestions(
-          QueryList(List(queryMeta("tag", Some(""))))
+          QueryList(List(queryField("tag", Some(""))))
         )
         .map { result =>
           result shouldBe List(

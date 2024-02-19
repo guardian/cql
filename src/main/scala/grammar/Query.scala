@@ -21,7 +21,7 @@ case class CqlResult(
 
 trait Query
 
-case class QueryList(exprs: List[QueryBinary | QueryMeta]) extends Query
+case class QueryList(exprs: List[QueryBinary | QueryField]) extends Query
 case class QueryBinary(
     left: QueryContent,
     right: Option[(Token, QueryContent)] = None
@@ -29,7 +29,7 @@ case class QueryBinary(
 case class QueryContent(content: QueryStr | QueryBinary | QueryGroup)
 case class QueryGroup(content: QueryBinary)
 case class QueryStr(searchExpr: String) extends Query
-case class QueryMeta(key: Token, value: Option[Token]) extends Query
+case class QueryField(key: Token, value: Option[Token]) extends Query
 
 trait QueryJson {
   implicit val typeaheadSuggestions: Encoder[TypeaheadSuggestions] =
@@ -41,7 +41,7 @@ trait QueryJson {
   implicit val queryListEncoder: Encoder[QueryList] = Encoder.instance { list =>
     val arr = list.exprs.map {
       case q: QueryBinary => q.asJson
-      case q: QueryMeta   => q.asJson
+      case q: QueryField   => q.asJson
     }
     Json.obj("type" -> "QueryList".asJson, "content" -> Json.arr(arr: _*))
   }
@@ -56,12 +56,12 @@ trait QueryJson {
         "searchExpr" -> queryStr.searchExpr.asJson
       )
   }
-  implicit val queryMetaEncoder: Encoder[QueryMeta] = Encoder.instance {
-    queryMeta =>
+  implicit val queryFieldEncoder: Encoder[QueryField] = Encoder.instance {
+    queryField =>
       Json.obj(
-        "type" -> "QueryMeta".asJson,
-        "key" -> queryMeta.key.asJson,
-        "value" -> queryMeta.value.asJson
+        "type" -> "QueryField".asJson,
+        "key" -> queryField.key.asJson,
+        "value" -> queryField.value.asJson
       )
   }
   implicit val tokenEncoder: Encoder[Token] = Encoder.instance { token =>

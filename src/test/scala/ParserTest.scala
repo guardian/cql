@@ -35,13 +35,13 @@ class ParserTest extends BaseTest {
     }
 
     it("should handle a query meta incorrectly nested in parentheses") {
-      val tokens = List(leftParenToken(), queryMetaKeyToken("tag", 1), eofToken(5))
+      val tokens = List(leftParenToken(), queryFieldKeyToken("tag", 1), eofToken(5))
       val result = new Parser(tokens).parse()
       assertFailure(result, "You cannot query for tags within a group")
     }
 
     it("should handle a query meta incorrectly following binary operators") {
-      val tokens = List(quotedStringToken("a"), andToken(1), queryMetaKeyToken("tag", 5), eofToken(8))
+      val tokens = List(quotedStringToken("a"), andToken(1), queryFieldKeyToken("tag", 5), eofToken(8))
       val result = new Parser(tokens).parse()
       assertFailure(result, "You cannot query for tags after 'AND'")
     }

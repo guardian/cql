@@ -28,16 +28,16 @@ class Parser(tokens: List[Token]):
 
   // program    -> statement* EOF
   private def queryList =
-    var queries = List.empty[QueryBinary | QueryMeta]
+    var queries = List.empty[QueryBinary | QueryField]
     while (peek().tokenType != EOF) {
       queries = queries :+ query
     }
     QueryList(queries)
 
-  val startOfQueryMeta = List(TokenType.QUERY_META_KEY, TokenType.PLUS)
+  val startOfQueryField = List(TokenType.QUERY_META_KEY, TokenType.PLUS)
 
-  private def query: QueryBinary | QueryMeta =
-    if (startOfQueryMeta.contains(peek().tokenType)) queryMeta
+  private def query: QueryBinary | QueryField =
+    if (startOfQueryField.contains(peek().tokenType)) queryField
     else queryBinary
 
   private def queryBinary =
@@ -46,14 +46,14 @@ class Parser(tokens: List[Token]):
     peek().tokenType match {
       case TokenType.AND =>
         val andToken = consume(TokenType.AND)
-        guardAgainstQueryMeta("after 'AND'.")
+        guardAgainstQueryField("after 'AND'.")
         if (isAtEnd) {
           throw new ParseError("There must be a query following 'AND'")
         }
         QueryBinary(left, Some((andToken), queryContent))
       case TokenType.OR =>
         val orToken = consume(TokenType.OR)
-        guardAgainstQueryMeta("after 'OR'.")
+        guardAgainstQueryField("after 'OR'.")
         if (isAtEnd) {
           throw new ParseError("There must be a query following 'OR'")
         }
@@ -76,7 +76,7 @@ class Parser(tokens: List[Token]):
       throw Parser.error(peek(), "Groups must contain some content")
     }
 
-    guardAgainstQueryMeta("within a group. Try putting this query outside of the parentheses!")
+    guardAgainstQueryField("within a group. Try putting this query outside of the parentheses!")
 
     val content = queryBinary
     consume(TokenType.RIGHT_BRACKET, "Groups must end with a right bracket")
@@ -87,7 +87,7 @@ class Parser(tokens: List[Token]):
     val token = consume(TokenType.STRING, "Expected a string")
     QueryStr(token.literal.getOrElse(""))
 
-  private def queryMeta: QueryMeta =
+  private def queryField: QueryField =
     val key = Try {
       consume(TokenType.QUERY_META_KEY, "Expected a search key")
     }.recover { _ =>
@@ -102,7 +102,7 @@ class Parser(tokens: List[Token]):
       }
     }.toOption
 
-    QueryMeta(key, value)
+    QueryField(key, value)
 
   private def matchTokens(tokens: TokenType*) =
     tokens.exists(token =>
@@ -112,13 +112,13 @@ class Parser(tokens: List[Token]):
       } else false
     )
 
-  private def guardAgainstQueryMeta(errorLocation: String) =
+  private def guardAgainstQueryField(errorLocation: String) =
     peek().tokenType match {
       case TokenType.PLUS =>
         throw Parser.error(peek(), s"You cannot put queries for tags, sections etc. ${errorLocation}")
       case TokenType.QUERY_META_KEY =>
-        val queryMetaNode = queryMeta
-        throw Parser.error(peek(), s"You cannot query for ${queryMetaNode.key.literal.getOrElse("")}s ${errorLocation}. Try putting this query outside of the parentheses!")
+        val queryFieldNode = queryField
+        throw Parser.error(peek(), s"You cannot query for ${queryFieldNode.key.literal.getOrElse("")}s ${errorLocation}. Try putting this query outside of the parentheses!")
       case _ => ()
     }
 

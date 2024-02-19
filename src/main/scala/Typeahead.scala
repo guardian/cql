@@ -2,7 +2,7 @@ package cql
 
 import scala.concurrent.Future
 import concurrent.ExecutionContext.Implicits.global
-import cql.grammar.QueryMeta
+import cql.grammar.QueryField
 import cql.grammar.QueryList
 
 case class TypeaheadSuggestions(
@@ -35,11 +35,11 @@ class Typeahead(client: TypeaheadQueryClient) {
       program: QueryList
   ): Future[List[TypeaheadSuggestions]] =
     val eventuallySuggestions = program.exprs
-      .collect { case q: QueryMeta =>
+      .collect { case q: QueryField =>
         q
       }
       .flatMap {
-        case QueryMeta(keyToken, None) =>
+        case QueryField(keyToken, None) =>
           List(
             Future.successful(
               TypeaheadSuggestions(
@@ -50,7 +50,7 @@ class Typeahead(client: TypeaheadQueryClient) {
               )
             )
           )
-        case QueryMeta(keyToken, Some(valueToken)) =>
+        case QueryField(keyToken, Some(valueToken)) =>
           val keySuggestions = Future.successful(
             TypeaheadSuggestions(
               keyToken.start,

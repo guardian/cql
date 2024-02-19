@@ -6,7 +6,7 @@ import flatspec._
 import matchers._
 import funspec.AnyFunSpec
 import org.scalatest.funspec.AsyncFunSpec
-import cql.grammar.QueryMeta
+import cql.grammar.QueryField
 
 abstract class BaseTest extends AsyncFunSpec with should.Matchers {
   def leftParenToken(start: Int = 0) = Token(TokenType.LEFT_BRACKET, "(", Some("("), start, start + 1)
@@ -23,7 +23,7 @@ abstract class BaseTest extends AsyncFunSpec with should.Matchers {
     start + str.length + 1
   )
 
-  def queryMetaKeyToken(str: String, start: Int = 0) =
+  def queryFieldKeyToken(str: String, start: Int = 0) =
     Token(
       TokenType.QUERY_META_KEY,
       s"+$str",
@@ -31,7 +31,7 @@ abstract class BaseTest extends AsyncFunSpec with should.Matchers {
       start,
       start + str.length
     )
-  def queryMetaValueToken(str: String, start: Int = 0) =
+  def queryFieldValueToken(str: String, start: Int = 0) =
     Token(
       TokenType.QUERY_META_VALUE,
       s":$str",
@@ -40,9 +40,9 @@ abstract class BaseTest extends AsyncFunSpec with should.Matchers {
       start + str.length
     )
 
-  def queryMeta(key: String, value: Option[String], start: Int = 0): QueryMeta =
-    QueryMeta(
-      queryMetaKeyToken(key, start),
-      value.map { str => queryMetaValueToken(str, start + key.length + 2) }
+  def queryField(key: String, value: Option[String], start: Int = 0): QueryField =
+    QueryField(
+      queryFieldKeyToken(key, start),
+      value.map { str => queryFieldValueToken(str, start + key.length + 2) }
     )
 }
