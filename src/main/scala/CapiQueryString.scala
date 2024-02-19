@@ -19,7 +19,12 @@ object CapiQueryString {
       case QueryField(key, Some(value)) => Right(s"${key.literal.getOrElse("")}=${value.literal.getOrElse("")}")
       case QueryField(key, None) =>
         throw new CapiQueryStringError(
-          s"The key '+$key' needs a value after it (e.g. +$key:tone/news)"
+          s"The field '+$key' needs a value after it (e.g. +$key:tone/news)"
+        )
+      case QueryOutputModifier(key, Some(value)) => Right(s"${key.literal.getOrElse("")}=${value.literal.getOrElse("")}")
+      case QueryOutputModifier(key, None) =>
+        throw new CapiQueryStringError(
+          s"The output modifier '@$key' needs a value after it (e.g. +$key:all)"
         )
     }
 

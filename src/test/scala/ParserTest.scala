@@ -1,6 +1,6 @@
 package cql
 
-import cql.grammar.QueryList
+import cql.grammar.{QueryList, QueryOutputModifier}
 import concurrent.ExecutionContext.Implicits.global // Todo: sticking plaster
 import scala.util.Failure
 import scala.util.Success
@@ -9,11 +9,11 @@ import scala.util.Try
 class ParserTest extends BaseTest {
   def assertFailure(queryList: Try[QueryList], strContains: String) =
     queryList match
-        case Failure(exception) =>
-          exception
-            .getMessage()
-            .contains(strContains) shouldBe true
-        case Success(value) => fail("This should not parse")
+      case Failure(exception) =>
+        exception
+          .getMessage()
+          .contains(strContains) shouldBe true
+      case Success(value) => fail("This should not parse")
 
   describe("groups") {
     it("should handle unmatched parenthesis") {
@@ -34,16 +34,35 @@ class ParserTest extends BaseTest {
       assertFailure(result, "There must be a query following 'AND'")
     }
 
-    it("should handle a query meta incorrectly nested in parentheses") {
+    it("should handle a query field incorrectly nested in parentheses") {
       val tokens = List(leftParenToken(), queryFieldKeyToken("tag", 1), eofToken(5))
       val result = new Parser(tokens).parse()
       assertFailure(result, "You cannot query for tags within a group")
     }
 
-    it("should handle a query meta incorrectly following binary operators") {
+    it("should handle a query field incorrectly following binary operators") {
       val tokens = List(quotedStringToken("a"), andToken(1), queryFieldKeyToken("tag", 5), eofToken(8))
       val result = new Parser(tokens).parse()
       assertFailure(result, "You cannot query for tags after 'AND'")
+    }
+
+    it("should handle a query output modifier") {
+      val tokens = List(
+        queryOutputModifierKeyToken("tag", 1),
+        queryValueToken("all", 4),
+        eofToken(5)
+      )
+      val result = new Parser(tokens).parse()
+      result shouldBe Success(
+        QueryList(
+          List(
+            QueryOutputModifier(
+              queryOutputModifierKeyToken("tag", 1),
+              Some(queryValueToken("all", 4))
+            )
+          )
+        )
+      )
     }
   }
 }

@@ -2,10 +2,10 @@ package cql
 
 enum TokenType:
   // Single-character tokens.
-  case PLUS, COLON, LEFT_BRACKET, RIGHT_BRACKET,
+  case PLUS, COLON, AT, LEFT_BRACKET, RIGHT_BRACKET,
 
     // Literals.
-    STRING, NUMBER, QUERY_META_KEY, QUERY_META_VALUE,
+    STRING, NUMBER, QUERY_OUTPUT_MODIFIER_KEY, QUERY_FIELD_KEY, QUERY_VALUE,
 
     // Keywords.
     AND, OR, EOF

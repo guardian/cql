@@ -81,16 +81,19 @@ sausages
 Grammar:
 
 ```
-query_list         -> query* EOF
-query              -> query_binary | query_meta
-query_binary       -> query_content ('AND' | 'OR' query_content)?
-query_content      -> query_group | query_str | query_quoted_str | query_binary
-query_group        -> '(' query_content* ')'
-query_quoted_str   -> '"' string '"'
-query_str          -> /\w/
-query_meta         -> '+' query_meta_key? ':'? query_meta_value? // Permit incomplete meta queries for typeahead
-query_meta_key     -> 'tag' | 'section' | ...etc
-query_meta_value   -> /\w/
+query_list                  -> query* EOF
+query                       -> query_binary | query_field | query_output_modifier
+query_binary                -> query_content ('AND' | 'OR' query_content)?
+query_content               -> query_group | query_str | query_quoted_str | query_binary
+query_group                 -> '(' query_content* ')'
+query_quoted_str            -> '"' string '"'
+query_str                   -> /\w/
+query_field                 -> '+' query_field_key ':'? query_field_value? // Permit incomplete meta queries for typeahead
+query_field_key             -> 'tag' | 'section' | ...etc
+query_field_value           -> /\w/
+query_output_modifier       -> '@' query_output_modifier_key ':'? query_output_modifier_value
+query_output_modifier_key   -> 'show-fields' ...etc
+query_output_modifier_value -> /\w/
 ```
 
 How do we disambiguate search params from strings in the tokeniser?
@@ -110,15 +113,15 @@ Components options:
  - Svelte will export web components with `customComponent` properties in compiler and component config. However, from-scratch context menus will be a drag.
  - Preact will work with headlessUI, if we can adapt it for a typeahead menu. It also provides a webcomponent layer.
 
-Typeahead will require parsing AST nodes, not just tokens, as typeahead for query_meta_value will require knowing query_meta_key, which we only know in a query_meta node. We currently have no way of mapping from a position to a node. We'll need to keep positions when we consume tokens, every node should probably have a start and end.
+Typeahead will require parsing AST nodes, not just tokens, as typeahead for query_field_value will require knowing query_field_key, which we only know in a query_field node. We currently have no way of mapping from a position to a node. We'll need to keep positions when we consume tokens, every node should probably have a start and end.
 
 Typeahead happens on server. Rationale: typeahead must hit CAPI anyhow, so it's dependent on some server somewhere, and making it an LS feature keeps the client simpler.
 
 What do we serve for typeahead? 
-1. Provide values for every incomplete query_meta node for every query. Client then keeps those values for display when selection is in right place. 
+1. Provide values for every incomplete query_field node for every query. Client then keeps those values for display when selection is in right place. 
 2. Provide typehead as combination of position and query to server. Store less data upfront, but must query every time position changes.
 
-Option 1. preferable to avoid high request volumes, keep typeahead in sync with query, and keep latency low (chance that typeahead result will be cached, when for example clicking into existing incomplete query_meta)
+Option 1. preferable to avoid high request volumes, keep typeahead in sync with query, and keep latency low (chance that typeahead result will be cached, when for example clicking into existing incomplete query_field)
 
 Checking out Grid repo – QuerySyntax has a grammar for search queries. Actual string search limited to tokens or quoted strings. Chips can refer to nested fields. Good polish on dates, e.g. today, yesterday, multiple formats. Love the ambition in the tests, e.g.
 
@@ -131,7 +134,7 @@ Checking out Grid repo – QuerySyntax has a grammar for search queries. Actual 
 // TODO: date:2.january (this year)
 ```
 
-NB: query_meta will only be parseable at the top level. We could use `-` rather than `+` for negation. (`NOT` is used in the binary syntax for negation. Not added yet.)
+NB: query_field will only be parseable at the top level. We could use `-` rather than `+` for negation. (`NOT` is used in the binary syntax for negation. Not added yet.)
 
 Re: Typeahead – this requires a parse phase, no? B/c we must associate key value pairs for value lookups.
 

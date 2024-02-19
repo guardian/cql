@@ -23,9 +23,11 @@ class Scanner(program: String):
   def scanToken =
     advance match {
       case '+' =>
-        addSearchKey
+        addKey(TokenType.QUERY_FIELD_KEY)
+      case '@' =>
+        addKey(TokenType.QUERY_OUTPUT_MODIFIER_KEY)
       case ':' =>
-        addSearchValue
+        addValue
       case '(' =>
         addToken(TokenType.LEFT_BRACKET)
       case ')' =>
@@ -40,23 +42,23 @@ class Scanner(program: String):
       case _                   => addUnquotedString
     }
 
-  def addSearchKey =
+  def addKey(tokenType: TokenType) =
     while ((peek != ':' && peek != ' ') && !isAtEnd)
       advance
 
-    if (current - start == 1) addToken(TokenType.PLUS)
+    if (current - start == 1) addToken(TokenType.AT)
     else
       val key = program.substring(start + 1, current)
-      addToken(TokenType.QUERY_META_KEY, Some(key))
+      addToken(tokenType, Some(key))
 
-  def addSearchValue =
+  def addValue =
     while ((peek != ' ') && !isAtEnd)
       advance
 
     if (current - start == 1) addToken(TokenType.COLON)
     else
       val value = program.substring(start + 1, current)
-      addToken(TokenType.QUERY_META_VALUE, Some(value))
+      addToken(TokenType.QUERY_VALUE, Some(value))
 
   def isReservedWord =
     Token.reservedWords.exists { case (str, _) =>

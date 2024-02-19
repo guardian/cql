@@ -28,16 +28,18 @@ class Parser(tokens: List[Token]):
 
   // program    -> statement* EOF
   private def queryList =
-    var queries = List.empty[QueryBinary | QueryField]
+    var queries = List.empty[QueryBinary | QueryField | QueryOutputModifier]
     while (peek().tokenType != EOF) {
       queries = queries :+ query
     }
     QueryList(queries)
 
-  val startOfQueryField = List(TokenType.QUERY_META_KEY, TokenType.PLUS)
+  val startOfQueryField = List(TokenType.QUERY_FIELD_KEY, TokenType.PLUS)
+  val startOfQueryOutputModifier = List(TokenType.QUERY_OUTPUT_MODIFIER_KEY, TokenType.AT)
 
-  private def query: QueryBinary | QueryField =
+  private def query: QueryBinary | QueryField | QueryOutputModifier =
     if (startOfQueryField.contains(peek().tokenType)) queryField
+    else if (startOfQueryOutputModifier.contains(peek().tokenType)) queryOutputModifier
     else queryBinary
 
   private def queryBinary =
@@ -76,7 +78,9 @@ class Parser(tokens: List[Token]):
       throw Parser.error(peek(), "Groups must contain some content")
     }
 
-    guardAgainstQueryField("within a group. Try putting this query outside of the parentheses!")
+    guardAgainstQueryField(
+      "within a group. Try putting this query outside of the parentheses!"
+    )
 
     val content = queryBinary
     consume(TokenType.RIGHT_BRACKET, "Groups must end with a right bracket")
@@ -89,13 +93,13 @@ class Parser(tokens: List[Token]):
 
   private def queryField: QueryField =
     val key = Try {
-      consume(TokenType.QUERY_META_KEY, "Expected a search key")
+      consume(TokenType.QUERY_FIELD_KEY, "Expected a search key, e.g. +tag")
     }.recover { _ =>
       consume(TokenType.PLUS, "Expected at least a +")
     }.get
 
     val value = Try {
-      consume(TokenType.QUERY_META_VALUE, "Expected a search key")
+      consume(TokenType.QUERY_VALUE, s"Expected a search value, e.g. +tag:news")
     }.recoverWith { _ =>
       Try {
         consume(TokenType.COLON, "Expected at least a :")
@@ -103,6 +107,23 @@ class Parser(tokens: List[Token]):
     }.toOption
 
     QueryField(key, value)
+
+  private def queryOutputModifier: QueryOutputModifier =
+    val key = Try {
+      consume(TokenType.QUERY_OUTPUT_MODIFIER_KEY, "Expected a query modifier key, e.g. @show-fields")
+    }.recover { _ =>
+      consume(TokenType.AT, "Expected at least an @")
+    }.get
+
+    val value = Try {
+      consume(TokenType.QUERY_VALUE, "Expected a value for the query modifier, e.g. @show-fields:all")
+    }.recoverWith { _ =>
+      Try {
+        consume(TokenType.COLON, "Expected at least a :")
+      }
+    }.toOption
+
+    QueryOutputModifier(key, value)
 
   private def matchTokens(tokens: TokenType*) =
     tokens.exists(token =>
@@ -112,13 +133,34 @@ class Parser(tokens: List[Token]):
       } else false
     )
 
+  /** Throw a sensible parse error when a query field or output modifier is
+    * found in the wrong place.
+    */
   private def guardAgainstQueryField(errorLocation: String) =
     peek().tokenType match {
+      case TokenType.AT =>
+        throw Parser.error(
+          peek(),
+          s"You cannot put output modifiers (e.g. @show-fields:all) ${errorLocation}"
+        )
       case TokenType.PLUS =>
-        throw Parser.error(peek(), s"You cannot put queries for tags, sections etc. ${errorLocation}")
-      case TokenType.QUERY_META_KEY =>
+        throw Parser.error(
+          peek(),
+          s"You cannot put queries for tags, sections etc. ${errorLocation}"
+        )
+      case TokenType.QUERY_FIELD_KEY =>
         val queryFieldNode = queryField
-        throw Parser.error(peek(), s"You cannot query for ${queryFieldNode.key.literal.getOrElse("")}s ${errorLocation}. Try putting this query outside of the parentheses!")
+        throw Parser.error(
+          peek(),
+          s"You cannot query for ${queryFieldNode.key.literal.getOrElse("")}s ${errorLocation}"
+        )
+      case TokenType.QUERY_OUTPUT_MODIFIER_KEY =>
+        val queryFieldNode = queryOutputModifier
+        throw Parser.error(
+          peek(),
+          s"You cannot add an output modifier for ${queryFieldNode.key.literal
+              .getOrElse("")}s ${errorLocation}"
+        )
       case _ => ()
     }
 

@@ -22,18 +22,25 @@ abstract class BaseTest extends AsyncFunSpec with should.Matchers {
     start,
     start + str.length + 1
   )
-
   def queryFieldKeyToken(str: String, start: Int = 0) =
     Token(
-      TokenType.QUERY_META_KEY,
+      TokenType.QUERY_FIELD_KEY,
       s"+$str",
       Some(str),
       start,
       start + str.length
     )
-  def queryFieldValueToken(str: String, start: Int = 0) =
+  def queryOutputModifierKeyToken(str: String, start: Int = 0) =
     Token(
-      TokenType.QUERY_META_VALUE,
+      TokenType.QUERY_OUTPUT_MODIFIER_KEY,
+      s"@$str",
+      Some(str),
+      start,
+      start + str.length
+    )
+  def queryValueToken(str: String, start: Int = 0) =
+    Token(
+      TokenType.QUERY_VALUE,
       s":$str",
       Some(str),
       start,
@@ -43,6 +50,6 @@ abstract class BaseTest extends AsyncFunSpec with should.Matchers {
   def queryField(key: String, value: Option[String], start: Int = 0): QueryField =
     QueryField(
       queryFieldKeyToken(key, start),
-      value.map { str => queryFieldValueToken(str, start + key.length + 2) }
+      value.map { str => queryValueToken(str, start + key.length + 2) }
     )
 }

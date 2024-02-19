@@ -21,7 +21,7 @@ case class CqlResult(
 
 trait Query
 
-case class QueryList(exprs: List[QueryBinary | QueryField]) extends Query
+case class QueryList(exprs: List[QueryBinary | QueryField | QueryOutputModifier]) extends Query
 case class QueryBinary(
     left: QueryContent,
     right: Option[(Token, QueryContent)] = None
@@ -30,6 +30,7 @@ case class QueryContent(content: QueryStr | QueryBinary | QueryGroup)
 case class QueryGroup(content: QueryBinary)
 case class QueryStr(searchExpr: String) extends Query
 case class QueryField(key: Token, value: Option[Token]) extends Query
+case class QueryOutputModifier(key: Token, value: Option[Token]) extends Query
 
 trait QueryJson {
   implicit val typeaheadSuggestions: Encoder[TypeaheadSuggestions] =
@@ -42,6 +43,7 @@ trait QueryJson {
     val arr = list.exprs.map {
       case q: QueryBinary => q.asJson
       case q: QueryField   => q.asJson
+      case q: QueryOutputModifier => q.asJson
     }
     Json.obj("type" -> "QueryList".asJson, "content" -> Json.arr(arr: _*))
   }
@@ -60,6 +62,14 @@ trait QueryJson {
     queryField =>
       Json.obj(
         "type" -> "QueryField".asJson,
+        "key" -> queryField.key.asJson,
+        "value" -> queryField.value.asJson
+      )
+  }
+    implicit val queryOutputModifierEncoder: Encoder[QueryOutputModifier] = Encoder.instance {
+    queryField =>
+      Json.obj(
+        "type" -> "QueryOutputModifier".asJson,
         "key" -> queryField.key.asJson,
         "value" -> queryField.value.asJson
       )
