@@ -58,6 +58,7 @@ Todo:
   - [ ] Fix issue with incomplete binaries and output modifiers
 - [ ] Fill out additional fields:
   - [ ] Dates!
+    - [ ] Add `type` property to suggestion envelope to ensure correct interface is displayed
   - [ ] Other, less fancy fields
 - [ ] Add typeahead for binaries
 - [ ] Ensure content is displayed when server does not respond
