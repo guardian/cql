@@ -52,14 +52,18 @@ class Parser(tokens: List[Token]):
         val andToken = consume(TokenType.AND)
         guardAgainstQueryField("after 'AND'.")
         if (isAtEnd) {
-          throw new ParseError("There must be a query following 'AND', e.g. this AND that.")
+          throw new ParseError(
+            "There must be a query following 'AND', e.g. this AND that."
+          )
         }
         QueryBinary(left, Some((andToken), queryContent))
       case TokenType.OR =>
         val orToken = consume(TokenType.OR)
         guardAgainstQueryField("after 'OR'.")
         if (isAtEnd) {
-          throw new ParseError("There must be a query following 'OR', e.g. this OR that.")
+          throw new ParseError(
+            "There must be a query following 'OR', e.g. this OR that."
+          )
         }
         QueryBinary(left, Some((orToken, queryContent)))
       case _ => QueryBinary(left)
@@ -81,8 +85,11 @@ class Parser(tokens: List[Token]):
   private def queryGroup: QueryGroup =
     consume(TokenType.LEFT_BRACKET, "Groups should start with a left bracket")
 
-    if (isAtEnd) {
-      throw Parser.error(peek(), "Groups must contain some content. Put a search term between the brackets!")
+    if (isAtEnd || peek().tokenType == TokenType.RIGHT_BRACKET) {
+      throw Parser.error(
+        peek(),
+        "Groups must contain some content. Put a search term between the brackets!"
+      )
     }
 
     guardAgainstQueryField(

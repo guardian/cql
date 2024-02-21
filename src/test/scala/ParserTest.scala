@@ -72,5 +72,14 @@ class ParserTest extends BaseTest {
       val result = new Parser(tokens).parse()
       assertFailure(result, "An AND keyword must have a search term before and after it, e.g. this AND that")
     }
+
+    it("should handle empty groups") {
+      val tokens = List(
+        leftParenToken(),
+        rightParenToken(1)
+      )
+      val result = new Parser(tokens).parse()
+      assertFailure(result, "Groups must contain some content.")
+    }
   }
 }

@@ -62,7 +62,7 @@ Todo:
     - [x] Correct focus when date appears
     - [ ] What do we do when users want to navigate through the string without focus being stolen? Perhaps we don't need to autofocus?
   - [ ] Other, less fancy fields
-- [ ] Fix crash on empty parens
+- [x] Fix crash on empty parens
 - [ ] Add typeahead for binaries
 - [ ] Ensure content is displayed when server does not respond
 - [ ] Error handling for 4/5xx
