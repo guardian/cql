@@ -35,11 +35,13 @@ class Parser(tokens: List[Token]):
     QueryList(queries)
 
   val startOfQueryField = List(TokenType.QUERY_FIELD_KEY, TokenType.PLUS)
-  val startOfQueryOutputModifier = List(TokenType.QUERY_OUTPUT_MODIFIER_KEY, TokenType.AT)
+  val startOfQueryOutputModifier =
+    List(TokenType.QUERY_OUTPUT_MODIFIER_KEY, TokenType.AT)
 
   private def query: QueryBinary | QueryField | QueryOutputModifier =
     if (startOfQueryField.contains(peek().tokenType)) queryField
-    else if (startOfQueryOutputModifier.contains(peek().tokenType)) queryOutputModifier
+    else if (startOfQueryOutputModifier.contains(peek().tokenType))
+      queryOutputModifier
     else queryBinary
 
   private def queryBinary =
@@ -50,24 +52,29 @@ class Parser(tokens: List[Token]):
         val andToken = consume(TokenType.AND)
         guardAgainstQueryField("after 'AND'.")
         if (isAtEnd) {
-          throw new ParseError("There must be a query following 'AND'")
+          throw new ParseError("There must be a query following 'AND', e.g. this AND that.")
         }
         QueryBinary(left, Some((andToken), queryContent))
       case TokenType.OR =>
         val orToken = consume(TokenType.OR)
         guardAgainstQueryField("after 'OR'.")
         if (isAtEnd) {
-          throw new ParseError("There must be a query following 'OR'")
+          throw new ParseError("There must be a query following 'OR', e.g. this OR that.")
         }
         QueryBinary(left, Some((orToken, queryContent)))
       case _ => QueryBinary(left)
     }
 
   private def queryContent: QueryContent =
-    val content: QueryGroup | QueryStr | QueryBinary =
-      if (peek().tokenType == TokenType.LEFT_BRACKET) queryGroup
-      else if (peek().tokenType == TokenType.STRING) queryStr
-      else queryBinary
+    val content: QueryGroup | QueryStr | QueryBinary = peek().tokenType match
+      case TokenType.LEFT_BRACKET => queryGroup
+      case TokenType.STRING       => queryStr
+      case token if List(TokenType.AND, TokenType.OR).contains(token) =>
+        throw Parser.error(
+          peek(),
+          s"An ${token.toString()} keyword must have a search term before and after it, e.g. this ${token.toString} that."
+        )
+      case _ => queryBinary
 
     QueryContent(content)
 
@@ -75,15 +82,15 @@ class Parser(tokens: List[Token]):
     consume(TokenType.LEFT_BRACKET, "Groups should start with a left bracket")
 
     if (isAtEnd) {
-      throw Parser.error(peek(), "Groups must contain some content")
+      throw Parser.error(peek(), "Groups must contain some content. Put a search term between the brackets!")
     }
 
     guardAgainstQueryField(
-      "within a group. Try putting this query outside of the parentheses!"
+      "within a group. Try putting this query outside of the brackets!"
     )
 
     val content = queryBinary
-    consume(TokenType.RIGHT_BRACKET, "Groups must end with a right bracket")
+    consume(TokenType.RIGHT_BRACKET, "Groups must end with a right bracket.")
 
     QueryGroup(content)
 
@@ -110,13 +117,19 @@ class Parser(tokens: List[Token]):
 
   private def queryOutputModifier: QueryOutputModifier =
     val key = Try {
-      consume(TokenType.QUERY_OUTPUT_MODIFIER_KEY, "Expected a query modifier key, e.g. @show-fields")
+      consume(
+        TokenType.QUERY_OUTPUT_MODIFIER_KEY,
+        "Expected a query modifier key, e.g. @show-fields"
+      )
     }.recover { _ =>
       consume(TokenType.AT, "Expected at least an @")
     }.get
 
     val value = Try {
-      consume(TokenType.QUERY_VALUE, "Expected a value for the query modifier, e.g. @show-fields:all")
+      consume(
+        TokenType.QUERY_VALUE,
+        "Expected a value for the query modifier, e.g. @show-fields:all"
+      )
     }.recoverWith { _ =>
       Try {
         consume(TokenType.COLON, "Expected at least a :")

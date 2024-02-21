@@ -64,5 +64,13 @@ class ParserTest extends BaseTest {
         )
       )
     }
+
+    it("should handle a solo binary operator") {
+      val tokens = List(
+        andToken()
+      )
+      val result = new Parser(tokens).parse()
+      assertFailure(result, "An AND keyword must have a search term before and after it, e.g. this AND that")
+    }
   }
 }

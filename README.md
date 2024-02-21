@@ -55,7 +55,7 @@ Todo:
 - [x] Fix input scrolling
 - [x] Bug: fix crash on adding query meta within parentheses or after binary operators (with useful error state)
 - [x] Add '@' syntax for content return format (e.g. show-fields)
-  - [ ] Fix issue with incomplete binaries and output modifiers
+  - [x] Fix issue with incomplete binaries and output modifiers
 - [ ] Fill out additional fields:
   - [ ] Dates!
     - [ ] Add `type` property to suggestion envelope to ensure correct interface is displayed
