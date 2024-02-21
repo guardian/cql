@@ -130,5 +130,34 @@ class TypeaheadTest extends BaseTest {
           )
         }
     }
+
+    it(
+      "should give a suggestion of type DATE given e.g. 'from-date'"
+    ) {
+      typeahead
+        .getSuggestions(
+          QueryList(List(queryOutputModifier("from-date", Some(""))))
+        )
+        .map { result =>
+          result shouldBe List(
+            TypeaheadSuggestion(
+              0,
+              9,
+              ":",
+              TextSuggestion(
+                List(
+                  TextSuggestionOption("from-date", "from-date")
+                )
+              )
+            ),
+            TypeaheadSuggestion(
+              11,
+              11,
+              " ",
+              DateSuggestion(None, None)
+            )
+          )
+        }
+    }
   }
 }

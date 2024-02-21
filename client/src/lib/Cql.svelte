@@ -5,7 +5,7 @@
 	import { onMount, afterUpdate } from 'svelte';
 	import { fade } from 'svelte/transition';
 
-	const exampleQuery = 'an (example AND query) +tag:tags-are-magic';
+	const exampleQuery = '@from-date';
 
 	onMount(async () => {
 		fetchLanguageServer(exampleQuery);
@@ -39,10 +39,11 @@
 				if (menuIndex > 0) menuIndex--;
 				break;
 			case 'ArrowDown':
-				if (menuIndex < currentSuggestions.suggestions.length - 1) menuIndex++;
+				if (menuIndex < currentSuggestions.suggestions.TextSuggestion.suggestions.length - 1)
+					menuIndex++;
 				break;
 			case 'Enter':
-				replaceToken(menuIndex);
+				replaceCurrentSuggestionTargetWithMenuItem(menuIndex);
 				break;
 			case 'Escape':
 				currentSuggestions = undefined;
@@ -56,22 +57,38 @@
 		}
 	};
 
-	const replaceToken = (index: number) => {
+	const handleDateKeydown = (e) => {
+		switch (e.key) {
+			case 'Enter':
+				replaceCurrentSuggestionTarget(e.target.value);
+				inputElement.focus();
+				break;
+			case 'Escape':
+				inputElement.focus();
+				break;
+		}
+	};
+
+	const replaceCurrentSuggestionTargetWithMenuItem = (index: number) => {
+		const currentSuggestion = currentSuggestions.suggestions.TextSuggestion.suggestions[index];
+		const strToInsert = currentSuggestion.value;
+		replaceCurrentSuggestionTarget(strToInsert);
+	};
+
+	const replaceCurrentSuggestionTarget = (strToInsert: string) => {
 		const token = ast.tokens.find((token) => token.start === currentSuggestions.from);
 		if (!token) {
 			console.log(`No token found at ${currentSuggestions.from}`);
 			return;
 		}
 		// Assumption here: the +1s bake in the idea of a single + or : char leading the token.
-		const currentSuggestion = currentSuggestions.suggestions[index];
-		const strToInsert = currentSuggestion.value;
 		const beforeStr = cqlQuery.slice(0, token.start + 1);
 		const afterStr = cqlQuery.slice(token.end + 1);
 		const applySuffix = /^\s*$/.test(afterStr);
 		console.log({ strToInsert, beforeStr, afterStr, applySuffix, currentSuggestions });
-		cqlQuery = `${beforeStr}${currentSuggestion.value}${applySuffix ? currentSuggestions.suffix : afterStr}`;
+		cqlQuery = `${beforeStr}${strToInsert}${applySuffix ? currentSuggestions.suffix : afterStr}`;
 
-    // +1 for + or :, +1 to get us past the end of the current position
+		// +1 for + or :, +1 to get us past the end of the current position
 		const newCaretPosition = token.start + strToInsert.length + 2;
 
 		// Is there a better way of waiting for Svelte to update the DOM?
@@ -102,9 +119,9 @@
 	};
 
 	const applyTypeahead = (cursorOffset: number) => {
-    if (!ast) {
-      return;
-    }
+		if (!ast) {
+			return;
+		}
 
 		const typeaheadCharPos = cursorOffset - 1;
 		const firstValidSuggestions = ast.suggestions.find(
@@ -118,7 +135,11 @@
 		}
 
 		// Reset the menu if the previous selection falls off the edge of the new suggestion list.
-		if (currentSuggestions && menuIndex > currentSuggestions.suggestions.length - 1) {
+		if (
+			currentSuggestions &&
+			currentSuggestions.suggestions.TextSuggestion &&
+			menuIndex > currentSuggestions.suggestions.TextSuggestion.suggestions.length - 1
+		) {
 			menuIndex = 0;
 		}
 	};
@@ -182,15 +203,21 @@
 			style="left: {typeaheadOffsetPx - 7}px"
 			transition:fade={{ duration: 100 }}
 		>
-			<ul>
-				{#each currentSuggestions.suggestions as { label }, index}
-					<li>
-						<button class:--selected={menuIndex === index} on:click={() => replaceToken(index)}
-							>{label}</button
-						>
-					</li>
-				{/each}
-			</ul>
+			{#if currentSuggestions.suggestions.TextSuggestion}
+				<ul>
+					{#each currentSuggestions.suggestions.TextSuggestion.suggestions as { label }, index}
+						<li>
+							<button
+								class:--selected={menuIndex === index}
+								on:click={() => replaceCurrentSuggestionTargetWithMenuItem(index)}>{label}</button
+							>
+						</li>
+					{/each}
+				</ul>
+			{/if}
+			{#if currentSuggestions.suggestions.DateSuggestion}
+				<input class="Cql_typeahead-date" type="date" autofocus on:keydown={handleDateKeydown} />
+			{/if}
 		</div>{/if}
 	{#if ast.queryResult}<div class="Cql__output">{ast.queryResult}</div>{/if}
 	{#if ast.error}<div class="Cql__error">{ast.error}</div>{/if}
