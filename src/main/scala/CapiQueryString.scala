@@ -36,14 +36,7 @@ object CapiQueryString {
         Some(s"q=$encodedString")
     }
 
-    val maybeOtherQueries = otherQueries match {
-      case Nil  => None
-      case strs => Some(strs.mkString(""))
-    }
-
-    val queryStr = List(maybeSearchStr, maybeOtherQueries).flatten.mkString("&")
-
-    queryStr
+    List(maybeSearchStr, otherQueries).flatten.mkString("&")
 
   private def strFromContent(queryContent: QueryContent): String =
     queryContent.content match {

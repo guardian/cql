@@ -23,11 +23,11 @@
 		color: purple;
 	}
 
-	.Token__QUERY_META_KEY {
+	.Token__QUERY_FIELD_KEY, .Token__QUERY_OUTPUT_MODIFIER_KEY {
 		color: #977e0a;
 	}
 
-	.Token__QUERY_META_VALUE {
+	.Token__QUERY_VALUE {
 		color: darkgreen;
 	}
 </style>

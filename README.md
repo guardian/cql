@@ -57,9 +57,12 @@ Todo:
 - [x] Add '@' syntax for content return format (e.g. show-fields)
   - [x] Fix issue with incomplete binaries and output modifiers
 - [ ] Fill out additional fields:
-  - [ ] Dates!
-    - [ ] Add `type` property to suggestion envelope to ensure correct interface is displayed
+  - [x] Dates!
+    - [x] Add `type` property to suggestion envelope to ensure correct interface is displayed (NB: Circe wraps sealed trait in object with single key as name of class)
+    - [x] Correct focus when date appears
+    - [ ] What do we do when users want to navigate through the string without focus being stolen? Perhaps we don't need to autofocus?
   - [ ] Other, less fancy fields
+- [ ] Fix crash on empty parens
 - [ ] Add typeahead for binaries
 - [ ] Ensure content is displayed when server does not respond
 - [ ] Error handling for 4/5xx

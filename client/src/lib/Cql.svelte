@@ -148,6 +148,13 @@
 		typeaheadOffsetPx = cursorMarker?.getBoundingClientRect().left;
 	});
 
+	const onDatePickerInit = (datePickerEl) => {
+		console.log('hi', datePickerEl);
+		requestAnimationFrame(() => {
+			datePickerEl.focus();
+		});
+	};
+
 	const fetchLanguageServer = async (query: string) => {
 		cqlQuery = query;
 		const urlParams = new URLSearchParams();
@@ -199,7 +206,7 @@
 		</div>
 	</div>
 	{#if currentSuggestions !== undefined}<div
-			class="Cql__typeahead"
+			class={`Cql__typeahead Cql__typeahead-${Object.keys(currentSuggestions.suggestions).join('')}`}
 			style="left: {typeaheadOffsetPx - 7}px"
 			transition:fade={{ duration: 100 }}
 		>
@@ -216,7 +223,12 @@
 				</ul>
 			{/if}
 			{#if currentSuggestions.suggestions.DateSuggestion}
-				<input class="Cql_typeahead-date" type="date" autofocus on:keydown={handleDateKeydown} />
+				<input
+					class="Cql_typeahead-date"
+					type="date"
+					use:onDatePickerInit
+					on:keydown={handleDateKeydown}
+				/>
 			{/if}
 		</div>{/if}
 	{#if ast.queryResult}<div class="Cql__output">{ast.queryResult}</div>{/if}
@@ -286,8 +298,11 @@
 	}
 	.Cql__typeahead {
 		position: absolute;
-		border: 2px solid grey;
 		width: 200px;
+	}
+
+	.Cql__typeahead-TextSuggestion {
+		border: 2px solid grey;
 		background-color: white;
 	}
 
