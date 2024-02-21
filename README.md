@@ -154,3 +154,5 @@ Why would we like it to know less? B/c less coupling with language means
  - we can potentially use component with other language servers, languages
 
 Future refactor. Connect a typeahead client first.
+
+Date typeahead: autofocus when the value is not yet present. Display but do not autofocus when value is present (even if incorrect.)
