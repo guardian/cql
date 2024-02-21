@@ -6,27 +6,22 @@ import cql.grammar.QueryField
 import cql.grammar.QueryList
 import cql.grammar.QueryOutputModifier
 
-sealed trait TypeaheadSuggestion {
-  val from: Int
-  val to: Int
-}
-
-case class TypeaheadTextSuggestions(
+case class TypeaheadSuggestion(
     from: Int,
     to: Int,
     // The suffix to apply if this suggestion is accepted at the trailing edge of the query.
     // E.g. when we have typed '+ta' accept the key suggestion 'tag', we'll want to apply '+tag:'
     // to trigger typeahead for the value.
     suffix: String = "",
-    suggestions: List[TypeaheadTextSuggestion]
-) extends TypeaheadSuggestion
+    suggestions: Suggestions
+)
 
-case class TypeaheadTextSuggestion(label: String, value: String)
+sealed trait Suggestions
 
-case class TypeaheadDateSuggestion(
-  from: Int,
-  to: Int,
-) extends TypeaheadSuggestion
+case class TextSuggestion(suggestions: List[TextSuggestionOption]) extends Suggestions
+case class TextSuggestionOption(label: String, value: String)
+
+case class DateSuggestion(validFrom: Option[String], validTo: Option[String]) extends Suggestions
 
 class Typeahead(client: TypeaheadQueryClient) {
   private val typeaheadTokenResolverMap = Map(
@@ -40,12 +35,15 @@ class Typeahead(client: TypeaheadQueryClient) {
     "section" -> ("Section", suggestSections)
   )
 
-  private val typeaheadFieldResolverEntries = typeaheadFieldResolverMap.map {
-    case (value, (label, _)) => TypeaheadTextSuggestion(label, value)
-  }.toList
+  private val typeaheadFieldResolverEntries = TextSuggestion(
+    typeaheadFieldResolverMap.map { case (value, (label, _)) =>
+      TextSuggestionOption(label, value)
+    }.toList
+  )
 
-  private val typeaheadOutputModifierResolverMap = Map(
-    "show-fields" -> List(
+  private val typeaheadOutputModifierResolverMap
+      : Map[String, ("TEXT" | "DATE", List[String])] = Map(
+    "show-fields" -> ("TEXT", List(
       "all",
       "trailText",
       "headline",
@@ -69,17 +67,19 @@ class Typeahead(client: TypeaheadQueryClient) {
       "liveBloggingNow",
       "commentCloseDate",
       "starRating"
-    )
+    )),
+    "from-date" -> ("DATE", List.empty),
+    "to-date" -> ("DATE", List.empty)
   )
 
   private val typeaheadOutputModifierResolverEntries =
     typeaheadOutputModifierResolverMap.keys.map { case key =>
-      TypeaheadTextSuggestion(key, key)
+      TextSuggestionOption(key, key)
     }.toList
 
   def getSuggestions(
       program: QueryList
-  ): Future[List[TypeaheadTextSuggestions | TypeaheadDateSuggestion]] =
+  ): Future[List[TypeaheadSuggestion]] =
     val eventuallySuggestions = program.exprs.collect {
       case q: QueryField =>
         suggestQueryField(q)
@@ -94,7 +94,7 @@ class Typeahead(client: TypeaheadQueryClient) {
       case QueryField(keyToken, None) =>
         List(
           Future.successful(
-            TypeaheadTextSuggestions(
+            TypeaheadSuggestion(
               keyToken.start,
               keyToken.end,
               ":",
@@ -104,7 +104,7 @@ class Typeahead(client: TypeaheadQueryClient) {
         )
       case QueryField(keyToken, Some(valueToken)) =>
         val keySuggestions = Future.successful(
-          TypeaheadTextSuggestions(
+          TypeaheadSuggestion(
             keyToken.start,
             keyToken.end,
             ":",
@@ -117,11 +117,11 @@ class Typeahead(client: TypeaheadQueryClient) {
             valueToken.literal.getOrElse("")
           )
             .map { suggestions =>
-              TypeaheadTextSuggestions(
+              TypeaheadSuggestion(
                 valueToken.start,
                 valueToken.end,
                 " ",
-                suggestions
+                TextSuggestion(suggestions)
               )
             }
         List(keySuggestions, valueSuggestions)
@@ -131,7 +131,7 @@ class Typeahead(client: TypeaheadQueryClient) {
     q match {
       case QueryOutputModifier(keyToken, None) =>
         List(
-          TypeaheadTextSuggestions(
+          TypeaheadSuggestion(
             keyToken.start,
             keyToken.end,
             ":",
@@ -140,14 +140,14 @@ class Typeahead(client: TypeaheadQueryClient) {
         )
       case QueryOutputModifier(keyToken, Some(valueToken)) =>
         val keySuggestions =
-          TypeaheadTextSuggestions(
+          TypeaheadSuggestion(
             keyToken.start,
             keyToken.end,
             ":",
             suggestOutputModifierKey(keyToken.literal.getOrElse(""))
           )
         val valueSuggestions =
-          TypeaheadTextSuggestions(
+          TypeaheadSuggestion(
             valueToken.start,
             valueToken.end,
             " ",
@@ -159,40 +159,49 @@ class Typeahead(client: TypeaheadQueryClient) {
         List(keySuggestions, valueSuggestions)
     }
 
-  private def suggestFieldKey(str: String): List[TypeaheadTextSuggestion] =
+  private def suggestFieldKey(str: String): TextSuggestion =
     str match
       case "" => typeaheadFieldResolverEntries
       case str =>
-        typeaheadFieldResolverEntries
-          .filter(_.value.contains(str.toLowerCase()))
+        typeaheadFieldResolverEntries.copy(
+          suggestions = typeaheadFieldResolverEntries.suggestions
+            .filter(_.value.contains(str.toLowerCase()))
+        )
 
   private def suggestFieldValue(
       key: String,
       str: String
-  ): Future[List[TypeaheadTextSuggestion]] =
+  ): Future[List[TextSuggestionOption]] =
     typeaheadFieldResolverMap
       .get(key)
       .map(_._2(str))
       .getOrElse(Future.successful(List.empty))
 
-  private def suggestOutputModifierKey(str: String): List[TypeaheadTextSuggestion] =
-    typeaheadOutputModifierResolverEntries.filter(
-      _.value.contains(str.toLowerCase())
+  private def suggestOutputModifierKey(str: String): TextSuggestion =
+    TextSuggestion(
+      typeaheadOutputModifierResolverEntries.filter(
+        _.value.contains(str.toLowerCase())
+      )
     )
 
   private def suggestOutputModifierValue(
       key: String,
       str: String
-  ): List[TypeaheadTextSuggestion] =
-    typeaheadOutputModifierResolverMap
-      .get(key)
-      .getOrElse(List.empty)
-      .filter(
-        _.contains(
-          str.toLowerCase()
+  ): TextSuggestion | DateSuggestion =
+    typeaheadOutputModifierResolverMap.get(key) match
+      case Some("TEXT", suggestions) =>
+        TextSuggestion(
+          suggestions
+            .filter(
+              _.contains(
+                str.toLowerCase()
+              )
+            )
+            .map { str => TextSuggestionOption(str, str) }
         )
-      )
-      .map { str => TypeaheadTextSuggestion(str, str) }
+      // Todo: date validation based on rest of AST
+      case Some("DATE", _) => DateSuggestion(None, None)
+      case None            => TextSuggestion(List.empty)
 
   private def suggestTags(str: String) =
     client.getTags(str)

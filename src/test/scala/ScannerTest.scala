@@ -81,12 +81,12 @@ class ScannerTest extends BaseTest {
       assert(tokens === expectedTokens)
     }
 
-    it("should yield a plus token when a search key is incomplete") {
+    it("should yield a query field key when a search key is incomplete") {
       val scanner = new Scanner("""example +""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
         unquotedStringToken("example"),
-        Token(TokenType.PLUS, "+", None, 8, 8),
+        Token(TokenType.QUERY_FIELD_KEY, "+", None, 8, 8),
         eofToken(9)
       )
       assert(tokens === expectedTokens)

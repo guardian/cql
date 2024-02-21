@@ -7,7 +7,6 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class TypeaheadTest extends BaseTest {
 
-
   describe("typeahead") {
     val typeaheadQueryClient = new TypeaheadQueryClientTest()
     val typeahead = new Typeahead(typeaheadQueryClient)
@@ -23,11 +22,11 @@ class TypeaheadTest extends BaseTest {
         )
         .map { result =>
           result shouldBe List(
-            TypeaheadTextSuggestions(
+            TypeaheadSuggestion(
               0,
               7,
               ":",
-              List.empty
+              TextSuggestion(List.empty)
             )
           )
         }
@@ -44,12 +43,14 @@ class TypeaheadTest extends BaseTest {
         )
         .map { result =>
           result shouldBe List(
-            TypeaheadTextSuggestions(
+            TypeaheadSuggestion(
               0,
               2,
               ":",
-              List(
-                TypeaheadTextSuggestion("Tag", "tag")
+              TextSuggestion(
+                List(
+                  TextSuggestionOption("Tag", "tag")
+                )
               )
             )
           )
@@ -69,20 +70,24 @@ class TypeaheadTest extends BaseTest {
         )
         .map { result =>
           result shouldBe List(
-            TypeaheadTextSuggestions(
+            TypeaheadSuggestion(
               0,
               3,
               ":",
-              List(
-                TypeaheadTextSuggestion("Tag", "tag")
+              TextSuggestion(
+                List(
+                  TextSuggestionOption("Tag", "tag")
+                )
               )
             ),
-            TypeaheadTextSuggestions(
+            TypeaheadSuggestion(
               5,
               18,
               " ",
-              List(
-                TypeaheadTextSuggestion("Tags are magic", "tags-are-magic")
+              TextSuggestion(
+                List(
+                  TextSuggestionOption("Tags are magic", "tags-are-magic")
+                )
               )
             )
           )
@@ -102,20 +107,24 @@ class TypeaheadTest extends BaseTest {
         )
         .map { result =>
           result shouldBe List(
-            TypeaheadTextSuggestions(
+            TypeaheadSuggestion(
               0,
               3,
               ":",
-              List(
-                TypeaheadTextSuggestion("Tag", "tag")
+              TextSuggestion(
+                List(
+                  TextSuggestionOption("Tag", "tag")
+                )
               )
             ),
-            TypeaheadTextSuggestions(
+            TypeaheadSuggestion(
               5,
               5,
               " ",
-              List(
-                TypeaheadTextSuggestion("Tags are magic", "tags-are-magic")
+              TextSuggestion(
+                List(
+                  TextSuggestionOption("Tags are magic", "tags-are-magic")
+                )
               )
             )
           )

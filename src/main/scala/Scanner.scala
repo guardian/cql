@@ -46,7 +46,7 @@ class Scanner(program: String):
     while ((peek != ':' && peek != ' ') && !isAtEnd)
       advance
 
-    if (current - start == 1) addToken(TokenType.AT)
+    if (current - start == 1) addToken(tokenType)
     else
       val key = program.substring(start + 1, current)
       addToken(tokenType, Some(key))

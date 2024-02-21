@@ -1,17 +1,17 @@
 package cql
 
-import cql.{TypeaheadQueryClient, TypeaheadTextSuggestion}
+import cql.{TypeaheadQueryClient, TextSuggestionOption}
 
 import scala.concurrent.Future
 
 class TypeaheadQueryClientTest extends TypeaheadQueryClient {
-  def getTags(str: String): Future[List[TypeaheadTextSuggestion]] =
+  def getTags(str: String): Future[List[TextSuggestionOption]] =
     Future.successful(
-      List(TypeaheadTextSuggestion("Tags are magic", "tags-are-magic"))
+      List(TextSuggestionOption("Tags are magic", "tags-are-magic"))
     )
 
-  def getSections(str: String): Future[List[TypeaheadTextSuggestion]] =
+  def getSections(str: String): Future[List[TextSuggestionOption]] =
     Future.successful(
-      List(TypeaheadTextSuggestion("Also sections", "sections-are-magic"))
+      List(TextSuggestionOption("Also sections", "sections-are-magic"))
     )
 }

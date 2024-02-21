@@ -6,8 +6,12 @@ import io.circe.generic.semiauto.deriveEncoder
 import io.circe.Encoder
 import io.circe.syntax._
 import cql.TokenType
-import cql.{TypeaheadSuggestion, TypeaheadTextSuggestions, TypeaheadTextSuggestion}
-import cql.TypeaheadDateSuggestion
+import cql.{
+  TypeaheadSuggestion,
+  TextSuggestion,
+  TextSuggestionOption,
+  DateSuggestion
+}
 
 case class CqlResult(
     tokens: List[Token],
@@ -21,7 +25,9 @@ case class CqlResult(
 
 trait Query
 
-case class QueryList(exprs: List[QueryBinary | QueryField | QueryOutputModifier]) extends Query
+case class QueryList(
+    exprs: List[QueryBinary | QueryField | QueryOutputModifier]
+) extends Query
 case class QueryBinary(
     left: QueryContent,
     right: Option[(Token, QueryContent)] = None
@@ -35,18 +41,18 @@ case class QueryOutputModifier(key: Token, value: Option[Token]) extends Query
 trait QueryJson {
   implicit val typeaheadSuggestions: Encoder[TypeaheadSuggestion] =
     deriveEncoder[TypeaheadSuggestion]
-  implicit val typeaheadTextSuggestions: Encoder[TypeaheadTextSuggestions] =
-    deriveEncoder[TypeaheadTextSuggestions]
-  implicit val typeaheadSuggestion: Encoder[TypeaheadTextSuggestion] =
-    deriveEncoder[TypeaheadTextSuggestion]
-  implicit val typeaheadDateSuggestion: Encoder[TypeaheadDateSuggestion] =
-    deriveEncoder[TypeaheadDateSuggestion]
+  implicit val typeaheadTextSuggestion: Encoder[TextSuggestion] =
+    deriveEncoder[TextSuggestion]
+  implicit val typeaheadDateSuggestion: Encoder[DateSuggestion] =
+    deriveEncoder[DateSuggestion]
+  implicit val textSuggestionOption: Encoder[TextSuggestionOption] =
+    deriveEncoder[TextSuggestionOption]
 
   implicit val cqlResultEncoder: Encoder[CqlResult] = deriveEncoder[CqlResult]
   implicit val queryListEncoder: Encoder[QueryList] = Encoder.instance { list =>
     val arr = list.exprs.map {
-      case q: QueryBinary => q.asJson
-      case q: QueryField   => q.asJson
+      case q: QueryBinary         => q.asJson
+      case q: QueryField          => q.asJson
       case q: QueryOutputModifier => q.asJson
     }
     Json.obj("type" -> "QueryList".asJson, "content" -> Json.arr(arr: _*))
@@ -70,14 +76,14 @@ trait QueryJson {
         "value" -> queryField.value.asJson
       )
   }
-    implicit val queryOutputModifierEncoder: Encoder[QueryOutputModifier] = Encoder.instance {
-    queryField =>
+  implicit val queryOutputModifierEncoder: Encoder[QueryOutputModifier] =
+    Encoder.instance { queryField =>
       Json.obj(
         "type" -> "QueryOutputModifier".asJson,
         "key" -> queryField.key.asJson,
         "value" -> queryField.value.asJson
       )
-  }
+    }
   implicit val tokenEncoder: Encoder[Token] = Encoder.instance { token =>
     Json.obj(
       "type" -> "Token".asJson,
