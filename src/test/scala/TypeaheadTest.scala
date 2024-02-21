@@ -23,7 +23,7 @@ class TypeaheadTest extends BaseTest {
         )
         .map { result =>
           result shouldBe List(
-            TypeaheadSuggestions(
+            TypeaheadTextSuggestions(
               0,
               7,
               ":",
@@ -44,12 +44,12 @@ class TypeaheadTest extends BaseTest {
         )
         .map { result =>
           result shouldBe List(
-            TypeaheadSuggestions(
+            TypeaheadTextSuggestions(
               0,
               2,
               ":",
               List(
-                TypeaheadSuggestion("Tag", "tag")
+                TypeaheadTextSuggestion("Tag", "tag")
               )
             )
           )
@@ -69,20 +69,20 @@ class TypeaheadTest extends BaseTest {
         )
         .map { result =>
           result shouldBe List(
-            TypeaheadSuggestions(
+            TypeaheadTextSuggestions(
               0,
               3,
               ":",
               List(
-                TypeaheadSuggestion("Tag", "tag")
+                TypeaheadTextSuggestion("Tag", "tag")
               )
             ),
-            TypeaheadSuggestions(
+            TypeaheadTextSuggestions(
               5,
               18,
               " ",
               List(
-                TypeaheadSuggestion("Tags are magic", "tags-are-magic")
+                TypeaheadTextSuggestion("Tags are magic", "tags-are-magic")
               )
             )
           )
@@ -102,20 +102,20 @@ class TypeaheadTest extends BaseTest {
         )
         .map { result =>
           result shouldBe List(
-            TypeaheadSuggestions(
+            TypeaheadTextSuggestions(
               0,
               3,
               ":",
               List(
-                TypeaheadSuggestion("Tag", "tag")
+                TypeaheadTextSuggestion("Tag", "tag")
               )
             ),
-            TypeaheadSuggestions(
+            TypeaheadTextSuggestions(
               5,
               5,
               " ",
               List(
-                TypeaheadSuggestion("Tags are magic", "tags-are-magic")
+                TypeaheadTextSuggestion("Tags are magic", "tags-are-magic")
               )
             )
           )

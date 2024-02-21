@@ -6,8 +6,8 @@ import io.circe.generic.semiauto.deriveEncoder
 import io.circe.Encoder
 import io.circe.syntax._
 import cql.TokenType
-import cql.TypeaheadSuggestions
-import cql.TypeaheadSuggestion
+import cql.{TypeaheadSuggestion, TypeaheadTextSuggestions, TypeaheadTextSuggestion}
+import cql.TypeaheadDateSuggestion
 
 case class CqlResult(
     tokens: List[Token],
@@ -15,7 +15,7 @@ case class CqlResult(
     queryResult: Option[String],
     // Map from tokenType to a map of literals and their suggestions.
     // Avoiding TokenType as type to avoid serialisation shenanigans in prototype.
-    suggestions: List[TypeaheadSuggestions],
+    suggestions: List[TypeaheadSuggestion],
     error: Option[String] = None
 )
 
@@ -33,10 +33,14 @@ case class QueryField(key: Token, value: Option[Token]) extends Query
 case class QueryOutputModifier(key: Token, value: Option[Token]) extends Query
 
 trait QueryJson {
-  implicit val typeaheadSuggestions: Encoder[TypeaheadSuggestions] =
-    deriveEncoder[TypeaheadSuggestions]
-  implicit val typeaheadSuggestion: Encoder[TypeaheadSuggestion] =
+  implicit val typeaheadSuggestions: Encoder[TypeaheadSuggestion] =
     deriveEncoder[TypeaheadSuggestion]
+  implicit val typeaheadTextSuggestions: Encoder[TypeaheadTextSuggestions] =
+    deriveEncoder[TypeaheadTextSuggestions]
+  implicit val typeaheadSuggestion: Encoder[TypeaheadTextSuggestion] =
+    deriveEncoder[TypeaheadTextSuggestion]
+  implicit val typeaheadDateSuggestion: Encoder[TypeaheadDateSuggestion] =
+    deriveEncoder[TypeaheadDateSuggestion]
 
   implicit val cqlResultEncoder: Encoder[CqlResult] = deriveEncoder[CqlResult]
   implicit val queryListEncoder: Encoder[QueryList] = Encoder.instance { list =>
