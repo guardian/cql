@@ -95,20 +95,6 @@ class Scanner(program: String):
     val text = program.substring(start, current)
     tokens = tokens :+ Token(tokenType, text, literal, start, current - 1)
 
-  def addCommentBlock: Unit =
-    while (!(peek == '*' && peekNext == '/') && !isAtEnd)
-      // If we encounter another comment, consume that too
-      if (peek == '/' && peekNext == '*')
-        advance
-        advance
-        addCommentBlock
-      if (peek == '\n')
-        line = line + 1
-      advance
-    // Skip past the two remaining chars
-    advance
-    advance
-
   def advance =
     val previous = current
     current = current + 1
@@ -129,31 +115,3 @@ class Scanner(program: String):
   def report(line: Int, where: String, message: String) =
     println(s"[line ${line}] Error${where}: ${message}")
     hasError = true;
-
-// expression =
-//   literal
-//   unary
-//   binary
-//   grouping
-
-// literal =
-//   STRING
-//   NUMBER
-//   "true"
-//   "false"
-//   "nil"
-
-// unary =
-//   (BANG | MINUS)+ expression
-
-// binary =
-//   expression OPERATOR expression
-
-// grouping =
-//   LEFT_PAREN expression RIGHT_PAREN
-
-// operator =  BANG_EQUAL,
-//   EQUAL, EQUAL_EQUAL,
-//   GREATER, GREATER_EQUAL,
-//   LESS, LESS_EQUAL, MINUS, PLUS,
-//   SLASH, STAR
