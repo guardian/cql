@@ -1,42 +1,26 @@
-package cql.grammar
+package cql
 
-import cql.Token
 import io.circe._
 import io.circe.generic.semiauto.deriveEncoder
 import io.circe.Encoder
 import io.circe.syntax._
-import cql.TokenType
-import cql.{
+
+import cql.lang.{
+  Token,
+  TokenType,
   TypeaheadSuggestion,
   TextSuggestion,
   TextSuggestionOption,
-  DateSuggestion
+  DateSuggestion,
+  QueryList,
+  QueryBinary,
+  QueryField,
+  QueryOutputModifier,
+  QueryGroup,
+  QueryStr,
+  QueryContent,
+  CqlResult
 }
-
-case class CqlResult(
-    tokens: List[Token],
-    ast: Option[QueryList],
-    queryResult: Option[String],
-    // Map from tokenType to a map of literals and their suggestions.
-    // Avoiding TokenType as type to avoid serialisation shenanigans in prototype.
-    suggestions: List[TypeaheadSuggestion],
-    error: Option[String] = None
-)
-
-trait Query
-
-case class QueryList(
-    exprs: List[QueryBinary | QueryField | QueryOutputModifier]
-) extends Query
-case class QueryBinary(
-    left: QueryContent,
-    right: Option[(Token, QueryContent)] = None
-)
-case class QueryContent(content: QueryStr | QueryBinary | QueryGroup)
-case class QueryGroup(content: QueryBinary)
-case class QueryStr(searchExpr: String) extends Query
-case class QueryField(key: Token, value: Option[Token]) extends Query
-case class QueryOutputModifier(key: Token, value: Option[Token]) extends Query
 
 trait QueryJson {
   implicit val typeaheadSuggestions: Encoder[TypeaheadSuggestion] =

@@ -1,7 +1,7 @@
-package cql
+package cql.lang
 
 import TokenType.*
-import cql.grammar.*
+import cql.lang.*
 
 import java.net.{URI, URLEncoder}
 import java.nio.charset.Charset

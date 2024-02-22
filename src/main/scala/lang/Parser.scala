@@ -1,10 +1,9 @@
-package cql
-
-import TokenType.*
-import cql.grammar.*
+package cql.lang
 
 import scala.util.Try
 import scala.util.Success
+
+import TokenType.*
 
 class ParseError(message: String) extends Error(message)
 

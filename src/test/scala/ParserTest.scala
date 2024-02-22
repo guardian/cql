@@ -1,6 +1,6 @@
 package cql
 
-import cql.grammar.{QueryList, QueryOutputModifier}
+import cql.lang.{QueryList, QueryOutputModifier}
 import concurrent.ExecutionContext.Implicits.global // Todo: sticking plaster
 import scala.util.Failure
 import scala.util.Success

@@ -1,7 +1,5 @@
 package cql
 
-import cql.Cql
-import cql.grammar.QueryJson
 import org.apache.pekko
 import pekko.actor.typed.ActorSystem
 import pekko.actor.typed.scaladsl.Behaviors
@@ -12,6 +10,7 @@ import io.circe.syntax.*
 import com.github.pjfanning.pekkohttpcirce.*
 import scala.io.StdIn
 import scala.util.{Failure, Success, Try}
+import cql.lang.{Cql}
 
 object HttpServer extends QueryJson {
   val cql = new Cql()

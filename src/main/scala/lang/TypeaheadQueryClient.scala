@@ -1,6 +1,4 @@
-package cql
-
-import cql.TextSuggestionOption
+package cql.lang
 
 import scala.concurrent.Future
 

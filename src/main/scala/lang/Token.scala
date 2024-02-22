@@ -1,4 +1,4 @@
-package cql
+package cql.lang
 
 enum TokenType:
   // Single-character tokens.

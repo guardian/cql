@@ -1,10 +1,10 @@
-package cql
+package cql.lang
 
 import scala.concurrent.Future
 import concurrent.ExecutionContext.Implicits.global
-import cql.grammar.QueryField
-import cql.grammar.QueryList
-import cql.grammar.QueryOutputModifier
+import cql.lang.QueryField
+import cql.lang.QueryList
+import cql.lang.QueryOutputModifier
 
 case class TypeaheadSuggestion(
     from: Int,

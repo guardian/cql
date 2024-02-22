@@ -1,4 +1,4 @@
-package cql
+package cql.lang
 
 import scala.util.Try
 

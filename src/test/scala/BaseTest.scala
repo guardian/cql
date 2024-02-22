@@ -6,7 +6,7 @@ import flatspec._
 import matchers._
 import funspec.AnyFunSpec
 import org.scalatest.funspec.AsyncFunSpec
-import cql.grammar.{QueryField, QueryOutputModifier}
+import cql.lang.{QueryField, QueryOutputModifier}
 
 abstract class BaseTest extends AsyncFunSpec with should.Matchers {
   def leftParenToken(start: Int = 0) =
