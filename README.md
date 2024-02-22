@@ -60,12 +60,16 @@ Todo:
   - [x] Dates!
     - [x] Add `type` property to suggestion envelope to ensure correct interface is displayed (NB: Circe wraps sealed trait in object with single key as name of class)
     - [x] Correct focus when date appears
-    - [ ] What do we do when users want to navigate through the string without focus being stolen? Perhaps we don't need to autofocus?
+    - [x] What do we do when users want to navigate through the string without focus being stolen? Perhaps we don't need to autofocus? Solution for now: autofocus on first input, keydown or tab to focus input when value is already present (to allow user to scrub through dates unimpeded)
   - [ ] Other, less fancy fields
 - [x] Fix crash on empty parens
 - [ ] Add typeahead for binaries
 - [ ] Ensure content is displayed when server does not respond
 - [ ] Error handling for 4/5xx
+
+Infra
+- [ ] Add configuration for CAPI key
+- [ ] Add lambda handler, artefact creation, and IaC
 
 ### Notes
 

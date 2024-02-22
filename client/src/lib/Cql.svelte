@@ -18,6 +18,7 @@
 	let currentSuggestions = undefined;
 	let typeaheadOffsetPx = 0;
 	let inputElement: HTMLInputElement;
+  let datePickerElement: HTMLInputElement;
 	let cursorMarker: HTMLSpanElement;
 	let inputContainerElement: HTMLDivElement;
 	let menuIndex = 0;
@@ -26,7 +27,7 @@
 		fetchLanguageServer(e.target.value);
 	};
 
-	const handleKeydown = (e) => {
+	const handleInputKeydown = (e) => {
 		if (currentSuggestions === undefined) {
 			// Only active when menu is active
 			return;
@@ -39,8 +40,14 @@
 				if (menuIndex > 0) menuIndex--;
 				break;
 			case 'ArrowDown':
-				if (menuIndex < currentSuggestions.suggestions.TextSuggestion.suggestions.length - 1)
-					menuIndex++;
+        if (currentSuggestions.suggestions.TextSuggestion) {
+          if (menuIndex < currentSuggestions.suggestions.TextSuggestion.suggestions.length - 1)
+					  menuIndex++;
+        }
+        // Focus the datepicker if it's not already focussed
+        if (currentSuggestions.suggestions.DateSuggestion) {
+          datePickerElement.focus();
+        }
 				break;
 			case 'Enter':
 				replaceCurrentSuggestionTargetWithMenuItem(menuIndex);
@@ -69,8 +76,9 @@
 		}
 	};
 
-	const replaceCurrentSuggestionTargetWithMenuItem = (index: number) => {
-		const currentSuggestion = currentSuggestions.suggestions.TextSuggestion.suggestions[index];
+	const replaceCurrentSuggestionTargetWithMenuItem = (menuItemIndex: number) => {
+		const currentSuggestion =
+			currentSuggestions.suggestions.TextSuggestion.suggestions[menuItemIndex];
 		const strToInsert = currentSuggestion.value;
 		replaceCurrentSuggestionTarget(strToInsert);
 	};
@@ -85,7 +93,6 @@
 		const beforeStr = cqlQuery.slice(0, token.start + 1);
 		const afterStr = cqlQuery.slice(token.end + 1);
 		const applySuffix = /^\s*$/.test(afterStr);
-		console.log({ strToInsert, beforeStr, afterStr, applySuffix, currentSuggestions });
 		cqlQuery = `${beforeStr}${strToInsert}${applySuffix ? currentSuggestions.suffix : afterStr}`;
 
 		// +1 for + or :, +1 to get us past the end of the current position
@@ -149,10 +156,13 @@
 	});
 
 	const onDatePickerInit = (datePickerEl) => {
-		console.log('hi', datePickerEl);
-		requestAnimationFrame(() => {
-			datePickerEl.focus();
-		});
+		const { from, to } = currentSuggestions;
+		const noDateYetPresent = from === to;
+		if (noDateYetPresent) {
+			requestAnimationFrame(() => {
+				datePickerEl.focus();
+			});
+		}
 	};
 
 	const fetchLanguageServer = async (query: string) => {
@@ -189,7 +199,7 @@
 		class="Cql__input"
 		value={cqlQuery}
 		on:input={handleInput}
-		on:keydown={handleKeydown}
+		on:keydown={handleInputKeydown}
 		on:focus={watchSelectionChange}
 		on:blur={unwatchSelectionChange}
 		on:scroll={syncScrollState}
@@ -227,6 +237,7 @@
 					class="Cql_typeahead-date"
 					type="date"
 					use:onDatePickerInit
+          bind:this={datePickerElement}
 					on:keydown={handleDateKeydown}
 				/>
 			{/if}
