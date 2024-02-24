@@ -2,7 +2,7 @@ import sbtassembly.AssemblyKeys.assembly
 import sbtassembly.AssemblyPlugin.autoImport.assemblyJarName
 import sbtassembly.MergeStrategy
 
-name := "cql"
+name := "cql-lambda"
 
 organization := "com.gu"
 
@@ -42,7 +42,7 @@ lazy val cql = project.in(file("."))
 
 enablePlugins(RiffRaffArtifact)
 
-assemblyJarName := s"cql.jar"
+assemblyJarName := s"cql-lambda.jar"
 riffRaffPackageType := assembly.value
 riffRaffUploadArtifactBucket := Option("riffraff-artifact")
 riffRaffUploadManifestBucket := Option("riffraff-builds")

@@ -36,7 +36,7 @@ jobs:
         run: |
           npm ci
           npm test
-          npm synth
+          npm run synth
 
       - name: Upload to Riff-Raff
         uses: guardian/actions-riff-raff@v2
@@ -44,7 +44,7 @@ jobs:
           projectName: cql::cql-lambda
           configPath: ./cdk/cdk.out/riff-raff.yaml
           contentDirectories: |
-            cql-lambda-cloudformation:
+            cdk.out:
               - ./cdk/cdk.out/CqlLambda-PROD.template.json
             cql-lambda:
-              - ./handlers/cql-lambda/target/scala-3.3.1/cql-lambda.jar
+              - ./target/scala-3.3.1/cql-lambda.jar

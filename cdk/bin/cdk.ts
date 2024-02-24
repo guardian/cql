@@ -5,7 +5,7 @@ import { CqlLambda } from '../lib/cql-lambda';
 const app = new GuRoot();
 
 new CqlLambda(app, 'CqlLambda-PROD', {
-	stack: 'cql',
+	stack: 'playground',
 	stage: 'PROD',
 	env: { region: 'eu-west-1' },
 });
