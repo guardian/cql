@@ -8,7 +8,7 @@ export class CqlLambda extends GuStack {
 	constructor(scope: App, id: string, props: GuStackProps) {
 		super(scope, id, props);
 
-		const lambda = new GuLambdaFunction(this, 'cql-lambda', {
+		new GuLambdaFunction(this, 'cql-lambda', {
 			app: 'cql-lambda',
 			handler: 'cql.Handler::apply',
 			functionName: `cql-lambda-${this.stage}`,

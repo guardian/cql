@@ -1,0 +1,50 @@
+name: ci
+on:
+  pull_request:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+jobs:
+  gu-cdk-build:
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          aws-region: eu-west-1
+
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'corretto'
+          java-version: '11'
+          cache: 'sbt'
+
+      - name: Run tests and build JAR
+        run: sbt test assembly
+
+      - name: Generate CDK
+        working-directory: ./cdk
+        run: |
+          npm ci
+          npm test
+          npm synth
+
+      - name: Upload to Riff-Raff
+        uses: guardian/actions-riff-raff@v2
+        with:
+          projectName: cql::cql-lambda
+          configPath: ./cdk/cdk.out/riff-raff.yaml
+          contentDirectories: |
+            cql-lambda-cloudformation:
+              - ./cdk/cdk.out/CqlLambda-PROD.template.json
+            cql-lambda:
+              - ./handlers/cql-lambda/target/scala-3.3.1/cql-lambda.jar
