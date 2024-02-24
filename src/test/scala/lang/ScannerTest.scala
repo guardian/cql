@@ -1,4 +1,4 @@
-package cql
+package cql.lang
 
 class ScannerTest extends BaseTest {
   describe("unquoted strings") {

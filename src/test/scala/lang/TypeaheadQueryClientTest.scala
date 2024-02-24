@@ -1,6 +1,4 @@
-package cql
-
-import cql.{TypeaheadQueryClient, TextSuggestionOption}
+package cql.lang
 
 import scala.concurrent.Future
 

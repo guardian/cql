@@ -1,4 +1,4 @@
-package cql
+package cql.lang
 
 import cql.lang.{QueryList, QueryOutputModifier}
 import concurrent.ExecutionContext.Implicits.global // Todo: sticking plaster

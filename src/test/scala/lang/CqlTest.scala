@@ -1,4 +1,4 @@
-package cql
+package cql.lang
 
 import concurrent.ExecutionContext.Implicits.global // Todo: sticking plaster
 

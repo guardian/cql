@@ -1,6 +1,4 @@
-package cql
-
-import cql.lang.{QueryList, QueryField}
+package cql.lang
 
 import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
