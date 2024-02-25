@@ -68,8 +68,9 @@ Todo:
 - [ ] Error handling for 4/5xx
 
 Infra
+- [x] Configure CI
+- [ ] Add handler for lambda
 - [ ] Add configuration for CAPI key
-- [ ] Add lambda handler, artefact creation, and IaC
 
 ### Notes
 
