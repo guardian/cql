@@ -64,6 +64,8 @@ Todo:
     - [ ] Parse to correct format for query
   - [ ] Other, less fancy fields
 - [x] Fix crash on empty parens
+- [x] Fix crash on leading colon when key is not valid query or output key
+- [ ] Move to contenteditable (issues with scrolling in Chrome, e.g. https://issues.chromium.org/issues/41081857, make syncing scroll state of overlay difficult)
 - [ ] Add typeahead for binaries
 - [ ] Ensure content is displayed when server does not respond
 - [ ] Error handling for 4/5xx

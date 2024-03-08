@@ -36,11 +36,15 @@ class Parser(tokens: List[Token]):
   val startOfQueryField = List(TokenType.QUERY_FIELD_KEY, TokenType.PLUS)
   val startOfQueryOutputModifier =
     List(TokenType.QUERY_OUTPUT_MODIFIER_KEY, TokenType.AT)
+  val startOfQueryValue =
+    List(TokenType.QUERY_VALUE, TokenType.COLON)
 
   private def query: QueryBinary | QueryField | QueryOutputModifier =
     if (startOfQueryField.contains(peek().tokenType)) queryField
     else if (startOfQueryOutputModifier.contains(peek().tokenType))
       queryOutputModifier
+    else if (startOfQueryValue.contains(peek().tokenType))
+      throw new ParseError("I found an unexpected ':'. Did you intend to search for a tag, section or similar, e.g. tag:news? If you would like to add a search phrase containing a ':' character, please surround it in double quotes.")
     else queryBinary
 
   private def queryBinary =

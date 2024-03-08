@@ -16,6 +16,7 @@ abstract class BaseTest extends AsyncFunSpec with should.Matchers {
   def andToken(start: Int = 0) =
     Token(TokenType.AND, "AND", Some("AND"), start, start + 3)
   def eofToken(start: Int) = Token(TokenType.EOF, "", None, start, start)
+  def colonToken(start: Int) = Token(TokenType.COLON, "", None, start, start)
   def unquotedStringToken(str: String, start: Int = 0) =
     Token(TokenType.STRING, str, Some(str), start, start + str.length - 1)
   def quotedStringToken(str: String, start: Int = 0) = Token(

@@ -55,7 +55,7 @@ class Scanner(program: String):
     while ((peek != ' ') && !isAtEnd)
       advance
 
-    if (current - start == 1) addToken(TokenType.COLON)
+    if (current - start == 1) addToken(TokenType.QUERY_VALUE, None)
     else
       val value = program.substring(start + 1, current)
       addToken(TokenType.QUERY_VALUE, Some(value))
