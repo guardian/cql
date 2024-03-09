@@ -110,4 +110,26 @@ class ParserTest extends BaseTest {
     val result = new Parser(tokens).parse()
     assertFailure(result, "unexpected ':'")
   }
+
+  it("should not crash on arbitrary tokens") {
+    val tokenPermutations = List(
+      queryFieldKeyToken("tag"),
+      queryValueToken("news"),
+      queryOutputModifierKeyToken("show-fields"),
+      queryValueToken("all"),
+      colonToken(13),
+      andToken(1),
+      leftParenToken(),
+      quotedStringToken("sausages"),
+      rightParenToken(1),
+      unquotedStringToken("eggs"),
+      eofToken(14)
+    ).permutations.take(1000).toList
+
+    tokenPermutations.map { tokens =>
+      new Parser(tokens).parse()
+    }
+
+    assert(true)
+  }
 }
