@@ -165,3 +165,35 @@ Why would we like it to know less? B/c less coupling with language means
 Future refactor. Connect a typeahead client first.
 
 Date typeahead: autofocus when the value is not yet present. Display but do not autofocus when value is present (even if incorrect.)
+
+The input/overlay combination has a few edge cases are hard to address:
+ - [ ] Chrome does not issue a scroll event when the selection is programmatically changed https://issues.chromium.org/issues/41081857
+
+Using contenteditable will also make it possible to render chips inline, without needing to use e.g. a Threads component, and preserve the syntax highlighting.
+
+How do we handle chips as plain text? Is it possible? Two problems:
+- We must render things which aren't content but are interactive, e.g. 'remove' icons. Suspect easily solved w/ non-contenteditable additions to appropriate tokens renderings.
+- We must render things which _are_ content (from the POV of language) but are perhaps best non-interactive, e.g. colon char between meta key and val.
+
+Try a plaintext rendering, see how it goes. The closer we can be to plaintext, the simpler the implementation and the fewer edge cases.
+
+## Or, use a library
+
+Don't do that:
+- bundle size
+
+But, maybe _do:_
+- less code to maintain
+- robustly solve edge cases w/ contenteditable, which is [gnarly](https://www.youtube.com/watch?v=EEF2DlOUkag)
+
+What to use?
+
+### CodeMirror
+- Designed for languages, syntax highlighting, etc.
+- Kinda large for a bare install: dist/assets/index-BJKhd53Z.js 358.90 kB │ gzip: 116.51 kB
+
+### ProseMirror
+- Team already know it
+- Kinda a bit smaller – dist/assets/index-BKb-Hbln.js 176.79 kB │ gzip: 54.46 kB
+
+Hmm.

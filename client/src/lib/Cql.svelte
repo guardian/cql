@@ -8,23 +8,24 @@
 	const exampleQuery = '@from-date';
 
 	onMount(async () => {
+    applyTokens(exampleQuery, []);
 		fetchLanguageServer(exampleQuery);
 	});
 
-	let overlayOffset = 0;
 	let cqlQuery = exampleQuery;
-	let ast = '';
+	let ast = {};
 	let tokenisedChars = [];
 	let currentSuggestions = undefined;
 	let typeaheadOffsetPx = 0;
-	let inputElement: HTMLInputElement;
-  let datePickerElement: HTMLInputElement;
+	let inputElement: HTMLDivElement;
+	let datePickerElement: HTMLInputElement;
 	let cursorMarker: HTMLSpanElement;
 	let inputContainerElement: HTMLDivElement;
 	let menuIndex = 0;
 
 	const handleInput = (e: InputEvent) => {
-		fetchLanguageServer(e.target.value);
+    applyTokens(e.target.innerText, ast?.tokens || []);
+		fetchLanguageServer(e.target.innerText);
 	};
 
 	const handleInputKeydown = (e) => {
@@ -40,14 +41,14 @@
 				if (menuIndex > 0) menuIndex--;
 				break;
 			case 'ArrowDown':
-        if (currentSuggestions.suggestions.TextSuggestion) {
-          if (menuIndex < currentSuggestions.suggestions.TextSuggestion.suggestions.length - 1)
-					  menuIndex++;
-        }
-        // Focus the datepicker if it's not already focussed
-        if (currentSuggestions.suggestions.DateSuggestion) {
-          datePickerElement.focus();
-        }
+				if (currentSuggestions.suggestions.TextSuggestion) {
+					if (menuIndex < currentSuggestions.suggestions.TextSuggestion.suggestions.length - 1)
+						menuIndex++;
+				}
+				// Focus the datepicker if it's not already focussed
+				if (currentSuggestions.suggestions.DateSuggestion) {
+					datePickerElement.focus();
+				}
 				break;
 			case 'Enter':
 				replaceCurrentSuggestionTargetWithMenuItem(menuIndex);
@@ -99,9 +100,10 @@
 		const newCaretPosition = token.start + strToInsert.length + 2;
 
 		// Is there a better way of waiting for Svelte to update the DOM?
-		requestAnimationFrame(() => {
+		setTimeout(() => {
+			inputElement.focus();
 			inputElement.setSelectionRange(newCaretPosition, newCaretPosition);
-		});
+		}, 10);
 
 		currentSuggestions = undefined;
 
@@ -188,32 +190,26 @@
 			};
 		});
 	};
-
-	const syncScrollState = (e: ScrollEvent) => {
-		overlayOffset = e.target.scrollLeft;
-	};
 </script>
 
 <div class="Cql__input-container" bind:this={inputContainerElement}>
-	<input
+	<div
 		class="Cql__input"
-		value={cqlQuery}
+		contenteditable="true"
 		on:input={handleInput}
 		on:keydown={handleInputKeydown}
 		on:focus={watchSelectionChange}
 		on:blur={unwatchSelectionChange}
-		on:scroll={syncScrollState}
 		bind:this={inputElement}
-	/>
-	<div class="Cql__overlay-container">
-		<div class="Cql__overlay" contenteditable="true" style="left: -{overlayOffset}px">
-			{#each tokenisedChars || [] as { char, token }, index}
-				<Token str={char} {token} />{#if index === currentSuggestions?.from - 1}<span
-						class="Cql__cursor-marker"
-						bind:this={cursorMarker}
-					></span>{/if}
-			{/each}
-		</div>
+    role="textbox"
+    tabindex=0
+	>
+		{#each tokenisedChars || [] as { char, token }, index}
+			<Token str={char} {token} />{#if index === currentSuggestions?.from - 1}<span
+					class="Cql__cursor-marker"
+					bind:this={cursorMarker}
+				></span>{/if}
+		{/each}
 	</div>
 	{#if currentSuggestions !== undefined}<div
 			class={`Cql__typeahead Cql__typeahead-${Object.keys(currentSuggestions.suggestions).join('')}`}
@@ -237,7 +233,7 @@
 					class="Cql_typeahead-date"
 					type="date"
 					use:onDatePickerInit
-          bind:this={datePickerElement}
+					bind:this={datePickerElement}
 					on:keydown={handleDateKeydown}
 				/>
 			{/if}
@@ -256,20 +252,6 @@
 		position: relative;
 	}
 
-	.Cql__overlay-container {
-		position: absolute;
-		pointer-events: none;
-		top: 7px;
-		left: 7px;
-		width: var(--input-width);
-		overflow: hidden;
-		white-space: nowrap;
-	}
-
-	.Cql__overlay {
-		position: relative;
-	}
-
 	.Cql__input {
 		width: var(--input-width);
 		border: 2px solid #666;
@@ -277,10 +259,6 @@
 		padding: 5px;
 		color: transparent;
 		caret-color: #333;
-	}
-
-	.Cql__input,
-	.Cql__overlay-container {
 		font-family: sans-serif;
 		font-size: 16px;
 	}
