@@ -4,12 +4,14 @@ import org.scalatest.matchers._
 import org.scalatest.funspec.AnyFunSpec
 import cql.lang.BaseTest
 import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
+import scala.jdk.CollectionConverters._
 
 class HandlerTest extends AnyFunSpec with should.Matchers {
   val handler = new Handler()
 
   def assertIO(input: String, status: Int, output: String) =
-    val request = new APIGatewayProxyRequestEvent().withBody(input)
+    val request = new APIGatewayProxyRequestEvent()
+      .withPathParameters(Map("query" -> input).asJava)
 
     val response = handler.handleRequest(request, null)
 
@@ -21,7 +23,11 @@ class HandlerTest extends AnyFunSpec with should.Matchers {
     }
 
     it("should give a 400 for an invalid query") {
-      assertIO("this AND", 200, "There must be a query following 'AND', e.g. this AND that.")
+      assertIO(
+        "this AND",
+        200,
+        "There must be a query following 'AND', e.g. this AND that."
+      )
     }
   }
 }

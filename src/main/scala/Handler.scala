@@ -12,13 +12,16 @@ import cql.lang.Cql
 import scala.util.Try
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
+import scala.jdk.CollectionConverters._
+import scala.concurrent.Future
 
 class Handler
     extends RequestHandler[
       APIGatewayProxyRequestEvent,
       APIGatewayProxyResponseEvent
     ]
-    with Logging with QueryJson {
+    with Logging
+    with QueryJson {
   private implicit val ec: scala.concurrent.ExecutionContext =
     scala.concurrent.ExecutionContext.global
   private val cql = new Cql()
@@ -27,22 +30,36 @@ class Handler
       event: APIGatewayProxyRequestEvent,
       context: Context
   ): APIGatewayProxyResponseEvent = {
-    logger.info("Received request with body: " + event.getBody)
+    logger.info("Received request with params: " + event.getPathParameters().toString())
 
-    val eventualResult = cql
-      .run(event.getBody)
-      .map(r =>
-        Try {
-          (200, r.asJson.spaces2)
-        }.recover { e =>
-          logger.error("Server error", e)
-          (500, e.getMessage())
-        }.get
+    val eventualResult = event
+      .getPathParameters()
+      .asScala
+      .get("query")
+      .map(query =>
+        cql
+          .run(query)
+          .map(r =>
+            Try {
+              (200, r.asJson.spaces2)
+            }.recover { e =>
+              logger.error("Server error", e)
+              (500, e.getMessage())
+            }.get
+          )
+          .recover { e =>
+            logger.error("Bad request", e)
+            (400, e.getMessage())
+          }
       )
-      .recover { e =>
-        logger.error("Bad request", e)
-        (400, e.getMessage())
-      }
+      .getOrElse(
+        Future.successful(
+          (
+            400,
+            "No query specified. Supply a URL parameter for `query`, e.g. ?query=example"
+          )
+        )
+      )
 
     val (statusCode, responseBody) = Await.result(eventualResult, 5.seconds)
 
