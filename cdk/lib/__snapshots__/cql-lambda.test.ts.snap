@@ -37,7 +37,7 @@ exports[`The CqlLambda stack matches the snapshot 1`] = `
           },
         },
         "FunctionName": "cql-lambda-TEST",
-        "Handler": "cql.Handler::apply",
+        "Handler": "cql.Handler::handleRequest",
         "MemorySize": 1024,
         "Role": {
           "Fn::GetAtt": [

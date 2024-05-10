@@ -10,7 +10,7 @@ import io.circe.syntax.*
 import com.github.pjfanning.pekkohttpcirce.*
 import scala.io.StdIn
 import scala.util.{Failure, Success, Try}
-import cql.lang.{Cql}
+import cql.lang.Cql
 
 object HttpServer extends QueryJson {
   val cql = new Cql()

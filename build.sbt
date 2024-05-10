@@ -35,7 +35,9 @@ lazy val cql = project.in(file("."))
       "org.scalatest" %% "scalatest" % "3.2.9" % "test",
       "com.gu" % "content-api-client-default_2.13" % "20.0.2",
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.3",
-      "com.amazonaws" % "aws-lambda-java-events" % "3.11.4"
+      "com.amazonaws" % "aws-lambda-java-events" % "3.11.4",
+      "ch.qos.logback" % "logback-classic" % "1.4.7",
+      "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
     )
   )
 

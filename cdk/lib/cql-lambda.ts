@@ -10,7 +10,7 @@ export class CqlLambda extends GuStack {
 
 		new GuLambdaFunction(this, 'cql-lambda', {
 			app: 'cql-lambda',
-			handler: 'cql.Handler::apply',
+			handler: 'cql.Handler::handleRequest',
 			functionName: `cql-lambda-${this.stage}`,
       runtime: Runtime.JAVA_11,
       fileName: "cql-lambda.jar"
