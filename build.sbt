@@ -24,7 +24,6 @@ lazy val cql = project.in(file("."))
   .settings(
     scalaVersion := "3.3.1",
     libraryDependencies ++= Seq(
-      "org.scalactic" %% "scalactic" % "3.2.9",
       "org.apache.pekko" %% "pekko-actor-typed" % PekkoVersion,
       "org.apache.pekko" %% "pekko-stream" % PekkoVersion,
       "org.apache.pekko" %% "pekko-http" % PekkoHttpVersion,
@@ -41,10 +40,14 @@ lazy val cql = project.in(file("."))
     )
   )
 
-
 enablePlugins(RiffRaffArtifact)
 
 assemblyJarName := s"cql-lambda.jar"
 riffRaffPackageType := assembly.value
 riffRaffUploadArtifactBucket := Option("riffraff-artifact")
 riffRaffUploadManifestBucket := Option("riffraff-builds")
+
+assemblyMergeStrategy in assembly := {
+ case PathList("META-INF", _*) => MergeStrategy.discard
+ case _                        => MergeStrategy.first
+}
