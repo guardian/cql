@@ -30,10 +30,10 @@ class Handler
       event: APIGatewayProxyRequestEvent,
       context: Context
   ): APIGatewayProxyResponseEvent = {
-    logger.info("Received request with params: " + event.getPathParameters().toString())
+    logger.info("Received request with params: " + event.getQueryStringParameters().toString())
 
     val eventualResult = event
-      .getPathParameters()
+      .getQueryStringParameters()
       .asScala
       .get("query")
       .map(query =>
