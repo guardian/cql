@@ -92,13 +92,13 @@ class ScannerTest extends BaseTest {
       assert(tokens === expectedTokens)
     }
 
-    it("should yield a colon token when a query meta value is incomplete") {
+    it("should yield a query field value token when a query meta value is incomplete") {
       val scanner = new Scanner("""example +tag:""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
         unquotedStringToken("example"),
         Token(TokenType.QUERY_FIELD_KEY, "+tag", Some("tag"), 8, 11),
-        Token(TokenType.COLON, ":", None, 12, 12),
+        Token(TokenType.QUERY_VALUE, ":", None, 12, 12),
         eofToken(13)
       )
       assert(tokens === expectedTokens)

@@ -19,9 +19,9 @@ class Handler
       APIGatewayProxyResponseEvent
     ]
     with Logging with QueryJson {
-  implicit val ec: scala.concurrent.ExecutionContext =
+  private implicit val ec: scala.concurrent.ExecutionContext =
     scala.concurrent.ExecutionContext.global
-  val cql = new Cql()
+  private val cql = new Cql()
 
   def handleRequest(
       event: APIGatewayProxyRequestEvent,
