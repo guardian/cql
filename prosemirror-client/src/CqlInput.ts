@@ -61,6 +61,7 @@ const initialContent = doc.create(undefined, [
       chipValue.create(undefined, [schema.text("News")]),
     ]),
   ]),
+  searchText.create(undefined, [schema.text("example")]),
 ]);
 
 const template = document.createElement("template");
@@ -88,6 +89,10 @@ template.innerHTML = `
     }
     chip-key:after {
       content: ':'
+    }
+
+    .CqlToken__STRING {
+      color: lightblue;
     }
   </style>
 `;
@@ -190,24 +195,33 @@ const tokensToNodes = (tokens: Token[]): Node =>
     })
   );
 
-const tokensToDecorationSet = (tokens: Token[]): Decoration[] =>
-  tokens.flatMap((token) => {
+const tokensToDecorationSet = (tokens: Token[]): Decoration[] => {
+  let offset = 1; // Start of doc
+
+  return tokens.flatMap((token) => {
     switch (token.tokenType) {
       case "QUERY_FIELD_KEY":
+        offset += 4; // Chip node plus wrapper
+        return [];
       case "QUERY_VALUE":
+        offset += 2; // Chip node
+        return [];
       case "EOF":
         return [];
       default:
+        const start = token.start + offset;
+        const end = token.end + offset + 1;
         return [
           Decoration.inline(
-            token.start,
-            token.end,
+            start,
+            end,
             { class: `CqlToken__${token.tokenType}` },
-            { key: `${token.start}-${token.end}` }
+            { key: `${start}-${end}` }
           ),
         ];
     }
   });
+};
 
 type PluginState = {
   queryStr?: string;
@@ -232,7 +246,7 @@ const createCqlPlugin = (cqlService: CqlService) =>
         const decorations = maybeNewTokens
           ? DecorationSet.create(
               newState.doc,
-              tokensToDecorationSet(maybeNewTokens)
+              maybeNewTokens ? tokensToDecorationSet(maybeNewTokens) : []
             )
           : pluginState.decorations;
 
@@ -245,7 +259,33 @@ const createCqlPlugin = (cqlService: CqlService) =>
     props: {
       decorations: (state) => cqlPluginKey.getState(state)?.decorations,
     },
-    view() {
+    view(view) {
+      const updateView = (query: string) => {
+        cqlService.fetchResult(query).then((response) => {
+          console.log({ response });
+          const newDoc = tokensToNodes(response.tokens);
+          const userSelection = view.state.selection;
+          const docSelection = new AllSelection(view.state.doc);
+          const tr = view.state.tr.replaceWith(
+            docSelection.from,
+            docSelection.to,
+            newDoc
+          );
+          tr.setSelection(
+            TextSelection.create(
+              tr.doc,
+              Math.min(userSelection.from, tr.doc.nodeSize - 2),
+              Math.min(userSelection.to, tr.doc.nodeSize - 2)
+            )
+          );
+          tr.setMeta(NEW_TOKENS, response.tokens);
+
+          view.dispatch(tr);
+        });
+      };
+
+      updateView(cqlPluginKey.getState(view.state)?.queryStr!);
+
       return {
         update(view, prevState) {
           const prevQuery = cqlPluginKey.getState(prevState)?.queryStr!;
@@ -255,27 +295,7 @@ const createCqlPlugin = (cqlService: CqlService) =>
             return;
           }
 
-          cqlService.fetchResult(currentQuery).then((response) => {
-            console.log({ response });
-            const newDoc = tokensToNodes(response.tokens);
-            const userSelection = view.state.selection;
-            const docSelection = new AllSelection(view.state.doc);
-            const tr = view.state.tr.replaceWith(
-              docSelection.from,
-              docSelection.to,
-              newDoc
-            );
-            tr.setSelection(
-              TextSelection.create(
-                tr.doc,
-                Math.min(userSelection.from, tr.doc.nodeSize - 2),
-                Math.min(userSelection.to, tr.doc.nodeSize - 2)
-              )
-            );
-            tr.setMeta(NEW_TOKENS, response.tokens);
-
-            view.dispatch(tr);
-          });
+          updateView(currentQuery);
         },
       };
     },
