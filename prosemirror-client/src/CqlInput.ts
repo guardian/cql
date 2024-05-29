@@ -5,16 +5,16 @@ import {
   PluginKey,
   TextSelection,
 } from "prosemirror-state";
-import { EditorView } from "prosemirror-view";
+import { Decoration, DecorationSet, EditorView } from "prosemirror-view";
 import { Node, Schema } from "prosemirror-model";
-import { CqlResult, CqlService } from "./CqlService";
+import { CqlService } from "./CqlService";
 
 // Mix the nodes from prosemirror-schema-list into the basic schema to
 // create a schema with list support.
 const schema = new Schema({
   nodes: {
     doc: {
-      content: "searchText chipWrapper searchText",
+      content: "(searchText | chipWrapper)*",
     },
     text: {
       group: "inline",
@@ -157,7 +157,7 @@ const queryStrFromDoc = (doc: Node) => {
   return str;
 };
 
-const cqlPluginKey = new PluginKey<string>("cql-plugin");
+const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
 const tokensToNodes = (tokens: Token[]): Node =>
   doc.create(
@@ -190,24 +190,66 @@ const tokensToNodes = (tokens: Token[]): Node =>
     })
   );
 
-const tokensToDecorationSet = (tokens: Token[]): DecorationSet => {};
+const tokensToDecorationSet = (tokens: Token[]): Decoration[] =>
+  tokens.flatMap((token) => {
+    switch (token.tokenType) {
+      case "QUERY_FIELD_KEY":
+      case "QUERY_VALUE":
+      case "EOF":
+        return [];
+      default:
+        return [
+          Decoration.inline(
+            token.start,
+            token.end,
+            { class: `CqlToken__${token.tokenType}` },
+            { key: `${token.start}-${token.end}` }
+          ),
+        ];
+    }
+  });
+
+type PluginState = {
+  queryStr?: string;
+  decorations: DecorationSet;
+};
+
+const NEW_TOKENS = "NEW_TOKENS";
 
 const createCqlPlugin = (cqlService: CqlService) =>
-  new Plugin({
+  new Plugin<PluginState>({
     key: cqlPluginKey,
     state: {
       init(config) {
-        return config.doc ? queryStrFromDoc(config.doc) : undefined;
+        const queryStr = config.doc ? queryStrFromDoc(config.doc) : undefined;
+        return {
+          queryStr,
+          decorations: DecorationSet.empty,
+        };
       },
-      apply(_, __, ___, newState) {
-        return queryStrFromDoc(newState.doc);
+      apply(tr, pluginState, ___, newState) {
+        const maybeNewTokens: Token[] = tr.getMeta(NEW_TOKENS);
+        const decorations = maybeNewTokens
+          ? DecorationSet.create(
+              newState.doc,
+              tokensToDecorationSet(maybeNewTokens)
+            )
+          : pluginState.decorations;
+
+        return {
+          queryStr: queryStrFromDoc(newState.doc),
+          decorations,
+        };
       },
+    },
+    props: {
+      decorations: (state) => cqlPluginKey.getState(state)?.decorations,
     },
     view() {
       return {
         update(view, prevState) {
-          const prevQuery = cqlPluginKey.getState(prevState)!;
-          const currentQuery = cqlPluginKey.getState(view.state)!;
+          const prevQuery = cqlPluginKey.getState(prevState)?.queryStr!;
+          const currentQuery = cqlPluginKey.getState(view.state)?.queryStr!;
 
           if (prevQuery === currentQuery) {
             return;
@@ -230,6 +272,7 @@ const createCqlPlugin = (cqlService: CqlService) =>
                 Math.min(userSelection.to, tr.doc.nodeSize - 2)
               )
             );
+            tr.setMeta(NEW_TOKENS, response.tokens);
 
             view.dispatch(tr);
           });
