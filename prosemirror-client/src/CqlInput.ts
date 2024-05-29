@@ -1,4 +1,5 @@
 import {
+  AllSelection,
   EditorState,
   Plugin,
   PluginKey,
@@ -6,7 +7,7 @@ import {
 } from "prosemirror-state";
 import { EditorView } from "prosemirror-view";
 import { Node, Schema } from "prosemirror-model";
-import { CqlService } from "./CqlService";
+import { CqlResult, CqlService } from "./CqlService";
 
 // Mix the nodes from prosemirror-schema-list into the basic schema to
 // create a schema with list support.
@@ -55,10 +56,6 @@ const { chip, chipKey, chipValue, searchText, chipWrapper, doc } = schema.nodes;
 const initialContent = doc.create(undefined, [
   searchText.create(undefined, [schema.text("example")]),
   chipWrapper.create(undefined, [
-    chip.create(undefined, [
-      chipKey.create(undefined, [schema.text("tag")]),
-      chipValue.create(undefined, [schema.text("News")]),
-    ]),
     chip.create(undefined, [
       chipKey.create(undefined, [schema.text("tag")]),
       chipValue.create(undefined, [schema.text("News")]),
@@ -162,6 +159,39 @@ const queryStrFromDoc = (doc: Node) => {
 
 const cqlPluginKey = new PluginKey<string>("cql-plugin");
 
+const tokensToNodes = (tokens: Token[]): Node =>
+  doc.create(
+    undefined,
+    tokens.flatMap((token, index) => {
+      switch (token.tokenType) {
+        case "QUERY_FIELD_KEY":
+          const tokenKey = token.literal;
+          const tokenValue = tokens[index + 1]?.literal;
+          return [
+            chipWrapper.create(undefined, [
+              chip.create(undefined, [
+                chipKey.create(
+                  undefined,
+                  tokenKey ? schema.text(tokenKey) : undefined
+                ),
+                chipValue.create(
+                  undefined,
+                  tokenValue ? schema.text(tokenValue) : undefined
+                ),
+              ]),
+            ]),
+          ];
+        case "QUERY_VALUE":
+        case "EOF":
+          return [];
+        default:
+          return [searchText.create(undefined, schema.text(token.literal!))];
+      }
+    })
+  );
+
+const tokensToDecorationSet = (tokens: Token[]): DecorationSet => {};
+
 const createCqlPlugin = (cqlService: CqlService) =>
   new Plugin({
     key: cqlPluginKey,
@@ -183,8 +213,25 @@ const createCqlPlugin = (cqlService: CqlService) =>
             return;
           }
 
-          cqlService.fetchTokens(currentQuery).then((tokens) => {
-            console.log(tokens);
+          cqlService.fetchResult(currentQuery).then((response) => {
+            console.log({ response });
+            const newDoc = tokensToNodes(response.tokens);
+            const userSelection = view.state.selection;
+            const docSelection = new AllSelection(view.state.doc);
+            const tr = view.state.tr.replaceWith(
+              docSelection.from,
+              docSelection.to,
+              newDoc
+            );
+            tr.setSelection(
+              TextSelection.create(
+                tr.doc,
+                Math.min(userSelection.from, tr.doc.nodeSize - 2),
+                Math.min(userSelection.to, tr.doc.nodeSize - 2)
+              )
+            );
+
+            view.dispatch(tr);
           });
         },
       };

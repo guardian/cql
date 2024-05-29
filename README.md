@@ -197,3 +197,17 @@ What to use?
 - Kinda a bit smaller – dist/assets/index-BKb-Hbln.js 176.79 kB │ gzip: 54.46 kB
 
 Hmm.
+
+## Avoiding coupling between server and client
+
+We'd like to have a thin interface between server and client. What do we need to know?
+
+- All the chips, and where
+- All the necessary styling for syntax highlighting
+
+That's a lot of things. Unavoidable things to know:
+
+- Chips are pairs of (key, value?)
+- Where tokens of different sorts start and end
+
+Perhaps tokens are all we need: the parser can just understand those sorts of tokens that relate to chip keys and values by name.
