@@ -52,6 +52,26 @@ class ParserTest extends BaseTest {
     assertFailure(result, "You cannot query for tags after 'AND'")
   }
 
+  it("should handle an empty query field key") {
+    val tokens = List(
+      quotedStringToken("a"),
+      queryFieldKeyToken("", 2),
+      eofToken(5)
+    )
+    val result = new Parser(tokens).parse()
+    result shouldBe Success(
+      QueryList(
+        List(
+          QueryBinary(QueryContent(QueryStr("a")), None),
+          QueryField(
+            queryFieldKeyToken("", 2),
+            None
+          )
+        )
+      )
+    )
+  }
+
   it("should handle a query output modifier") {
     val tokens = List(
       queryOutputModifierKeyToken("tag", 1),
@@ -94,7 +114,7 @@ class ParserTest extends BaseTest {
   it("should handle a query value with no query key") {
     val tokens = List(
       quotedStringToken("example"),
-      queryValueToken("", 7),
+      queryValueToken("", 7)
     )
     val result = new Parser(tokens).parse()
     assertFailure(result, "unexpected ':'")

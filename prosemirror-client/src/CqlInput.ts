@@ -3,10 +3,11 @@ import {
   EditorState,
   Plugin,
   PluginKey,
+  Selection,
   TextSelection,
 } from "prosemirror-state";
 import { Decoration, DecorationSet, EditorView } from "prosemirror-view";
-import { Node, Schema } from "prosemirror-model";
+import { Node, NodeType, Schema } from "prosemirror-model";
 import { CqlService } from "./CqlService";
 
 // Mix the nodes from prosemirror-schema-list into the basic schema to
@@ -28,6 +29,7 @@ const schema = new Schema({
       group: "block",
       content: "inline*",
       toDOM: (_) => ["search-text", 0],
+      whitespace: "pre",
     },
     chipWrapper: {
       content: "chip*",
@@ -42,12 +44,12 @@ const schema = new Schema({
     chipKey: {
       content: "inline*",
       group: "block",
-      toDOM: (_) => ["chip-key", 0],
+      toDOM: (_) => ["chip-key", { "tabindex": "0" }, 0],
     },
     chipValue: {
       content: "inline*",
       group: "block",
-      toDOM: (_) => ["chip-value", 0],
+      toDOM: (_) => ["chip-value", { "tabindex": "0" }, 0],
     },
   },
 });
@@ -55,18 +57,15 @@ const schema = new Schema({
 const { chip, chipKey, chipValue, searchText, chipWrapper, doc } = schema.nodes;
 const initialContent = doc.create(undefined, [
   searchText.create(undefined, [schema.text("example")]),
-  chipWrapper.create(undefined, [
-    chip.create(undefined, [
-      chipKey.create(undefined, [schema.text("tag")]),
-      chipValue.create(undefined, [schema.text("News")]),
-    ]),
-  ]),
-  searchText.create(undefined, [schema.text("example")]),
 ]);
 
 const template = document.createElement("template");
 template.innerHTML = `
   <style>
+    .ProseMirror {
+      white-space: pre-wrap;
+    }
+
     search-text {
       /* Ensure there's always space for input */
       display: inline-block;
@@ -85,6 +84,7 @@ template.innerHTML = `
       margin: 0 5px;
     }
     chip-key {
+      display: flex;
       padding-right: 5px;
     }
     chip-key:after {
@@ -124,10 +124,8 @@ export const createCqlInput = (cqlService: CqlService) => {
             const tr = view.state.tr;
             tr.insert(
               view.state.doc.nodeSize - 2,
-              schema.nodes.searchText.create(undefined, schema.text(" "))
-            ).setSelection(
-              new TextSelection(tr.doc.resolve(tr.doc.nodeSize - 3))
-            );
+              schema.nodes.searchText.create(undefined, schema.text(" "))
+            )
             view.updateState(view.state.apply(tr));
           }
         },
@@ -152,7 +150,7 @@ const queryStrFromDoc = (doc: Node) => {
         str += `+${node.textContent}`;
         return false;
       case "chipValue":
-        str += `:${node.textContent} `;
+        str += node.textContent.length > 0 ? `:${node.textContent} ` : "";
         return false;
       default:
         return true;
@@ -260,7 +258,10 @@ const createCqlPlugin = (cqlService: CqlService) =>
       decorations: (state) => cqlPluginKey.getState(state)?.decorations,
     },
     view(view) {
-      const updateView = (query: string) => {
+      const updateView = (
+        query: string,
+        shouldWrapSelectionInKey: boolean = false
+      ) => {
         cqlService.fetchResult(query).then((response) => {
           console.log({ response });
           const newDoc = tokensToNodes(response.tokens);
@@ -271,13 +272,14 @@ const createCqlPlugin = (cqlService: CqlService) =>
             docSelection.to,
             newDoc
           );
-          tr.setSelection(
-            TextSelection.create(
-              tr.doc,
-              Math.min(userSelection.from, tr.doc.nodeSize - 2),
-              Math.min(userSelection.to, tr.doc.nodeSize - 2)
-            )
+
+          const selection = getNewSelection(
+            userSelection,
+            shouldWrapSelectionInKey,
+            tr.doc
           );
+
+          tr.setSelection(selection);
           tr.setMeta(NEW_TOKENS, response.tokens);
 
           view.dispatch(tr);
@@ -291,12 +293,74 @@ const createCqlPlugin = (cqlService: CqlService) =>
           const prevQuery = cqlPluginKey.getState(prevState)?.queryStr!;
           const currentQuery = cqlPluginKey.getState(view.state)?.queryStr!;
 
-          if (prevQuery === currentQuery) {
+          if (prevQuery.trim() === currentQuery.trim()) {
             return;
           }
 
-          updateView(currentQuery);
+          const shouldWrapSelectionInKey = isBeginningKeyValPair(
+            prevQuery,
+            currentQuery
+          );
+
+          updateView(currentQuery, shouldWrapSelectionInKey);
         },
       };
     },
   });
+
+const keyValPairChars = ["+", "@"];
+
+const isBeginningKeyValPair = (first: string, second: string): boolean => {
+  const firstDiffChar = getFirstDiff(first, second);
+  return firstDiffChar ? keyValPairChars.includes(firstDiffChar) : false;
+};
+
+const getFirstDiff = (first: string, second: string): string | undefined => {
+  for (let i = 0; i < first.length; i++) {
+    if (second[i] !== first[i]) {
+      return second[i];
+    }
+  }
+};
+
+const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
+  let found = -1;
+  doc.nodesBetween(pos - 1, doc.content.size, (node, pos) => {
+    if (found > -1) return false;
+    if (node.type === type) found = pos;
+  });
+  return found;
+};
+
+const getNewSelection = (
+  currentSelection: Selection,
+  shouldWrapSelectionInKey: boolean,
+  doc: Node
+): Selection => {
+  if (shouldWrapSelectionInKey) {
+    const nodePos = findNodeAt(currentSelection.from, doc, chipKey);
+
+    if (nodePos !== -1) {
+      const $pos = doc.resolve(nodePos);
+      const selection = TextSelection.findFrom($pos, 1);
+      if (selection) {
+        return selection;
+      }
+    }
+  }
+
+  return TextSelection.create(
+    doc,
+    Math.min(currentSelection.from, doc.nodeSize - 2),
+    Math.min(currentSelection.to, doc.nodeSize - 2)
+  );
+};
+
+const logNode = (doc: Node) => {
+  console.log(`Log node ${doc.type.name}`);
+
+  doc.nodesBetween(0, doc.content.size, (node, pos) => {
+    const indent = doc.resolve(pos).depth * 4;
+    console.log(`${" ".repeat(indent)} ${node.type.name} ${pos}`);
+  });
+};

@@ -43,7 +43,7 @@ class Scanner(program: String):
     }
 
   def addKey(tokenType: TokenType) =
-    while ((peek != ':' && peek != ' ') && !isAtEnd)
+    while ((peek != ':' && !peek.isWhitespace) && !isAtEnd)
       advance
 
     if (current - start == 1) addToken(tokenType)
@@ -52,7 +52,7 @@ class Scanner(program: String):
       addToken(tokenType, Some(key))
 
   def addValue =
-    while ((peek != ' ') && !isAtEnd)
+    while ((!peek.isWhitespace) && !isAtEnd)
       advance
 
     if (current - start == 1) addToken(TokenType.QUERY_VALUE, None)
@@ -74,7 +74,7 @@ class Scanner(program: String):
     }
 
   def addUnquotedString =
-    while (peek != ' ' && peek != ')' && !isAtEnd)
+    while (!peek.isWhitespace && peek != ')' && !isAtEnd)
       advance
 
     addToken(TokenType.STRING, Some(program.substring(start, current)))
