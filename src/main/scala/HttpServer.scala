@@ -29,6 +29,8 @@ object HttpServer extends QueryJson {
       path("cql") {
         get {
           parameters("query") { query =>
+            println(s"Parsing query ${query}");
+
             complete {
               val result = cql.run(query)
               result

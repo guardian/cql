@@ -8,6 +8,7 @@ class Scanner(program: String):
   var current = 0
   var line = 1
   var hasError = false;
+  var reservedChars = "+@:()\""
 
   def scanTokens: List[Token] =
     while (!isAtEnd) {
@@ -16,7 +17,29 @@ class Scanner(program: String):
       scanToken
     }
 
-    tokens :+ Token(TokenType.EOF, "", None, current, current)
+    println(tokens.map(_.lexeme))
+    println(joinStringTokens(tokens).map(_.lexeme))
+
+    joinStringTokens(tokens) :+ Token(TokenType.EOF, "", None, current, current)
+
+  def joinStringTokens(tokens: List[Token]) = tokens.foldLeft(
+    List.empty[Token]
+  )((acc, token) => {
+    (acc.lastOption, token.tokenType) match {
+      case (Some(prevToken), TokenType.STRING)
+          if prevToken.tokenType == TokenType.STRING =>
+        acc.slice(0, acc.length - 1) :+ Token(
+          TokenType.STRING,
+          lexeme = prevToken.lexeme + " " + token.lexeme,
+          literal = Some(
+            prevToken.literal.getOrElse("") + " " + token.literal.getOrElse("")
+          ),
+          prevToken.start,
+          token.end
+        )
+      case _ => acc :+ token
+    }
+  })
 
   def isAtEnd = current == program.size
 
@@ -93,6 +116,7 @@ class Scanner(program: String):
 
   def addToken(tokenType: TokenType, literal: Option[String] = None) =
     val text = program.substring(start, current)
+    println(s"text${text}")
     tokens = tokens :+ Token(tokenType, text, literal, start, current - 1)
 
   def advance =

@@ -15,6 +15,19 @@ scalacOptions ++= Seq(
   "-encoding", "UTF-8"
 )
 
+val javaVersion = 21
+
+initialize := {
+  // Ensure previous initializations are run
+  val _ = initialize.value
+
+  // Retrieve the JVM's class version and specification version
+  val classVersion = sys.props("java.class.version")
+  val specVersion = sys.props("java.specification.version")
+
+  assert(specVersion.toDouble >= javaVersion, s"Java ${javaVersion} or above is required to run this project.")
+}
+
 val PekkoVersion = "1.0.1"
 val PekkoHttpVersion = "1.0.0"
 val circeVersion = "0.14.4"

@@ -13,12 +13,17 @@
     "react-dom": "^18.3.1",
     "typescript": "^5.2.2",
     "vite": "^5.2.0",
-    "vitest": "^1.6.0"
+    "vitest": "^1.6.0",
+    "@types/bun": "latest"
   },
   "dependencies": {
+    "prosemirror-commands": "^1.5.2",
     "prosemirror-dev-tools": "^4.1.0",
+    "prosemirror-keymap": "^1.2.2",
     "prosemirror-model": "^1.20.0",
     "prosemirror-state": "^1.4.3",
+    "prosemirror-transform": "^1.9.0",
     "prosemirror-view": "^1.33.4"
-  }
+  },
+  "module": "index.ts"
 }

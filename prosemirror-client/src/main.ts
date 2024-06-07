@@ -1,4 +1,4 @@
-import { createCqlInput } from "./CqlInput";
+import { createCqlInput } from "./cqlInput/CqlInput";
 import applyDevTools from "prosemirror-dev-tools";
 import "./style.css";
 import { CqlService } from "./CqlService";

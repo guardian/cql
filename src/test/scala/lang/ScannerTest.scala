@@ -12,12 +12,11 @@ class ScannerTest extends BaseTest {
       assert(tokens === expectedTokens)
     }
 
-    it("should give multiple tokens for strings separated with a space") {
+    it("should give single tokens for strings separated with a space - 1") {
       val scanner = new Scanner("""magnificent octopus""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
-        unquotedStringToken("magnificent"),
-        unquotedStringToken("octopus", 12),
+        unquotedStringToken("magnificent octopus"),
         eofToken(19)
       )
       assert(tokens === expectedTokens)
@@ -121,7 +120,7 @@ class ScannerTest extends BaseTest {
       assert(tokens === expectedTokens)
     }
 
-    it("should tokenise groups and boolean operators") {
+    it("should tokenise groups and boolean operators - 1") {
       val scanner = new Scanner("""one AND (two OR three)""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
@@ -134,6 +133,19 @@ class ScannerTest extends BaseTest {
         Token(TokenType.RIGHT_BRACKET, ")", None, 21, 21),
         eofToken(22)
       )
+      assert(tokens === expectedTokens)
+    }
+
+    it("should tokenise groups and boolean operators - 2") {
+      val scanner = new Scanner("""one AND two three""")
+      val tokens = scanner.scanTokens
+      val expectedTokens = List(
+        unquotedStringToken("one"),
+        Token(TokenType.AND, "AND", None, 4, 6),
+        unquotedStringToken("two three", 8),
+        eofToken(17)
+      )
+
       assert(tokens === expectedTokens)
     }
 

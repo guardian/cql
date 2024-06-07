@@ -1,7 +1,7 @@
 type Token = {
   tokenType: string;
   lexeme: string;
-  literal?: string;
+  literal: string | null;
   start: number;
   end: number;
 };
