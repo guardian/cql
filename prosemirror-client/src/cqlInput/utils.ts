@@ -14,59 +14,68 @@ import { Selection, TextSelection } from "prosemirror-state";
 
 const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE"];
 
-export const mapTokens = (tokens: Token[]) => {
+export const createTokenMap = (tokens: ProseMirrorToken[]) => {
   // We only distinguish between key/val tokens here – other tokens are universally
   // represented as searchText. We join the other tokens into single ranges so they
   // can provide mappings for their node representation.
-  const compactedTokenRanges = tokens.reduce(
-    (acc, { start, end, tokenType }) => {
-      if (tokensToPreserve.includes(tokenType)) {
-        return acc.concat({ start, end, tokenType });
-      }
+  const compactedTokenRanges = tokens.reduce((acc, { from, to, tokenType }) => {
+    if (tokensToPreserve.includes(tokenType)) {
+      return acc.concat({ from, to, tokenType });
+    }
 
-      const prevToken = acc.at(-1);
+    const prevToken = acc.at(-1);
 
-      if (!prevToken || tokensToPreserve.includes(prevToken.tokenType)) {
-        return acc.concat({ start, end, tokenType });
-      }
+    if (!prevToken || tokensToPreserve.includes(prevToken.tokenType)) {
+      return acc.concat({ from, to, tokenType });
+    }
 
-      return acc
-        .slice(0, acc.length - 1)
-        .concat({ start: prevToken.start, end, tokenType });
-    },
-    [] as { start: number; end: number; tokenType: string }[]
-  );
+    return acc
+      .slice(0, acc.length - 1)
+      .concat({ from: prevToken.from, to, tokenType });
+  }, [] as { from: number; to: number; tokenType: string }[]);
 
   const ranges = compactedTokenRanges.reduce<[number, number, number][]>(
-    (ranges, { tokenType, start, end }) => {
+    (ranges, { tokenType, from, to }) => {
       switch (tokenType) {
         case "QUERY_FIELD_KEY":
           // We add mappings here to accommodate the positions occupied by node boundaries.
           return ranges.concat(
-            //  chipWrapper begin (+1)
-            //  chip begin (+1)
-            //  chipKey begin (+1)
-            [start - 1, 0, 3]
+            // chip begin (+1)
+            // chipKey begin (+1)
+            // leading char ('+')
+            [from - 1, 0, 3]
           );
         case "QUERY_VALUE":
           return ranges.concat(
-            // chipKey end, chipValue begin (+1)
-            [start - 1, 0, 1]
+            // leading char ('+')
+            [from - 1, 0, 1],
+            // chipValue end (+1)
+            [to, 0, 1]
           );
         default:
           return ranges.concat(
-            [start - 1, 0, 2], // searchText begin (+2)
-            [end, 0, 1] // searchText end (+1)
+            [from, 0, 1], // searchText begin (+1)
+            [to, 0, 1] // searchText end (+1)
           );
       }
     },
     []
   );
 
-  return new Mapping([StepMap.offset(-1), new StepMap(ranges.flat())]);
+  return new Mapping([new StepMap(ranges.flat())]);
 };
 
-export const tokensToNodes = (tokens: Token[]): Node => {
+export const mapTokens = (tokens: ProseMirrorToken[]): ProseMirrorToken[] => {
+  const mapping = createTokenMap(tokens);
+
+  return tokens.map(({ from, to, ...rest }) => ({
+    from: mapping.map(from),
+    to: mapping.map(to, -1),
+    ...rest,
+  }));
+};
+
+export const tokensToNodes = (tokens: ProseMirrorToken[]): Node => {
   const nodes = tokens.reduce<Node[]>((acc, token, index): Node[] => {
     switch (token.tokenType) {
       case "QUERY_FIELD_KEY":
@@ -91,11 +100,11 @@ export const tokensToNodes = (tokens: Token[]): Node => {
         // add the whitespace that separates them.
         const nextTokenPos =
           tokens[index + 1].tokenType !== "EOF"
-            ? tokens[index + 1]?.start
+            ? tokens[index + 1]?.from
             : undefined;
 
         const lexemeIncludingTrailingWhitespace = nextTokenPos
-          ? token.lexeme.padEnd(nextTokenPos - token.start, " ")
+          ? token.lexeme.padEnd(nextTokenPos - token.from, " ")
           : token.lexeme;
 
         // Join non-KV pairs into a single searchText node
@@ -127,26 +136,18 @@ export const tokensToNodes = (tokens: Token[]): Node => {
 
 const tokensThatAreNotDecorated = ["QUERY_FIELD_KEY", "QUERY_VALUE", "EOF"];
 
-export const tokensToDecorationSet = (tokens: Token[]): Decoration[] => {
-  const mapping = mapTokens(tokens);
-  return tokens
+export const tokensToDecorationSet = (
+  tokens: ProseMirrorToken[]
+): Decoration[] => {
+  return mapTokens(tokens)
     .filter((token) => !tokensThatAreNotDecorated.includes(token.tokenType))
-    .map(
-      ({ start, end, lexeme, tokenType }) =>
-        console.log({
-          deco: tokenType,
-          start,
-          end,
-          content: lexeme,
-          mappedStart: mapping.map(start),
-          mappedEnd: mapping.map(end),
-        }) ||
-        Decoration.inline(
-          mapping.map(start) - 1,
-          mapping.map(end) + 1,
-          { class: `CqlToken__${tokenType}` },
-          { key: `${start}-${end}` }
-        )
+    .map(({ from, to, tokenType }) =>
+      Decoration.inline(
+        from,
+        to,
+        { class: `CqlToken__${tokenType}` },
+        { key: `${from}-${to}` }
+      )
     );
 };
 
@@ -223,6 +224,28 @@ export const getNewSelection = (
   );
 };
 
+export type ProseMirrorToken = Omit<Token, "start" | "end"> & {
+  from: number;
+  to: number;
+};
+
+/**
+ * CQL ranges correspond to character indices, e.g.
+ * a b c
+ * 0 1 2
+ *
+ * Prosemirror positions are positions between characters, e.g.
+ *
+ *  a b c
+ * 0 1 2 3
+ */
+export const toProseMirrorTokens = (tokens: Token[]): ProseMirrorToken[] =>
+  tokens.map(({ start, end, ...token }) => ({
+    ...token,
+    from: start,
+    to: end + 1,
+  }));
+
 /**
  * Utility function to log node structure to console.
  */
@@ -231,8 +254,12 @@ export const logNode = (doc: Node) => {
 
   doc.nodesBetween(0, doc.content.size, (node, pos) => {
     const indent = doc.resolve(pos).depth * 4;
+    const content =
+      node.type.name === "text" ? `'${node.textContent}'` : undefined;
     console.log(
-      `${" ".repeat(indent)} ${node.type.name} ${pos}-${pos + node.nodeSize}`
+      `${" ".repeat(indent)} ${node.type.name} ${pos}-${pos + node.nodeSize} ${
+        content ? content : ""
+      }`
     );
   });
 };

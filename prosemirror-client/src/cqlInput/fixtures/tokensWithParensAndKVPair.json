@@ -1,0 +1,122 @@
+[
+  {
+    "type": "Token",
+    "tokenType": "STRING",
+    "lexeme": "text",
+    "start": 0,
+    "end": 3,
+    "literal": "text"
+  },
+  {
+    "type": "Token",
+    "tokenType": "LEFT_BRACKET",
+    "lexeme": "(",
+    "start": 5,
+    "end": 5,
+    "literal": null
+  },
+  {
+    "type": "Token",
+    "tokenType": "STRING",
+    "lexeme": "b",
+    "start": 6,
+    "end": 6,
+    "literal": "b"
+  },
+  {
+    "type": "Token",
+    "tokenType": "OR",
+    "lexeme": "OR",
+    "start": 8,
+    "end": 9,
+    "literal": null
+  },
+  {
+    "type": "Token",
+    "tokenType": "STRING",
+    "lexeme": "c",
+    "start": 11,
+    "end": 11,
+    "literal": "c"
+  },
+  {
+    "type": "Token",
+    "tokenType": "RIGHT_BRACKET",
+    "lexeme": ")",
+    "start": 12,
+    "end": 12,
+    "literal": null
+  },
+  {
+    "type": "Token",
+    "tokenType": "QUERY_FIELD_KEY",
+    "lexeme": "+key",
+    "start": 14,
+    "end": 17,
+    "literal": "key"
+  },
+  {
+    "type": "Token",
+    "tokenType": "QUERY_VALUE",
+    "lexeme": ":value",
+    "start": 18,
+    "end": 23,
+    "literal": "value"
+  },
+  {
+    "type": "Token",
+    "tokenType": "STRING",
+    "lexeme": "text",
+    "start": 25,
+    "end": 28,
+    "literal": "text"
+  },
+  {
+    "type": "Token",
+    "tokenType": "LEFT_BRACKET",
+    "lexeme": "(",
+    "start": 30,
+    "end": 30,
+    "literal": null
+  },
+  {
+    "type": "Token",
+    "tokenType": "STRING",
+    "lexeme": "b",
+    "start": 31,
+    "end": 31,
+    "literal": "b"
+  },
+  {
+    "type": "Token",
+    "tokenType": "OR",
+    "lexeme": "OR",
+    "start": 33,
+    "end": 34,
+    "literal": null
+  },
+  {
+    "type": "Token",
+    "tokenType": "STRING",
+    "lexeme": "c",
+    "start": 36,
+    "end": 36,
+    "literal": "c"
+  },
+  {
+    "type": "Token",
+    "tokenType": "RIGHT_BRACKET",
+    "lexeme": ")",
+    "start": 37,
+    "end": 37,
+    "literal": null
+  },
+  {
+    "type": "Token",
+    "tokenType": "EOF",
+    "lexeme": "",
+    "start": 38,
+    "end": 38,
+    "literal": null
+  }
+]

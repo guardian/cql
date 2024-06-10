@@ -5,10 +5,12 @@ import {
   getNewSelection,
   isBeginningKeyValPair,
   logNode,
-  mapTokens,
+  createTokenMap,
   queryStrFromDoc,
   tokensToDecorationSet,
   tokensToNodes,
+  toProseMirrorTokens,
+  ProseMirrorToken,
 } from "./utils";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
@@ -32,7 +34,7 @@ export const createCqlPlugin = (cqlService: CqlService) =>
         };
       },
       apply(tr, pluginState, ___, newState) {
-        const maybeNewTokens: Token[] = tr.getMeta(NEW_TOKENS);
+        const maybeNewTokens: ProseMirrorToken[] = tr.getMeta(NEW_TOKENS);
         const decorations = maybeNewTokens
           ? DecorationSet.create(
               newState.doc,
@@ -54,9 +56,12 @@ export const createCqlPlugin = (cqlService: CqlService) =>
         query: string,
         shouldWrapSelectionInKey: boolean = false
       ) => {
-        const { tokens, suggestions } = await cqlService.fetchResult(query);
+        const { tokens: _tokens, suggestions } = await cqlService.fetchResult(
+          query
+        );
+        const tokens = toProseMirrorTokens(_tokens);
         const newDoc = tokensToNodes(tokens);
-        console.log(JSON.stringify(tokens, undefined, ' '));
+        console.log(JSON.stringify(tokens, undefined, " "));
         logNode(newDoc);
         const userSelection = view.state.selection;
         const docSelection = new AllSelection(view.state.doc);
@@ -70,7 +75,7 @@ export const createCqlPlugin = (cqlService: CqlService) =>
 
         if (suggestions.length && tr.selection.from === tr.selection.to) {
           console.log("single position: testing selections");
-          const mapping = mapTokens(tokens);
+          const mapping = createTokenMap(tokens);
           suggestions.map((suggestion) => {
             const start = mapping.map(suggestion.from);
             const end = mapping.map(suggestion.to);

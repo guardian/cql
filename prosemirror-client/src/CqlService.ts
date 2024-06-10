@@ -1,3 +1,5 @@
+import { Range } from "./cqlInput/types";
+
 export type CqlResult = {
   tokens: Array<Token>;
   ast?: QueryList;

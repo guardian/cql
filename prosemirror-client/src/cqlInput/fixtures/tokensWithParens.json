@@ -1,0 +1,50 @@
+[
+  {
+    "type": "Token",
+    "tokenType": "LEFT_BRACKET",
+    "lexeme": "(",
+    "start": 0,
+    "end": 0,
+    "literal": null
+  },
+  {
+    "type": "Token",
+    "tokenType": "STRING",
+    "lexeme": "b",
+    "start": 1,
+    "end": 1,
+    "literal": "b"
+  },
+  {
+    "type": "Token",
+    "tokenType": "OR",
+    "lexeme": "OR",
+    "start": 3,
+    "end": 4,
+    "literal": null
+  },
+  {
+    "type": "Token",
+    "tokenType": "STRING",
+    "lexeme": "c",
+    "start": 6,
+    "end": 6,
+    "literal": "c"
+  },
+  {
+    "type": "Token",
+    "tokenType": "RIGHT_BRACKET",
+    "lexeme": ")",
+    "start": 7,
+    "end": 7,
+    "literal": null
+  },
+  {
+    "type": "Token",
+    "tokenType": "EOF",
+    "lexeme": "",
+    "start": 8,
+    "end": 8,
+    "literal": null
+  }
+]
