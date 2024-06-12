@@ -20,7 +20,10 @@ export type TypeaheadSuggestion = {
   suggestions: Suggestions;
 };
 
-type Suggestions = TextSuggestion | DateSuggestion;
+type Suggestions = {
+  TextSuggestion?: TextSuggestion;
+  DateSuggestion: DateSuggestion;
+};
 
 type TextSuggestion = { suggestions: Array<TextSuggestionOption> };
 type TextSuggestionOption = { label: String; value: String };

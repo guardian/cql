@@ -50,13 +50,16 @@ template.innerHTML = `
 export const createCqlInput = (cqlService: CqlService) => {
   class CqlInput extends HTMLElement {
     connectedCallback() {
+      const cqlInputId = "cql-input";
+      const cqlPopoverId = "cql-popover";
       const shadow = this.attachShadow({ mode: "closed" });
 
-      shadow.innerHTML = `<div id="cql-input"></div>`;
+      shadow.innerHTML = `<div id="${cqlInputId}"></div><div id="${cqlPopoverId}"></div>`;
       shadow.appendChild(template.content.cloneNode(true));
-      const cqlInput = shadow.getElementById("cql-input")!;
+      const cqlInput = shadow.getElementById(cqlInputId)!;
+      const cqlPopover = shadow.getElementById(cqlPopoverId)!;
 
-      createEditor(cqlInput, cqlService);
+      createEditor(cqlInput, cqlPopover, cqlService);
     }
   }
 

@@ -14,8 +14,12 @@ const initialContent = doc.create(undefined, [
   searchText.create(undefined, [schema.text("example")]),
 ]);
 
-export const createEditor = (mountEl: HTMLElement, cqlService: CqlService) => {
-  const plugin = createCqlPlugin(cqlService);
+export const createEditor = (
+  mountEl: HTMLElement,
+  popoverEl: HTMLElement,
+  cqlService: CqlService
+) => {
+  const plugin = createCqlPlugin(cqlService, popoverEl);
   const view = new EditorView(mountEl, {
     state: EditorState.create({
       doc: initialContent,

@@ -22,7 +22,10 @@ type PluginState = {
 
 const NEW_TOKENS = "NEW_TOKENS";
 
-export const createCqlPlugin = (cqlService: CqlService) =>
+export const createCqlPlugin = (
+  cqlService: CqlService,
+  popoverEl: HTMLElement
+) =>
   new Plugin<PluginState>({
     key: cqlPluginKey,
     state: {
@@ -76,13 +79,23 @@ export const createCqlPlugin = (cqlService: CqlService) =>
         if (suggestions.length && tr.selection.from === tr.selection.to) {
           console.log("single position: testing selections");
           const mapping = createTokenMap(tokens);
-          suggestions.map((suggestion) => {
+
+          suggestions.forEach((suggestion) => {
             const start = mapping.map(suggestion.from);
             const end = mapping.map(suggestion.to);
             if (tr.selection.from >= start && tr.selection.to <= end) {
               console.log("suggestion to apply:", suggestion);
             }
           });
+
+          popoverEl.innerHTML = `<div>${suggestions.flatMap(suggestion => {
+            if (!suggestion.suggestions.TextSuggestion) {
+              return;
+            }
+            return suggestion.suggestions.TextSuggestion.suggestions.map(({label, value}) => {
+              return `<div>${label}</div>`
+            })
+          }).join("")}</div>`
         }
 
         view.dispatch(tr);
