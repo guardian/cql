@@ -7,17 +7,21 @@ import {
   logNode,
   createTokenMap,
   queryStrFromDoc,
-  tokensToDecorationSet,
+  tokensToDecorations,
   tokensToNodes,
   toProseMirrorTokens,
   ProseMirrorToken,
+  findNodeAt,
 } from "./utils";
+import { chip } from "./schema";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
+export type SelectionAnchor = { from: number; to: number };
+
 type PluginState = {
   queryStr?: string;
-  decorations: DecorationSet;
+  tokens: ProseMirrorToken[];
 };
 
 const NEW_TOKENS = "NEW_TOKENS";
@@ -33,26 +37,27 @@ export const createCqlPlugin = (
         const queryStr = config.doc ? queryStrFromDoc(config.doc) : undefined;
         return {
           queryStr,
+          tokens: [],
+          selectionAnchor: undefined,
           decorations: DecorationSet.empty,
         };
       },
-      apply(tr, pluginState, ___, newState) {
-        const maybeNewTokens: ProseMirrorToken[] = tr.getMeta(NEW_TOKENS);
-        const decorations = maybeNewTokens
-          ? DecorationSet.create(
-              newState.doc,
-              maybeNewTokens ? tokensToDecorationSet(maybeNewTokens) : []
-            )
-          : pluginState.decorations;
+      apply(tr, pluginState, _, newState) {
+        const maybeNewTokens: ProseMirrorToken[] | undefined =
+          tr.getMeta(NEW_TOKENS);
 
         return {
           queryStr: queryStrFromDoc(newState.doc),
-          decorations,
+          tokens: maybeNewTokens ?? pluginState.tokens,
         };
       },
     },
     props: {
-      decorations: (state) => cqlPluginKey.getState(state)?.decorations,
+      decorations: (state) => {
+        const { tokens } = cqlPluginKey.getState(state)!;
+
+        return DecorationSet.create(state.doc, tokensToDecorations(tokens));
+      },
     },
     view(view) {
       const updateView = async (
@@ -76,29 +81,46 @@ export const createCqlPlugin = (
           )
           .setMeta(NEW_TOKENS, tokens);
 
+        view.dispatch(tr);
+
         if (suggestions.length && tr.selection.from === tr.selection.to) {
-          console.log("single position: testing selections");
+          console.log("single position: testing selections", suggestions);
           const mapping = createTokenMap(tokens);
 
           suggestions.forEach((suggestion) => {
             const start = mapping.map(suggestion.from);
             const end = mapping.map(suggestion.to);
-            if (tr.selection.from >= start && tr.selection.to <= end) {
+            if (
+              view.state.selection.from >= start &&
+              view.state.selection.to <= end
+            ) {
               console.log("suggestion to apply:", suggestion);
+              const chipPos = findNodeAt(start, view.state.doc, chip);
+              const domSelectionAnchor = view.nodeDOM(
+                chipPos
+              ) as HTMLElement;
+              const { left } = domSelectionAnchor.getBoundingClientRect();
+              popoverEl.style.left = `${left}px`;
             }
           });
 
-          popoverEl.innerHTML = `<div>${suggestions.flatMap(suggestion => {
-            if (!suggestion.suggestions.TextSuggestion) {
-              return;
-            }
-            return suggestion.suggestions.TextSuggestion.suggestions.map(({label, value}) => {
-              return `<div>${label}</div>`
+          popoverEl.innerHTML = `<div>${suggestions
+            .flatMap((suggestion) => {
+              if (!suggestion.suggestions.TextSuggestion) {
+                return;
+              }
+              return suggestion.suggestions.TextSuggestion.suggestions.map(
+                ({ label, value }) => {
+                  return `<div>${label}</div>`;
+                }
+              );
             })
-          }).join("")}</div>`
-        }
+            .join("")}</div>`;
 
-        view.dispatch(tr);
+          popoverEl.showPopover();
+        } else {
+          popoverEl.hidePopover();
+        }
       };
 
       updateView(cqlPluginKey.getState(view.state)?.queryStr!);

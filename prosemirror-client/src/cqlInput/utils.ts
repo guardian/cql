@@ -11,6 +11,7 @@ import {
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection } from "prosemirror-state";
+import { SelectionAnchor } from "./plugin";
 
 const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE"];
 
@@ -136,7 +137,7 @@ export const tokensToNodes = (tokens: ProseMirrorToken[]): Node => {
 
 const tokensThatAreNotDecorated = ["QUERY_FIELD_KEY", "QUERY_VALUE", "EOF"];
 
-export const tokensToDecorationSet = (
+export const tokensToDecorations = (
   tokens: ProseMirrorToken[]
 ): Decoration[] => {
   return mapTokens(tokens)
@@ -191,11 +192,14 @@ const getFirstDiff = (first: string, second: string): string | undefined => {
   }
 };
 
-const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
+export const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
   let found = -1;
   doc.nodesBetween(pos - 1, doc.content.size, (node, pos) => {
     if (found > -1) return false;
-    if (node.type === type) found = pos;
+
+    if (node.type === type) {
+      found = pos;
+    }
   });
   return found;
 };

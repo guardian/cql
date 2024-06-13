@@ -44,6 +44,18 @@ template.innerHTML = `
     .CqlToken__RIGHT_BRACKET, .CqlToken__LEFT_BRACKET {
       color: lightpink;
     }
+
+    #cql-input {
+      position: relative;
+      anchor-name: --cql-input;
+    }
+
+    #cql-popover {
+      position-anchor: --cql-input;
+      top: anchor(end);
+      margin: 0;
+      width: 100px;
+    }
   </style>
 `;
 
@@ -54,7 +66,7 @@ export const createCqlInput = (cqlService: CqlService) => {
       const cqlPopoverId = "cql-popover";
       const shadow = this.attachShadow({ mode: "closed" });
 
-      shadow.innerHTML = `<div id="${cqlInputId}"></div><div id="${cqlPopoverId}"></div>`;
+      shadow.innerHTML = `<div id="${cqlInputId}"></div><div id="${cqlPopoverId}" popover anchor="${cqlInputId}"></div>`;
       shadow.appendChild(template.content.cloneNode(true));
       const cqlInput = shadow.getElementById(cqlInputId)!;
       const cqlPopover = shadow.getElementById(cqlPopoverId)!;

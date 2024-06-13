@@ -29,6 +29,7 @@ export const createEditor = (
     dispatchTransaction(tr) {
       view.updateState(view.state.apply(tr));
 
+      // Ensure that we always have space for text after the last wrapper node
       if (view.state.doc.lastChild?.type.name === "chipWrapper") {
         const tr = view.state.tr;
         tr.insert(
