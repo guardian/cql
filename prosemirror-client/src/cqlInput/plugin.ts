@@ -84,42 +84,40 @@ export const createCqlPlugin = (
         view.dispatch(tr);
 
         if (suggestions.length && tr.selection.from === tr.selection.to) {
-          console.log("single position: testing selections", suggestions);
           const mapping = createTokenMap(tokens);
 
-          suggestions.forEach((suggestion) => {
-            const start = mapping.map(suggestion.from);
-            const end = mapping.map(suggestion.to);
-            if (
-              view.state.selection.from >= start &&
-              view.state.selection.to <= end
-            ) {
-              console.log("suggestion to apply:", suggestion);
-              const chipPos = findNodeAt(start, view.state.doc, chip);
-              const domSelectionAnchor = view.nodeDOM(
-                chipPos
-              ) as HTMLElement;
-              const { left } = domSelectionAnchor.getBoundingClientRect();
-              popoverEl.style.left = `${left}px`;
-            }
-          });
-
-          popoverEl.innerHTML = `<div>${suggestions
-            .flatMap((suggestion) => {
-              if (!suggestion.suggestions.TextSuggestion) {
-                return;
-              }
-              return suggestion.suggestions.TextSuggestion.suggestions.map(
-                ({ label, value }) => {
-                  return `<div>${label}</div>`;
-                }
-              );
+          const suggestion = suggestions
+            .map((suggestion) => {
+              const start = mapping.map(suggestion.from);
+              const end = mapping.map(suggestion.to);
+              return { ...suggestion, from: start, to: end };
             })
-            .join("")}</div>`;
+            .find(
+              ({ from, to, suggestions }) =>
+                view.state.selection.from >= from &&
+                view.state.selection.to <= to &&
+                !!suggestions.TextSuggestion
+            );
 
+          if (suggestion) {
+            const { from, suggestions } = suggestion;
+            const chipPos = findNodeAt(from, view.state.doc, chip);
+            const domSelectionAnchor = view.nodeDOM(chipPos) as HTMLElement;
+            const { left } = domSelectionAnchor.getBoundingClientRect();
+            popoverEl.style.left = `${left}px`;
+
+            if (suggestions.TextSuggestion) {
+              popoverEl.innerHTML = suggestions.TextSuggestion.suggestions
+                .map(({ label, value }) => {
+                  return `<div data-value="${value}">${label}</div>`;
+                })
+                .join("");
+            }
+          }
           popoverEl.showPopover();
         } else {
           popoverEl.hidePopover();
+          popoverEl.innerHTML = "";
         }
       };
 
