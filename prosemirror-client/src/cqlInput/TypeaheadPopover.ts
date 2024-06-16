@@ -18,6 +18,12 @@ export class TypeaheadPopover {
     public popoverEl: HTMLElement,
     debugEl?: HTMLElement
   ) {
+    popoverEl.addEventListener("click", (e: MouseEvent) => {
+      if (e.target instanceof HTMLElement && e.target.dataset.value) {
+        this.selectItem(e.target.dataset.value);
+      }
+    });
+
     if (debugEl) {
       this.debugContainer = document.createElement("div");
       debugEl.appendChild(this.debugContainer);
@@ -77,7 +83,7 @@ export class TypeaheadPopover {
   private updateItems(items: MenuItem[]) {
     this.popoverEl.innerHTML = items
       .map(({ label, value }) => {
-        return `<div data-value="${value}">${label}</div>`;
+        return `<div class="Cql__Option" data-value="${value}">${label}</div>`;
       })
       .join("");
   }
@@ -92,4 +98,8 @@ export class TypeaheadPopover {
       )}</div>`;
     }
   };
+
+  private selectItem(itemValue: string) {
+    console.log({ itemValue });
+  }
 }

@@ -56,11 +56,21 @@ template.innerHTML = `
     }
 
     #cql-popover {
+      width: 150px;
+      margin: 0;
+      padding: 0;
+      top: anchor(end);
       font-size: ${baseFontSize};
       position-anchor: --cql-input;
-      top: anchor(end);
-      margin: 0;
-      width: 150px;
+    }
+
+    .Cql__Option {
+      padding: 5px;
+    }
+
+    .Cql__Option:hover {
+      background-color: rgba(0,0,0,0.2);
+      cursor: pointer;
     }
   </style>
 `;
