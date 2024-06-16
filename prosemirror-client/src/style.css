@@ -81,3 +81,14 @@ h6 {
 #__next {
   isolation: isolate;
 }
+
+.Cql__Debug {
+  display: flex;
+  margin: 30px;
+  white-space: pre;
+  font-family: monospace;
+}
+
+.Cql__Debug > div {
+  flex-grow: 1;
+}

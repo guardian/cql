@@ -1,6 +1,8 @@
 import { CqlService } from "../CqlService";
 import { createEditor } from "./editor";
 
+const baseFontSize = "28px";
+const baseBorderRadius = "5px";
 const template = document.createElement("template");
 template.innerHTML = `
   <style>
@@ -20,10 +22,9 @@ template.innerHTML = `
     chip {
       display: inline-flex;
       background-color: rgba(255,255,255,0.2);
-      border-left: 1px solid rgba(255,255,255,0.2);
-      border-right: 1px solid rgba(255,255,255,0.2);
       padding: 0 5px;
       margin: 0 5px;
+      border-radius: ${baseBorderRadius};
     }
     chip-key {
       display: flex;
@@ -47,19 +48,27 @@ template.innerHTML = `
 
     #cql-input {
       position: relative;
+      padding: 5px;
+      font-size: ${baseFontSize};
       anchor-name: --cql-input;
+      border: 2px solid grey;
+      border-radius: ${baseBorderRadius};
     }
 
     #cql-popover {
+      font-size: ${baseFontSize};
       position-anchor: --cql-input;
       top: anchor(end);
       margin: 0;
-      width: 100px;
+      width: 150px;
     }
   </style>
 `;
 
-export const createCqlInput = (cqlService: CqlService) => {
+export const createCqlInput = (
+  cqlService: CqlService,
+  debugEl?: HTMLElement
+) => {
   class CqlInput extends HTMLElement {
     connectedCallback() {
       const cqlInputId = "cql-input";
@@ -71,7 +80,7 @@ export const createCqlInput = (cqlService: CqlService) => {
       const cqlInput = shadow.getElementById(cqlInputId)!;
       const cqlPopover = shadow.getElementById(cqlPopoverId)!;
 
-      createEditor(cqlInput, cqlPopover, cqlService);
+      createEditor(cqlInput, cqlPopover, cqlService, debugEl);
     }
   }
 

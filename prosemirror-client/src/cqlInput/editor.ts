@@ -17,9 +17,10 @@ const initialContent = doc.create(undefined, [
 export const createEditor = (
   mountEl: HTMLElement,
   popoverEl: HTMLElement,
-  cqlService: CqlService
+  cqlService: CqlService,
+  debugEl?: HTMLElement
 ) => {
-  const plugin = createCqlPlugin(cqlService, popoverEl);
+  const plugin = createCqlPlugin(cqlService, popoverEl, debugEl);
   const view = new EditorView(mountEl, {
     state: EditorState.create({
       doc: initialContent,

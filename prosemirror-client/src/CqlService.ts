@@ -1,5 +1,3 @@
-import { Range } from "./cqlInput/types";
-
 export type CqlResult = {
   tokens: Array<Token>;
   ast?: QueryList;
@@ -16,7 +14,7 @@ export type TypeaheadSuggestion = {
   // The suffix to apply if this suggestion is accepted at the trailing edge of the query.
   // E.g. when we have typed '+ta' accept the key suggestion 'tag', we'll want to apply '+tag:'
   // to trigger typeahead for the value.
-  suffix: String;
+  suffix: string;
   suggestions: Suggestions;
 };
 
@@ -26,8 +24,8 @@ type Suggestions = {
 };
 
 type TextSuggestion = { suggestions: Array<TextSuggestionOption> };
-type TextSuggestionOption = { label: String; value: String };
-type DateSuggestion = { validFrom?: String; validTo?: String };
+type TextSuggestionOption = { label: string; value: string };
+type DateSuggestion = { validFrom?: string; validTo?: string };
 
 export class CqlService {
   constructor(private url: string) {}

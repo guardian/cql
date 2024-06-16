@@ -1,5 +1,5 @@
-import { DecorationSet } from "prosemirror-view";
-import { CqlService } from "../CqlService";
+import { DecorationSet, EditorView } from "prosemirror-view";
+import { CqlService, TypeaheadSuggestion } from "../CqlService";
 import { AllSelection, Plugin, PluginKey } from "prosemirror-state";
 import {
   getNewSelection,
@@ -14,6 +14,8 @@ import {
   findNodeAt,
 } from "./utils";
 import { chip } from "./schema";
+import { Mapping } from "prosemirror-transform";
+import { TypeaheadPopover } from "./TypeaheadPopover";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -21,16 +23,32 @@ export type SelectionAnchor = { from: number; to: number };
 
 type PluginState = {
   queryStr?: string;
+  mapping: Mapping;
+} & ServiceState;
+
+type ServiceState = {
   tokens: ProseMirrorToken[];
+  suggestions: TypeaheadSuggestion[];
 };
 
-const NEW_TOKENS = "NEW_TOKENS";
+const NEW_STATE = "NEW_STATE";
 
 export const createCqlPlugin = (
   cqlService: CqlService,
-  popoverEl: HTMLElement
-) =>
-  new Plugin<PluginState>({
+  popoverEl: HTMLElement,
+  debugEl?: HTMLElement
+) => {
+  let typeaheadPopover: TypeaheadPopover | undefined;
+  let debugTokenContainer: HTMLElement | undefined;
+  let debugASTContainer: HTMLElement | undefined;
+  if (debugEl) {
+    debugTokenContainer = document.createElement("div");
+    debugEl.appendChild(debugTokenContainer);
+    debugASTContainer = document.createElement("div");
+    debugEl.appendChild(debugASTContainer);
+  }
+
+  return new Plugin<PluginState>({
     key: cqlPluginKey,
     state: {
       init(config) {
@@ -38,17 +56,20 @@ export const createCqlPlugin = (
         return {
           queryStr,
           tokens: [],
-          selectionAnchor: undefined,
-          decorations: DecorationSet.empty,
+          suggestions: [],
+          mapping: new Mapping(),
         };
       },
-      apply(tr, pluginState, _, newState) {
-        const maybeNewTokens: ProseMirrorToken[] | undefined =
-          tr.getMeta(NEW_TOKENS);
+      apply(tr, { tokens, suggestions, mapping }, _, newState) {
+        const maybeNewState: ServiceState | undefined = tr.getMeta(NEW_STATE);
 
         return {
           queryStr: queryStrFromDoc(newState.doc),
-          tokens: maybeNewTokens ?? pluginState.tokens,
+          mapping: maybeNewState?.tokens
+            ? createTokenMap(maybeNewState?.tokens)
+            : mapping,
+          tokens: maybeNewState?.tokens ?? tokens,
+          suggestions: maybeNewState?.suggestions ?? suggestions,
         };
       },
     },
@@ -58,19 +79,50 @@ export const createCqlPlugin = (
 
         return DecorationSet.create(state.doc, tokensToDecorations(tokens));
       },
+      handleKeyDown(_, event) {
+        if (!typeaheadPopover?.isRenderingNavigableMenu()) {
+          return false;
+        }
+        switch (event.code) {
+          case "ArrowUp":
+            // Handle selection;
+            return true;
+          case "ArrowDown":
+            // Handle new selection;
+            return true;
+        }
+      },
     },
     view(view) {
+      typeaheadPopover = new TypeaheadPopover(view, popoverEl, debugEl);
+
       const updateView = async (
         query: string,
         shouldWrapSelectionInKey: boolean = false
       ) => {
-        const { tokens: _tokens, suggestions } = await cqlService.fetchResult(
-          query
-        );
+        const {
+          tokens: _tokens,
+          suggestions,
+          ast,
+        } = await cqlService.fetchResult(query);
         const tokens = toProseMirrorTokens(_tokens);
         const newDoc = tokensToNodes(tokens);
-        console.log(JSON.stringify(tokens, undefined, " "));
-        logNode(newDoc);
+
+        if (debugASTContainer) {
+          debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
+            ast,
+            undefined,
+            "  "
+          )}</div>`;
+        }
+        if (debugTokenContainer) {
+          debugTokenContainer.innerHTML = `<h2>Tokens</h2><div>${JSON.stringify(
+            tokens,
+            undefined,
+            "  "
+          )}</div>`;
+        }
+
         const userSelection = view.state.selection;
         const docSelection = new AllSelection(view.state.doc);
         const tr = view.state.tr;
@@ -79,46 +131,9 @@ export const createCqlPlugin = (
           .setSelection(
             getNewSelection(userSelection, shouldWrapSelectionInKey, tr.doc)
           )
-          .setMeta(NEW_TOKENS, tokens);
+          .setMeta(NEW_STATE, { tokens, suggestions });
 
         view.dispatch(tr);
-
-        if (suggestions.length && tr.selection.from === tr.selection.to) {
-          const mapping = createTokenMap(tokens);
-
-          const suggestion = suggestions
-            .map((suggestion) => {
-              const start = mapping.map(suggestion.from);
-              const end = mapping.map(suggestion.to);
-              return { ...suggestion, from: start, to: end };
-            })
-            .find(
-              ({ from, to, suggestions }) =>
-                view.state.selection.from >= from &&
-                view.state.selection.to <= to &&
-                !!suggestions.TextSuggestion
-            );
-
-          if (suggestion) {
-            const { from, suggestions } = suggestion;
-            const chipPos = findNodeAt(from, view.state.doc, chip);
-            const domSelectionAnchor = view.nodeDOM(chipPos) as HTMLElement;
-            const { left } = domSelectionAnchor.getBoundingClientRect();
-            popoverEl.style.left = `${left}px`;
-
-            if (suggestions.TextSuggestion) {
-              popoverEl.innerHTML = suggestions.TextSuggestion.suggestions
-                .map(({ label, value }) => {
-                  return `<div data-value="${value}">${label}</div>`;
-                })
-                .join("");
-            }
-          }
-          popoverEl.showPopover();
-        } else {
-          popoverEl.hidePopover();
-          popoverEl.innerHTML = "";
-        }
       };
 
       updateView(cqlPluginKey.getState(view.state)?.queryStr!);
@@ -126,7 +141,17 @@ export const createCqlPlugin = (
       return {
         update(view, prevState) {
           const prevQuery = cqlPluginKey.getState(prevState)?.queryStr!;
-          const currentQuery = cqlPluginKey.getState(view.state)?.queryStr!;
+          const {
+            queryStr: currentQuery,
+            suggestions,
+            mapping,
+          } = cqlPluginKey.getState(view.state)!;
+
+          typeaheadPopover?.updateItemsFromSuggestions(suggestions, mapping);
+
+          if (!currentQuery) {
+            return;
+          }
 
           if (prevQuery.trim() === currentQuery.trim()) {
             return;
@@ -142,3 +167,4 @@ export const createCqlPlugin = (
       };
     },
   });
+};
