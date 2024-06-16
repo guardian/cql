@@ -12,6 +12,7 @@ type MenuItem = {
 export class TypeaheadPopover {
   private debugContainer: HTMLElement | undefined;
   private currentSuggestion: TypeaheadSuggestion | undefined;
+  private currentOptionIndex = 0;
 
   public constructor(
     public view: EditorView,
@@ -80,10 +81,26 @@ export class TypeaheadPopover {
     }
   };
 
+  public moveSelectionUp = () => this.moveSelection(1);
+
+  public moveSelectionDown = () => this.moveSelection(-1);
+
+  private moveSelection = (by: number) => {
+    const suggestions =
+      this.currentSuggestion?.suggestions.TextSuggestion?.suggestions!;
+    this.currentOptionIndex =
+      (this.currentOptionIndex + by + (by < 0 ? suggestions.length! : 0)) %
+      suggestions.length!;
+    this.updateItems(suggestions!);
+  };
+
   private updateItems(items: MenuItem[]) {
+    console.log({ idx: this.currentOptionIndex });
     this.popoverEl.innerHTML = items
-      .map(({ label, value }) => {
-        return `<div class="Cql__Option" data-value="${value}">${label}</div>`;
+      .map(({ label, value }, index) => {
+        return `<div class="Cql__Option ${
+          index === this.currentOptionIndex ? "Cql__Option--is-selected" : ""
+        }" data-value="${value}">${label}</div>`;
       })
       .join("");
   }

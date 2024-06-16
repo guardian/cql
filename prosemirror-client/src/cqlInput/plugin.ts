@@ -85,10 +85,10 @@ export const createCqlPlugin = (
         }
         switch (event.code) {
           case "ArrowUp":
-            // Handle selection;
+            typeaheadPopover.moveSelectionUp();
             return true;
           case "ArrowDown":
-            // Handle new selection;
+            typeaheadPopover.moveSelectionDown();
             return true;
         }
       },

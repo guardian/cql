@@ -215,7 +215,7 @@ Perhaps tokens are all we need: the parser can just understand those sorts of to
 ## Prosemirror client todos
 
 - [ ] Handle clicks on typeahead menu
-- [ ] Handle keyboard navigation on typeahead menu
+- [x] Handle keyboard navigation on typeahead menu
 - [ ] Correctly display typeahead menu when there's no content in a chip key or value
 - [ ] Deletion pattern for chips on backspace
 - [ ] Deletion handle for chips UI

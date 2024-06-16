@@ -68,6 +68,10 @@ template.innerHTML = `
       padding: 5px;
     }
 
+    .Cql__Option--is-selected {
+      background-color: rgba(0,0,0,0.1);
+    }
+
     .Cql__Option:hover {
       background-color: rgba(0,0,0,0.2);
       cursor: pointer;
