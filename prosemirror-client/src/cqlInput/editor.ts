@@ -4,6 +4,7 @@ import { createCqlPlugin } from "./plugin";
 import { EditorState } from "prosemirror-state";
 import { doc, schema, searchText } from "./schema";
 import { baseKeymap } from "prosemirror-commands";
+import { undo, redo, history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
 
 declare module window {
@@ -25,7 +26,12 @@ export const createEditor = (
     state: EditorState.create({
       doc: initialContent,
       schema: schema,
-      plugins: [plugin, keymap(baseKeymap)],
+      plugins: [
+        plugin,
+        keymap(baseKeymap),
+        history(),
+        keymap({ "Mod-z": undo, "Mod-y": redo }),
+      ],
     }),
     dispatchTransaction(tr) {
       view.updateState(view.state.apply(tr));
