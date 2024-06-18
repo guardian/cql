@@ -11,7 +11,6 @@ import {
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection } from "prosemirror-state";
-import { SelectionAnchor } from "./plugin";
 
 const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE"];
 

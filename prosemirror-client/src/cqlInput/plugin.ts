@@ -1,25 +1,22 @@
-import { DecorationSet, EditorView } from "prosemirror-view";
+import { DecorationSet } from "prosemirror-view";
 import { CqlService, TypeaheadSuggestion } from "../CqlService";
 import { AllSelection, Plugin, PluginKey } from "prosemirror-state";
 import {
   getNewSelection,
   isBeginningKeyValPair,
-  logNode,
   createTokenMap,
   queryStrFromDoc,
   tokensToDecorations,
   tokensToNodes,
   toProseMirrorTokens,
   ProseMirrorToken,
-  findNodeAt,
 } from "./utils";
-import { chip } from "./schema";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
+import { doc, schema } from "./schema";
+import { Slice } from "prosemirror-model";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
-
-export type SelectionAnchor = { from: number; to: number };
 
 type PluginState = {
   queryStr?: string;
@@ -93,6 +90,12 @@ export const createCqlPlugin = (
           case "Enter":
             typeaheadPopover.applyOption();
         }
+      },
+      // Serialise outgoing content to a CQL string for portability
+      clipboardTextSerializer(content) {
+        const node = doc.create(undefined, content.content);
+        const queryStr = queryStrFromDoc(node);
+        return queryStr;
       },
     },
     view(view) {
