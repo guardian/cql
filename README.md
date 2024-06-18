@@ -218,9 +218,18 @@ Perhaps tokens are all we need: the parser can just understand those sorts of to
 - [x] Handle selection on typeahead menu (including clicks)
 - [x] Correctly display typeahead menu when there's no content in a chip key or value
 - [x] Serialise to CQL string on copy
+- [ ] Tab through content
 - [ ] Deletion pattern for chips on backspace
 - [ ] Deletion handle for chips UI
 - [ ] Date suggestions
-- [ ] Display labels, not values, in chips
-- [ ] TELEMETRY
+- [ ] Display labels, not values, in chips?
+- [ ] Chip polarity
+- [ ] Telemetry:
+  - [ ] Create chip
+  - [ ] Autocomplete key, value selection
+  - [ ] Remove chip – mouse
+  - [ ] Remove chip – backspace
+  - [ ] Tab behaviour?
+  - [ ] Paste?
+  - [ ] ...
 - [ ] ...
