@@ -110,7 +110,11 @@ export class TypeaheadPopover {
     this.view.dispatch(
       tr
         .replaceRangeWith(from, to, schema.text(suggestion.value))
-        .setSelection(TextSelection.create(tr.doc, from + suggestion.value.length))
+        .setSelection(
+          // +1 to tip the selection into the next available text position –
+          // e.g. key -> value, value -> searchText
+          TextSelection.near(tr.doc.resolve(from + suggestion.value.length + 1))
+        )
     );
   };
 

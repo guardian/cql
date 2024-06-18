@@ -13,8 +13,7 @@ import {
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
-import { doc, schema } from "./schema";
-import { Slice } from "prosemirror-model";
+import { doc } from "./schema";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
