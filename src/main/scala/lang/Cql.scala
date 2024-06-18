@@ -23,7 +23,7 @@ class Cql:
   implicit val ec: scala.concurrent.ExecutionContext =
     scala.concurrent.ExecutionContext.global
   val guardianContentClient = new GuardianContentClient("test")
-  val typeaheadClient = new TypeaheadQueryClientTest()
+  val typeaheadClient = new TypeaheadQueryCapiClient(guardianContentClient)
   val typeahead = new Typeahead(typeaheadClient)
 
   def run(program: String): Future[CqlResult] =

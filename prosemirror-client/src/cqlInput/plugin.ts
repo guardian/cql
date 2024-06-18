@@ -90,6 +90,8 @@ export const createCqlPlugin = (
           case "ArrowDown":
             typeaheadPopover.moveSelectionDown();
             return true;
+          case "Enter":
+            typeaheadPopover.applyOption();
         }
       },
     },

@@ -2,7 +2,7 @@ import { Mapping } from "prosemirror-transform";
 import { TypeaheadSuggestion } from "../CqlService";
 import { findNodeAt } from "./utils";
 import { EditorView } from "prosemirror-view";
-import { chip } from "./schema";
+import { chip, schema } from "./schema";
 
 type MenuItem = {
   label: string;
@@ -20,8 +20,9 @@ export class TypeaheadPopover {
     debugEl?: HTMLElement
   ) {
     popoverEl.addEventListener("click", (e: MouseEvent) => {
-      if (e.target instanceof HTMLElement && e.target.dataset.value) {
-        this.selectItem(e.target.dataset.value);
+      if (e.target instanceof HTMLElement && e.target.dataset.index !== undefined) {
+        this.currentOptionIndex = parseInt(e.target.dataset.index ?? "0");
+        this.applyOption();
       }
     });
 
@@ -81,9 +82,34 @@ export class TypeaheadPopover {
     }
   };
 
-  public moveSelectionUp = () => this.moveSelection(1);
+  public moveSelectionUp = () => this.moveSelection(-1);
 
-  public moveSelectionDown = () => this.moveSelection(-1);
+  public moveSelectionDown = () => this.moveSelection(1);
+
+  public applyOption = () => {
+    const suggestion =
+      this.currentSuggestion?.suggestions.TextSuggestion?.suggestions[
+        this.currentOptionIndex
+      ];
+
+    if (!this.currentSuggestion || !suggestion) {
+      console.warn(
+        `No option available with current suggestion at index ${this.currentOptionIndex}`
+      );
+
+      return;
+    }
+
+    const { from, to } = this.currentSuggestion;
+
+    this.view.dispatch(
+      this.view.state.tr.replaceRangeWith(
+        from,
+        to,
+        schema.text(suggestion.value)
+      )
+    );
+  };
 
   private moveSelection = (by: number) => {
     const suggestions =
@@ -95,12 +121,11 @@ export class TypeaheadPopover {
   };
 
   private updateItems(items: MenuItem[]) {
-    console.log({ idx: this.currentOptionIndex });
     this.popoverEl.innerHTML = items
-      .map(({ label, value }, index) => {
+      .map(({ label }, index) => {
         return `<div class="Cql__Option ${
           index === this.currentOptionIndex ? "Cql__Option--is-selected" : ""
-        }" data-value="${value}">${label}</div>`;
+        }" data-index="${index}">${label}</div>`;
       })
       .join("");
   }

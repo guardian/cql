@@ -56,7 +56,7 @@ template.innerHTML = `
     }
 
     #cql-popover {
-      width: 150px;
+      width: 250px;
       margin: 0;
       padding: 0;
       top: anchor(end);
