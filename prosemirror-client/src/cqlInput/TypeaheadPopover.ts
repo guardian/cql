@@ -111,8 +111,9 @@ export class TypeaheadPopover {
       tr
         .replaceRangeWith(from, to, schema.text(suggestion.value))
         .setSelection(
-          // +1 to tip the selection into the next available text position –
-          // e.g. key -> value, value -> searchText
+          // +1 to tip the selection into the next available node's text
+          // position after applying the suggestion e.g. key -> value, value ->
+          // searchText
           TextSelection.near(tr.doc.resolve(from + suggestion.value.length + 1))
         )
     );

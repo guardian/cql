@@ -10,10 +10,11 @@ import {
   tokensToNodes,
   toProseMirrorTokens,
   ProseMirrorToken,
+  logNode,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
-import { doc } from "./schema";
+import { doc, schema, searchText } from "./schema";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -96,6 +97,18 @@ export const createCqlPlugin = (
         const queryStr = queryStrFromDoc(node);
         return queryStr;
       },
+      // Only permit pasting plain text, solving some odd problems with pasting
+      // – for example, tag nodes disappearing. I'm not entirely sure why that
+      // happens, it should be default behaviour.
+      handlePaste(view, event) {
+        const pastedStr = event.clipboardData?.getData("text/plain") ?? "";
+        const tr = view.state.tr;
+        tr.replaceSelectionWith(
+          searchText.create(undefined, schema.text(pastedStr))
+        );
+        view.dispatch(tr);
+        return true;
+      },
     },
     view(view) {
       typeaheadPopover = new TypeaheadPopover(view, popoverEl, debugEl);
@@ -146,16 +159,12 @@ export const createCqlPlugin = (
         update(view, prevState) {
           const prevQuery = cqlPluginKey.getState(prevState)?.queryStr!;
           const {
-            queryStr: currentQuery,
+            queryStr: currentQuery = "",
             suggestions,
             mapping,
           } = cqlPluginKey.getState(view.state)!;
 
           typeaheadPopover?.updateItemsFromSuggestions(suggestions, mapping);
-
-          if (!currentQuery) {
-            return;
-          }
 
           if (prevQuery.trim() === currentQuery.trim()) {
             return;

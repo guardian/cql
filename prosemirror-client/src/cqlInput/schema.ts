@@ -27,13 +27,13 @@ export const schema = new Schema({
     chipKey: {
       content: "inline*",
       group: "block",
-      toDOM: () => ["chip-key", { tabindex: "0" }, 0],
+      toDOM: () => ["chip-key", 0],
     },
     chipValue: {
       content: "inline*",
       group: "block",
       whitespace: "pre",
-      toDOM: () => ["chip-value", { tabindex: "0" }, 0],
+      toDOM: () => ["chip-value", 0],
     },
   },
 });
