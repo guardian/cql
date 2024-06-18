@@ -222,4 +222,5 @@ Perhaps tokens are all we need: the parser can just understand those sorts of to
 - [ ] Deletion handle for chips UI
 - [ ] Date suggestions
 - [ ] Display labels, not values, in chips
+- [ ] TELEMETRY
 - [ ] ...
