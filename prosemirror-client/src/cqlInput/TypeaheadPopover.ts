@@ -3,6 +3,7 @@ import { TypeaheadSuggestion } from "../CqlService";
 import { findNodeAt } from "./utils";
 import { EditorView } from "prosemirror-view";
 import { chip, schema } from "./schema";
+import { TextSelection } from "prosemirror-state";
 
 type MenuItem = {
   label: string;
@@ -20,7 +21,10 @@ export class TypeaheadPopover {
     debugEl?: HTMLElement
   ) {
     popoverEl.addEventListener("click", (e: MouseEvent) => {
-      if (e.target instanceof HTMLElement && e.target.dataset.index !== undefined) {
+      if (
+        e.target instanceof HTMLElement &&
+        e.target.dataset.index !== undefined
+      ) {
         this.currentOptionIndex = parseInt(e.target.dataset.index ?? "0");
         this.applyOption();
       }
@@ -101,13 +105,12 @@ export class TypeaheadPopover {
     }
 
     const { from, to } = this.currentSuggestion;
+    const tr = this.view.state.tr;
 
     this.view.dispatch(
-      this.view.state.tr.replaceRangeWith(
-        from,
-        to,
-        schema.text(suggestion.value)
-      )
+      tr
+        .replaceRangeWith(from, to, schema.text(suggestion.value))
+        .setSelection(TextSelection.create(tr.doc, from + suggestion.value.length))
     );
   };
 
@@ -140,8 +143,4 @@ export class TypeaheadPopover {
       )}</div>`;
     }
   };
-
-  private selectItem(itemValue: string) {
-    console.log({ itemValue });
-  }
 }
