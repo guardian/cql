@@ -43,7 +43,7 @@ export class TypeaheadPopover {
       this.view.state.selection.from === this.view.state.selection.to
     ) {
       const mappedSuggestions = suggestions.map((suggestion) => {
-        const start = mapping.map(suggestion.from);
+        const start = mapping.map(suggestion.from, -1);
         const end = mapping.map(suggestion.to);
         return { ...suggestion, from: start, to: end };
       });
