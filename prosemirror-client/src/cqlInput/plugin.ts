@@ -15,6 +15,7 @@ import {
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
 import { doc, schema, searchText } from "./schema";
+import { DOMSerializer, Fragment } from "prosemirror-model";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -89,26 +90,25 @@ export const createCqlPlugin = (
             return true;
           case "Enter":
             typeaheadPopover.applyOption();
+            return true;
         }
       },
-      // Serialise outgoing content to a CQL string for portability
+      // Serialise outgoing content to a CQL string for portability in both plain text and html
       clipboardTextSerializer(content) {
         const node = doc.create(undefined, content.content);
         const queryStr = queryStrFromDoc(node);
         return queryStr;
       },
-      // Only permit pasting plain text, solving some odd problems with pasting
-      // – for example, tag nodes disappearing. I'm not entirely sure why that
-      // happens, it should be default behaviour.
-      handlePaste(view, event) {
-        const pastedStr = event.clipboardData?.getData("text/plain") ?? "";
-        const tr = view.state.tr;
-        tr.replaceSelectionWith(
-          searchText.create(undefined, schema.text(pastedStr))
-        );
-        view.dispatch(tr);
-        return true;
-      },
+      clipboardSerializer: {
+        serializeFragment: (fragment: Fragment) => {
+          const node = doc.create(undefined, fragment);
+          const queryStr = queryStrFromDoc(node);
+          const plainTextNode = DOMSerializer.fromSchema(schema).serializeNode(
+            schema.text(queryStr)
+          );
+          return plainTextNode;
+        },
+      } as DOMSerializer, // Cast because docs specify only serializeFragment is needed
     },
     view(view) {
       typeaheadPopover = new TypeaheadPopover(view, popoverEl, debugEl);
