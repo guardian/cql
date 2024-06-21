@@ -76,6 +76,10 @@ template.innerHTML = `
       background-color: rgba(0,0,0,0.2);
       cursor: pointer;
     }
+
+    .Cql__ChipWrapper--is-pending-delete chip {
+      background-color: darkred;
+    }
   </style>
 `;
 

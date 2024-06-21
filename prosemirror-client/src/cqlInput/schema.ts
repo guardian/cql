@@ -1,5 +1,7 @@
 import { Schema } from "prosemirror-model";
 
+export const DELETE_CHIP_INTENT = "DELETE_CHIP_INTENT";
+
 export const schema = new Schema({
   nodes: {
     doc: {
@@ -18,6 +20,11 @@ export const schema = new Schema({
       content: "chip*",
       group: "block",
       toDOM: () => ["chip-wrapper", 0],
+      attrs: {
+        [DELETE_CHIP_INTENT]: {
+          default: false
+        }
+      }
     },
     chip: {
       content: "chipKey chipValue",

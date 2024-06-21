@@ -14,7 +14,7 @@ import {
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
-import { doc, schema, searchText } from "./schema";
+import { DELETE_CHIP_INTENT, chipWrapper, doc, schema } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
@@ -72,12 +72,73 @@ export const createCqlPlugin = (
       },
     },
     props: {
+      nodeViews: {
+        [chipWrapper.name]: () => {
+          const dom = document.createElement("chip-wrapper");
+          const contentDOM = dom;
+          const pendingDeleteClass = "Cql__ChipWrapper--is-pending-delete";
+          return {
+            dom,
+            contentDOM,
+            update: (node) => {
+              if (node.attrs[DELETE_CHIP_INTENT] === true) {
+                dom.classList.add(pendingDeleteClass);
+              } else {
+                dom.classList.remove(pendingDeleteClass);
+              }
+              return true;
+            },
+          };
+        },
+      },
       decorations: (state) => {
         const { tokens } = cqlPluginKey.getState(state)!;
 
         return DecorationSet.create(state.doc, tokensToDecorations(tokens));
       },
-      handleKeyDown(_, event) {
+      handleKeyDown(view, event) {
+        switch (event.code) {
+          // What should the behaviour of tab be?
+          case "Tab":
+            if (event.shiftKey) {
+              // Reverse tab
+              return true;
+            }
+            return true;
+          case "Delete":
+            // Look forward for node
+            console.log("Todo – delete forward");
+            return true;
+          case "Backspace":
+            // Look backward for node
+            const { anchor } = view.state.selection;
+            const positionBeforeSearchText = Math.max(anchor - 1, 0);
+            const prevPos = view.state.doc.resolve(positionBeforeSearchText);
+            const prevNode = prevPos.nodeBefore;
+            if (prevNode?.type !== chipWrapper) {
+              return false;
+            }
+
+            const prevNodePos = prevPos.pos - prevNode.nodeSize;
+            const tr = view.state.tr;
+
+            // Remove the chip if marked for deletion
+            if (prevNode.attrs[DELETE_CHIP_INTENT]) {
+              tr.delete(prevNodePos, prevPos.pos)
+                // Prosemirror removes the whitespace in the preceding searchText
+                // for reasons I've yet to discover – add it back
+                .insertText(" ", prevNodePos);
+            } else {
+              // Mark for deletion
+              tr.setNodeAttribute(prevNodePos, DELETE_CHIP_INTENT, true);
+              // Add trailing space back to previous selection
+            }
+
+            view.dispatch(tr);
+
+            return true;
+        }
+
         if (!typeaheadPopover?.isRenderingNavigableMenu()) {
           return false;
         }
@@ -143,6 +204,9 @@ export const createCqlPlugin = (
         const userSelection = view.state.selection;
         const docSelection = new AllSelection(view.state.doc);
         const tr = view.state.tr;
+
+        console.log("Incoming query", { from: query, tokens, ast });
+        logNode(newDoc);
 
         tr.replaceWith(docSelection.from, docSelection.to, newDoc)
           .setSelection(
