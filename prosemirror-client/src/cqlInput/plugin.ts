@@ -1,4 +1,4 @@
-import { DecorationSet } from "prosemirror-view";
+import { DecorationSet, EditorView } from "prosemirror-view";
 import { CqlService, TypeaheadSuggestion } from "../CqlService";
 import { AllSelection, Plugin, PluginKey } from "prosemirror-state";
 import {
@@ -15,7 +15,7 @@ import {
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
 import { DELETE_CHIP_INTENT, chipWrapper, doc, schema } from "./schema";
-import { DOMSerializer, Fragment } from "prosemirror-model";
+import { DOMSerializer, Fragment, Node } from "prosemirror-model";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -45,6 +45,35 @@ export const createCqlPlugin = (
     debugASTContainer = document.createElement("div");
     debugEl.appendChild(debugASTContainer);
   }
+
+  const applyDeleteIntent = (
+    view: EditorView,
+    from: number,
+    to: number,
+    node: Node
+  ) => {
+    if (node.type !== chipWrapper) {
+      return false;
+    }
+
+    const tr = view.state.tr;
+
+    // Remove the chip if marked for deletion
+    if (node.attrs[DELETE_CHIP_INTENT]) {
+      tr.delete(from, to)
+        // Prosemirror removes the whitespace in the preceding searchText
+        // for reasons I've yet to discover – add it back
+        .insertText(" ", from);
+    } else {
+      // Mark for deletion
+      tr.setNodeAttribute(from, DELETE_CHIP_INTENT, true);
+      // Add trailing space back to previous selection
+    }
+
+    view.dispatch(tr);
+
+    return true;
+  };
 
   return new Plugin<PluginState>({
     key: cqlPluginKey,
@@ -105,38 +134,39 @@ export const createCqlPlugin = (
               return true;
             }
             return true;
-          case "Delete":
+          case "Delete": {
             // Look forward for node
-            console.log("Todo – delete forward");
-            return true;
-          case "Backspace":
-            // Look backward for node
             const { anchor } = view.state.selection;
-            const positionBeforeSearchText = Math.max(anchor - 1, 0);
-            const prevPos = view.state.doc.resolve(positionBeforeSearchText);
-            const prevNode = prevPos.nodeBefore;
-            if (prevNode?.type !== chipWrapper) {
+            const positionAfterSearchText = Math.max(anchor + 1, 0);
+            const $nextPos = view.state.doc.resolve(positionAfterSearchText);
+            const nextNode = $nextPos.nodeAfter;
+
+            if (!nextNode) {
               return false;
             }
 
-            const prevNodePos = prevPos.pos - prevNode.nodeSize;
-            const tr = view.state.tr;
+            return applyDeleteIntent(
+              view,
+              $nextPos.pos,
+              $nextPos.pos + nextNode.nodeSize,
+              nextNode
+            );
+          }
+          case "Backspace": {
+            // Look backward for node
+            const { anchor } = view.state.selection;
+            const positionBeforeSearchText = Math.max(anchor - 1, 0);
+            const $prevPos = view.state.doc.resolve(positionBeforeSearchText);
+            const prevNode = $prevPos.nodeBefore;
 
-            // Remove the chip if marked for deletion
-            if (prevNode.attrs[DELETE_CHIP_INTENT]) {
-              tr.delete(prevNodePos, prevPos.pos)
-                // Prosemirror removes the whitespace in the preceding searchText
-                // for reasons I've yet to discover – add it back
-                .insertText(" ", prevNodePos);
-            } else {
-              // Mark for deletion
-              tr.setNodeAttribute(prevNodePos, DELETE_CHIP_INTENT, true);
-              // Add trailing space back to previous selection
+            if (!prevNode) {
+              return false;
             }
 
-            view.dispatch(tr);
+            const prevNodePos = $prevPos.pos - prevNode.nodeSize;
 
-            return true;
+            return applyDeleteIntent(view, prevNodePos, $prevPos.pos, prevNode);
+          }
         }
 
         if (!typeaheadPopover?.isRenderingNavigableMenu()) {
