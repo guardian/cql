@@ -1,6 +1,7 @@
 import { Mapping, StepMap } from "prosemirror-transform";
-import { Decoration } from "prosemirror-view";
+import { Decoration, EditorView } from "prosemirror-view";
 import {
+  DELETE_CHIP_INTENT,
   chip,
   chipKey,
   chipValue,
@@ -248,6 +249,37 @@ export const toProseMirrorTokens = (tokens: Token[]): ProseMirrorToken[] =>
     from: start,
     to: end + 1,
   }));
+
+/**
+ * Apply a delete intent to the node at the given range:
+ *  - mark the node for deletion, or
+ *  - delete the node if already marked for deletion
+ */
+export const applyDeleteIntent = (
+  view: EditorView,
+  from: number,
+  to: number,
+  node: Node
+) => {
+  if (node.type !== chipWrapper) {
+    return false;
+  }
+
+  const tr = view.state.tr;
+
+  if (node.attrs[DELETE_CHIP_INTENT]) {
+    tr.delete(from, to)
+      // Prosemirror removes the whitespace in the preceding searchText,
+      // regardless of range, for reasons I've yet to discover – add it back
+      .insertText(" ", from);
+  } else {
+    tr.setNodeAttribute(from, DELETE_CHIP_INTENT, true);
+  }
+
+  view.dispatch(tr);
+
+  return true;
+};
 
 /**
  * Utility function to log node structure to console.

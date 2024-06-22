@@ -1,4 +1,4 @@
-import { DecorationSet, EditorView } from "prosemirror-view";
+import { DecorationSet } from "prosemirror-view";
 import { CqlService, TypeaheadSuggestion } from "../CqlService";
 import { AllSelection, Plugin, PluginKey } from "prosemirror-state";
 import {
@@ -11,11 +11,12 @@ import {
   toProseMirrorTokens,
   ProseMirrorToken,
   logNode,
+  applyDeleteIntent,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
 import { DELETE_CHIP_INTENT, chipWrapper, doc, schema } from "./schema";
-import { DOMSerializer, Fragment, Node } from "prosemirror-model";
+import { DOMSerializer, Fragment } from "prosemirror-model";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -46,35 +47,6 @@ export const createCqlPlugin = (
     debugEl.appendChild(debugASTContainer);
   }
 
-  const applyDeleteIntent = (
-    view: EditorView,
-    from: number,
-    to: number,
-    node: Node
-  ) => {
-    if (node.type !== chipWrapper) {
-      return false;
-    }
-
-    const tr = view.state.tr;
-
-    // Remove the chip if marked for deletion
-    if (node.attrs[DELETE_CHIP_INTENT]) {
-      tr.delete(from, to)
-        // Prosemirror removes the whitespace in the preceding searchText
-        // for reasons I've yet to discover – add it back
-        .insertText(" ", from);
-    } else {
-      // Mark for deletion
-      tr.setNodeAttribute(from, DELETE_CHIP_INTENT, true);
-      // Add trailing space back to previous selection
-    }
-
-    view.dispatch(tr);
-
-    return true;
-  };
-
   return new Plugin<PluginState>({
     key: cqlPluginKey,
     state: {
@@ -99,6 +71,24 @@ export const createCqlPlugin = (
           suggestions: maybeNewState?.suggestions ?? suggestions,
         };
       },
+    },
+    appendTransaction(_, oldState, newState) {
+      // If the selection has changed, reset any chips that are pending delete
+      if (!oldState.selection.eq(newState.selection)) {
+        const posOfChipWrappersToReset: number[] = [];
+        newState.doc.descendants((node, pos) => {
+          if (node.type === chipWrapper && node.attrs[DELETE_CHIP_INTENT]) {
+            posOfChipWrappersToReset.push(pos);
+          }
+        });
+        if (posOfChipWrappersToReset.length) {
+          const tr = newState.tr;
+          posOfChipWrappersToReset.forEach((pos) => {
+            tr.setNodeAttribute(pos, DELETE_CHIP_INTENT, false);
+          });
+          return tr;
+        }
+      }
     },
     props: {
       nodeViews: {
