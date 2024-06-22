@@ -92,14 +92,38 @@ export const createCqlPlugin = (
     },
     props: {
       nodeViews: {
-        [chipWrapper.name]: () => {
+        [chipWrapper.name]: (_node, view, getPos) => {
           const dom = document.createElement("chip-wrapper");
-          const contentDOM = dom;
+          const contentDOM = document.createElement("span");
+          const polarityHandle = document.createElement("span");
+          polarityHandle.classList.add("Cql__ChipWrapperPolarityHandle");
+          polarityHandle.contentEditable = false;
+          polarityHandle.innerHTML = "+";
+
+          const deleteHandle = document.createElement("span");
+          deleteHandle.classList.add("Cql__ChipWrapperDeleteHandle");
+          deleteHandle.contentEditable = false;
+          deleteHandle.innerHTML = "×";
+          deleteHandle.addEventListener("click", () => {
+            const pos = getPos();
+            if (!pos) {
+              return;
+            }
+            const node = view.state.doc.resolve(pos).nodeAfter;
+            if (!node) {
+              return;
+            }
+            applyDeleteIntent(view, pos, pos + node.nodeSize, node);
+          });
+
+          dom.appendChild(polarityHandle);
+          dom.appendChild(contentDOM);
+          dom.appendChild(deleteHandle);
           const pendingDeleteClass = "Cql__ChipWrapper--is-pending-delete";
           return {
             dom,
             contentDOM,
-            update: (node) => {
+            update(node) {
               if (node.attrs[DELETE_CHIP_INTENT] === true) {
                 dom.classList.add(pendingDeleteClass);
               } else {

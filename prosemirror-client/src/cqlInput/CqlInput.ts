@@ -15,21 +15,24 @@ template.innerHTML = `
       display: inline-block;
       min-width: 5px;
     }
-    chip {
-      display: block;
-    }
-    chip-wrapper: { display: flex-inline; }
-    chip {
+
+    chip-wrapper {
       display: inline-flex;
       background-color: rgba(255,255,255,0.2);
-      padding: 0 5px;
       margin: 0 5px;
       border-radius: ${baseBorderRadius};
     }
+
+    chip {
+      display: inline-flex;
+      padding: 0 5px;
+    }
+
     chip-key {
       display: flex;
       padding-right: 5px;
     }
+
     chip-key:after {
       content: ':'
     }
@@ -79,6 +82,11 @@ template.innerHTML = `
 
     .Cql__ChipWrapper--is-pending-delete chip {
       background-color: darkred;
+    }
+
+    .Cql__ChipWrapperDeleteHandle, .Cql__ChipWrapperPolarityHandle {
+      background-color: rgba(0,0,0,0.2);
+       padding: 0 5px;
     }
   </style>
 `;
