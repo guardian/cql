@@ -4,6 +4,7 @@ import _tokensWithOneKVPair from "./fixtures/tokensWithOneKVPair.json";
 import _tokensWithTwoKVPairs from "./fixtures/tokensWithTwoKVPairs.json";
 import _tokensWithParens from "./fixtures/tokensWithParens.json";
 import _tokensWithParensAndKVPair from "./fixtures/tokensWithParensAndKVPair.json";
+import _tokensWithTrailingWhitespace from "./fixtures/tokensWithTrailingWhitespace.json";
 import {
   ProseMirrorToken,
   createTokenMap,
@@ -29,6 +30,9 @@ describe("utils", () => {
   const tokensWithParensAndKVPair = toProseMirrorTokens(
     _tokensWithParensAndKVPair
   );
+  const tokensWithTrailingWhitespace = toProseMirrorTokens(
+    _tokensWithTrailingWhitespace
+  );
 
   describe("tokensToNode", () => {
     test("creates nodes from a list of tokens - 1", () => {
@@ -44,6 +48,16 @@ describe("utils", () => {
         ]),
 
         searchText.create(undefined, [schema.text("text")]),
+      ]);
+
+      expect(node.toJSON()).toEqual(expected.toJSON());
+    });
+
+    test("should preserve whitespace at end of query", () => {
+      const node = tokensToNodes(tokensWithTrailingWhitespace);
+
+      const expected = doc.create(undefined, [
+        searchText.create(undefined, [schema.text("example   ")]),
       ]);
 
       expect(node.toJSON()).toEqual(expected.toJSON());

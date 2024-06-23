@@ -67,6 +67,12 @@ export class TypeaheadPopover {
         const { from, suggestions } = suggestionThatCoversSelection;
         const chipPos = findNodeAt(from, this.view.state.doc, chip);
         const domSelectionAnchor = this.view.nodeDOM(chipPos) as HTMLElement;
+
+        if (!domSelectionAnchor) {
+          this.popoverEl.hidePopover();
+          return;
+        }
+
         const { left } = domSelectionAnchor.getBoundingClientRect();
         this.popoverEl.style.left = `${left}px`;
 
@@ -108,14 +114,12 @@ export class TypeaheadPopover {
     const tr = this.view.state.tr;
 
     this.view.dispatch(
-      tr
-        .replaceRangeWith(from, to, schema.text(suggestion.value))
-        .setSelection(
-          // +1 to tip the selection into the next available node's text
-          // position after applying the suggestion e.g. key -> value, value ->
-          // searchText
-          TextSelection.near(tr.doc.resolve(from + suggestion.value.length + 1))
-        )
+      tr.replaceRangeWith(from, to, schema.text(suggestion.value)).setSelection(
+        // +1 to tip the selection into the next available node's text
+        // position after applying the suggestion e.g. key -> value, value ->
+        // searchText
+        TextSelection.near(tr.doc.resolve(from + suggestion.value.length + 1))
+      )
     );
   };
 

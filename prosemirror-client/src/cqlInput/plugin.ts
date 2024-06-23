@@ -1,6 +1,11 @@
 import { DecorationSet } from "prosemirror-view";
 import { CqlService, TypeaheadSuggestion } from "../CqlService";
-import { AllSelection, Plugin, PluginKey } from "prosemirror-state";
+import {
+  AllSelection,
+  Plugin,
+  PluginKey,
+  Transaction,
+} from "prosemirror-state";
 import {
   getNewSelection,
   isBeginningKeyValPair,
@@ -15,7 +20,13 @@ import {
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
-import { DELETE_CHIP_INTENT, chipWrapper, doc, schema } from "./schema";
+import {
+  DELETE_CHIP_INTENT,
+  chipWrapper,
+  doc,
+  schema,
+  searchText,
+} from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
@@ -73,6 +84,8 @@ export const createCqlPlugin = (
       },
     },
     appendTransaction(_, oldState, newState) {
+      let tr: Transaction | undefined;
+
       // If the selection has changed, reset any chips that are pending delete
       if (!oldState.selection.eq(newState.selection)) {
         const posOfChipWrappersToReset: number[] = [];
@@ -82,17 +95,31 @@ export const createCqlPlugin = (
           }
         });
         if (posOfChipWrappersToReset.length) {
-          const tr = newState.tr;
+          tr = newState.tr;
           posOfChipWrappersToReset.forEach((pos) => {
-            tr.setNodeAttribute(pos, DELETE_CHIP_INTENT, false);
+            tr?.setNodeAttribute(pos, DELETE_CHIP_INTENT, false);
           });
           return tr;
         }
       }
+
+      return tr;
     },
     props: {
       nodeViews: {
-        [chipWrapper.name]: (_node, view, getPos) => {
+        [chipWrapper.name](initialNode, view, getPos) {
+          const handleDeleteClickEvent = () => {
+            const pos = getPos();
+            if (!pos) {
+              return;
+            }
+            const node = view.state.doc.resolve(pos).nodeAfter;
+            if (!node) {
+              return;
+            }
+            applyDeleteIntent(view, pos, pos + node.nodeSize, node);
+          };
+
           const dom = document.createElement("chip-wrapper");
           const contentDOM = document.createElement("span");
           const polarityHandle = document.createElement("span");
@@ -104,17 +131,7 @@ export const createCqlPlugin = (
           deleteHandle.classList.add("Cql__ChipWrapperDeleteHandle");
           deleteHandle.contentEditable = false;
           deleteHandle.innerHTML = "×";
-          deleteHandle.addEventListener("click", () => {
-            const pos = getPos();
-            if (!pos) {
-              return;
-            }
-            const node = view.state.doc.resolve(pos).nodeAfter;
-            if (!node) {
-              return;
-            }
-            applyDeleteIntent(view, pos, pos + node.nodeSize, node);
-          });
+          deleteHandle.addEventListener("click", handleDeleteClickEvent);
 
           dom.appendChild(polarityHandle);
           dom.appendChild(contentDOM);
@@ -124,13 +141,17 @@ export const createCqlPlugin = (
             dom,
             contentDOM,
             update(node) {
+              if (node.type !== initialNode.type) {
+                return false;
+              }
+
               if (node.attrs[DELETE_CHIP_INTENT] === true) {
                 dom.classList.add(pendingDeleteClass);
               } else {
                 dom.classList.remove(pendingDeleteClass);
               }
               return true;
-            },
+            }
           };
         },
       },

@@ -97,12 +97,9 @@ export const tokensToNodes = (tokens: ProseMirrorToken[]): Node => {
       case "EOF":
         return acc;
       default:
-        // If this token terminates and the next non-EOF token begins ahead of it,
-        // add the whitespace that separates them.
-        const nextTokenPos =
-          tokens[index + 1].tokenType !== "EOF"
-            ? tokens[index + 1]?.from
-            : undefined;
+        // If this token terminates and the next token begins ahead of it, add
+        // the whitespace that separates them.
+        const nextTokenPos = tokens[index + 1]?.from;
 
         const lexemeIncludingTrailingWhitespace = nextTokenPos
           ? token.lexeme.padEnd(nextTokenPos - token.from, " ")
@@ -268,10 +265,11 @@ export const applyDeleteIntent = (
   const tr = view.state.tr;
 
   if (node.attrs[DELETE_CHIP_INTENT]) {
-    tr.delete(from, to)
+    tr.deleteRange(from, to)
       // Prosemirror removes the whitespace in the preceding searchText,
       // regardless of range, for reasons I've yet to discover – add it back
-      .insertText(" ", from);
+      .insertText(" ", from - 1)
+      .setSelection(TextSelection.create(tr.doc, from - 1));
   } else {
     tr.setNodeAttribute(from, DELETE_CHIP_INTENT, true);
   }
