@@ -219,7 +219,7 @@ Perhaps tokens are all we need: the parser can just understand those sorts of to
 - [x] Correctly display typeahead menu when there's no content in a chip key or value
 - [x] Serialise to CQL string on copy
 - [x] Deletion pattern for chips on backspace
-- [ ] Deletion handle for chips UI
+- [x] Deletion handle for chips UI
 - [ ] Date suggestions
 - [ ] Tab through content
 - [ ] Display labels, not values, in chips?

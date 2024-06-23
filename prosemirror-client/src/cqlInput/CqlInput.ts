@@ -86,7 +86,8 @@ template.innerHTML = `
 
     .Cql__ChipWrapperDeleteHandle, .Cql__ChipWrapperPolarityHandle {
       background-color: rgba(0,0,0,0.2);
-       padding: 0 5px;
+      padding: 0 5px;
+      cursor: pointer;
     }
   </style>
 `;
