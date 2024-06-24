@@ -22,14 +22,14 @@ jobs:
 
       - name: Build static assets
         working-directory: prosemirror-client
-        run:
+        run: |
           bun install
           bun run build
 
       - name: Upload static assets
         uses: actions/upload-artifact@v3
         with:
-          path: dist
+          path: prosemirror-client/dist
 
       - name: Deploy static assets
         uses: guardian/actions-static-site@v2
