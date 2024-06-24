@@ -25,7 +25,6 @@ import {
   chipWrapper,
   doc,
   schema,
-  searchText,
 } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 
@@ -124,12 +123,12 @@ export const createCqlPlugin = (
           const contentDOM = document.createElement("span");
           const polarityHandle = document.createElement("span");
           polarityHandle.classList.add("Cql__ChipWrapperPolarityHandle");
-          polarityHandle.contentEditable = false;
+          polarityHandle.setAttribute('contentEditable', "false");
           polarityHandle.innerHTML = "+";
 
           const deleteHandle = document.createElement("span");
           deleteHandle.classList.add("Cql__ChipWrapperDeleteHandle");
-          deleteHandle.contentEditable = false;
+          deleteHandle.setAttribute('contentEditable', "false");
           deleteHandle.innerHTML = "×";
           deleteHandle.addEventListener("click", handleDeleteClickEvent);
 

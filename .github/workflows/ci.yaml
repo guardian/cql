@@ -23,7 +23,7 @@ jobs:
       - name: Build static assets
         working-directory: prosemirror-client
         run:
-          bun build
+          bun run build
 
       - name: Upload static assets
         uses: actions/upload-artifact@v3

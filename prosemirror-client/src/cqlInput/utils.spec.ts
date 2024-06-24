@@ -1,14 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import { Mapping } from "prosemirror-transform";
 import _tokensWithOneKVPair from "./fixtures/tokensWithOneKVPair.json";
 import _tokensWithTwoKVPairs from "./fixtures/tokensWithTwoKVPairs.json";
 import _tokensWithParens from "./fixtures/tokensWithParens.json";
 import _tokensWithParensAndKVPair from "./fixtures/tokensWithParensAndKVPair.json";
 import _tokensWithTrailingWhitespace from "./fixtures/tokensWithTrailingWhitespace.json";
 import {
-  ProseMirrorToken,
-  createTokenMap,
-  logNode,
   mapTokens,
   toProseMirrorTokens,
   tokensToNodes,
@@ -25,7 +21,6 @@ import {
 
 describe("utils", () => {
   const tokensWithOneKVPair = toProseMirrorTokens(_tokensWithOneKVPair);
-  const tokensWithTwoKVPairs = toProseMirrorTokens(_tokensWithTwoKVPairs);
   const tokensWithParens = toProseMirrorTokens(_tokensWithParens);
   const tokensWithParensAndKVPair = toProseMirrorTokens(
     _tokensWithParensAndKVPair
