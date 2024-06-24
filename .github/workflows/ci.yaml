@@ -6,6 +6,34 @@ on:
     branches:
       - main
 jobs:
+  static-site:
+    runs-on: ubuntu-latest
+
+    permissions:
+      id-token: write
+      contents: read
+
+    steps:
+      - name: Setup bun
+        uses: oven-sh/setup-bun@v1
+
+      - name: Build static assets
+        working-directory: prosemirror-client
+        run:
+          bun build
+
+      - name: Upload static assets
+        uses: actions/upload-artifact@v3
+        with:
+          path: dist
+
+      - name: Deploy static assets
+        uses: guardian/actions-static-site@v2
+        with:
+          app: cql
+          domain: cql.gutools.co.uk
+          guActionsRiffRaffRoleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+
   gu-cdk-build:
     runs-on: ubuntu-latest
     permissions:
