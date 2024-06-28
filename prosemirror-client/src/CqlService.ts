@@ -30,6 +30,10 @@ type DateSuggestion = { validFrom?: string; validTo?: string };
 export class CqlService {
   constructor(private url: string) {}
 
+  public setUrl(url: string) {
+    this.url = url;
+  }
+
   public async fetchResult(query: string) {
     const urlParams = new URLSearchParams();
     urlParams.append("query", query);

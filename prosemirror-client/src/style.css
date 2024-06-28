@@ -27,12 +27,7 @@
 *::after {
   box-sizing: border-box;
 }
-/*
-  2. Remove default margin
-*/
-* {
-  margin: 0;
-}
+
 /*
   Typographic tweaks!
   3. Add accessible line-height
@@ -82,13 +77,26 @@ h6 {
   isolation: isolate;
 }
 
-.Cql__Debug {
+.CqlSandbox__debug-container {
   display: flex;
-  margin: 30px;
+  margin-top: 10px;
   white-space: pre;
   font-family: monospace;
 }
 
 .Cql__Debug > div {
   flex-grow: 1;
+}
+
+.CqlSandbox {
+  margin-top: 30px;
+}
+
+input {
+  position: relative;
+  padding: 5px;
+  border: 2px solid grey;
+  border-radius: 5px;
+  background: none;
+  color: rgba(255, 255, 255, 0.87);
 }
