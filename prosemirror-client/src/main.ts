@@ -24,9 +24,9 @@ document.getElementById("cql-sandbox")!.appendChild(debugEl);
 
 const cqlInput = document.getElementById("cql-input")!;
 const queryEl = document.getElementById("query")!;
-cqlInput?.addEventListener("change", (e: CustomEvent) => {
+cqlInput?.addEventListener("change", ((e: CustomEvent) => {
   queryEl.innerHTML = e.detail.query;
-});
+}) as EventListener);
 
 const params = new URLSearchParams(window.location.search);
 const endpoint = params.get("endpoint");

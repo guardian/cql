@@ -250,7 +250,9 @@ export const createCqlPlugin = ({
           queryResult,
         } = await cqlService.fetchResult(query);
 
-        onChange(queryResult);
+        if (queryResult) {
+          onChange(queryResult);
+        }
 
         const tokens = toProseMirrorTokens(_tokens);
         const newDoc = tokensToNodes(tokens);

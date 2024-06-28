@@ -30,7 +30,11 @@ class Handler
       event: APIGatewayProxyRequestEvent,
       context: Context
   ): APIGatewayProxyResponseEvent = {
-    logger.info("Received request with params: " + event.getQueryStringParameters().toString())
+    logger.info(
+      "Received request with params: " + event
+        .getQueryStringParameters()
+        .toString()
+    )
 
     val eventualResult = event
       .getQueryStringParameters()
@@ -66,6 +70,9 @@ class Handler
     logger.info(s"Responding with status ${statusCode}: ${responseBody}")
 
     new APIGatewayProxyResponseEvent()
+      .withHeaders(Map(
+        "Access-Control-Allow-Origin" -> "*"
+      ).asJava)
       .withStatusCode(statusCode)
       .withBody(
         responseBody
