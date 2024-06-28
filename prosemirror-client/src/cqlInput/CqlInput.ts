@@ -107,7 +107,23 @@ export const createCqlInput = (
       const cqlInput = shadow.getElementById(cqlInputId)!;
       const cqlPopover = shadow.getElementById(cqlPopoverId)!;
 
-      createEditor(cqlInput, cqlPopover, cqlService, debugEl);
+      const onChange = (query: string) => {
+        this.dispatchEvent(
+          new CustomEvent("change", {
+            detail: {
+              query,
+            },
+          })
+        );
+      };
+
+      createEditor({
+        mountEl: cqlInput,
+        popoverEl: cqlPopover,
+        cqlService,
+        debugEl,
+        onChange,
+      });
     }
   }
 

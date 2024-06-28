@@ -8,12 +8,13 @@ debugEl.className = "CqlSandbox__debug-container";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <h1>Rich query sandbox</h1>
-  <cql-input></cql-input>
+  <cql-input id="cql-input"></cql-input>
   
   <div id="cql-sandbox" class="CqlSandbox">
+    <h2>Query</h2>
+    <div id="query"></div>
     <h2>Config</h2>
     <div class="CqlSandbox__input-container">
-      <input type="text" id="api-key" placeholder="Add a CAPI api key"/>
       <input type="text" id="endpoint" placeholder="Add a CQL language server endpoint"/>
     </div>
   </div>
@@ -21,9 +22,14 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
 
 document.getElementById("cql-sandbox")!.appendChild(debugEl);
 
+const cqlInput = document.getElementById("cql-input")!;
+const queryEl = document.getElementById("query")!;
+cqlInput?.addEventListener("change", (e: CustomEvent) => {
+  queryEl.innerHTML = e.detail.query;
+});
+
 const params = new URLSearchParams(window.location.search);
 const endpoint = params.get("endpoint");
-const apiKey = params.get("api-key");
 
 const initialEndpoint = endpoint || "http://localhost:5050";
 const cqlService = new CqlService(initialEndpoint);
@@ -35,15 +41,9 @@ if (window.CQL_VIEW) {
   applyDevTools(window.CQL_VIEW);
 }
 
-const apiKeyInput = document.getElementById("api-key") as HTMLInputElement;
-apiKeyInput?.addEventListener("input", (event) => {
-  setUrlParam("api-key", (event.target as HTMLInputElement).value);
-});
-apiKeyInput.value = apiKey ?? "";
-
 const endpointInput = document.getElementById("endpoint") as HTMLInputElement;
 endpointInput?.addEventListener("input", (event) => {
-  const endpoint = (event.target as HTMLInputElement).value
+  const endpoint = (event.target as HTMLInputElement).value;
   setUrlParam("endpoint", endpoint);
   cqlService.setUrl(endpoint);
 });
@@ -55,7 +55,9 @@ const setUrlParam = (key: string, value: string) => {
   history.pushState(
     "",
     "",
-    `${window.location.origin}${window.location.pathname}?${urlParams.toString()}`
+    `${window.location.origin}${
+      window.location.pathname
+    }?${urlParams.toString()}`
   );
 };
 
@@ -63,8 +65,6 @@ const setUrlParam = (key: string, value: string) => {
 window.addEventListener("popstate", function () {
   const params = new URLSearchParams(window.location.search);
   const endpoint = params.get("endpoint");
-  const apiKey = params.get("api-key");
 
-  apiKeyInput.value = apiKey ?? "";
   endpointInput.value = endpoint ?? "";
 });

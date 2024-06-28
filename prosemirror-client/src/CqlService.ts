@@ -1,7 +1,7 @@
 export type CqlResult = {
   tokens: Array<Token>;
   ast?: QueryList;
-  queryResult?: String;
+  queryResult?: string;
   // Map from tokenType to a map of literals and their suggestions.
   // Avoiding TokenType as type to avoid serialisation shenanigans in prototype.
   suggestions: Array<TypeaheadSuggestion>;

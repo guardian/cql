@@ -15,13 +15,20 @@ const initialContent = doc.create(undefined, [
   searchText.create(undefined, [schema.text("example")]),
 ]);
 
-export const createEditor = (
-  mountEl: HTMLElement,
-  popoverEl: HTMLElement,
-  cqlService: CqlService,
-  debugEl?: HTMLElement
-) => {
-  const plugin = createCqlPlugin(cqlService, popoverEl, debugEl);
+export const createEditor = ({
+  mountEl,
+  popoverEl,
+  cqlService,
+  onChange,
+  debugEl,
+}: {
+  mountEl: HTMLElement;
+  popoverEl: HTMLElement;
+  cqlService: CqlService;
+  onChange: (query: string) => void;
+  debugEl?: HTMLElement;
+}) => {
+  const plugin = createCqlPlugin({ cqlService, popoverEl, onChange, debugEl });
   const view = new EditorView(mountEl, {
     state: EditorState.create({
       doc: initialContent,

@@ -20,12 +20,7 @@ import {
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
-import {
-  DELETE_CHIP_INTENT,
-  chipWrapper,
-  doc,
-  schema,
-} from "./schema";
+import { DELETE_CHIP_INTENT, chipWrapper, doc, schema } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
@@ -42,11 +37,17 @@ type ServiceState = {
 
 const NEW_STATE = "NEW_STATE";
 
-export const createCqlPlugin = (
-  cqlService: CqlService,
-  popoverEl: HTMLElement,
-  debugEl?: HTMLElement
-) => {
+export const createCqlPlugin = ({
+  cqlService,
+  popoverEl,
+  onChange,
+  debugEl,
+}: {
+  cqlService: CqlService;
+  popoverEl: HTMLElement;
+  onChange: (query: string) => void;
+  debugEl?: HTMLElement;
+}) => {
   let typeaheadPopover: TypeaheadPopover | undefined;
   let debugTokenContainer: HTMLElement | undefined;
   let debugASTContainer: HTMLElement | undefined;
@@ -123,12 +124,12 @@ export const createCqlPlugin = (
           const contentDOM = document.createElement("span");
           const polarityHandle = document.createElement("span");
           polarityHandle.classList.add("Cql__ChipWrapperPolarityHandle");
-          polarityHandle.setAttribute('contentEditable', "false");
+          polarityHandle.setAttribute("contentEditable", "false");
           polarityHandle.innerHTML = "+";
 
           const deleteHandle = document.createElement("span");
           deleteHandle.classList.add("Cql__ChipWrapperDeleteHandle");
-          deleteHandle.setAttribute('contentEditable', "false");
+          deleteHandle.setAttribute("contentEditable", "false");
           deleteHandle.innerHTML = "×";
           deleteHandle.addEventListener("click", handleDeleteClickEvent);
 
@@ -150,7 +151,7 @@ export const createCqlPlugin = (
                 dom.classList.remove(pendingDeleteClass);
               }
               return true;
-            }
+            },
           };
         },
       },
@@ -246,7 +247,11 @@ export const createCqlPlugin = (
           tokens: _tokens,
           suggestions,
           ast,
+          queryResult,
         } = await cqlService.fetchResult(query);
+
+        onChange(queryResult);
+
         const tokens = toProseMirrorTokens(_tokens);
         const newDoc = tokensToNodes(tokens);
 
