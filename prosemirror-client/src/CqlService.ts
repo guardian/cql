@@ -28,6 +28,8 @@ type TextSuggestionOption = { label: string; value: string };
 type DateSuggestion = { validFrom?: string; validTo?: string };
 
 export class CqlService {
+  private abortController: AbortController | undefined;
+
   constructor(private url: string) {}
 
   public setUrl(url: string) {
@@ -35,10 +37,17 @@ export class CqlService {
   }
 
   public async fetchResult(query: string) {
+    this.abortController = new AbortController();
     const urlParams = new URLSearchParams();
     urlParams.append("query", query);
-    const request = await fetch(`${this.url}/cql?${urlParams}`);
+    const request = await fetch(`${this.url}/cql?${urlParams}`, {
+      signal: this.abortController.signal,
+    });
 
     return (await request.json()) as CqlResult;
+  }
+
+  public cancel() {
+    this.abortController?.abort();
   }
 }

@@ -243,49 +243,58 @@ export const createCqlPlugin = ({
         query: string,
         shouldWrapSelectionInKey: boolean = false
       ) => {
-        const {
-          tokens: _tokens,
-          suggestions,
-          ast,
-          queryResult,
-        } = await cqlService.fetchResult(query);
+        try {
+          cqlService.cancel();
 
-        if (queryResult) {
-          onChange(queryResult);
-        }
-
-        const tokens = toProseMirrorTokens(_tokens);
-        const newDoc = tokensToNodes(tokens);
-
-        if (debugASTContainer) {
-          debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
+          const {
+            tokens: _tokens,
+            suggestions,
             ast,
-            undefined,
-            "  "
-          )}</div>`;
+            queryResult,
+          } = await cqlService.fetchResult(query);
+
+          if (queryResult) {
+            onChange(queryResult);
+          }
+
+          const tokens = toProseMirrorTokens(_tokens);
+          const newDoc = tokensToNodes(tokens);
+
+          if (debugASTContainer) {
+            debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
+              ast,
+              undefined,
+              "  "
+            )}</div>`;
+          }
+          if (debugTokenContainer) {
+            debugTokenContainer.innerHTML = `<h2>Tokens</h2><div>${JSON.stringify(
+              tokens,
+              undefined,
+              "  "
+            )}</div>`;
+          }
+
+          const userSelection = view.state.selection;
+          const docSelection = new AllSelection(view.state.doc);
+          const tr = view.state.tr;
+
+          console.log("Incoming query", { from: query, tokens, ast });
+          logNode(newDoc);
+
+          tr.replaceWith(docSelection.from, docSelection.to, newDoc)
+            .setSelection(
+              getNewSelection(userSelection, shouldWrapSelectionInKey, tr.doc)
+            )
+            .setMeta(NEW_STATE, { tokens, suggestions });
+
+          view.dispatch(tr);
+        } catch (e) {
+          // Ignore aborts
+          if (!(e instanceof DOMException) || e.name !== "AbortError") {
+            throw e;
+          }
         }
-        if (debugTokenContainer) {
-          debugTokenContainer.innerHTML = `<h2>Tokens</h2><div>${JSON.stringify(
-            tokens,
-            undefined,
-            "  "
-          )}</div>`;
-        }
-
-        const userSelection = view.state.selection;
-        const docSelection = new AllSelection(view.state.doc);
-        const tr = view.state.tr;
-
-        console.log("Incoming query", { from: query, tokens, ast });
-        logNode(newDoc);
-
-        tr.replaceWith(docSelection.from, docSelection.to, newDoc)
-          .setSelection(
-            getNewSelection(userSelection, shouldWrapSelectionInKey, tr.doc)
-          )
-          .setMeta(NEW_STATE, { tokens, suggestions });
-
-        view.dispatch(tr);
       };
 
       updateView(cqlPluginKey.getState(view.state)?.queryStr!);
