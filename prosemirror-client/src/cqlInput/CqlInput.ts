@@ -1,4 +1,5 @@
 import { CqlService } from "../CqlService";
+import { QueryChangeEventDetail } from "./dom";
 import { createEditor } from "./editor";
 
 const baseFontSize = "28px";
@@ -107,12 +108,10 @@ export const createCqlInput = (
       const cqlInput = shadow.getElementById(cqlInputId)!;
       const cqlPopover = shadow.getElementById(cqlPopoverId)!;
 
-      const onChange = (query: string) => {
+      const onChange = (detail: QueryChangeEventDetail) => {
         this.dispatchEvent(
-          new CustomEvent("change", {
-            detail: {
-              query,
-            },
+          new CustomEvent("queryChange", {
+            detail,
           })
         );
       };

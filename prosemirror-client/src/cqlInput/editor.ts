@@ -6,6 +6,7 @@ import { doc, schema, searchText } from "./schema";
 import { baseKeymap } from "prosemirror-commands";
 import { undo, redo, history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
+import { QueryChangeEventDetail } from "./dom";
 
 declare module window {
   export let CQL_VIEW: EditorView;
@@ -25,7 +26,7 @@ export const createEditor = ({
   mountEl: HTMLElement;
   popoverEl: HTMLElement;
   cqlService: CqlService;
-  onChange: (query: string) => void;
+  onChange: (detail: QueryChangeEventDetail) => void;
   debugEl?: HTMLElement;
 }) => {
   const plugin = createCqlPlugin({ cqlService, popoverEl, onChange, debugEl });

@@ -92,6 +92,14 @@ h6 {
   margin-top: 30px;
 }
 
+.CqlSandbox__query-results {
+  display: flex;
+}
+
+.CqlSandbox__query-results > div {
+  flex-grow: 1;
+}
+
 input {
   position: relative;
   padding: 5px;

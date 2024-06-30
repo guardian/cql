@@ -22,6 +22,7 @@ import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
 import { DELETE_CHIP_INTENT, chipWrapper, doc, schema } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
+import { QueryChangeEventDetail } from "./dom";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -45,7 +46,7 @@ export const createCqlPlugin = ({
 }: {
   cqlService: CqlService;
   popoverEl: HTMLElement;
-  onChange: (query: string) => void;
+  onChange: (detail: QueryChangeEventDetail) => void;
   debugEl?: HTMLElement;
 }) => {
   let typeaheadPopover: TypeaheadPopover | undefined;
@@ -254,7 +255,7 @@ export const createCqlPlugin = ({
           } = await cqlService.fetchResult(query);
 
           if (queryResult) {
-            onChange(queryResult);
+            onChange({ query: queryResult, cqlQuery: query });
           }
 
           const tokens = toProseMirrorTokens(_tokens);

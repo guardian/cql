@@ -11,8 +11,16 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <cql-input id="cql-input"></cql-input>
   
   <div id="cql-sandbox" class="CqlSandbox">
-    <h2>Query</h2>
-    <div id="query"></div>
+    <div class="CqlSandbox__query-results">
+      <div>
+        <h2>CQL</h2>
+        <div id="cql"></div>
+      </div>
+      <div>
+        <h2>API query</h2>
+        <div id="query"></div>
+      </div>
+    </div>
     <h2>Config</h2>
     <div class="CqlSandbox__input-container">
       <input type="text" id="endpoint" placeholder="Add a CQL language server endpoint"/>
@@ -23,9 +31,11 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
 document.getElementById("cql-sandbox")!.appendChild(debugEl);
 
 const cqlInput = document.getElementById("cql-input")!;
+const cqlEl = document.getElementById("cql")!;
 const queryEl = document.getElementById("query")!;
-cqlInput?.addEventListener("change", ((e: CustomEvent) => {
+cqlInput?.addEventListener("queryChange", ((e: CustomEvent) => {
   queryEl.innerHTML = e.detail.query;
+  cqlEl.innerHTML = e.detail.cqlQuery
 }) as EventListener);
 
 const params = new URLSearchParams(window.location.search);
