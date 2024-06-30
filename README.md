@@ -65,16 +65,16 @@ Todo:
   - [ ] Other, less fancy fields
 - [x] Fix crash on empty parens
 - [x] Fix crash on leading colon when key is not valid query or output key
-- [ ] Move to contenteditable (issues with scrolling in Chrome, e.g. https://issues.chromium.org/issues/41081857, make syncing scroll state of overlay difficult)
+- [x] Move to contenteditable (issues with scrolling in Chrome, e.g. https://issues.chromium.org/issues/41081857, make syncing scroll state of overlay difficult)
 - [ ] Add typeahead for binaries
 - [ ] Ensure content is displayed when server does not respond
 - [ ] Error handling for 4/5xx
 
 Infra
 - [x] Configure CI for lambda
-- [ ] Add handler for lambda
-- [ ] Add CI for static site
-- [ ] Add configuration for CAPI key
+- [x] Add handler for lambda
+- [x] Add CI for static site
+- [x] Add configuration for CAPI key
 
 ### Notes
 
@@ -220,10 +220,14 @@ Perhaps tokens are all we need: the parser can just understand those sorts of to
 - [x] Serialise to CQL string on copy
 - [x] Deletion pattern for chips on backspace
 - [x] Deletion handle for chips UI
+- [ ] Add good testing story
 - [ ] Date suggestions
 - [ ] Tab through content
 - [ ] Display labels, not values, in chips?
 - [ ] Chip polarity
+- [ ] Cursor movement:
+  - [ ] Ctrl-e to move to start and end of doc
+  - [ ] ...
 - [ ] Telemetry:
   - [ ] Create chip
   - [ ] Autocomplete key, value selection
