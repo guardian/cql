@@ -1,4 +1,4 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -9,5 +9,182 @@
   <body>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
+    <h2 id="todos">Todos</h2>
+    <ul>
+      <li><input checked type="checkbox" /> Scanning</li>
+      <li><input checked type="checkbox" /> Parsing</li>
+      <li><input checked type="checkbox" /> Query string builder</li>
+      <li><input checked type="checkbox" /> Add group and binary syntax</li>
+      <li><input checked type="checkbox" /> String ranges in scanned tokens</li>
+      <li><input checked type="checkbox" /> Parse hints for typeahead</li>
+      <li>
+        <input checked type="checkbox" />
+        <del>ScalaJS to provide parser in web env</del> ScalaJS adds 180kb to
+        your bundle as the price of entry? Yeah we&#39;re not doing that
+      </li>
+      <li>
+        <input checked type="checkbox" /> Add a language server for funsies
+      </li>
+      <li>
+        <input checked type="checkbox" /> Web component - environment and first
+        pass at component infra
+      </li>
+      <li>
+        <input checked type="checkbox" /> Web component - syntax highlighting
+        <ul>
+          <li>
+            <input checked type="checkbox" /> Ensure untokenised string
+            components still display, we&#39;re getting 500s and invisible
+            characters on trailing + chars
+          </li>
+        </ul>
+      </li>
+      <li>
+        <input checked type="checkbox" /> Web component - typeahead
+        <ul>
+          <li>
+            <input checked type="checkbox" /> First pass at implementation
+          </li>
+          <li>
+            <input checked type="checkbox" /> Handle typing on the trailing edge
+            (off by one)
+          </li>
+        </ul>
+      </li>
+      <li>
+        <input type="checkbox" /> Web component - async lookup
+        <ul>
+          <li>
+            <input checked type="checkbox" /> Implement async lookup in language
+            server
+          </li>
+          <li><input type="checkbox" /> Add loading state</li>
+        </ul>
+      </li>
+      <li>
+        <input checked type="checkbox" /> Bug: open parentheses crashes the
+        server 🙃
+      </li>
+      <li><input checked type="checkbox" /> Fix tests</li>
+      <li><input checked type="checkbox" /> Fix input scrolling</li>
+      <li>
+        <input checked type="checkbox" /> Bug: fix crash on adding query meta
+        within parentheses or after binary operators (with useful error state)
+      </li>
+      <li>
+        <input checked type="checkbox" /> Add &#39;@&#39; syntax for content
+        return format (e.g. show-fields)
+        <ul>
+          <li>
+            <input checked type="checkbox" /> Fix issue with incomplete binaries
+            and output modifiers
+          </li>
+        </ul>
+      </li>
+      <li>
+        <input type="checkbox" /> Fill out additional fields:
+        <ul>
+          <li>
+            <input checked type="checkbox" /> Dates!
+            <ul>
+              <li>
+                <input checked type="checkbox" /> Add <code>type</code> property
+                to suggestion envelope to ensure correct interface is displayed
+                (NB: Circe wraps sealed trait in object with single key as name
+                of class)
+              </li>
+              <li>
+                <input checked type="checkbox" /> Correct focus when date
+                appears
+              </li>
+              <li>
+                <input checked type="checkbox" /> What do we do when users want
+                to navigate through the string without focus being stolen?
+                Perhaps we don&#39;t need to autofocus? Solution for now:
+                autofocus on first input, keydown or tab to focus input when
+                value is already present (to allow user to scrub through dates
+                unimpeded)
+              </li>
+              <li>
+                <input type="checkbox" /> Parse to correct format for query
+              </li>
+            </ul>
+          </li>
+          <li><input type="checkbox" /> Other, less fancy fields</li>
+        </ul>
+      </li>
+      <li><input checked type="checkbox" /> Fix crash on empty parens</li>
+      <li>
+        <input checked type="checkbox" /> Fix crash on leading colon when key is
+        not valid query or output key
+      </li>
+      <li>
+        <input checked type="checkbox" /> Move to contenteditable (ProseMirror)
+        (issues with scrolling in Chrome, e.g.
+        <a href="https://issues.chromium.org/issues/41081857"
+          >https://issues.chromium.org/issues/41081857</a
+        >, make syncing scroll state of overlay difficult)
+      </li>
+      <li>
+        <input checked type="checkbox" /> Handle keyboard navigation on
+        typeahead menu
+      </li>
+      <li>
+        <input checked type="checkbox" /> Handle selection on typeahead menu
+        (including clicks)
+      </li>
+      <li>
+        <input checked type="checkbox" /> Correctly display typeahead menu when
+        there&#39;s no content in a chip key or value
+      </li>
+      <li><input checked type="checkbox" /> Serialise to CQL string on copy</li>
+      <li>
+        <input checked type="checkbox" /> Deletion pattern for chips on
+        backspace
+      </li>
+      <li><input checked type="checkbox" /> Deletion handle for chips UI</li>
+      <li><input type="checkbox" /> Add good testing story</li>
+      <li><input type="checkbox" /> 🐛 Suggestions are off by one for consecutive chips</li>
+      <li><input type="checkbox" /> Date suggestions</li>
+      <li><input type="checkbox" /> Tab through content</li>
+      <li><input type="checkbox" /> Chip polarity</li>
+      <li><input type="checkbox" /> Add typeahead for binaries</li>
+      <li>
+        <input type="checkbox" /> Error handling, with position, when the query
+        is malformed
+      </li>
+      <li><input type="checkbox" /> Error handling for &gt;400 codes</li>
+      <li>
+        <input type="checkbox" /> Cursor movement:
+        <ul>
+          <li>
+            <input type="checkbox" /> Ctrl-e to move to start and end of doc
+          </li>
+          <li><input type="checkbox" /> ...</li>
+        </ul>
+      </li>
+      <li><input type="checkbox" /> Display labels, not values, in chips?</li>
+      <li>
+        <input type="checkbox" /> Telemetry:
+        <ul>
+          <li><input type="checkbox" /> Create chip</li>
+          <li><input type="checkbox" /> Autocomplete key, value selection</li>
+          <li><input type="checkbox" /> Remove chip – mouse</li>
+          <li><input type="checkbox" /> Remove chip – backspace</li>
+          <li><input type="checkbox" /> Tab behaviour?</li>
+          <li><input type="checkbox" /> Paste?</li>
+          <li><input type="checkbox" /> ...</li>
+        </ul>
+      </li>
+      <li><input type="checkbox" /> ...</li>
+    </ul>
+    <h3 id="infra">Infra</h3>
+    <ul>
+      <li><input checked type="checkbox" /> Configure CI for lambda</li>
+      <li><input checked type="checkbox" /> Add handler for lambda</li>
+      <li><input checked type="checkbox" /> Add CI for static site</li>
+      <li><input checked type="checkbox" /> Add configuration for CAPI key</li>
+      <li><input type="checkbox" /> ...</li>
+    </ul>
   </body>
 </html>

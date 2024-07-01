@@ -2,6 +2,12 @@
 
 An experiment to see if a query DSL, coupled with first-class typeahead and syntax highlighting, might provide a more consistent and discoverable way to search Guardian content.
 
+![intro](https://github.com/guardian/cql/assets/7767575/22d3dba7-ace6-4c3a-8dcf-9755728fa98b)
+
+Sandbox available at https://cql-sandbox.gutools.co.uk/. A language server is currently available via API Gateway in the developer playground account – add the url to get started, or ping me and I'll send it!
+
+## Why?
+
 At the moment at the Guardian, there are a few ways to query CAPI:
   - directly, via the API and a query string
   - via many different GUIs across many different tools, each with variable support for the search functionality CAPI has to offer.
@@ -31,50 +37,7 @@ Concerns:
   - where is the language server located? Do we embed it in the input, or make it a feature of CAPI?
     - Typeahead feature might include section/tag lookup, interactions w/ API etc. – keeping this server side could reduce pace at which client would change, which if this component spreads across estate as a library would be helpful.
 
-Todo:
-
-- [x] Scanning
-- [x] Parsing
-- [x] Query string builder
-- [x] Add group and binary syntax
-- [x] String ranges in scanned tokens
-- [x] Parse hints for typeahead
-- [x] ~~ScalaJS to provide parser in web env~~ ScalaJS adds 180kb to your bundle as the price of entry? Yeah we're not doing that
-- [x] Add a language server for funsies
-- [x] Web component - environment and first pass at component infra
-- [x] Web component - syntax highlighting
-  - [x] Ensure untokenised string components still display, we're getting 500s and invisible characters on trailing + chars
-- [x] Web component - typeahead
-  - [x] First pass at implementation
-  - [x] Handle typing on the trailing edge (off by one) 
-- [ ] Web component - async lookup
-  - [x] Implement async lookup in language server
-  - [ ] Add loading state
-- [x] Bug: open parentheses crashes the server 🙃
-- [x] Fix tests
-- [x] Fix input scrolling
-- [x] Bug: fix crash on adding query meta within parentheses or after binary operators (with useful error state)
-- [x] Add '@' syntax for content return format (e.g. show-fields)
-  - [x] Fix issue with incomplete binaries and output modifiers
-- [ ] Fill out additional fields:
-  - [x] Dates!
-    - [x] Add `type` property to suggestion envelope to ensure correct interface is displayed (NB: Circe wraps sealed trait in object with single key as name of class)
-    - [x] Correct focus when date appears
-    - [x] What do we do when users want to navigate through the string without focus being stolen? Perhaps we don't need to autofocus? Solution for now: autofocus on first input, keydown or tab to focus input when value is already present (to allow user to scrub through dates unimpeded)
-    - [ ] Parse to correct format for query
-  - [ ] Other, less fancy fields
-- [x] Fix crash on empty parens
-- [x] Fix crash on leading colon when key is not valid query or output key
-- [x] Move to contenteditable (issues with scrolling in Chrome, e.g. https://issues.chromium.org/issues/41081857, make syncing scroll state of overlay difficult)
-- [ ] Add typeahead for binaries
-- [ ] Ensure content is displayed when server does not respond
-- [ ] Error handling for 4/5xx
-
-Infra
-- [x] Configure CI for lambda
-- [x] Add handler for lambda
-- [x] Add CI for static site
-- [x] Add configuration for CAPI key
+See index.html in the prosemirror client for todos.
 
 ### Notes
 
@@ -212,28 +175,28 @@ That's a lot of things. Unavoidable things to know:
 
 Perhaps tokens are all we need: the parser can just understand those sorts of tokens that relate to chip keys and values by name.
 
-## Prosemirror client todos
+## Async vs. sync – why not both? 🤷
 
-- [x] Handle keyboard navigation on typeahead menu
-- [x] Handle selection on typeahead menu (including clicks)
-- [x] Correctly display typeahead menu when there's no content in a chip key or value
-- [x] Serialise to CQL string on copy
-- [x] Deletion pattern for chips on backspace
-- [x] Deletion handle for chips UI
-- [ ] Add good testing story
-- [ ] Date suggestions
-- [ ] Tab through content
-- [ ] Display labels, not values, in chips?
-- [ ] Chip polarity
-- [ ] Cursor movement:
-  - [ ] Ctrl-e to move to start and end of doc
-  - [ ] ...
-- [ ] Telemetry:
-  - [ ] Create chip
-  - [ ] Autocomplete key, value selection
-  - [ ] Remove chip – mouse
-  - [ ] Remove chip – backspace
-  - [ ] Tab behaviour?
-  - [ ] Paste?
-  - [ ] ...
-- [ ] ...
+Async vs. sync language server trades off a few things:
+
+### Async
+
+- ✅ Update once, available everywhere
+- ❌ Latency can be a problem for UX – worse in US/AU. How to limit this feeling?
+- ❌ Maintenance cost, ownership cost – some team must own and maintain this service, with gladness in their heart
+
+### Sync
+
+- ✅ Instant UI for everything but resolver lookups
+- ✅ Smaller surface area for sync bugs
+- ❌ Must bundle into code, increasing weight of client (likely negligible) and possibly necessitating publishing (more dev friction)
+
+Can we have both?
+- Async better for widely used product (e.g. CAPI), where cost of updates across estate increases – async mitigates that cost vs. ownership/maintenance story
+- Sync better for smaller products, where search is e.g. only used in that product, and benefit of central server negligible
+
+Perhaps an API that accepts a language service that is optionally asynchronous?
+
+This will necessitate a rethink in how we handle suggestions, as at the moment they're included in the LS response. Suggestions are necessarily async (value lookups may go across the wire).
+- Factor them out into a separate, async call. This would mean a rethink of the suggestions API.
+- Make suggestions event-driven, to ensure we make a single call.

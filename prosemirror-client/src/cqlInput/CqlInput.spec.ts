@@ -1,4 +1,4 @@
-import { test, expect, mock } from "bun:test";
+import { test, mock } from "bun:test";
 import { createCqlInput } from "./CqlInput";
 import { CqlService } from "../CqlService";
 
