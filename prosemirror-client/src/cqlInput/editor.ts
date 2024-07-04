@@ -7,6 +7,7 @@ import { baseKeymap } from "prosemirror-commands";
 import { undo, redo, history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
 import { QueryChangeEventDetail } from "./dom";
+import { bottomOfLine, topOfLine } from "./commands";
 
 declare module window {
   export let CQL_VIEW: EditorView;
@@ -36,9 +37,15 @@ export const createEditor = ({
       schema: schema,
       plugins: [
         plugin,
+        keymap({
+          "Mod-z": undo,
+          "Mod-y": redo,
+          "Ctrl-a": topOfLine,
+          "Ctrl-e": bottomOfLine
+        }),
         keymap(baseKeymap),
         history(),
-        keymap({ "Mod-z": undo, "Mod-y": redo }),
+        
       ],
     }),
     dispatchTransaction(tr) {
