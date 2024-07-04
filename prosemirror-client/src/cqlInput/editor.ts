@@ -1,5 +1,5 @@
 import { EditorView } from "prosemirror-view";
-import { CqlService } from "../CqlService";
+import { CqlServiceInterface } from "../services/CqlService";
 import { createCqlPlugin } from "./plugin";
 import { EditorState } from "prosemirror-state";
 import { doc, schema, searchText } from "./schema";
@@ -26,7 +26,7 @@ export const createEditor = ({
 }: {
   mountEl: HTMLElement;
   popoverEl: HTMLElement;
-  cqlService: CqlService;
+  cqlService: CqlServiceInterface;
   onChange: (detail: QueryChangeEventDetail) => void;
   debugEl?: HTMLElement;
 }) => {

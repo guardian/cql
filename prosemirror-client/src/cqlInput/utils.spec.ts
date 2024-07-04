@@ -1,9 +1,9 @@
 import { describe, expect, test } from "bun:test";
-import _tokensWithOneKVPair from "./fixtures/tokensWithOneKVPair.json";
-import _tokensWithTwoKVPairs from "./fixtures/tokensWithTwoKVPairs.json";
-import _tokensWithParens from "./fixtures/tokensWithParens.json";
-import _tokensWithParensAndKVPair from "./fixtures/tokensWithParensAndKVPair.json";
-import _tokensWithTrailingWhitespace from "./fixtures/tokensWithTrailingWhitespace.json";
+import _tokensWithOneKVPair from "./fixtures/tokens/tokensWithOneKVPair.json";
+import _tokensWithTwoKVPairs from "./fixtures/tokens/tokensWithTwoKVPairs.json";
+import _tokensWithParens from "./fixtures/tokens/tokensWithParens.json";
+import _tokensWithParensAndKVPair from "./fixtures/tokens/tokensWithParensAndKVPair.json";
+import _tokensWithTrailingWhitespace from "./fixtures/tokens/tokensWithTrailingWhitespace.json";
 import {
   mapTokens,
   toProseMirrorTokens,

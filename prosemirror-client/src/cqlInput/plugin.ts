@@ -1,5 +1,8 @@
 import { DecorationSet } from "prosemirror-view";
-import { CqlService, TypeaheadSuggestion } from "../CqlService";
+import {
+  CqlServiceInterface,
+  TypeaheadSuggestion,
+} from "../services/CqlService";
 import {
   AllSelection,
   Plugin,
@@ -44,7 +47,7 @@ export const createCqlPlugin = ({
   onChange,
   debugEl,
 }: {
-  cqlService: CqlService;
+  cqlService: CqlServiceInterface;
   popoverEl: HTMLElement;
   onChange: (detail: QueryChangeEventDetail) => void;
   debugEl?: HTMLElement;

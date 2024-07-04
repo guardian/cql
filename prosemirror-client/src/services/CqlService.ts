@@ -27,7 +27,15 @@ type TextSuggestion = { suggestions: Array<TextSuggestionOption> };
 type TextSuggestionOption = { label: string; value: string };
 type DateSuggestion = { validFrom?: string; validTo?: string };
 
-export class CqlService {
+export interface CqlServiceInterface {
+  setUrl(url: string): void;
+
+  fetchResult(query: string): Promise<CqlResult>;
+
+  cancel(): void;
+}
+
+export class CqlService implements CqlServiceInterface {
   private abortController: AbortController | undefined;
 
   constructor(private url: string) {}

@@ -1,4 +1,4 @@
-import { CqlService } from "../CqlService";
+import { CqlServiceInterface } from "../services/CqlService";
 import { QueryChangeEventDetail } from "./dom";
 import { createEditor } from "./editor";
 

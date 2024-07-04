@@ -1,5 +1,5 @@
 import { Mapping } from "prosemirror-transform";
-import { TypeaheadSuggestion } from "../CqlService";
+import { TypeaheadSuggestion } from "../services/CqlService";
 import { findNodeAt } from "./utils";
 import { EditorView } from "prosemirror-view";
 import { chip, schema } from "./schema";
@@ -80,14 +80,14 @@ export class TypeaheadPopover {
           this.updateItems(suggestions.TextSuggestion.suggestions);
         }
 
-        this.popoverEl.showPopover();
+        this.popoverEl.showPopover?.();
       } else {
         this.currentSuggestion = undefined;
-        this.popoverEl.hidePopover();
+        this.popoverEl.hidePopover?.();
       }
     } else {
       this.currentSuggestion = undefined;
-      this.popoverEl.hidePopover();
+      this.popoverEl.hidePopover?.();
       this.popoverEl.innerHTML = "";
     }
   };
