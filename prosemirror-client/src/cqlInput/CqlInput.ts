@@ -94,7 +94,7 @@ template.innerHTML = `
 `;
 
 export const createCqlInput = (
-  cqlService: CqlService,
+  cqlService: CqlServiceInterface,
   debugEl?: HTMLElement
 ) => {
   class CqlInput extends HTMLElement {
