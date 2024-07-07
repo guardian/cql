@@ -13,17 +13,15 @@ declare module window {
   export let CQL_VIEW: EditorView;
 }
 
-const initialContent = doc.create(undefined, [
-  searchText.create(undefined, [schema.text("example")]),
-]);
-
 export const createEditor = ({
+  initialValue = "",
   mountEl,
   popoverEl,
   cqlService,
   onChange,
   debugEl,
 }: {
+  initialValue: string;
   mountEl: HTMLElement;
   popoverEl: HTMLElement;
   cqlService: CqlServiceInterface;
@@ -33,7 +31,12 @@ export const createEditor = ({
   const plugin = createCqlPlugin({ cqlService, popoverEl, onChange, debugEl });
   const view = new EditorView(mountEl, {
     state: EditorState.create({
-      doc: initialContent,
+      doc: doc.create(undefined, [
+        searchText.create(
+          undefined,
+          [initialValue !== "" ? [schema.text(initialValue)] : []].flat()
+        ),
+      ]),
       schema: schema,
       plugins: [
         plugin,
@@ -41,11 +44,10 @@ export const createEditor = ({
           "Mod-z": undo,
           "Mod-y": redo,
           "Ctrl-a": topOfLine,
-          "Ctrl-e": bottomOfLine
+          "Ctrl-e": bottomOfLine,
         }),
         keymap(baseKeymap),
         history(),
-        
       ],
     }),
     dispatchTransaction(tr) {
@@ -61,12 +63,9 @@ export const createEditor = ({
         view.updateState(view.state.apply(tr));
       }
     },
-    handleDOMEvents: {
-      focusin(view, event) {
-        console.log("focus", view, event.target);
-      },
-    },
   });
 
   window.CQL_VIEW = view;
+
+  return view.dom;
 };

@@ -93,17 +93,22 @@ template.innerHTML = `
   </style>
 `;
 
+export const contentEditableTestId = "cql-input-contenteditable";
+export const popoverTestId = "cql-input-popover";
+
 export const createCqlInput = (
   cqlService: CqlServiceInterface,
   debugEl?: HTMLElement
 ) => {
   class CqlInput extends HTMLElement {
+    static observedAttributes = ["initialValue"];
+
     connectedCallback() {
       const cqlInputId = "cql-input";
       const cqlPopoverId = "cql-popover";
-      const shadow = this.attachShadow({ mode: "closed" });
+      const shadow = this.attachShadow({ mode: "open" });
 
-      shadow.innerHTML = `<div id="${cqlInputId}"></div><div id="${cqlPopoverId}" popover anchor="${cqlInputId}"></div>`;
+      shadow.innerHTML = `<div id="${cqlInputId}"></div><div id="${cqlPopoverId}" data-testid="${popoverTestId}" popover anchor="${cqlInputId}"></div>`;
       shadow.appendChild(template.content.cloneNode(true));
       const cqlInput = shadow.getElementById(cqlInputId)!;
       const cqlPopover = shadow.getElementById(cqlPopoverId)!;
@@ -116,13 +121,16 @@ export const createCqlInput = (
         );
       };
 
-      createEditor({
+      const editorNode = createEditor({
+        initialValue: this.getAttribute("initial-value") ?? "",
         mountEl: cqlInput,
         popoverEl: cqlPopover,
         cqlService,
         debugEl,
         onChange,
       });
+
+      editorNode.setAttribute("data-testid", contentEditableTestId);
     }
   }
 

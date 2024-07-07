@@ -1,0 +1,36 @@
+{
+  "tokens": [
+    {
+      "type": "Token",
+      "tokenType": "STRING",
+      "lexeme": "examp",
+      "start": 0,
+      "end": 4,
+      "literal": "examp"
+    },
+    {
+      "type": "Token",
+      "tokenType": "EOF",
+      "lexeme": "",
+      "start": 5,
+      "end": 5,
+      "literal": null
+    }
+  ],
+  "ast": {
+    "type": "QueryList",
+    "content": [
+      {
+        "type": "QueryBinary",
+        "left": {
+          "type": "QueryContent",
+          "searchExpr": "examp"
+        },
+        "right": null
+      }
+    ]
+  },
+  "queryResult": "q=examp",
+  "suggestions": [],
+  "error": null
+}

@@ -1,0 +1,36 @@
+{
+  "tokens": [
+    {
+      "type": "Token",
+      "tokenType": "STRING",
+      "lexeme": "ex",
+      "start": 0,
+      "end": 1,
+      "literal": "ex"
+    },
+    {
+      "type": "Token",
+      "tokenType": "EOF",
+      "lexeme": "",
+      "start": 2,
+      "end": 2,
+      "literal": null
+    }
+  ],
+  "ast": {
+    "type": "QueryList",
+    "content": [
+      {
+        "type": "QueryBinary",
+        "left": {
+          "type": "QueryContent",
+          "searchExpr": "exa"
+        },
+        "right": null
+      }
+    ]
+  },
+  "queryResult": "q=e",
+  "suggestions": [],
+  "error": null
+}

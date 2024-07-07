@@ -283,9 +283,6 @@ export const createCqlPlugin = ({
           const docSelection = new AllSelection(view.state.doc);
           const tr = view.state.tr;
 
-          console.log("Incoming query", { from: query, tokens, ast });
-          logNode(newDoc);
-
           tr.replaceWith(docSelection.from, docSelection.to, newDoc)
             .setSelection(
               getNewSelection(userSelection, shouldWrapSelectionInKey, tr.doc)
