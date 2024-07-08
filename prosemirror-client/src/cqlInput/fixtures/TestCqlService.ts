@@ -1,29 +1,28 @@
 import { CqlResult, CqlServiceInterface } from "../../services/CqlService";
 import empty from "./responses/<empty>.json";
-import e from "./responses/e.json";
-import ex from "./responses/ex.json";
-import exa from "./responses/exa.json";
-import exam from "./responses/exam.json";
-import examp from "./responses/examp.json";
-import exampl from "./responses/exampl.json";
-import example from "./responses/example.json";
-import example_ from "./responses/example_.json";
 import example_plus from "./responses/example_+.json";
 import example_pluscolon from "./responses/example_+:.json";
+import example_plustagcolon from "./responses/example_+tag:.json";
 import example_tags_are_magic from "./responses/example_+tag:tags-are-magic.json";
+import { createTextResponse } from "./responses/createTextResponse";
 
 const resultFixtures: Record<string, CqlResult> = {
-  e,
-  ex,
-  exa,
-  exam,
-  examp,
-  exampl,
-  example,
-  "example ": example_,
+  e: createTextResponse("e"),
+  ex: createTextResponse("ex"), 
+  exa: createTextResponse("exa"),
+  exam: createTextResponse("exam"),
+  examp: createTextResponse("examp"),
+  exampl: createTextResponse("exampl"),
+  example: createTextResponse("example"),
+  "example ": createTextResponse("example "),
+  "<example ": createTextResponse("<example "),
+  "example >": createTextResponse("example >"),
   "example +": example_plus,
   "example +:  ": example_pluscolon,
-  "example_+tag:tags-are-magic": example_tags_are_magic,
+  "example +tag:   ": example_plustagcolon,
+  "example +tag:tags-are-magic": example_tags_are_magic,
+  "example +tag:tags-are-magic ": example_tags_are_magic,
+  "example +tag:tags-are-magic  ": example_tags_are_magic,
 } as any;
 
 export class TestCqlService implements CqlServiceInterface {

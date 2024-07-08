@@ -18,7 +18,6 @@ import {
   tokensToNodes,
   toProseMirrorTokens,
   ProseMirrorToken,
-  logNode,
   applyDeleteIntent,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
