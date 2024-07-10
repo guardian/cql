@@ -12,7 +12,7 @@ class TypeaheadQueryCapiClient(client: GuardianContentClient)
       case str => ContentApiClient.tags.q(str)
     client.getResponse(query).map { response =>
       response.results.map { tag =>
-        TextSuggestionOption(tag.webTitle, tag.id)
+        TextSuggestionOption(tag.webTitle, tag.id, tag.description.getOrElse(""))
       }.toList
     }
 
@@ -22,7 +22,7 @@ class TypeaheadQueryCapiClient(client: GuardianContentClient)
       case str => ContentApiClient.sections.q(str)
     client.getResponse(query).map { response =>
       response.results.map { section =>
-        TextSuggestionOption(section.webTitle, section.id)
+        TextSuggestionOption(section.webTitle, section.id, section.webTitle)
       }.toList
     }
 }
@@ -30,11 +30,11 @@ class TypeaheadQueryCapiClient(client: GuardianContentClient)
 class TypeaheadQueryClientTest extends TypeaheadQueryClient {
   def getTags(str: String): Future[List[TextSuggestionOption]] =
     Future.successful(
-      List(TextSuggestionOption("Tags are magic", "tags-are-magic"))
+      List(TextSuggestionOption("Tags are magic", "tags-are-magic", "A magic tag"))
     )
 
   def getSections(str: String): Future[List[TextSuggestionOption]] =
     Future.successful(
-      List(TextSuggestionOption("Also sections", "sections-are-magic"))
+      List(TextSuggestionOption("Also sections", "sections-are-magic", "Sections are less magic"))
     )
 }
