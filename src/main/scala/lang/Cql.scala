@@ -1,10 +1,7 @@
 package cql.lang
 
-import scala.io.Source
 import scala.util.{Failure, Success, Try}
-import cql.lang.QueryList
 import io.circe.generic.semiauto.*
-import io.circe.Encoder
 
 import scala.concurrent.Future
 import com.gu.contentapi.client.GuardianContentClient
@@ -19,12 +16,10 @@ case class CqlResult(
     error: Option[String] = None
 )
 
-class Cql:
+class Cql(typeahead: Typeahead):
   implicit val ec: scala.concurrent.ExecutionContext =
     scala.concurrent.ExecutionContext.global
   val guardianContentClient = new GuardianContentClient("test")
-  val typeaheadClient = new TypeaheadQueryClientTest()
-  val typeahead = new Typeahead(typeaheadClient)
 
   def run(program: String): Future[CqlResult] =
     val scanner = new Scanner(program)

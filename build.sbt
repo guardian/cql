@@ -35,7 +35,7 @@ val circeVersion = "0.14.4"
 lazy val cql = project.in(file("."))
   .enablePlugins(RiffRaffArtifact)
   .settings(
-    scalaVersion := "3.3.1",
+    scalaVersion := "3.4.2",
     libraryDependencies ++= Seq(
       "org.apache.pekko" %% "pekko-actor-typed" % PekkoVersion,
       "org.apache.pekko" %% "pekko-stream" % PekkoVersion,

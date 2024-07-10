@@ -10,10 +10,15 @@ import io.circe.syntax.*
 import com.github.pjfanning.pekkohttpcirce.*
 import scala.io.StdIn
 import scala.util.{Failure, Success, Try}
-import cql.lang.Cql
+import cql.lang.{Cql, Typeahead, TypeaheadHelpersCapi}
+import com.gu.contentapi.client.GuardianContentClient
 
 object HttpServer extends QueryJson {
-  val cql = new Cql()
+  val guardianContentClient = new GuardianContentClient("test")
+  val typeaheadHelpers = new TypeaheadHelpersCapi(guardianContentClient)
+  val typeahead = new Typeahead(typeaheadHelpers.fieldResolvers, typeaheadHelpers.outputModifierResolvers)
+
+  val cql = new Cql(typeahead)
 
   def run(): Unit = {
 

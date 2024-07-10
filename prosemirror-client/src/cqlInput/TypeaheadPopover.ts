@@ -8,6 +8,7 @@ import { TextSelection } from "prosemirror-state";
 type MenuItem = {
   label: string;
   value: string;
+  description: string;
 };
 
 export class TypeaheadPopover {
@@ -134,10 +135,10 @@ export class TypeaheadPopover {
 
   private updateItems(items: MenuItem[]) {
     this.popoverEl.innerHTML = items
-      .map(({ label }, index) => {
+      .map(({ label, description }, index) => {
         return `<div class="Cql__Option ${
           index === this.currentOptionIndex ? "Cql__Option--is-selected" : ""
-        }" data-index="${index}">${label}</div>`;
+        }" data-index="${index}"><div class="Cql__OptionLabel">${label}</div><div class="Cql__OptionDescription">${description}</div></div>`;
       })
       .join("");
   }

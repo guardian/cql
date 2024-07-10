@@ -4,10 +4,10 @@ import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TypeaheadTest extends BaseTest {
-
   describe("typeahead") {
-    val typeaheadQueryClient = new TypeaheadQueryClientTest()
-    val typeahead = new Typeahead(typeaheadQueryClient)
+    val typeaheadQueryClient = new TestTypeaheadHelpers()
+    val typeahead =
+      new Typeahead(typeaheadQueryClient.fieldResolvers, List.empty)
 
     it("should give no typeahead where none is warranted") {
       typeahead.getSuggestions(QueryList(List.empty)).map { result =>
@@ -47,7 +47,11 @@ class TypeaheadTest extends BaseTest {
               ":",
               TextSuggestion(
                 List(
-                  TextSuggestionOption("Tag", "tag")
+                  TextSuggestionOption(
+                    "Tag",
+                    "tag",
+                    "Search by content tags, e.g. sport/football"
+                  )
                 )
               )
             )
@@ -74,7 +78,11 @@ class TypeaheadTest extends BaseTest {
               ":",
               TextSuggestion(
                 List(
-                  TextSuggestionOption("Tag", "tag")
+                  TextSuggestionOption(
+                    "Tag",
+                    "tag",
+                    "Search by content tags, e.g. sport/football"
+                  )
                 )
               )
             ),
@@ -84,7 +92,11 @@ class TypeaheadTest extends BaseTest {
               " ",
               TextSuggestion(
                 List(
-                  TextSuggestionOption("Tags are magic", "tags-are-magic")
+                  TextSuggestionOption(
+                    "Tags are magic",
+                    "tags-are-magic",
+                    "A magic tag"
+                  )
                 )
               )
             )
@@ -111,7 +123,11 @@ class TypeaheadTest extends BaseTest {
               ":",
               TextSuggestion(
                 List(
-                  TextSuggestionOption("Tag", "tag")
+                  TextSuggestionOption(
+                    "Tag",
+                    "tag",
+                    "Search by content tags, e.g. sport/football"
+                  )
                 )
               )
             ),
@@ -121,7 +137,11 @@ class TypeaheadTest extends BaseTest {
               " ",
               TextSuggestion(
                 List(
-                  TextSuggestionOption("Tags are magic", "tags-are-magic")
+                  TextSuggestionOption(
+                    "Tags are magic",
+                    "tags-are-magic",
+                    "A magic tag"
+                  )
                 )
               )
             )
@@ -144,7 +164,11 @@ class TypeaheadTest extends BaseTest {
               ":",
               TextSuggestion(
                 List(
-                  TextSuggestionOption("from-date", "from-date")
+                  TextSuggestionOption(
+                    "from-date",
+                    "from-date",
+                    "The date to search from"
+                  )
                 )
               )
             ),

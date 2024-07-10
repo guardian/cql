@@ -24,7 +24,7 @@ type Suggestions = {
 };
 
 type TextSuggestion = { suggestions: Array<TextSuggestionOption> };
-type TextSuggestionOption = { label: string; value: string };
+type TextSuggestionOption = { label: string; value: string, description: string };
 type DateSuggestion = { validFrom?: string; validTo?: string };
 
 export interface CqlServiceInterface {

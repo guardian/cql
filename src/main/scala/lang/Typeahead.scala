@@ -32,14 +32,8 @@ type TypeaheadResolver = (String => Future[List[TextSuggestionOption]]) |
 
 type TypeaheadType = "TEXT" | "DATE"
 
-class Typeahead(client: TypeaheadQueryClient) {
-  private val typeaheadTokenResolverMap = Map(
-    TokenType.QUERY_FIELD_KEY -> suggestFieldKey,
-    TokenType.QUERY_OUTPUT_MODIFIER_KEY -> suggestOutputModifierKey,
-    TokenType.QUERY_VALUE -> suggestFieldValue
-  )
-
   case class TypeaheadField(
+      id: String,
       name: String,
       description: String,
       resolver: TypeaheadResolver,
@@ -56,86 +50,18 @@ class Typeahead(client: TypeaheadQueryClient) {
     def toSuggestionOption: TextSuggestionOption =
       TextSuggestionOption(name, name, description)
 
-  private val typeaheadFieldResolverMap = Map(
-    "tag" -> TypeaheadField(
-      "Tag",
-      "Search by content tags, e.g. sport/football",
-      suggestTags
-    ),
-    "section" -> TypeaheadField(
-      "Section",
-      "Search by content sections, e.g. section/news",
-      suggestSections
-    )
+class Typeahead(fieldResolvers: List[TypeaheadField], outputModifierResolvers: List[TypeaheadField]) {
+  private val typeaheadTokenResolverMap = Map(
+    TokenType.QUERY_FIELD_KEY -> suggestFieldKey,
+    TokenType.QUERY_OUTPUT_MODIFIER_KEY -> suggestOutputModifierKey,
+    TokenType.QUERY_VALUE -> suggestFieldValue
   )
 
-  private val typeaheadFieldResolverEntries = TextSuggestion(
-    typeaheadFieldResolverMap.map {
-      case (value, TypeaheadField(label, description, _, _)) =>
-        TextSuggestionOption(label, value, description)
+  private val typeaheadFieldEntries = TextSuggestion(
+    fieldResolvers.map {
+      case TypeaheadField(id, label, description, _, _) =>
+        TextSuggestionOption(label, id, description)
     }.toList
-  )
-
-  private val typeaheadOutputModifierResolvers = List(
-    TypeaheadField(
-      "show-fields",
-      "Determine the list of fields to return",
-      List(
-        TextSuggestionOption("all", "all", "Description"),
-        TextSuggestionOption("trailText", "trailText", "Description"),
-        TextSuggestionOption("headline", "headline", "Description"),
-        TextSuggestionOption(
-          "showInRelatedContent",
-          "showInRelatedContent",
-          "Description"
-        ),
-        TextSuggestionOption("body", "body", "Description"),
-        TextSuggestionOption("lastModified", "lastModified", "Description"),
-        TextSuggestionOption(
-          "hasStoryPackage",
-          "hasStoryPackage",
-          "Description"
-        ),
-        TextSuggestionOption("score", "score", "Description"),
-        TextSuggestionOption("standfirst", "standfirst", "Description"),
-        TextSuggestionOption("shortUrl", "shortUrl", "Description"),
-        TextSuggestionOption("thumbnail", "thumbnail", "Description"),
-        TextSuggestionOption("wordcount", "wordcount", "Description"),
-        TextSuggestionOption("commentable", "commentable", "Description"),
-        TextSuggestionOption("isPremoderated", "isPremoderated", "Description"),
-        TextSuggestionOption("allowUgc", "allowUgc", "Description"),
-        TextSuggestionOption("byline", "byline", "Description"),
-        TextSuggestionOption("publication", "publication", "Description"),
-        TextSuggestionOption(
-          "internalPageCode",
-          "internalPageCode",
-          "Description"
-        ),
-        TextSuggestionOption(
-          "productionOffice",
-          "productionOffice",
-          "Description"
-        ),
-        TextSuggestionOption(
-          "shouldHideAdverts",
-          "shouldHideAdverts",
-          "Description"
-        ),
-        TextSuggestionOption(
-          "liveBloggingNow",
-          "liveBloggingNow",
-          "Description"
-        ),
-        TextSuggestionOption(
-          "commentCloseDate",
-          "commentCloseDate",
-          "Description"
-        ),
-        TextSuggestionOption("starRating", "starRating", "Description")
-      )
-    ),
-    TypeaheadField("from-date", "The date to search from", List.empty),
-    TypeaheadField("to-date", "The date to search to", List.empty)
   )
 
   def getSuggestions(
@@ -235,10 +161,10 @@ class Typeahead(client: TypeaheadQueryClient) {
 
   private def suggestFieldKey(str: String): TextSuggestion =
     str match
-      case "" => typeaheadFieldResolverEntries
+      case "" => typeaheadFieldEntries
       case str =>
-        typeaheadFieldResolverEntries.copy(
-          suggestions = typeaheadFieldResolverEntries.suggestions
+        typeaheadFieldEntries.copy(
+          suggestions = typeaheadFieldEntries.suggestions
             .filter(_.value.contains(str.toLowerCase()))
         )
 
@@ -246,15 +172,15 @@ class Typeahead(client: TypeaheadQueryClient) {
       key: String,
       str: String
   ): Future[List[TextSuggestionOption]] =
-    typeaheadFieldResolverMap
-      .get(key)
+    fieldResolvers
+      .find(_.id == key)
       .map(_.resolveSuggestions(str))
       .getOrElse(Future.successful(List.empty))
 
   private def suggestOutputModifierKey(str: String): Future[TextSuggestion] =
     Future.successful(
       TextSuggestion(
-        typeaheadOutputModifierResolvers
+        outputModifierResolvers
           .filter(
             _.name.contains(str.toLowerCase())
           )
@@ -266,7 +192,7 @@ class Typeahead(client: TypeaheadQueryClient) {
       key: String,
       str: String
   ): Future[TextSuggestion | DateSuggestion] =
-    typeaheadOutputModifierResolvers.find(_.name == key) match
+    outputModifierResolvers.find(_.name == key) match
       case Some(typeaheadField) if typeaheadField.suggestionType == "TEXT" =>
         typeaheadField.resolveSuggestions(str).map { suggestions =>
           TextSuggestion(
@@ -282,10 +208,4 @@ class Typeahead(client: TypeaheadQueryClient) {
       case Some(typeaheadField) if typeaheadField.suggestionType == "DATE" =>
         Future.successful(DateSuggestion(None, None))
       case _ => Future.successful(TextSuggestion(List.empty))
-
-  private def suggestTags(str: String) =
-    client.getTags(str)
-
-  private def suggestSections(str: String) =
-    client.getSections(str)
 }

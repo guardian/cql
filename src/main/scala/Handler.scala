@@ -8,13 +8,14 @@ import com.amazonaws.services.lambda.runtime.events.{
 import io.circe.generic.auto._
 import io.circe.syntax._
 import util.Logging
-import cql.lang.Cql
+
 import scala.util.Try
 import scala.concurrent.Await
 import scala.concurrent.duration.DurationInt
 import scala.jdk.CollectionConverters._
 import scala.concurrent.Future
-
+import com.gu.contentapi.client.GuardianContentClient
+import cql.lang.{Cql, Typeahead, TypeaheadHelpersCapi}
 class Handler
     extends RequestHandler[
       APIGatewayProxyRequestEvent,
@@ -24,7 +25,12 @@ class Handler
     with QueryJson {
   private implicit val ec: scala.concurrent.ExecutionContext =
     scala.concurrent.ExecutionContext.global
-  private val cql = new Cql()
+
+  val guardianContentClient = new GuardianContentClient("test")
+  val typeaheadHelpers = new TypeaheadHelpersCapi(guardianContentClient)
+  val typeahead = new Typeahead(typeaheadHelpers.fieldResolvers, typeaheadHelpers.outputModifierResolvers)
+  
+  private val cql = new Cql(typeahead)
 
   def handleRequest(
       event: APIGatewayProxyRequestEvent,

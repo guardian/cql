@@ -2,8 +2,8 @@ import { CqlServiceInterface } from "../services/CqlService";
 import { QueryChangeEventDetail } from "./dom";
 import { createEditor } from "./editor";
 
-const baseFontSize = "28px";
-const baseBorderRadius = "5px";
+const baseFontSize = 28;
+const baseBorderRadius = 5;
 const template = document.createElement("template");
 template.innerHTML = `
   <style>
@@ -21,7 +21,7 @@ template.innerHTML = `
       display: inline-flex;
       background-color: rgba(255,255,255,0.2);
       margin: 0 5px;
-      border-radius: ${baseBorderRadius};
+      border-radius: ${baseBorderRadius}px;
     }
 
     chip {
@@ -53,18 +53,18 @@ template.innerHTML = `
     #cql-input {
       position: relative;
       padding: 5px;
-      font-size: ${baseFontSize};
+      font-size: ${baseFontSize}px;
       anchor-name: --cql-input;
       border: 2px solid grey;
-      border-radius: ${baseBorderRadius};
+      border-radius: ${baseBorderRadius}px;
     }
 
     #cql-popover {
-      width: 250px;
+      width: 500px;
       margin: 0;
       padding: 0;
       top: anchor(end);
-      font-size: ${baseFontSize};
+      font-size: ${baseFontSize}px;
       position-anchor: --cql-input;
     }
 
@@ -79,6 +79,10 @@ template.innerHTML = `
     .Cql__Option:hover {
       background-color: rgba(0,0,0,0.2);
       cursor: pointer;
+    }
+
+    .Cql__OptionDescription {
+      font-size: ${baseFontSize * 0.8}px;
     }
 
     .Cql__ChipWrapper--is-pending-delete chip {
