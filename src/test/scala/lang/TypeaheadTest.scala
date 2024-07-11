@@ -7,7 +7,7 @@ class TypeaheadTest extends BaseTest {
   describe("typeahead") {
     val typeaheadQueryClient = new TestTypeaheadHelpers()
     val typeahead =
-      new Typeahead(typeaheadQueryClient.fieldResolvers, List.empty)
+      new Typeahead(typeaheadQueryClient.fieldResolvers, typeaheadQueryClient.outputModifierResolvers)
 
     it("should give no typeahead where none is warranted") {
       typeahead.getSuggestions(QueryList(List.empty)).map { result =>
@@ -165,7 +165,7 @@ class TypeaheadTest extends BaseTest {
               TextSuggestion(
                 List(
                   TextSuggestionOption(
-                    "from-date",
+                    "From date",
                     "from-date",
                     "The date to search from"
                   )
@@ -173,10 +173,10 @@ class TypeaheadTest extends BaseTest {
               )
             ),
             TypeaheadSuggestion(
-              11,
-              11,
-              " ",
-              DateSuggestion(None, None)
+              0,
+              9,
+              ":",
+              TextSuggestion(List.empty)
             )
           )
         }

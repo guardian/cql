@@ -10,7 +10,6 @@ import userEvent from "@testing-library/user-event";
 import {
   findByShadowTestId,
   findByShadowText,
-  prettyShadowDOM,
 } from "shadow-dom-testing-library";
 
 mock.module("../CqlService", () => ({}));

@@ -4,7 +4,6 @@ import scala.util.{Failure, Success, Try}
 import io.circe.generic.semiauto.*
 
 import scala.concurrent.Future
-import com.gu.contentapi.client.GuardianContentClient
 
 case class CqlResult(
     tokens: List[Token],
@@ -19,7 +18,6 @@ case class CqlResult(
 class Cql(typeahead: Typeahead):
   implicit val ec: scala.concurrent.ExecutionContext =
     scala.concurrent.ExecutionContext.global
-  val guardianContentClient = new GuardianContentClient("test")
 
   def run(program: String): Future[CqlResult] =
     val scanner = new Scanner(program)

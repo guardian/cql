@@ -13,6 +13,7 @@ case class TypeaheadSuggestion(
     suggestions: Suggestions
 )
 
+
 sealed trait Suggestions
 
 case class TextSuggestion(suggestions: List[TextSuggestionOption])
@@ -32,25 +33,28 @@ type TypeaheadResolver = (String => Future[List[TextSuggestionOption]]) |
 
 type TypeaheadType = "TEXT" | "DATE"
 
-  case class TypeaheadField(
-      id: String,
-      name: String,
-      description: String,
-      resolver: TypeaheadResolver,
-      suggestionType: "TEXT" | "DATE" = "TEXT"
-  ):
-    def resolveSuggestions(str: String): Future[List[TextSuggestionOption]] =
-      resolver match {
-        case list: List[TextSuggestionOption] =>
-          Future.successful(list.filter { _.label.contains(str) })
-        case resolverFn: (String => Future[List[TextSuggestionOption]]) =>
-          resolverFn(str)
-      }
+case class TypeaheadField(
+    id: String,
+    name: String,
+    description: String,
+    resolver: TypeaheadResolver,
+    suggestionType: "TEXT" | "DATE" = "TEXT"
+):
+  def resolveSuggestions(str: String): Future[List[TextSuggestionOption]] =
+    resolver match {
+      case list: List[TextSuggestionOption] =>
+        Future.successful(list.filter { _.label.contains(str) })
+      case resolverFn: (String => Future[List[TextSuggestionOption]]) =>
+        resolverFn(str)
+    }
 
-    def toSuggestionOption: TextSuggestionOption =
-      TextSuggestionOption(name, name, description)
+  def toSuggestionOption: TextSuggestionOption =
+    TextSuggestionOption(name, id, description)
 
-class Typeahead(fieldResolvers: List[TypeaheadField], outputModifierResolvers: List[TypeaheadField]) {
+class Typeahead(
+    fieldResolvers: List[TypeaheadField],
+    outputModifierResolvers: List[TypeaheadField]
+) {
   private val typeaheadTokenResolverMap = Map(
     TokenType.QUERY_FIELD_KEY -> suggestFieldKey,
     TokenType.QUERY_OUTPUT_MODIFIER_KEY -> suggestOutputModifierKey,
@@ -58,9 +62,8 @@ class Typeahead(fieldResolvers: List[TypeaheadField], outputModifierResolvers: L
   )
 
   private val typeaheadFieldEntries = TextSuggestion(
-    fieldResolvers.map {
-      case TypeaheadField(id, label, description, _, _) =>
-        TextSuggestionOption(label, id, description)
+    fieldResolvers.map { case TypeaheadField(id, label, description, _, _) =>
+      TextSuggestionOption(label, id, description)
     }.toList
   )
 
@@ -134,6 +137,7 @@ class Typeahead(fieldResolvers: List[TypeaheadField], outputModifierResolvers: L
             )
         }
       case QueryOutputModifier(keyToken, Some(valueToken)) =>
+        
         val keySuggestion = suggestOutputModifierKey(
           keyToken.literal.getOrElse("")
         ).map { suggestion =>
@@ -182,7 +186,7 @@ class Typeahead(fieldResolvers: List[TypeaheadField], outputModifierResolvers: L
       TextSuggestion(
         outputModifierResolvers
           .filter(
-            _.name.contains(str.toLowerCase())
+            _.id.contains(str.toLowerCase())
           )
           .map(_.toSuggestionOption)
       )

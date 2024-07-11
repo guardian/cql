@@ -28,10 +28,7 @@ const resultFixtures: Record<string, CqlResult> = {
 export class TestCqlService implements CqlServiceInterface {
   private abortController: AbortController | undefined;
 
-  /**
-   * @param url
-   * @param resultFixtures A map from query strings to results
-   */
+  // @ts-ignore unused var – url not relevant for test
   constructor(private url: string) {}
 
   public setUrl(url: string) {

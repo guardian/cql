@@ -79,4 +79,4 @@ jobs:
             cdk.out:
               - ./cdk/cdk.out/CqlLambda-PROD.template.json
             cql-lambda:
-              - ./target/scala-3.3.1/cql-lambda.jar
+              - ./target/scala-3.4.2/cql-lambda.jar
