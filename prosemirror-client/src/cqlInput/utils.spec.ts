@@ -4,7 +4,9 @@ import _tokensWithTwoKVPairs from "./fixtures/tokens/tokensWithTwoKVPairs.json";
 import _tokensWithParens from "./fixtures/tokens/tokensWithParens.json";
 import _tokensWithParensAndKVPair from "./fixtures/tokens/tokensWithParensAndKVPair.json";
 import _tokensWithTrailingWhitespace from "./fixtures/tokens/tokensWithTrailingWhitespace.json";
+import _tokensWithTagAtBeginning from "./fixtures/tokens/tokensWithTagAtBeginning.json";
 import {
+  ProseMirrorToken,
   mapTokens,
   toProseMirrorTokens,
   tokensToNodes,
@@ -28,6 +30,18 @@ describe("utils", () => {
   const tokensWithTrailingWhitespace = toProseMirrorTokens(
     _tokensWithTrailingWhitespace
   );
+  const tokensWithTagAtBeginning = toProseMirrorTokens(
+    _tokensWithTagAtBeginning
+  );
+
+  const getTextFromTokenRanges = (tokens: ProseMirrorToken[]) => {
+    const mappedTokens = mapTokens(tokens);
+    const node = tokensToNodes(tokens);
+    return mappedTokens.map(({ from, to, tokenType }) => {
+      return tokenType !== "EOF" ? node.textBetween(from, to) : "";
+    });
+  }
+  
 
   describe("tokensToNode", () => {
     test("creates nodes from a list of tokens - 1", () => {
@@ -60,41 +74,38 @@ describe("utils", () => {
   });
 
   describe("mapTokens", () => {
-    test("should map tokens to text positions - 1", () => {
-      const mappedTokens = mapTokens(tokensWithParens);
-      const node = tokensToNodes(mappedTokens);
-
-      const text = mappedTokens.map(({ from, to }) => {
-        return node.textBetween(from, to);
-      });
+    test("should map tokens to text positions with parens", () => {
+      const text = getTextFromTokenRanges(tokensWithParens);
 
       expect(text).toEqual(["(", "b", "OR", "c", ")", ""]);
     });
-  });
 
-  test("should map tokens to text positions - 2", () => {
-    const mappedTokens = mapTokens(tokensWithParensAndKVPair);
-    const node = tokensToNodes(tokensWithParensAndKVPair);
-    const text = mappedTokens.map(({ from, to }) => {
-      return node.textBetween(from, to);
+    test("should map tokens to text positions with parens and tags", () => {
+      const text = getTextFromTokenRanges(tokensWithParensAndKVPair);
+
+      expect(text).toEqual([
+        "text",
+        "(",
+        "b",
+        "OR",
+        "c",
+        ")",
+        "key",
+        "value",
+        "text",
+        "(",
+        "b",
+        "OR",
+        "c",
+        ")",
+        "",
+      ]);
     });
 
-    expect(text).toEqual([
-      "text",
-      "(",
-      "b",
-      "OR",
-      "c",
-      ")",
-      "key",
-      "value",
-      "text",
-      "(",
-      "b",
-      "OR",
-      "c",
-      ")",
-      "",
-    ]);
+    test("should map tokens to text positions with a tag at the beginning", () => {
+      const text = getTextFromTokenRanges(tokensWithTagAtBeginning);
+
+      expect(text).toEqual(["tag", "test", ""]);
+    });
   });
 });

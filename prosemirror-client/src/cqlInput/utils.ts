@@ -265,11 +265,12 @@ export const applyDeleteIntent = (
   const tr = view.state.tr;
 
   if (node.attrs[DELETE_CHIP_INTENT]) {
+    const insertAt = Math.max(0, from - 1)
     tr.deleteRange(from, to)
       // Prosemirror removes the whitespace in the preceding searchText,
       // regardless of range, for reasons I've yet to discover – add it back
-      .insertText(" ", from - 1)
-      .setSelection(TextSelection.create(tr.doc, from - 1));
+      .insertText(" ", insertAt)
+      .setSelection(TextSelection.create(tr.doc, insertAt));
   } else {
     tr.setNodeAttribute(from, DELETE_CHIP_INTENT, true);
   }
@@ -284,7 +285,7 @@ export const applyDeleteIntent = (
  */
 export const logNode = (doc: Node) => {
   console.log(`Log node ${doc.type.name}:`);
-
+  
   doc.nodesBetween(0, doc.content.size, (node, pos) => {
     const indent = doc.resolve(pos).depth * 4;
     const content =

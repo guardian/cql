@@ -145,9 +145,13 @@ export class TypeaheadPopover {
 
   private updateDebugSuggestions = (suggestions: TypeaheadSuggestion[]) => {
     if (this.debugContainer) {
-      this.debugContainer.innerHTML = `<h2>Typeahead</h3><p>Current selection: ${
-        this.view.state.selection.from
-      }-${this.view.state.selection.to}</p>
+      this.debugContainer.innerHTML = `
+        <h2>Typeahead</h3>
+            <p>Current selection: ${
+              this.view.state.selection.from
+            }-${this.view.state.selection.to}
+            </p>
+            
       <div>${suggestions.map((suggestion) =>
         JSON.stringify(suggestion, undefined, "  ")
       )}</div>`;

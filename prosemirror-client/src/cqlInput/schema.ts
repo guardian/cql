@@ -5,7 +5,7 @@ export const DELETE_CHIP_INTENT = "DELETE_CHIP_INTENT";
 export const schema = new Schema({
   nodes: {
     doc: {
-      content: "(searchText chipWrapper?)*",
+      content: "(searchText | chipWrapper)*",
     },
     text: {
       group: "inline",
