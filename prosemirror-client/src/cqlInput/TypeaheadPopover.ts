@@ -60,7 +60,7 @@ export class TypeaheadPopover {
         ({ from, to, suggestions }) =>
           this.view.state.selection.from >= from &&
           this.view.state.selection.to <= to &&
-          !!suggestions.TextSuggestion
+          Object.keys(suggestions).length
       );
 
       if (suggestionThatCoversSelection) {
@@ -78,7 +78,11 @@ export class TypeaheadPopover {
         this.popoverEl.style.left = `${left}px`;
 
         if (suggestions.TextSuggestion) {
-          this.updateItems(suggestions.TextSuggestion.suggestions);
+          this.renderTextSuggestion(suggestions.TextSuggestion.suggestions);
+        }
+
+        if (suggestions.DateSuggestion) {
+          this.renderDateSuggestion();
         }
 
         this.popoverEl.showPopover?.();
@@ -130,10 +134,10 @@ export class TypeaheadPopover {
     this.currentOptionIndex =
       (this.currentOptionIndex + by + (by < 0 ? suggestions.length! : 0)) %
       suggestions.length!;
-    this.updateItems(suggestions!);
+    this.renderTextSuggestion(suggestions!);
   };
 
-  private updateItems(items: MenuItem[]) {
+  private renderTextSuggestion(items: MenuItem[]) {
     this.popoverEl.innerHTML = items
       .map(({ label, description }, index) => {
         return `<div class="Cql__Option ${
@@ -143,13 +147,17 @@ export class TypeaheadPopover {
       .join("");
   }
 
+  private renderDateSuggestion() {
+    this.popoverEl.innerHTML = `Date goes here`;
+  }
+
   private updateDebugSuggestions = (suggestions: TypeaheadSuggestion[]) => {
     if (this.debugContainer) {
       this.debugContainer.innerHTML = `
         <h2>Typeahead</h3>
-            <p>Current selection: ${
-              this.view.state.selection.from
-            }-${this.view.state.selection.to}
+            <p>Current selection: ${this.view.state.selection.from}-${
+        this.view.state.selection.to
+      }
             </p>
             
       <div>${suggestions.map((suggestion) =>
