@@ -28,8 +28,11 @@ class Handler
 
   val guardianContentClient = new GuardianContentClient("test")
   val typeaheadHelpers = new TypeaheadHelpersCapi(guardianContentClient)
-  val typeahead = new Typeahead(typeaheadHelpers.fieldResolvers, typeaheadHelpers.outputModifierResolvers)
-  
+  val typeahead = new Typeahead(
+    typeaheadHelpers.fieldResolvers,
+    typeaheadHelpers.outputModifierResolvers
+  )
+
   private val cql = new Cql(typeahead)
 
   def handleRequest(
@@ -76,9 +79,11 @@ class Handler
     logger.info(s"Responding with status ${statusCode}: ${responseBody}")
 
     new APIGatewayProxyResponseEvent()
-      .withHeaders(Map(
-        "Access-Control-Allow-Origin" -> "*"
-      ).asJava)
+      .withHeaders(
+        Map(
+          "Access-Control-Allow-Origin" -> "*"
+        ).asJava
+      )
       .withStatusCode(statusCode)
       .withBody(
         responseBody

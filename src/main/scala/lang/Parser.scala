@@ -44,7 +44,9 @@ class Parser(tokens: List[Token]):
     else if (startOfQueryOutputModifier.contains(peek().tokenType))
       queryOutputModifier
     else if (startOfQueryValue.contains(peek().tokenType))
-      throw new ParseError("I found an unexpected ':'. Did you intend to search for a tag, section or similar, e.g. tag:news? If you would like to add a search phrase containing a ':' character, please surround it in double quotes.")
+      throw new ParseError(
+        "I found an unexpected ':'. Did you intend to search for a tag, section or similar, e.g. tag:news? If you would like to add a search phrase containing a ':' character, please surround it in double quotes."
+      )
     else queryBinary
 
   private def queryBinary =

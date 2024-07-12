@@ -18,6 +18,20 @@ class TypeaheadHelpersCapi(client: GuardianContentClient) {
       "Section",
       "Search by content sections, e.g. section/news",
       getSections
+    ),
+    TypeaheadField(
+      "from-date",
+      "From date",
+      "The date to search from",
+      List.empty,
+      "DATE"
+    ),
+    TypeaheadField(
+      "to-date",
+      "To date",
+      "The date to search to",
+      List.empty,
+      "DATE"
     )
   )
 
@@ -79,9 +93,7 @@ class TypeaheadHelpersCapi(client: GuardianContentClient) {
         ),
         TextSuggestionOption("starRating", "starRating", "Description")
       )
-    ),
-    TypeaheadField("from-date", "From date", "The date to search from", List.empty),
-    TypeaheadField("to-date","To date", "The date to search to", List.empty)
+    )
   )
 
   private def getTags(str: String): Future[List[TextSuggestionOption]] =
@@ -90,7 +102,11 @@ class TypeaheadHelpersCapi(client: GuardianContentClient) {
       case str => ContentApiClient.tags.q(str)
     client.getResponse(query).map { response =>
       response.results.map { tag =>
-        TextSuggestionOption(tag.webTitle, tag.id, tag.description.getOrElse(""))
+        TextSuggestionOption(
+          tag.webTitle,
+          tag.id,
+          tag.description.getOrElse("")
+        )
       }.toList
     }
 

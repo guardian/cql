@@ -16,7 +16,10 @@ import com.gu.contentapi.client.GuardianContentClient
 object HttpServer extends QueryJson {
   val guardianContentClient = new GuardianContentClient("test")
   val typeaheadHelpers = new TypeaheadHelpersCapi(guardianContentClient)
-  val typeahead = new Typeahead(typeaheadHelpers.fieldResolvers, typeaheadHelpers.outputModifierResolvers)
+  val typeahead = new Typeahead(
+    typeaheadHelpers.fieldResolvers,
+    typeaheadHelpers.outputModifierResolvers
+  )
 
   val cql = new Cql(typeahead)
 

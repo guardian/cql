@@ -19,14 +19,7 @@ class TypeaheadTest extends BaseTest {
           QueryList(List(queryField("example", None)))
         )
         .map { result =>
-          result shouldBe List(
-            TypeaheadSuggestion(
-              0,
-              7,
-              ":",
-              TextSuggestion(List.empty)
-            )
-          )
+          result shouldBe List.empty
         }
     }
 

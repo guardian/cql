@@ -13,7 +13,6 @@ case class TypeaheadSuggestion(
     suggestions: Suggestions
 )
 
-
 sealed trait Suggestions
 
 case class TextSuggestion(suggestions: List[TextSuggestionOption])
@@ -80,44 +79,41 @@ class Typeahead(
       }
       .map(_.flatten)
 
+  private def getSuggestionsForKeyToken(keyToken: Token) =
+    Future.successful(suggestFieldKey(keyToken.literal.getOrElse("")).map {
+      suggestions =>
+        TypeaheadSuggestion(
+          keyToken.start,
+          keyToken.end,
+          ":",
+          suggestions
+        )
+    }.toList)
+
   private def suggestQueryField(
       q: QueryField
   ): Future[List[TypeaheadSuggestion]] =
     q match {
       case QueryField(keyToken, None) =>
-        Future.successful(
-          List(
-            TypeaheadSuggestion(
-              keyToken.start,
-              keyToken.end,
-              ":",
-              suggestFieldKey(keyToken.literal.getOrElse(""))
-            )
-          )
-        )
+        getSuggestionsForKeyToken(keyToken)
       case QueryField(keyToken, Some(valueToken)) =>
-        val keySuggestions = Future.successful(
-          TypeaheadSuggestion(
-            keyToken.start,
-            keyToken.end,
-            ":",
-            suggestFieldKey(keyToken.literal.getOrElse(""))
-          )
-        )
+        val keySuggestions = getSuggestionsForKeyToken(keyToken)
         val valueSuggestions =
           suggestFieldValue(
             keyToken.literal.getOrElse(""),
             valueToken.literal.getOrElse("")
           )
-            .map { suggestions =>
-              TypeaheadSuggestion(
-                valueToken.start,
-                valueToken.end,
-                " ",
-                TextSuggestion(suggestions)
-              )
+            .map {
+              _.map { suggestions =>
+                TypeaheadSuggestion(
+                  valueToken.start,
+                  valueToken.end,
+                  " ",
+                  suggestions
+                )
+              }
             }
-        Future.sequence(List(keySuggestions, valueSuggestions))
+        Future.sequence(List(keySuggestions, valueSuggestions)).map(_.flatten)
     }
 
   private def suggestQueryOutputModifier(
@@ -137,7 +133,6 @@ class Typeahead(
             )
         }
       case QueryOutputModifier(keyToken, Some(valueToken)) =>
-        
         val keySuggestion = suggestOutputModifierKey(
           keyToken.literal.getOrElse("")
         ).map { suggestion =>
@@ -163,23 +158,36 @@ class Typeahead(
         Future.sequence(List(keySuggestion, valueSuggestion))
     }
 
-  private def suggestFieldKey(str: String): TextSuggestion =
+  private def suggestFieldKey(str: String): Option[TextSuggestion] =
     str match
-      case "" => typeaheadFieldEntries
+      case "" => Some(typeaheadFieldEntries)
       case str =>
-        typeaheadFieldEntries.copy(
-          suggestions = typeaheadFieldEntries.suggestions
-            .filter(_.value.contains(str.toLowerCase()))
-        )
+        typeaheadFieldEntries.suggestions
+          .filter(_.value.contains(str.toLowerCase())) match {
+          case suggestions @ nonEmptyList :: Nil =>
+            Some(
+              typeaheadFieldEntries.copy(
+                suggestions = suggestions
+              )
+            )
+          case _ => None
+        }
 
   private def suggestFieldValue(
       key: String,
       str: String
-  ): Future[List[TextSuggestionOption]] =
+  ): Future[Option[Suggestions]] =
     fieldResolvers
       .find(_.id == key)
-      .map(_.resolveSuggestions(str))
-      .getOrElse(Future.successful(List.empty))
+      .map {
+        case typeaheadField if typeaheadField.suggestionType == "DATE" =>
+          Future.successful(Some(DateSuggestion(None, None)))
+        case textField =>
+          textField
+            .resolveSuggestions(str)
+            .map(options => Some(TextSuggestion(options)))
+      }
+      .getOrElse(Future.successful(None))
 
   private def suggestOutputModifierKey(str: String): Future[TextSuggestion] =
     Future.successful(
