@@ -3,7 +3,7 @@ import { TypeaheadSuggestion } from "../services/CqlService";
 import { findNodeAt } from "./utils";
 import { EditorView } from "prosemirror-view";
 import { chip, schema } from "./schema";
-import { TextSelection } from "prosemirror-state";
+import { Selection, TextSelection } from "prosemirror-state";
 
 type MenuItem = {
   label: string;
@@ -48,6 +48,7 @@ export class TypeaheadPopover {
       suggestions.length &&
       this.view.state.selection.from === this.view.state.selection.to
     ) {
+      const currentState = this.view.state;
       const mappedSuggestions = suggestions.map((suggestion) => {
         const start = mapping.map(suggestion.from, -1);
         const end = mapping.map(suggestion.to);
@@ -58,15 +59,15 @@ export class TypeaheadPopover {
 
       const suggestionThatCoversSelection = mappedSuggestions.find(
         ({ from, to, suggestions }) =>
-          this.view.state.selection.from >= from &&
-          this.view.state.selection.to <= to &&
+          currentState.selection.from >= from &&
+          currentState.selection.to <= to &&
           Object.keys(suggestions).length
       );
 
       if (suggestionThatCoversSelection) {
         this.currentSuggestion = suggestionThatCoversSelection;
-        const { from, suggestions } = suggestionThatCoversSelection;
-        const chipPos = findNodeAt(from, this.view.state.doc, chip);
+        const { from, to, suggestions } = suggestionThatCoversSelection;
+        const chipPos = findNodeAt(from, currentState.doc, chip);
         const domSelectionAnchor = this.view.nodeDOM(chipPos) as HTMLElement;
 
         if (!domSelectionAnchor) {
@@ -82,7 +83,9 @@ export class TypeaheadPopover {
         }
 
         if (suggestions.DateSuggestion) {
-          this.renderDateSuggestion();
+          const value = this.view.state.doc.textBetween(from, to);
+
+          this.renderDateSuggestion(value);
         }
 
         this.popoverEl.showPopover?.();
@@ -115,15 +118,23 @@ export class TypeaheadPopover {
       return;
     }
 
+    this.applyValueToInput(suggestion.value);
+  };
+
+  private applyValueToInput = (value: string) => {
+    if (!this.currentSuggestion) {
+      return;
+    }
+
     const { from, to } = this.currentSuggestion;
     const tr = this.view.state.tr;
 
     this.view.dispatch(
-      tr.replaceRangeWith(from, to, schema.text(suggestion.value)).setSelection(
+      tr.replaceRangeWith(from, to, schema.text(value)).setSelection(
         // +1 to tip the selection into the next available node's text
         // position after applying the suggestion e.g. key -> value, value ->
         // searchText
-        TextSelection.near(tr.doc.resolve(from + suggestion.value.length + 1))
+        TextSelection.near(tr.doc.resolve(from + value.length + 1))
       )
     );
   };
@@ -147,8 +158,32 @@ export class TypeaheadPopover {
       .join("");
   }
 
-  private renderDateSuggestion() {
-    this.popoverEl.innerHTML = `Date goes here`;
+  private renderDateSuggestion(value: string) {
+    this.popoverEl.innerHTML = "";
+    const dateInput = document.createElement("input");
+    dateInput.classList.add("Cql_typeahead-date");
+    dateInput.setAttribute("value", value);
+    dateInput.setAttribute("type", "date");
+    dateInput.addEventListener("keydown", (e) => {
+      switch (e.key) {
+        case "Enter":
+          const value = (e.target as HTMLInputElement).value;
+          this.applyValueToInput(value);
+          this.view.dom.focus();
+          break;
+        case "Escape":
+          this.view.dom.focus();
+          break;
+      }
+    });
+
+    this.popoverEl.appendChild(dateInput);
+    const maybeValidDate = new Date(value);
+    const isDateValid =
+      maybeValidDate instanceof Date && isFinite(maybeValidDate.getTime());
+    if (!isDateValid) {
+      dateInput.focus();
+    }
   }
 
   private updateDebugSuggestions = (suggestions: TypeaheadSuggestion[]) => {
