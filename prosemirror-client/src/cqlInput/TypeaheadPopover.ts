@@ -3,7 +3,7 @@ import { TypeaheadSuggestion } from "../services/CqlService";
 import { findNodeAt } from "./utils";
 import { EditorView } from "prosemirror-view";
 import { chip, schema } from "./schema";
-import { Selection, TextSelection } from "prosemirror-state";
+import { TextSelection } from "prosemirror-state";
 
 type MenuItem = {
   label: string;
@@ -153,7 +153,7 @@ export class TypeaheadPopover {
       .map(({ label, description }, index) => {
         return `<div class="Cql__Option ${
           index === this.currentOptionIndex ? "Cql__Option--is-selected" : ""
-        }" data-index="${index}"><div class="Cql__OptionLabel">${label}</div><div class="Cql__OptionDescription">${description}</div></div>`;
+        }" data-index="${index}"><div class="Cql__OptionLabel">${label}</div>${description ? `<div class="Cql__OptionDescription">${description}</div>`: ""}</div>`;
       })
       .join("");
   }
@@ -161,7 +161,7 @@ export class TypeaheadPopover {
   private renderDateSuggestion(value: string) {
     this.popoverEl.innerHTML = "";
     const dateInput = document.createElement("input");
-    dateInput.classList.add("Cql_typeahead-date");
+    dateInput.classList.add("Cql__TypeaheadDateInput");
     dateInput.setAttribute("value", value);
     dateInput.setAttribute("type", "date");
     dateInput.addEventListener("keydown", (e) => {

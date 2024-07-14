@@ -7,6 +7,10 @@ const baseBorderRadius = 5;
 const template = document.createElement("template");
 template.innerHTML = `
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     .ProseMirror {
       white-space: pre-wrap;
     }
@@ -65,6 +69,7 @@ template.innerHTML = `
       padding: 0;
       top: anchor(end);
       font-size: ${baseFontSize}px;
+      border-radius: ${baseBorderRadius}px;
       position-anchor: --cql-input;
     }
 
@@ -93,6 +98,12 @@ template.innerHTML = `
       background-color: rgba(0,0,0,0.2);
       padding: 0 5px;
       cursor: pointer;
+    }
+
+    .Cql__TypeaheadDateInput {
+      width: 100%;
+      border-radius: ${baseBorderRadius}px;
+      border: none;
     }
   </style>
 `;
