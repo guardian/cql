@@ -308,7 +308,7 @@ export const createCqlPlugin = ({
             mapping,
           } = cqlPluginKey.getState(view.state)!;
 
-          typeaheadPopover?.updateItemsFromSuggestions(suggestions, mapping, prevState.selection);
+          typeaheadPopover?.updateItemsFromSuggestions(suggestions, mapping);
 
           if (prevQuery.trim() === currentQuery.trim()) {
             return;
