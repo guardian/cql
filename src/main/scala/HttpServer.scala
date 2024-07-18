@@ -7,9 +7,8 @@ import pekko.http.scaladsl.Http
 import pekko.http.scaladsl.model.*
 import pekko.http.scaladsl.server.Directives.*
 import io.circe.syntax.*
-import com.github.pjfanning.pekkohttpcirce.*
 import scala.io.StdIn
-import scala.util.{Failure, Success, Try}
+import scala.util.Try
 import cql.lang.{Cql, Typeahead, TypeaheadHelpersCapi}
 import com.gu.contentapi.client.GuardianContentClient
 

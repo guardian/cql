@@ -5,7 +5,7 @@ import scala.util.Success
 
 import TokenType.*
 
-class ParseError(position: Int, message: String) extends Error(message)
+case class ParseError(position: Int, message: String) extends Error(message)
 
 class Parser(tokens: List[Token]):
   var current: Int = 0;
@@ -80,7 +80,7 @@ class Parser(tokens: List[Token]):
     consume(TokenType.LEFT_BRACKET, "Groups should start with a left bracket")
 
     if (isAtEnd || peek().tokenType == TokenType.RIGHT_BRACKET) {
-      error(
+      throw error(
         "Groups must contain some content. Put a search term between the brackets!"
       )
     }

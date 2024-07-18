@@ -39,7 +39,7 @@ trait QueryJson {
       case q: QueryField          => q.asJson
       case q: QueryOutputModifier => q.asJson
     }
-    Json.obj("type" -> "QueryList".asJson, "content" -> Json.arr(arr: _*))
+    Json.obj("type" -> "QueryList".asJson, "content" -> Json.arr(arr*))
   }
   implicit val queryGroupEncoder: Encoder[QueryGroup] = Encoder.instance {
     group =>
