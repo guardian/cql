@@ -106,7 +106,7 @@ test("accepts the given value when a popover appears", async () => {
   await selectPopoverOption(container, "Tag");
   await findByShadowText(container, "tag");
 
-  expect(valueContainer.value).toBe("example +tag:   ");
+  expect(valueContainer.value).toBe("example +tag:  ");
 });
 
 test("ctrl-a moves the caret to the beginning of the input", async () => {

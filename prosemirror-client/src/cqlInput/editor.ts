@@ -58,7 +58,7 @@ export const createEditor = ({
         const tr = view.state.tr;
         tr.insert(
           view.state.doc.nodeSize - 2,
-          schema.nodes.searchText.create(undefined, schema.text(" "))
+          schema.nodes.searchText.create(undefined)
         );
         view.updateState(view.state.apply(tr));
       }
