@@ -9,7 +9,7 @@ import {
   ProseMirrorToken,
   mapTokens,
   toProseMirrorTokens,
-  tokensToNodes,
+  tokensToDoc,
 } from "./utils";
 import {
   chip,
@@ -36,7 +36,7 @@ describe("utils", () => {
 
   const getTextFromTokenRanges = (tokens: ProseMirrorToken[]) => {
     const mappedTokens = mapTokens(tokens);
-    const node = tokensToNodes(tokens);
+    const node = tokensToDoc(tokens);
     return mappedTokens.map(({ from, to, tokenType }) => {
       return tokenType !== "EOF" ? node.textBetween(from, to) : "";
     });
@@ -45,7 +45,7 @@ describe("utils", () => {
 
   describe("tokensToNode", () => {
     test("creates nodes from a list of tokens - 1", () => {
-      const node = tokensToNodes(tokensWithOneKVPair);
+      const node = tokensToDoc(tokensWithOneKVPair);
 
       const expected = doc.create(undefined, [
         searchText.create(undefined, [schema.text("text ")]),
@@ -63,7 +63,7 @@ describe("utils", () => {
     });
 
     test("should preserve whitespace at end of query", () => {
-      const node = tokensToNodes(tokensWithTrailingWhitespace);
+      const node = tokensToDoc(tokensWithTrailingWhitespace);
 
       const expected = doc.create(undefined, [
         searchText.create(undefined, [schema.text("example   ")]),

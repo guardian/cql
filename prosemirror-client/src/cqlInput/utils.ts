@@ -15,9 +15,30 @@ import { Selection, TextSelection } from "prosemirror-state";
 
 const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE"];
 
-export const createTokenMap = (tokens: ProseMirrorToken[]) => {
+/**
+ * Create a mapping from ProseMirrorToken positions to document positions.
+ *
+ * This is necessary because whereas a CQL query is one-dimensional (a string),
+ * the ProseMirror document is two-dimensional (a tree), although it can be
+ * indexed as a flat sequence of tokens (see
+ * https://prosemirror.net/docs/guide/#doc.indexing).
+ *
+ * For example, the following CQL string (after conversion to ProseMirror ranges
+ * – see `toProseMirrorTokens`)
+ *
+ *  s t r   + k : v
+ * | | | | | | | | |
+ * 0 1 2 3 4 5 6 7 8
+ *
+ * is represented in ProseMirror as 
+ *
+ *  <doc> <searchText> s t r </searchText> <chipWrapper> <chip> <chipKey> k </chipKey> <chipValue> v </chipValue> </chip> </chipWrapper> </doc>
+ * |     |            | | | |             |             |      |         | |          |           | |            |       |              |      |  
+ * 0     1            2 3 4 5             6             7      8         9 10         11         12 13           14      15             16     17
+ */
+export const createProseMirrorTokenToDocumentMap = (tokens: ProseMirrorToken[]) => {
   // We only distinguish between key/val tokens here – other tokens are universally
-  // represented as searchText. We join the other tokens into single ranges so they
+  // represented as searchText. We join the other tokens into single ranges so we
   // can provide mappings for their node representation.
   const compactedTokenRanges = tokens.reduce((acc, { from, to, tokenType }) => {
     if (tokensToPreserve.includes(tokenType)) {
@@ -66,8 +87,11 @@ export const createTokenMap = (tokens: ProseMirrorToken[]) => {
   return new Mapping([new StepMap(ranges.flat())]);
 };
 
+/**
+ * Map ProseMirrorTokens to their document positions.
+ */
 export const mapTokens = (tokens: ProseMirrorToken[]): ProseMirrorToken[] => {
-  const mapping = createTokenMap(tokens);
+  const mapping = createProseMirrorTokenToDocumentMap(tokens);
 
   return tokens.map(({ from, to, ...rest }) => ({
     from: mapping.map(from),
@@ -76,7 +100,10 @@ export const mapTokens = (tokens: ProseMirrorToken[]): ProseMirrorToken[] => {
   }));
 };
 
-export const tokensToNodes = (tokens: ProseMirrorToken[]): Node => {
+/**
+ * Create a ProseMirror document from an array of ProseMirrorTokens.
+ */
+export const tokensToDoc = (tokens: ProseMirrorToken[]): Node => {
   const nodes = tokens.reduce<Node[]>((acc, token, index): Node[] => {
     switch (token.tokenType) {
       case "QUERY_FIELD_KEY":

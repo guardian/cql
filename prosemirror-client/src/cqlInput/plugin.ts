@@ -12,10 +12,10 @@ import {
 import {
   getNewSelection,
   isBeginningKeyValPair,
-  createTokenMap,
+  createProseMirrorTokenToDocumentMap,
   queryStrFromDoc,
   tokensToDecorations,
-  tokensToNodes,
+  tokensToDoc,
   toProseMirrorTokens,
   ProseMirrorToken,
   applyDeleteIntent,
@@ -29,8 +29,10 @@ import { QueryChangeEventDetail } from "./dom";
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
 type PluginState = {
+  // The query string that represents the most recent document state seen by the language server.
   queryStr?: string;
-  mapping: Mapping;
+  // A mapping from ProseMirrorToken positions to document positions.
+  mapping: Mapping
 } & ServiceState;
 
 type ServiceState = {
@@ -40,6 +42,15 @@ type ServiceState = {
 
 const NEW_STATE = "NEW_STATE";
 
+/**
+ * The CQL plugin handles most aspects of the editor behaviour, including
+ *  - fetching results from the language server, and applying them to the document
+ *  - applying decorations for syntax highlighting
+ *  - managing typeahead behaviour
+ *  - providing a NodeView for rendering chips
+ *  - handling clipboard (de)serialisation 
+ *  - managing custom keyboard and selection behaviour
+ */
 export const createCqlPlugin = ({
   cqlService,
   popoverEl,
@@ -79,7 +90,7 @@ export const createCqlPlugin = ({
         return {
           queryStr: queryStrFromDoc(newState.doc),
           mapping: maybeNewState?.tokens
-            ? createTokenMap(maybeNewState?.tokens)
+            ? createProseMirrorTokenToDocumentMap(maybeNewState?.tokens)
             : mapping,
           tokens: maybeNewState?.tokens ?? tokens,
           suggestions: maybeNewState?.suggestions ?? suggestions,
@@ -261,7 +272,7 @@ export const createCqlPlugin = ({
           }
 
           const tokens = toProseMirrorTokens(_tokens);
-          const newDoc = tokensToNodes(tokens);
+          const newDoc = tokensToDoc(tokens);
 
           if (debugASTContainer) {
             debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
