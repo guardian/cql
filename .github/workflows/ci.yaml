@@ -24,6 +24,7 @@ jobs:
         working-directory: prosemirror-client
         run: |
           bun install
+          bun test
           bun run build
 
       - name: Upload static assets
