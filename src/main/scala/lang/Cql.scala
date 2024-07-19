@@ -1,11 +1,16 @@
 package cql.lang
 
 import scala.util.{Failure, Success, Try}
-import io.circe.generic.semiauto.*
-
 import scala.concurrent.Future
+import io.circe.generic.semiauto.deriveEncoder
+import io.circe.Encoder
 
 case class CqlError(message: String, position: Option[Int] = None)
+
+object CqlError {
+  implicit val typeaheadSuggestions: Encoder[CqlError] =
+    deriveEncoder[CqlError]
+}
 
 case class CqlResult(
     tokens: List[Token],
@@ -14,8 +19,12 @@ case class CqlResult(
     // Map from tokenType to a map of literals and their suggestions.
     // Avoiding TokenType as type to avoid serialisation shenanigans in prototype.
     suggestions: List[TypeaheadSuggestion],
-    error: Option[CqlError] = None
+    error: Option[CqlError]
 )
+
+object CqlResult {
+  implicit val cqlResultEncoder: Encoder[CqlResult] = deriveEncoder[CqlResult]
+}
 
 class Cql(typeahead: Typeahead):
   implicit val ec: scala.concurrent.ExecutionContext =
@@ -31,7 +40,13 @@ class Cql(typeahead: Typeahead):
         typeahead.getSuggestions(expr).map { suggestions =>
           Try { CapiQueryString.build(expr) } match
             case Success(capiQueryStr) =>
-              CqlResult(tokens, Some(expr), Some(capiQueryStr), suggestions)
+              CqlResult(
+                tokens,
+                Some(expr),
+                Some(capiQueryStr),
+                suggestions,
+                None
+              )
             case Failure(e: Throwable) =>
               CqlResult(
                 tokens,
@@ -43,7 +58,8 @@ class Cql(typeahead: Typeahead):
         }
       case Failure(e) =>
         val error = e match {
-          case ParseError(position, message) => CqlError(message, Some(position))
+          case ParseError(position, message) =>
+            CqlError(message, Some(position))
           case e: Throwable => CqlError(e.getMessage)
         }
 

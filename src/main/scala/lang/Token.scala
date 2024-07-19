@@ -1,5 +1,9 @@
 package cql.lang
 
+import io.circe.Encoder
+import io.circe.Json
+import io.circe.syntax._
+
 enum TokenType:
   // Single-character tokens.
   case PLUS, COLON, AT, LEFT_BRACKET, RIGHT_BRACKET,
@@ -24,3 +28,14 @@ object Token:
     "AND" -> TokenType.AND,
     "OR" -> TokenType.OR
   )
+
+  implicit val tokenEncoder: Encoder[Token] = Encoder.instance { token =>
+    Json.obj(
+      "type" -> "Token".asJson,
+      "tokenType" -> token.tokenType.toString.asJson,
+      "lexeme" -> token.lexeme.asJson,
+      "start" -> token.start.asJson,
+      "end" -> token.end.asJson,
+      "literal" -> token.literal.asJson
+    )
+  }

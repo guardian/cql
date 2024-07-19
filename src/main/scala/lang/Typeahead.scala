@@ -2,6 +2,8 @@ package cql.lang
 
 import scala.concurrent.Future
 import concurrent.ExecutionContext.Implicits.global
+import io.circe.Encoder
+import io.circe.generic.semiauto.deriveEncoder
 
 case class TypeaheadSuggestion(
     from: Int,
@@ -13,10 +15,21 @@ case class TypeaheadSuggestion(
     suggestions: Suggestions
 )
 
+object TypeaheadSuggestion {
+  implicit val encoder: Encoder[TypeaheadSuggestion] =
+    deriveEncoder[TypeaheadSuggestion]
+}
+
 sealed trait Suggestions
 
 case class TextSuggestion(suggestions: List[TextSuggestionOption])
     extends Suggestions
+
+object TextSuggestion {
+  implicit val encoder: Encoder[TextSuggestion] =
+    deriveEncoder[TextSuggestion]
+
+}
 
 case class TextSuggestionOption(
     label: String,
@@ -24,8 +37,19 @@ case class TextSuggestionOption(
     description: String
 )
 
+object TextSuggestionOption {
+
+  implicit val encoder: Encoder[TextSuggestionOption] =
+    deriveEncoder[TextSuggestionOption]
+}
+
 case class DateSuggestion(validFrom: Option[String], validTo: Option[String])
     extends Suggestions
+
+object DateSuggestion {
+  implicit val encoder: Encoder[DateSuggestion] =
+    deriveEncoder[DateSuggestion]
+}
 
 type TypeaheadResolver = (String => Future[List[TextSuggestionOption]]) |
   List[TextSuggestionOption]

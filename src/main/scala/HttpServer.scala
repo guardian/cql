@@ -12,7 +12,7 @@ import scala.util.Try
 import cql.lang.{Cql, Typeahead, TypeaheadHelpersCapi}
 import com.gu.contentapi.client.GuardianContentClient
 
-object HttpServer extends QueryJson {
+object HttpServer {
   val guardianContentClient = new GuardianContentClient("test")
   val typeaheadHelpers = new TypeaheadHelpersCapi(guardianContentClient)
   val typeahead = new Typeahead(

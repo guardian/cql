@@ -7,7 +7,10 @@ class TypeaheadTest extends BaseTest {
   describe("typeahead") {
     val typeaheadQueryClient = new TestTypeaheadHelpers()
     val typeahead =
-      new Typeahead(typeaheadQueryClient.fieldResolvers, typeaheadQueryClient.outputModifierResolvers)
+      new Typeahead(
+        typeaheadQueryClient.fieldResolvers,
+        typeaheadQueryClient.outputModifierResolvers
+      )
 
     it("should give no typeahead where none is warranted") {
       typeahead.getSuggestions(QueryList(List.empty)).map { result =>

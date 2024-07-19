@@ -5,7 +5,6 @@ import com.amazonaws.services.lambda.runtime.events.{
   APIGatewayProxyRequestEvent,
   APIGatewayProxyResponseEvent
 }
-import io.circe.generic.auto._
 import io.circe.syntax._
 import util.Logging
 
@@ -21,8 +20,7 @@ class Handler
       APIGatewayProxyRequestEvent,
       APIGatewayProxyResponseEvent
     ]
-    with Logging
-    with QueryJson {
+    with Logging {
   private implicit val ec: scala.concurrent.ExecutionContext =
     scala.concurrent.ExecutionContext.global
 

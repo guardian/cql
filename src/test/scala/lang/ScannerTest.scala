@@ -91,7 +91,9 @@ class ScannerTest extends BaseTest {
       assert(tokens === expectedTokens)
     }
 
-    it("should yield a query field value token when a query meta value is incomplete") {
+    it(
+      "should yield a query field value token when a query meta value is incomplete"
+    ) {
       val scanner = new Scanner("""example +tag:""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
@@ -107,7 +109,13 @@ class ScannerTest extends BaseTest {
       val scanner = new Scanner("""@show-fields:all""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
-        Token(TokenType.QUERY_OUTPUT_MODIFIER_KEY, "@show-fields", Some("show-fields"), 0, 11),
+        Token(
+          TokenType.QUERY_OUTPUT_MODIFIER_KEY,
+          "@show-fields",
+          Some("show-fields"),
+          0,
+          11
+        ),
         Token(
           TokenType.QUERY_VALUE,
           ":all",
