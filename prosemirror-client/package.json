@@ -21,6 +21,7 @@
     "vitest": "^1.6.0"
   },
   "dependencies": {
+    "@floating-ui/dom": "^1.6.7",
     "@types/prosemirror-dev-tools": "^3.0.6",
     "prosemirror-commands": "^1.5.2",
     "prosemirror-dev-tools": "^4.1.0",

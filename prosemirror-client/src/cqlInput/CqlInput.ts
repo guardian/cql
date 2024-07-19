@@ -4,6 +4,7 @@ import { createEditor } from "./editor";
 
 const baseFontSize = 28;
 const baseBorderRadius = 5;
+const popoverArrowSize = 10;
 const template = document.createElement("template");
 template.innerHTML = `
   <style>
@@ -97,7 +98,6 @@ template.innerHTML = `
     }
 
     .Cql__TypeaheadPopover, .Cql__ErrorPopover {
-      display: block;
       width: 500px;
       margin: 0;
       padding: 0;
@@ -105,10 +105,21 @@ template.innerHTML = `
       font-size: ${baseFontSize}px;
       border-radius: ${baseBorderRadius}px;
       position-anchor: --cql-input;
+      overflow: visible;
     }
 
     .Cql__ErrorPopover {
       width: max-content;
+    }
+
+    .Cql__PopoverArrow {
+      position: absolute;
+      width: 0; 
+      height: 0;
+      border-left: ${popoverArrowSize}px solid transparent;
+      border-right: ${popoverArrowSize}px solid transparent;
+      border-bottom: ${popoverArrowSize}px solid white;
+      top: -${popoverArrowSize}px;
     }
   </style>
 `;

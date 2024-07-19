@@ -12,7 +12,6 @@ import {
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection } from "prosemirror-state";
-import { CqlError } from "../services/CqlService";
 
 const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE"];
 

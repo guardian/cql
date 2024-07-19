@@ -1,10 +1,12 @@
 import { Mapping } from "prosemirror-transform";
 import { EditorView } from "prosemirror-view";
 import { CqlError } from "../services/CqlService";
-import { Popover } from "./Popover";
+import { Popover, VirtualElement } from "./Popover";
 
 export class ErrorPopover extends Popover {
   private debugContainer: HTMLElement | undefined;
+  private contentEl: HTMLElement;
+  private arrowEl: HTMLElement;
 
   public constructor(
     public view: EditorView,
@@ -12,10 +14,20 @@ export class ErrorPopover extends Popover {
     debugEl?: HTMLElement
   ) {
     super(view, popoverEl);
+
+    this.arrowEl = document.createElement("div");
+    this.arrowEl.classList.add("Cql__PopoverArrow");
+    popoverEl.appendChild(this.arrowEl);
+
+    this.contentEl = document.createElement("div");
+    popoverEl.appendChild(this.contentEl);
+
     if (debugEl) {
       this.debugContainer = document.createElement("div");
       debugEl.appendChild(this.debugContainer);
     }
+
+    popoverEl.hidePopover?.();
   }
 
   public updateErrorMessage = async (
@@ -23,20 +35,23 @@ export class ErrorPopover extends Popover {
     mapping: Mapping
   ) => {
     if (!error) {
-      this.popoverEl.innerHTML = "";
-      this.popoverEl.hidePopover();
+      this.contentEl.innerHTML = "";
+      this.popoverEl.hidePopover?.();
       return;
     }
 
     this.updateDebugContainer(error);
 
-    this.popoverEl.innerHTML = error.message;
+    this.contentEl.innerHTML = error.message;
 
-    await this.renderElementAtPos(
-      error.position ? mapping.map(error.position) : undefined
+    const referenceEl = this.getVirtualElementFromView(
+      error.position ? mapping.map(error.position) - 1 : undefined
     );
 
-    this.popoverEl.showPopover();
+    const xOffset = -30;
+    await this.renderPopover(referenceEl, this.arrowEl, xOffset);
+
+    this.popoverEl.showPopover?.();
   };
 
   private updateDebugContainer = (error: CqlError) => {
@@ -47,5 +62,31 @@ export class ErrorPopover extends Popover {
         <div>Message: ${error.message}</div>
         </div>`;
     }
+  };
+
+  private getVirtualElementFromView = (
+    position: number | undefined
+  ): VirtualElement => {
+    if (position) {
+      try {
+        const { top, right, bottom, left } = this.view.coordsAtPos(position);
+        return {
+          getBoundingClientRect: () => ({
+            width: right - left,
+            height: bottom - top,
+            x: left,
+            y: top,
+            top,
+            left,
+            right,
+            bottom,
+          }),
+        };
+      } catch (e) {
+        // Defer to parent input container
+      }
+    }
+
+    return this.view.dom;
   };
 }

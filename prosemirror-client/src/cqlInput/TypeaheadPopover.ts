@@ -1,8 +1,7 @@
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadSuggestion } from "../services/CqlService";
-import { findNodeAt } from "./utils";
 import { EditorView } from "prosemirror-view";
-import { chip, schema } from "./schema";
+import { schema } from "./schema";
 import { TextSelection } from "prosemirror-state";
 import { Popover } from "./Popover";
 
@@ -80,9 +79,9 @@ export class TypeaheadPopover extends Popover {
 
     this.currentSuggestion = suggestionThatCoversSelection;
     const { from, to, suggestions } = suggestionThatCoversSelection;
-    const chipPos = findNodeAt(from, currentState.doc, chip);
+    const { node } = this.view.domAtPos(from);
 
-    this.renderElementAtPos(chipPos);
+    this.renderPopover(node as HTMLElement);
 
     if (suggestions.TextSuggestion) {
       this.renderTextSuggestion(suggestions.TextSuggestion.suggestions);
