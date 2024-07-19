@@ -2,7 +2,7 @@ import { test, mock, expect } from "bun:test";
 import {
   contentEditableTestId,
   createCqlInput,
-  popoverTestId,
+  typeaheadTestId,
 } from "./CqlInput";
 import { TestCqlService } from "./fixtures/TestCqlService";
 import { findByTestId } from "@testing-library/dom";
@@ -68,7 +68,7 @@ const selectPopoverOption = async (
   container: HTMLElement,
   optionLabel: string
 ) => {
-  const popoverContainer = await findByShadowTestId(container, popoverTestId);
+  const popoverContainer = await findByShadowTestId(container, typeaheadTestId);
   await findByShadowText(popoverContainer, optionLabel);
   await typeIntoInput(container, "{Enter}");
 };
@@ -94,7 +94,7 @@ test("displays a popover when a tag prompt is entered", async () => {
   await moveCursorToEnd(container);
   await typeIntoInput(container, "+");
 
-  const popoverContainer = await findByShadowTestId(container, popoverTestId);
+  const popoverContainer = await findByShadowTestId(container, typeaheadTestId);
   await findByShadowText(popoverContainer, "Tag");
   await findByShadowText(popoverContainer, "Section");
 });

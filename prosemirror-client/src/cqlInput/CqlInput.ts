@@ -63,16 +63,6 @@ template.innerHTML = `
       border-radius: ${baseBorderRadius}px;
     }
 
-    #cql-popover {
-      width: 500px;
-      margin: 0;
-      padding: 0;
-      top: anchor(end);
-      font-size: ${baseFontSize}px;
-      border-radius: ${baseBorderRadius}px;
-      position-anchor: --cql-input;
-    }
-
     .Cql__Option {
       padding: 5px;
     }
@@ -105,11 +95,27 @@ template.innerHTML = `
       border-radius: ${baseBorderRadius}px;
       border: none;
     }
+
+    .Cql__TypeaheadPopover, .Cql__ErrorPopover {
+      display: block;
+      width: 500px;
+      margin: 0;
+      padding: 0;
+      top: anchor(end);
+      font-size: ${baseFontSize}px;
+      border-radius: ${baseBorderRadius}px;
+      position-anchor: --cql-input;
+    }
+
+    .Cql__ErrorPopover {
+      width: max-content;
+    }
   </style>
 `;
 
 export const contentEditableTestId = "cql-input-contenteditable";
-export const popoverTestId = "cql-input-popover";
+export const typeaheadTestId = "cql-input-typeahead";
+export const errorTestId = "cql-input-error";
 
 export const createCqlInput = (
   cqlService: CqlServiceInterface,
@@ -120,13 +126,19 @@ export const createCqlInput = (
 
     connectedCallback() {
       const cqlInputId = "cql-input";
-      const cqlPopoverId = "cql-popover";
+      const cqlTypeaheadId = "cql-typeahead";
+      const cqlErrorId = "cql-error";
       const shadow = this.attachShadow({ mode: "open" });
 
-      shadow.innerHTML = `<div id="${cqlInputId}"></div><div id="${cqlPopoverId}" data-testid="${popoverTestId}" popover anchor="${cqlInputId}"></div>`;
+      shadow.innerHTML = `
+        <div id="${cqlInputId}"></div>
+        <div id="${cqlTypeaheadId}" class="Cql__TypeaheadPopover" data-testid="${typeaheadTestId}" popover anchor="${cqlInputId}"></div>
+        <div id="${cqlErrorId}" class="Cql__ErrorPopover" data-testid="${errorTestId}" popover></div>
+      `;
       shadow.appendChild(template.content.cloneNode(true));
       const cqlInput = shadow.getElementById(cqlInputId)!;
-      const cqlPopover = shadow.getElementById(cqlPopoverId)!;
+      const typeaheadEl = shadow.getElementById(cqlTypeaheadId)!;
+      const errorEl = shadow.getElementById(cqlErrorId)!;
 
       const onChange = (detail: QueryChangeEventDetail) => {
         this.dispatchEvent(
@@ -139,7 +151,8 @@ export const createCqlInput = (
       const editorNode = createEditor({
         initialValue: this.getAttribute("initial-value") ?? "",
         mountEl: cqlInput,
-        popoverEl: cqlPopover,
+        typeaheadEl,
+        errorEl,
         cqlService,
         debugEl,
         onChange,

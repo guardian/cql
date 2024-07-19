@@ -12,6 +12,7 @@ import {
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection } from "prosemirror-state";
+import { CqlError } from "../services/CqlService";
 
 const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE"];
 
@@ -30,13 +31,15 @@ const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE"];
  * | | | | | | | | |
  * 0 1 2 3 4 5 6 7 8
  *
- * is represented in ProseMirror as 
+ * is represented in ProseMirror as
  *
  *  <doc> <searchText> s t r </searchText> <chipWrapper> <chip> <chipKey> k </chipKey> <chipValue> v </chipValue> </chip> </chipWrapper> </doc>
- * |     |            | | | |             |             |      |         | |          |           | |            |       |              |      |  
+ * |     |            | | | |             |             |      |         | |          |           | |            |       |              |      |
  * 0     1            2 3 4 5             6             7      8         9 10         11         12 13           14      15             16     17
  */
-export const createProseMirrorTokenToDocumentMap = (tokens: ProseMirrorToken[]) => {
+export const createProseMirrorTokenToDocumentMap = (
+  tokens: ProseMirrorToken[]
+) => {
   // We only distinguish between key/val tokens here – other tokens are universally
   // represented as searchText. We join the other tokens into single ranges so we
   // can provide mappings for their node representation.
@@ -292,7 +295,7 @@ export const applyDeleteIntent = (
   const tr = view.state.tr;
 
   if (node.attrs[DELETE_CHIP_INTENT]) {
-    const insertAt = Math.max(0, from - 1)
+    const insertAt = Math.max(0, from - 1);
     tr.deleteRange(from, to)
       // Prosemirror removes the whitespace in the preceding searchText,
       // regardless of range, for reasons I've yet to discover – add it back
@@ -312,7 +315,7 @@ export const applyDeleteIntent = (
  */
 export const logNode = (doc: Node) => {
   console.log(`Log node ${doc.type.name}:`);
-  
+
   doc.nodesBetween(0, doc.content.size, (node, pos) => {
     const indent = doc.resolve(pos).depth * 4;
     const content =

@@ -8,7 +8,7 @@ debugEl.className = "CqlSandbox__debug-container";
 
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <h1>Rich query sandbox</h1>
-  <cql-input id="cql-input"></cql-input>
+  <cql-input id="cql-input" popover-container-id="popover-container"></cql-input>
   
   <div id="cql-sandbox" class="CqlSandbox">
     <div class="CqlSandbox__query-results">
@@ -25,6 +25,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
     <div class="CqlSandbox__input-container">
       <input type="text" id="endpoint" placeholder="Add a CQL language server endpoint"/>
     </div>
+    <div class="CqlSandbox__popover-container" id="popover-container"></div>
   </div>
 `;
 

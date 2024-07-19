@@ -4,6 +4,7 @@ import { findNodeAt } from "./utils";
 import { EditorView } from "prosemirror-view";
 import { chip, schema } from "./schema";
 import { TextSelection } from "prosemirror-state";
+import { Popover } from "./Popover";
 
 type MenuItem = {
   label: string;
@@ -11,7 +12,7 @@ type MenuItem = {
   description: string;
 };
 
-export class TypeaheadPopover {
+export class TypeaheadPopover extends Popover {
   private debugContainer: HTMLElement | undefined;
   private currentSuggestion: TypeaheadSuggestion | undefined;
   private currentOptionIndex = 0;
@@ -21,6 +22,7 @@ export class TypeaheadPopover {
     public popoverEl: HTMLElement,
     debugEl?: HTMLElement
   ) {
+    super(view, popoverEl);
     popoverEl.addEventListener("click", (e: MouseEvent) => {
       if (
         e.target instanceof HTMLElement &&
@@ -41,63 +43,58 @@ export class TypeaheadPopover {
     !!this.currentSuggestion?.suggestions.TextSuggestion;
 
   public updateItemsFromSuggestions = (
-    suggestions: TypeaheadSuggestion[],
+    typeaheadSuggestions: TypeaheadSuggestion[],
     mapping: Mapping
   ) => {
     if (
-      suggestions.length &&
-      this.view.state.selection.from === this.view.state.selection.to
+      !typeaheadSuggestions.length ||
+      this.view.state.selection.from !== this.view.state.selection.to
     ) {
-      const currentState = this.view.state;
-      const mappedSuggestions = suggestions.map((suggestion) => {
-        const start = mapping.map(suggestion.from, -1);
-        const end = mapping.map(suggestion.to);
-        return { ...suggestion, from: start, to: end };
-      });
-
-      this.updateDebugSuggestions(mappedSuggestions);
-
-      const suggestionThatCoversSelection = mappedSuggestions.find(
-        ({ from, to, suggestions }) =>
-          currentState.selection.from >= from &&
-          currentState.selection.to <= to &&
-          Object.keys(suggestions).length
-      );
-
-      if (suggestionThatCoversSelection) {
-        this.currentSuggestion = suggestionThatCoversSelection;
-        const { from, to, suggestions } = suggestionThatCoversSelection;
-        const chipPos = findNodeAt(from, currentState.doc, chip);
-        const domSelectionAnchor = this.view.nodeDOM(chipPos) as HTMLElement;
-
-        if (!domSelectionAnchor) {
-          this.popoverEl.hidePopover();
-          return;
-        }
-
-        const { left } = domSelectionAnchor.getBoundingClientRect();
-        this.popoverEl.style.left = `${left}px`;
-
-        if (suggestions.TextSuggestion) {
-          this.renderTextSuggestion(suggestions.TextSuggestion.suggestions);
-        }
-
-        if (suggestions.DateSuggestion) {
-          const value = this.view.state.doc.textBetween(from, to);
-
-          this.renderDateSuggestion(value);
-        }
-
-        this.popoverEl.showPopover?.();
-      } else {
-        this.currentSuggestion = undefined;
-        this.popoverEl.hidePopover?.();
-      }
-    } else {
       this.currentSuggestion = undefined;
       this.popoverEl.hidePopover?.();
       this.popoverEl.innerHTML = "";
+      return;
     }
+
+    const currentState = this.view.state;
+    const mappedSuggestions = typeaheadSuggestions.map((suggestion) => {
+      const start = mapping.map(suggestion.from, -1);
+      const end = mapping.map(suggestion.to);
+      return { ...suggestion, from: start, to: end };
+    });
+
+    this.updateDebugSuggestions(mappedSuggestions);
+
+    const suggestionThatCoversSelection = mappedSuggestions.find(
+      ({ from, to, suggestions }) =>
+        currentState.selection.from >= from &&
+        currentState.selection.to <= to &&
+        Object.keys(suggestions).length
+    );
+
+    if (!suggestionThatCoversSelection) {
+      this.currentSuggestion = undefined;
+      this.popoverEl.hidePopover?.();
+      return;
+    }
+
+    this.currentSuggestion = suggestionThatCoversSelection;
+    const { from, to, suggestions } = suggestionThatCoversSelection;
+    const chipPos = findNodeAt(from, currentState.doc, chip);
+
+    this.renderElementAtPos(chipPos);
+
+    if (suggestions.TextSuggestion) {
+      this.renderTextSuggestion(suggestions.TextSuggestion.suggestions);
+    }
+
+    if (suggestions.DateSuggestion) {
+      const value = this.view.state.doc.textBetween(from, to);
+
+      this.renderDateSuggestion(value);
+    }
+
+    this.popoverEl.showPopover?.();
   };
 
   public moveSelectionUp = () => this.moveSelection(-1);
@@ -153,7 +150,11 @@ export class TypeaheadPopover {
       .map(({ label, description }, index) => {
         return `<div class="Cql__Option ${
           index === this.currentOptionIndex ? "Cql__Option--is-selected" : ""
-        }" data-index="${index}"><div class="Cql__OptionLabel">${label}</div>${description ? `<div class="Cql__OptionDescription">${description}</div>`: ""}</div>`;
+        }" data-index="${index}"><div class="Cql__OptionLabel">${label}</div>${
+          description
+            ? `<div class="Cql__OptionDescription">${description}</div>`
+            : ""
+        }</div>`;
       })
       .join("");
   }
@@ -189,7 +190,7 @@ export class TypeaheadPopover {
   private updateDebugSuggestions = (suggestions: TypeaheadSuggestion[]) => {
     if (this.debugContainer) {
       this.debugContainer.innerHTML = `
-        <h2>Typeahead</h3>
+        <h2>Typeahead</h2>
             <p>Current selection: ${this.view.state.selection.from}-${
         this.view.state.selection.to
       }

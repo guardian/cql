@@ -1,5 +1,6 @@
 import { DecorationSet } from "prosemirror-view";
 import {
+  CqlError,
   CqlServiceInterface,
   TypeaheadSuggestion,
 } from "../services/CqlService";
@@ -25,6 +26,7 @@ import { TypeaheadPopover } from "./TypeaheadPopover";
 import { DELETE_CHIP_INTENT, chipWrapper, doc, schema } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { QueryChangeEventDetail } from "./dom";
+import { ErrorPopover } from "./ErrorPopover";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -32,12 +34,13 @@ type PluginState = {
   // The query string that represents the most recent document state seen by the language server.
   queryStr?: string;
   // A mapping from ProseMirrorToken positions to document positions.
-  mapping: Mapping
+  mapping: Mapping;
 } & ServiceState;
 
 type ServiceState = {
   tokens: ProseMirrorToken[];
   suggestions: TypeaheadSuggestion[];
+  error: CqlError | undefined;
 };
 
 const NEW_STATE = "NEW_STATE";
@@ -48,21 +51,24 @@ const NEW_STATE = "NEW_STATE";
  *  - applying decorations for syntax highlighting
  *  - managing typeahead behaviour
  *  - providing a NodeView for rendering chips
- *  - handling clipboard (de)serialisation 
+ *  - handling clipboard (de)serialisation
  *  - managing custom keyboard and selection behaviour
  */
 export const createCqlPlugin = ({
   cqlService,
-  popoverEl,
+  typeaheadEl,
+  errorEl,
   onChange,
   debugEl,
 }: {
   cqlService: CqlServiceInterface;
-  popoverEl: HTMLElement;
+  typeaheadEl: HTMLElement;
+  errorEl: HTMLElement;
   onChange: (detail: QueryChangeEventDetail) => void;
   debugEl?: HTMLElement;
 }) => {
   let typeaheadPopover: TypeaheadPopover | undefined;
+  let errorPopover: ErrorPopover | undefined;
   let debugTokenContainer: HTMLElement | undefined;
   let debugASTContainer: HTMLElement | undefined;
   if (debugEl) {
@@ -82,18 +88,20 @@ export const createCqlPlugin = ({
           tokens: [],
           suggestions: [],
           mapping: new Mapping(),
+          error: undefined,
         };
       },
-      apply(tr, { tokens, suggestions, mapping }, _, newState) {
+      apply(tr, { tokens, suggestions, mapping, error }, _, newState) {
         const maybeNewState: ServiceState | undefined = tr.getMeta(NEW_STATE);
 
         return {
           queryStr: queryStrFromDoc(newState.doc),
-          mapping: maybeNewState?.tokens
-            ? createProseMirrorTokenToDocumentMap(maybeNewState?.tokens)
+          mapping: maybeNewState
+            ? createProseMirrorTokenToDocumentMap(maybeNewState.tokens)
             : mapping,
-          tokens: maybeNewState?.tokens ?? tokens,
-          suggestions: maybeNewState?.suggestions ?? suggestions,
+          tokens: maybeNewState ? maybeNewState.tokens : tokens,
+          suggestions: maybeNewState ? maybeNewState.suggestions : suggestions,
+          error: maybeNewState ? maybeNewState.error : error,
         };
       },
     },
@@ -251,9 +259,10 @@ export const createCqlPlugin = ({
       } as DOMSerializer, // Cast because docs specify only serializeFragment is needed
     },
     view(view) {
-      typeaheadPopover = new TypeaheadPopover(view, popoverEl, debugEl);
+      typeaheadPopover = new TypeaheadPopover(view, typeaheadEl, debugEl);
+      errorPopover = new ErrorPopover(view, errorEl, debugEl);
 
-      const updateView = async (
+      const fetchQueryAndUpdateDoc = async (
         query: string,
         shouldWrapSelectionInKey: boolean = false
       ) => {
@@ -265,6 +274,7 @@ export const createCqlPlugin = ({
             suggestions,
             ast,
             queryResult,
+            error,
           } = await cqlService.fetchResult(query);
 
           if (queryResult) {
@@ -297,7 +307,7 @@ export const createCqlPlugin = ({
             .setSelection(
               getNewSelection(userSelection, shouldWrapSelectionInKey, tr.doc)
             )
-            .setMeta(NEW_STATE, { tokens, suggestions });
+            .setMeta(NEW_STATE, { tokens, suggestions, error });
 
           view.dispatch(tr);
         } catch (e) {
@@ -308,7 +318,7 @@ export const createCqlPlugin = ({
         }
       };
 
-      updateView(cqlPluginKey.getState(view.state)?.queryStr!);
+      fetchQueryAndUpdateDoc(cqlPluginKey.getState(view.state)?.queryStr!);
 
       return {
         update(view, prevState) {
@@ -317,9 +327,11 @@ export const createCqlPlugin = ({
             queryStr: currentQuery = "",
             suggestions,
             mapping,
+            error,
           } = cqlPluginKey.getState(view.state)!;
 
           typeaheadPopover?.updateItemsFromSuggestions(suggestions, mapping);
+          errorPopover?.updateErrorMessage(error, mapping);
 
           if (prevQuery.trim() === currentQuery.trim()) {
             return;
@@ -330,7 +342,7 @@ export const createCqlPlugin = ({
             currentQuery
           );
 
-          updateView(currentQuery, shouldWrapSelectionInKey);
+          fetchQueryAndUpdateDoc(currentQuery, shouldWrapSelectionInKey);
         },
       };
     },

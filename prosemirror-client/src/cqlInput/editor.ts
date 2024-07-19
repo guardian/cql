@@ -16,19 +16,27 @@ declare module window {
 export const createEditor = ({
   initialValue = "",
   mountEl,
-  popoverEl,
+  typeaheadEl,
+  errorEl,
   cqlService,
   onChange,
   debugEl,
 }: {
   initialValue: string;
   mountEl: HTMLElement;
-  popoverEl: HTMLElement;
+  typeaheadEl: HTMLElement;
+  errorEl: HTMLElement;
   cqlService: CqlServiceInterface;
   onChange: (detail: QueryChangeEventDetail) => void;
   debugEl?: HTMLElement;
 }) => {
-  const plugin = createCqlPlugin({ cqlService, popoverEl, onChange, debugEl });
+  const plugin = createCqlPlugin({
+    cqlService,
+    typeaheadEl,
+    errorEl,
+    onChange,
+    debugEl,
+  });
   const view = new EditorView(mountEl, {
     state: EditorState.create({
       doc: doc.create(undefined, [

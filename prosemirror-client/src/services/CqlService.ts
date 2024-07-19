@@ -5,8 +5,13 @@ export type CqlResult = {
   // Map from tokenType to a map of literals and their suggestions.
   // Avoiding TokenType as type to avoid serialisation shenanigans in prototype.
   suggestions: Array<TypeaheadSuggestion>;
-  error?: string;
+  error?: CqlError;
 };
+
+export type CqlError = {
+  position?: number,
+  message: string;
+}
 
 export type TypeaheadSuggestion = {
   from: number;
