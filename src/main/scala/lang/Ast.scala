@@ -31,7 +31,7 @@ object QueryBinary {
 }
 case class QueryBinary(
     left: QueryContent,
-    right: Option[(Token, QueryContent)] = None
+    right: Option[(Token, QueryBinary)] = None
 )
 
 object QueryContent {

@@ -39,7 +39,7 @@ class Parser(tokens: List[Token]):
       )
     else queryBinary
 
-  private def queryBinary =
+  private def queryBinary: QueryBinary =
     val left = queryContent
 
     peek().tokenType match {
@@ -51,7 +51,7 @@ class Parser(tokens: List[Token]):
             "There must be a query following 'AND', e.g. this AND that."
           )
         }
-        QueryBinary(left, Some((andToken), queryContent))
+        QueryBinary(left, Some((andToken), queryBinary))
       case TokenType.OR =>
         val orToken = consume(TokenType.OR)
         guardAgainstQueryField("after 'OR'.")
@@ -60,7 +60,7 @@ class Parser(tokens: List[Token]):
             "There must be a query following 'OR', e.g. this OR that."
           )
         }
-        QueryBinary(left, Some((orToken, queryContent)))
+        QueryBinary(left, Some((orToken, queryBinary)))
       case _ => QueryBinary(left)
     }
 
@@ -72,7 +72,8 @@ class Parser(tokens: List[Token]):
         throw error(
           s"An ${token.toString()} keyword must have a search term before and after it, e.g. this ${token.toString} that."
         )
-      case _ => queryBinary
+      case _ =>
+        throw error(s"I didn't expect what I found after '${previous().lexeme}'")
 
     QueryContent(content)
 
@@ -89,10 +90,10 @@ class Parser(tokens: List[Token]):
       "within a group. Try putting this query outside of the brackets!"
     )
 
-    val content = queryBinary
+    val binary = queryBinary
     consume(TokenType.RIGHT_BRACKET, "Groups must end with a right bracket.")
 
-    QueryGroup(content)
+    QueryGroup(binary)
 
   private def queryStr: QueryStr =
     val token = consume(TokenType.STRING, "Expected a string")

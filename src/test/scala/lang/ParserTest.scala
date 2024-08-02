@@ -6,14 +6,13 @@ import scala.util.Failure
 import scala.util.Success
 import scala.util.Try
 import org.scalatest.compatible.Assertion
+import org.scalatest.matchers.should.Matchers
 
-class ParserTest extends BaseTest {
+class ParserTest extends BaseTest with Matchers {
   def assertFailure(queryList: Try[QueryList], strContains: String): Assertion =
     queryList match
       case Failure(exception) =>
-        exception
-          .getMessage()
-          .contains(strContains) shouldBe true
+        exception.getMessage() should include(strContains)
       case Success(value) => fail("This should not parse")
 
   it("should handle unmatched parenthesis") {
@@ -32,6 +31,12 @@ class ParserTest extends BaseTest {
     val tokens = List(quotedStringToken("example"), andToken(7), eofToken(0))
     val result = new Parser(tokens).parse()
     assertFailure(result, "There must be a query following 'AND'")
+  }
+
+  it("should handle an unbalanced binary within parenthesis") {
+    val tokens = List(leftParenToken(), quotedStringToken("example"), andToken(8), rightParenToken(9), eofToken(10))
+    val result = new Parser(tokens).parse()
+    assertFailure(result, "I didn't expect what I found after 'AND'")
   }
 
   it("should handle a query field incorrectly nested in parentheses") {

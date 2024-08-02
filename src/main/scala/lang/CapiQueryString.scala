@@ -51,7 +51,7 @@ object CapiQueryString {
     val leftStr = strFromContent(queryBinary.left)
     val rightStr = queryBinary.right
       .map { case (op, content) =>
-        s" ${op.tokenType.toString} ${strFromContent(content)}"
+        s" ${op.tokenType.toString} ${strFromBinary(content)}"
       }
       .getOrElse("")
     leftStr + rightStr
