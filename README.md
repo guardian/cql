@@ -60,9 +60,9 @@ Grammar:
 ```
 query_list                  -> query* EOF
 query                       -> query_binary | query_field | query_output_modifier
-query_binary                -> query_content ('AND' | 'OR' query_content)?
-query_content               -> query_group | query_str | query_quoted_str | query_binary
-query_group                 -> '(' query_content* ')'
+query_binary                -> query_content ('AND' | 'OR' query_content)*
+query_content               -> query_group | query_str | query_quoted_str
+query_group                 -> '(' query_binary* ')'
 query_quoted_str            -> '"' string '"'
 query_str                   -> /\w/
 query_field                 -> '+' query_field_key ':'? query_field_value? // Permit incomplete meta queries for typeahead

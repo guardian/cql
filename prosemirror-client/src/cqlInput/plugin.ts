@@ -21,6 +21,7 @@ import {
   ProseMirrorToken,
   applyDeleteIntent,
   errorToDecoration,
+  getErrorMessage,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
@@ -44,7 +45,8 @@ type ServiceState = {
   error: CqlError | undefined;
 };
 
-const NEW_STATE = "NEW_STATE";
+const ACTION_NEW_STATE = "NEW_STATE";
+const ACTION_SERVER_ERROR = "SERVER_ERROR";
 
 export const ERROR_CLASS = "Cql__ErrorWidget";
 
@@ -97,7 +99,20 @@ export const createCqlPlugin = ({
         };
       },
       apply(tr, { tokens, suggestions, mapping, error }, _, newState) {
-        const maybeNewState: ServiceState | undefined = tr.getMeta(NEW_STATE);
+        const maybeError: string | undefined = tr.getMeta(ACTION_SERVER_ERROR);
+
+        if (maybeError) {
+          return {
+            queryStr: "",
+            tokens: [],
+            suggestions,
+            mapping,
+            error: { message: maybeError },
+          };
+        }
+
+        const maybeNewState: ServiceState | undefined =
+          tr.getMeta(ACTION_NEW_STATE);
 
         return {
           queryStr: queryStrFromDoc(newState.doc),
@@ -319,14 +334,18 @@ export const createCqlPlugin = ({
             .setSelection(
               getNewSelection(userSelection, shouldWrapSelectionInKey, tr.doc)
             )
-            .setMeta(NEW_STATE, { tokens, suggestions, error });
+            .setMeta(ACTION_NEW_STATE, { tokens, suggestions, error });
 
           view.dispatch(tr);
         } catch (e) {
           // Ignore aborts
-          if (!(e instanceof DOMException) || e.name !== "AbortError") {
-            throw e;
+          if (e instanceof DOMException && e?.name === "AbortError") {
+            return;
           }
+
+          const tr = view.state.tr;
+          tr.setMeta(ACTION_SERVER_ERROR, `Error: ${getErrorMessage(e)}`);
+          view.dispatch(tr);
         }
       };
 

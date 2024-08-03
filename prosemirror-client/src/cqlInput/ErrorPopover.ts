@@ -36,11 +36,17 @@ export class ErrorPopover extends Popover {
 
     this.updateDebugContainer(error);
 
-    const referenceEl = this.view.dom.getElementsByClassName(ERROR_CLASS)?.[0];
+    this.errorMsgEl.innerHTML = error.message;
 
+    if (!error.position) {
+      this.popoverEl.hidePopover?.();
+      return;
+    }
+
+    const referenceEl = this.view.dom.getElementsByClassName(ERROR_CLASS)?.[0];
     if (!referenceEl) {
       console.warn(
-        "Attempt to render element popover, but no position widget found in document"
+        `Attempt to render element popover at position ${error.position}, but no position widget found in document`
       );
       return;
     }
@@ -48,7 +54,6 @@ export class ErrorPopover extends Popover {
     const xOffset = 0;
     const yOffset = -25;
     await this.renderPopover(referenceEl, xOffset, yOffset);
-    this.errorMsgEl.innerHTML = error.message;
 
     this.popoverEl.showPopover?.();
   };
