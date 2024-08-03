@@ -12,6 +12,7 @@ import {
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection } from "prosemirror-state";
+import { ERROR_CLASS } from "./plugin";
 
 const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE"];
 
@@ -325,4 +326,14 @@ export const logNode = (doc: Node) => {
       }`
     );
   });
+};
+
+export const errorToDecoration = (position: number): Decoration => {
+  const toDOM = () => {
+    const el = document.createElement("span");
+    el.classList.add(ERROR_CLASS);
+    return el;
+  };
+
+  return Decoration.widget(position, toDOM);
 };

@@ -1,4 +1,4 @@
-import { arrow, computePosition, flip, offset, shift } from "@floating-ui/dom";
+import { computePosition, flip, offset, shift } from "@floating-ui/dom";
 import { EditorView } from "prosemirror-view";
 
 export type VirtualElement = {
@@ -22,31 +22,19 @@ export abstract class Popover {
 
   protected async renderPopover(
     referenceElement: VirtualElement,
-    arrowEl?: HTMLElement,
-    xOffset: number = 0
+    xOffset: number = 0,
+    yOffset: number = 0
   ) {
-    const {
-      x,
-      y,
-      middlewareData: { arrow: arrowData },
-    } = await computePosition(referenceElement, this.popoverEl, {
+    const { x, y } = await computePosition(referenceElement, this.popoverEl, {
       placement: "bottom-start",
       middleware: [
         flip(),
         shift(),
-        offset({ mainAxis: 15, crossAxis: xOffset }),
-        ...(arrowEl ? [arrow({ element: arrowEl })] : []),
+        offset({ mainAxis: yOffset, crossAxis: xOffset }),
       ],
     });
 
     this.popoverEl.style.left = `${x}px`;
-    this.popoverEl.style.right = `${y}px`;
-
-    if (arrowEl && arrowData) {
-      const { x, y } = arrowData;
-
-      arrowEl.style.left = x !== undefined ? `${x}px` : "";
-      arrowEl.style.top = y !== undefined ? `${y}px` : "";
-    }
+    this.popoverEl.style.top = `${y}px`;
   }
 }

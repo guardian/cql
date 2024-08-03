@@ -2,11 +2,11 @@ import { Mapping } from "prosemirror-transform";
 import { EditorView } from "prosemirror-view";
 import { CqlError } from "../services/CqlService";
 import { Popover, VirtualElement } from "./Popover";
+import { ERROR_CLASS } from "./plugin";
 
 export class ErrorPopover extends Popover {
   private debugContainer: HTMLElement | undefined;
   private contentEl: HTMLElement;
-  private arrowEl: HTMLElement;
 
   public constructor(
     public view: EditorView,
@@ -14,10 +14,6 @@ export class ErrorPopover extends Popover {
     debugEl?: HTMLElement
   ) {
     super(view, popoverEl);
-
-    this.arrowEl = document.createElement("div");
-    this.arrowEl.classList.add("Cql__PopoverArrow");
-    popoverEl.appendChild(this.arrowEl);
 
     this.contentEl = document.createElement("div");
     popoverEl.appendChild(this.contentEl);
@@ -30,10 +26,7 @@ export class ErrorPopover extends Popover {
     popoverEl.hidePopover?.();
   }
 
-  public updateErrorMessage = async (
-    error: CqlError | undefined,
-    mapping: Mapping
-  ) => {
+  public updateErrorMessage = async (error: CqlError | undefined) => {
     if (!error) {
       this.contentEl.innerHTML = "";
       this.popoverEl.hidePopover?.();
@@ -42,14 +35,18 @@ export class ErrorPopover extends Popover {
 
     this.updateDebugContainer(error);
 
-    this.contentEl.innerHTML = error.message;
+    const referenceEl = this.view.dom.getElementsByClassName(ERROR_CLASS)?.[0];
 
-    const referenceEl = this.getVirtualElementFromView(
-      error.position ? mapping.map(error.position) - 1 : undefined
-    );
+    if (!referenceEl) {
+      console.warn(
+        "Attempt to render element popover, but no position widget found in document"
+      );
+      return;
+    }
 
-    const xOffset = -30;
-    await this.renderPopover(referenceEl, this.arrowEl, xOffset);
+    const xOffset = 0;
+    const yOffset = -25;
+    await this.renderPopover(referenceEl, xOffset, yOffset);
 
     this.popoverEl.showPopover?.();
   };
@@ -57,7 +54,7 @@ export class ErrorPopover extends Popover {
   private updateDebugContainer = (error: CqlError) => {
     if (this.debugContainer) {
       this.debugContainer.innerHTML = `<div>
-        <h2>Error</h3>
+        <h2>Error</h2>
         <div>Position: ${error.position ?? "No position given"}</div>
         <div>Message: ${error.message}</div>
         </div>`;
@@ -70,6 +67,7 @@ export class ErrorPopover extends Popover {
     if (position) {
       try {
         const { top, right, bottom, left } = this.view.coordsAtPos(position);
+
         return {
           getBoundingClientRect: () => ({
             width: right - left,

@@ -56,6 +56,7 @@ template.innerHTML = `
     }
 
     #cql-input {
+      display: block;
       position: relative;
       padding: 5px;
       font-size: ${baseFontSize}px;
@@ -98,29 +99,22 @@ template.innerHTML = `
     }
 
     .Cql__TypeaheadPopover, .Cql__ErrorPopover {
+      position: absolute;
       width: 500px;
       margin: 0;
       padding: 0;
-      top: anchor(end);
       font-size: ${baseFontSize}px;
       border-radius: ${baseBorderRadius}px;
-      position-anchor: --cql-input;
       overflow: visible;
     }
 
     .Cql__ErrorPopover {
       width: max-content;
+      background: transparent;
+      border: none;
+      color: red;
     }
 
-    .Cql__PopoverArrow {
-      position: absolute;
-      width: 0; 
-      height: 0;
-      border-left: ${popoverArrowSize}px solid transparent;
-      border-right: ${popoverArrowSize}px solid transparent;
-      border-bottom: ${popoverArrowSize}px solid white;
-      top: -${popoverArrowSize}px;
-    }
   </style>
 `;
 
@@ -144,7 +138,7 @@ export const createCqlInput = (
       shadow.innerHTML = `
         <div id="${cqlInputId}"></div>
         <div id="${cqlTypeaheadId}" class="Cql__TypeaheadPopover" data-testid="${typeaheadTestId}" popover anchor="${cqlInputId}"></div>
-        <div id="${cqlErrorId}" class="Cql__ErrorPopover" data-testid="${errorTestId}" popover></div>
+        <div id="${cqlErrorId}" class="Cql__ErrorPopover" data-testid="${errorTestId}" popover>~</div>
       `;
       shadow.appendChild(template.content.cloneNode(true));
       const cqlInput = shadow.getElementById(cqlInputId)!;

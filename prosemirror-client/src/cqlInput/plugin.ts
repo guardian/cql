@@ -20,6 +20,7 @@ import {
   toProseMirrorTokens,
   ProseMirrorToken,
   applyDeleteIntent,
+  errorToDecoration,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
@@ -44,6 +45,8 @@ type ServiceState = {
 };
 
 const NEW_STATE = "NEW_STATE";
+
+export const ERROR_CLASS = "Cql__ErrorWidget";
 
 /**
  * The CQL plugin handles most aspects of the editor behaviour, including
@@ -178,9 +181,16 @@ export const createCqlPlugin = ({
         },
       },
       decorations: (state) => {
-        const { tokens } = cqlPluginKey.getState(state)!;
+        const { tokens, error, mapping } = cqlPluginKey.getState(state)!;
 
-        return DecorationSet.create(state.doc, tokensToDecorations(tokens));
+        const maybeErrorDeco = error?.position
+          ? [errorToDecoration(mapping.map(error.position))]
+          : [];
+
+        return DecorationSet.create(state.doc, [
+          ...maybeErrorDeco,
+          ...tokensToDecorations(tokens),
+        ]);
       },
       handleKeyDown(view, event) {
         switch (event.code) {
