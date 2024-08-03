@@ -1,10 +1,10 @@
 import { CqlServiceInterface } from "../services/CqlService";
 import { QueryChangeEventDetail } from "./dom";
 import { createEditor } from "./editor";
+import { VISIBLE_CLASS } from "./plugin";
 
 const baseFontSize = 28;
 const baseBorderRadius = 5;
-const popoverArrowSize = 10;
 const template = document.createElement("template");
 template.innerHTML = `
   <style>
@@ -110,12 +110,20 @@ template.innerHTML = `
     }
 
     .Cql__ErrorPopover {
+      display: none;
       width: max-content;
       background: transparent;
       border: none;
       color: red;
     }
 
+    .Cql__ErrorMessageContainer {
+      display: none;
+    }
+
+    .${VISIBLE_CLASS} {
+      display: block;
+    }
   </style>
 `;
 
@@ -139,7 +147,7 @@ export const createCqlInput = (
       const shadow = this.attachShadow({ mode: "open" });
 
       shadow.innerHTML = `
-        <div id="${cqlInputId}"></div>
+        <div id="${cqlInputId}" spellcheck="false"></div>
         <div id="${cqlTypeaheadId}" class="Cql__TypeaheadPopover" data-testid="${typeaheadTestId}" popover></div>
         <div id="${cqlErrorId}" class="Cql__ErrorPopover" data-testid="${errorTestId}" popover>~</div>
         <div id="${cqlErrorMsgId}" class="Cql__ErrorMessageContainer" data-testid="${errorMsgTestId}"></div>

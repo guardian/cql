@@ -1,17 +1,19 @@
 import { EditorView } from "prosemirror-view";
 import { CqlError } from "../services/CqlService";
 import { Popover } from "./Popover";
-import { ERROR_CLASS } from "./plugin";
+import { ERROR_CLASS, VISIBLE_CLASS } from "./plugin";
 
 export class ErrorPopover extends Popover {
   private debugContainer: HTMLElement | undefined;
   private contentEl: HTMLElement;
+  private visibilityTimeout: ReturnType<typeof setTimeout> | undefined;
 
   public constructor(
     protected view: EditorView,
     protected popoverEl: HTMLElement,
     private errorMsgEl: HTMLElement,
-    debugEl?: HTMLElement
+    debugEl?: HTMLElement,
+    private debounceTime = 500
   ) {
     super(view, popoverEl);
 
@@ -28,15 +30,15 @@ export class ErrorPopover extends Popover {
 
   public updateErrorMessage = async (error: CqlError | undefined) => {
     if (!error) {
-      this.contentEl.innerHTML = "";
-      this.errorMsgEl.innerHTML = "";
-      this.popoverEl.hidePopover?.();
+      this.hideErrorMessages();
+      console.log('hide');
       return;
     }
 
     this.updateDebugContainer(error);
 
     this.errorMsgEl.innerHTML = error.message;
+    this.debouncedShowErrorMessages();
 
     if (!error.position) {
       this.popoverEl.hidePopover?.();
@@ -54,8 +56,6 @@ export class ErrorPopover extends Popover {
     const xOffset = 0;
     const yOffset = -25;
     await this.renderPopover(referenceEl, xOffset, yOffset);
-
-    this.popoverEl.showPopover?.();
   };
 
   private updateDebugContainer = (error: CqlError) => {
@@ -66,5 +66,25 @@ export class ErrorPopover extends Popover {
         <div>Message: ${error.message}</div>
         </div>`;
     }
+  };
+
+  public hideErrorMessages = () => {
+    clearTimeout(this.visibilityTimeout);
+
+    this.contentEl.innerHTML = "";
+    this.errorMsgEl.innerHTML = "";
+    this.errorMsgEl.classList.remove(VISIBLE_CLASS);
+    this.popoverEl.classList.remove(VISIBLE_CLASS);
+    this.popoverEl.hidePopover?.();
+  };
+
+  private debouncedShowErrorMessages = () => {
+    console.log('defer show')
+    this.visibilityTimeout = setTimeout(() => {
+      console.log('shot')
+      this.popoverEl.showPopover?.();
+      this.errorMsgEl.classList.add(VISIBLE_CLASS);
+      this.popoverEl.classList.add(VISIBLE_CLASS);
+    }, this.debounceTime);
   };
 }

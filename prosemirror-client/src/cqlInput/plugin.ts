@@ -49,6 +49,7 @@ const ACTION_NEW_STATE = "NEW_STATE";
 const ACTION_SERVER_ERROR = "SERVER_ERROR";
 
 export const ERROR_CLASS = "Cql__ErrorWidget";
+export const VISIBLE_CLASS = "Cql--isVisible";
 
 /**
  * The CQL plugin handles most aspects of the editor behaviour, including
@@ -121,7 +122,7 @@ export const createCqlPlugin = ({
             : mapping,
           tokens: maybeNewState ? maybeNewState.tokens : tokens,
           suggestions: maybeNewState ? maybeNewState.suggestions : suggestions,
-          error: maybeNewState ? maybeNewState.error : error,
+          error: maybeNewState ? maybeNewState.error : undefined,
         };
       },
     },
