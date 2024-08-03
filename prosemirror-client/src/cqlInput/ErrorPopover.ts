@@ -1,7 +1,6 @@
-import { Mapping } from "prosemirror-transform";
 import { EditorView } from "prosemirror-view";
 import { CqlError } from "../services/CqlService";
-import { Popover, VirtualElement } from "./Popover";
+import { Popover } from "./Popover";
 import { ERROR_CLASS } from "./plugin";
 
 export class ErrorPopover extends Popover {
@@ -9,8 +8,9 @@ export class ErrorPopover extends Popover {
   private contentEl: HTMLElement;
 
   public constructor(
-    public view: EditorView,
-    public popoverEl: HTMLElement,
+    protected view: EditorView,
+    protected popoverEl: HTMLElement,
+    private errorMsgEl: HTMLElement,
     debugEl?: HTMLElement
   ) {
     super(view, popoverEl);
@@ -29,6 +29,7 @@ export class ErrorPopover extends Popover {
   public updateErrorMessage = async (error: CqlError | undefined) => {
     if (!error) {
       this.contentEl.innerHTML = "";
+      this.errorMsgEl.innerHTML = "";
       this.popoverEl.hidePopover?.();
       return;
     }
@@ -47,6 +48,7 @@ export class ErrorPopover extends Popover {
     const xOffset = 0;
     const yOffset = -25;
     await this.renderPopover(referenceEl, xOffset, yOffset);
+    this.errorMsgEl.innerHTML = error.message;
 
     this.popoverEl.showPopover?.();
   };
@@ -59,32 +61,5 @@ export class ErrorPopover extends Popover {
         <div>Message: ${error.message}</div>
         </div>`;
     }
-  };
-
-  private getVirtualElementFromView = (
-    position: number | undefined
-  ): VirtualElement => {
-    if (position) {
-      try {
-        const { top, right, bottom, left } = this.view.coordsAtPos(position);
-
-        return {
-          getBoundingClientRect: () => ({
-            width: right - left,
-            height: bottom - top,
-            x: left,
-            y: top,
-            top,
-            left,
-            right,
-            bottom,
-          }),
-        };
-      } catch (e) {
-        // Defer to parent input container
-      }
-    }
-
-    return this.view.dom;
   };
 }

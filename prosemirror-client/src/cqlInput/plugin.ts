@@ -61,12 +61,14 @@ export const createCqlPlugin = ({
   cqlService,
   typeaheadEl,
   errorEl,
+  errorMsgEl,
   onChange,
   debugEl,
 }: {
   cqlService: CqlServiceInterface;
   typeaheadEl: HTMLElement;
   errorEl: HTMLElement;
+  errorMsgEl: HTMLElement;
   onChange: (detail: QueryChangeEventDetail) => void;
   debugEl?: HTMLElement;
 }) => {
@@ -270,7 +272,7 @@ export const createCqlPlugin = ({
     },
     view(view) {
       typeaheadPopover = new TypeaheadPopover(view, typeaheadEl, debugEl);
-      errorPopover = new ErrorPopover(view, errorEl, debugEl);
+      errorPopover = new ErrorPopover(view, errorEl, errorMsgEl, debugEl);
 
       const fetchQueryAndUpdateDoc = async (
         query: string,
@@ -341,7 +343,7 @@ export const createCqlPlugin = ({
           } = cqlPluginKey.getState(view.state)!;
 
           typeaheadPopover?.updateItemsFromSuggestions(suggestions, mapping);
-          errorPopover?.updateErrorMessage(error, mapping);
+          errorPopover?.updateErrorMessage(error);
 
           if (prevQuery.trim() === currentQuery.trim()) {
             return;

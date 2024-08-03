@@ -121,6 +121,7 @@ template.innerHTML = `
 export const contentEditableTestId = "cql-input-contenteditable";
 export const typeaheadTestId = "cql-input-typeahead";
 export const errorTestId = "cql-input-error";
+export const errorMsgTestId = "cql-input-error-message";
 
 export const createCqlInput = (
   cqlService: CqlServiceInterface,
@@ -133,17 +134,20 @@ export const createCqlInput = (
       const cqlInputId = "cql-input";
       const cqlTypeaheadId = "cql-typeahead";
       const cqlErrorId = "cql-error";
+      const cqlErrorMsgId = "cql-error-msg";
       const shadow = this.attachShadow({ mode: "open" });
 
       shadow.innerHTML = `
         <div id="${cqlInputId}"></div>
-        <div id="${cqlTypeaheadId}" class="Cql__TypeaheadPopover" data-testid="${typeaheadTestId}" popover anchor="${cqlInputId}"></div>
+        <div id="${cqlTypeaheadId}" class="Cql__TypeaheadPopover" data-testid="${typeaheadTestId}" popover></div>
         <div id="${cqlErrorId}" class="Cql__ErrorPopover" data-testid="${errorTestId}" popover>~</div>
+        <div id="${cqlErrorMsgId}" class="Cql__ErrorMessageContainer" data-testid="${errorMsgTestId}"></div>
       `;
       shadow.appendChild(template.content.cloneNode(true));
       const cqlInput = shadow.getElementById(cqlInputId)!;
       const typeaheadEl = shadow.getElementById(cqlTypeaheadId)!;
       const errorEl = shadow.getElementById(cqlErrorId)!;
+      const errorMsgEl = shadow.getElementById(cqlErrorMsgId)!;
 
       const onChange = (detail: QueryChangeEventDetail) => {
         this.dispatchEvent(
@@ -158,6 +162,7 @@ export const createCqlInput = (
         mountEl: cqlInput,
         typeaheadEl,
         errorEl,
+        errorMsgEl,
         cqlService,
         debugEl,
         onChange,

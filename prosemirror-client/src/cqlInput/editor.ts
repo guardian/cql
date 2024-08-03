@@ -18,14 +18,16 @@ export const createEditor = ({
   mountEl,
   typeaheadEl,
   errorEl,
+  errorMsgEl,
+  debugEl,
   cqlService,
   onChange,
-  debugEl,
 }: {
   initialValue: string;
   mountEl: HTMLElement;
   typeaheadEl: HTMLElement;
   errorEl: HTMLElement;
+  errorMsgEl: HTMLElement;
   cqlService: CqlServiceInterface;
   onChange: (detail: QueryChangeEventDetail) => void;
   debugEl?: HTMLElement;
@@ -34,6 +36,7 @@ export const createEditor = ({
     cqlService,
     typeaheadEl,
     errorEl,
+    errorMsgEl,
     onChange,
     debugEl,
   });
