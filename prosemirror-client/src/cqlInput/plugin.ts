@@ -122,7 +122,13 @@ export const createCqlPlugin = ({
             : mapping,
           tokens: maybeNewState ? maybeNewState.tokens : tokens,
           suggestions: maybeNewState ? maybeNewState.suggestions : suggestions,
-          error: maybeNewState ? maybeNewState.error : undefined,
+          error: maybeNewState
+            ? maybeNewState.error
+            // Remove the error state if the document changes – the document may be
+            // valid, and the server will report if it is not
+            : !tr.docChanged
+            ? error
+            : undefined,
         };
       },
     },

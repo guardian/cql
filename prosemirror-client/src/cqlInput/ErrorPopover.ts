@@ -31,7 +31,6 @@ export class ErrorPopover extends Popover {
   public updateErrorMessage = async (error: CqlError | undefined) => {
     if (!error) {
       this.hideErrorMessages();
-      console.log('hide');
       return;
     }
 
@@ -79,9 +78,7 @@ export class ErrorPopover extends Popover {
   };
 
   private debouncedShowErrorMessages = () => {
-    console.log('defer show')
     this.visibilityTimeout = setTimeout(() => {
-      console.log('shot')
       this.popoverEl.showPopover?.();
       this.errorMsgEl.classList.add(VISIBLE_CLASS);
       this.popoverEl.classList.add(VISIBLE_CLASS);
