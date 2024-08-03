@@ -34,7 +34,7 @@ object TextSuggestion {
 case class TextSuggestionOption(
     label: String,
     value: String,
-    description: String
+    description: Option[String] = None
 )
 
 object TextSuggestionOption {
@@ -60,7 +60,7 @@ case class TypeaheadField(
     id: String,
     name: String,
     description: String,
-    resolver: TypeaheadResolver,
+    resolver: TypeaheadResolver = List.empty,
     suggestionType: "TEXT" | "DATE" = "TEXT"
 ):
   def resolveSuggestions(str: String): Future[List[TextSuggestionOption]] =
@@ -72,7 +72,7 @@ case class TypeaheadField(
     }
 
   def toSuggestionOption: TextSuggestionOption =
-    TextSuggestionOption(name, id, description)
+    TextSuggestionOption(name, id, Some(description))
 
 class Typeahead(
     fieldResolvers: List[TypeaheadField],
@@ -86,7 +86,7 @@ class Typeahead(
 
   private val typeaheadFieldEntries = TextSuggestion(
     fieldResolvers.map { case TypeaheadField(id, label, description, _, _) =>
-      TextSuggestionOption(label, id, description)
+      TextSuggestionOption(label, id, Some(description))
     }.toList
   )
 
