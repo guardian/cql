@@ -101,11 +101,12 @@ template.innerHTML = `
     .Cql__TypeaheadPopover, .Cql__ErrorPopover {
       position: absolute;
       width: 500px;
+      max-height: min(80vh, 400px);
       margin: 0;
       padding: 0;
       font-size: ${baseFontSize}px;
       border-radius: ${baseBorderRadius}px;
-      overflow: visible;
+      overflow-y: scroll;
     }
 
     .Cql__ErrorPopover {
