@@ -46,7 +46,7 @@ class TypeaheadTest extends BaseTest {
                   TextSuggestionOption(
                     "Tag",
                     "tag",
-                    "Search by content tags, e.g. sport/football"
+                    Some("Search by content tags, e.g. sport/football")
                   )
                 )
               )
@@ -77,7 +77,7 @@ class TypeaheadTest extends BaseTest {
                   TextSuggestionOption(
                     "Tag",
                     "tag",
-                    "Search by content tags, e.g. sport/football"
+                    Some("Search by content tags, e.g. sport/football")
                   )
                 )
               )
@@ -91,7 +91,7 @@ class TypeaheadTest extends BaseTest {
                   TextSuggestionOption(
                     "Tags are magic",
                     "tags-are-magic",
-                    "A magic tag"
+                    Some("A magic tag")
                   )
                 )
               )
@@ -122,7 +122,7 @@ class TypeaheadTest extends BaseTest {
                   TextSuggestionOption(
                     "Tag",
                     "tag",
-                    "Search by content tags, e.g. sport/football"
+                    Some("Search by content tags, e.g. sport/football")
                   )
                 )
               )
@@ -136,7 +136,7 @@ class TypeaheadTest extends BaseTest {
                   TextSuggestionOption(
                     "Tags are magic",
                     "tags-are-magic",
-                    "A magic tag"
+                    Some("A magic tag")
                   )
                 )
               )
@@ -163,7 +163,7 @@ class TypeaheadTest extends BaseTest {
                   TextSuggestionOption(
                     "From date",
                     "from-date",
-                    "The date to search from"
+                    Some("The date to search from")
                   )
                 )
               )

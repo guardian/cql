@@ -31,7 +31,7 @@ class TestTypeaheadHelpers {
   private def getTags(str: String): Future[List[TextSuggestionOption]] =
     Future.successful(
       List(
-        TextSuggestionOption("Tags are magic", "tags-are-magic", "A magic tag")
+        TextSuggestionOption("Tags are magic", "tags-are-magic", Some("A magic tag"))
       )
     )
 
@@ -41,7 +41,7 @@ class TestTypeaheadHelpers {
         TextSuggestionOption(
           "Also sections",
           "sections-are-magic",
-          "Sections are less magic"
+          Some("Sections are less magic")
         )
       )
     )
