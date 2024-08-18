@@ -1,112 +1,130 @@
-package cql.lang
+import { Token } from "../Query";
+import { createQueryArray, createQueryBinary, createQueryContent, createQueryGroup, createQueryStr, QueryArray, QueryBinary, QueryContent, QueryField, QueryGroup, QueryStr } from "./ast";
+import { TokenType } from "./token";
 
-import scala.util.Try
-import scala.util.Success
+class ParseError extends Error {
+  constructor(
+  public position: number, public message: string) {
+    super(message);
+  }
+}
 
-import TokenType.*
+class Parser {
+  private current: number = 0;
+  private skipTypes = [];
 
-case class ParseError(position: Int, message: String) extends Error(message)
+  constructor(private tokens: Token[]) {}
 
-class Parser(tokens: List[Token]):
-  var current: Int = 0;
-  val skipTypes = List()
-
-  def parse(): Try[QueryList] =
-    Try { queryList }
+  public parse(): QueryArray {
+    return this.queryArray();
+  }
 
   // program    -> statement* EOF
-  private def queryList =
-    var queries = List.empty[QueryBinary | QueryField | QueryOutputModifier]
-    while (peek().tokenType != EOF) {
-      queries = queries :+ query
+  private queryArray() {
+    const queries: (QueryBinary | QueryField)[] = []
+    while (this.peek().tokenType !== TokenType.EOF) {
+      queries.push(this.query())
     }
-    QueryList(queries)
+   return createQueryArray(queries)
+  }
 
-  val startOfQueryField = List(TokenType.QUERY_FIELD_KEY, TokenType.PLUS)
-  val startOfQueryOutputModifier =
-    List(TokenType.QUERY_OUTPUT_MODIFIER_KEY, TokenType.AT)
-  val startOfQueryValue =
-    List(TokenType.QUERY_VALUE, TokenType.COLON)
+  private startOfQueryField = [TokenType.QUERY_FIELD_KEY, TokenType.PLUS]
+  private startOfQueryOutputModifier =
+    [TokenType.QUERY_OUTPUT_MODIFIER_KEY, TokenType.AT]
+  private startOfQueryValue =
+    [TokenType.QUERY_VALUE, TokenType.COLON]
 
-  private def query: QueryBinary | QueryField | QueryOutputModifier =
-    if (startOfQueryField.contains(peek().tokenType)) queryField
-    else if (startOfQueryOutputModifier.contains(peek().tokenType))
-      queryOutputModifier
-    else if (startOfQueryValue.contains(peek().tokenType))
-      throw ParseError(
-        peek().start,
-        "I found an unexpected ':'. Did you intend to search for a tag, section or similar, e.g. tag:news? If you would like to add a search phrase containing a ':' character, please surround it in double quotes."
+  private query(): QueryBinary | QueryField {
+    if (this.startOfQueryField.includes(this.peek().tokenType)) {
+      return this.queryField();
+    } else if (this.startOfQueryValue.includes(this.peek().tokenType))
+      throw new ParseError(
+        this.peek().start,
+        "I found an unexpected ':'. Did you numberend to search for a tag, section or similar, e.g. tag:news? If you would like to add a search phrase containing a ':' character, please surround it in double quotes."
       )
-    else queryBinary
+    else return this.queryBinary()
 
-  private def queryBinary: QueryBinary =
-    val left = queryContent
+  private queryBinary(): QueryBinary {
+    const left = this.queryContent()
 
-    peek().tokenType match {
-      case TokenType.AND =>
-        val andToken = consume(TokenType.AND)
-        guardAgainstQueryField("after 'AND'.")
-        if (isAtEnd) {
-          throw error(
+    switch(this.peek().tokenType) {
+      case TokenType.AND: {
+        const andToken = this.consume(TokenType.AND)
+        this.guardAgainstQueryField("after 'AND'.")
+        if (this.isAtEnd()) {
+          throw this.error(
             "There must be a query following 'AND', e.g. this AND that."
           )
         }
-        QueryBinary(left, Some((andToken), queryBinary))
-      case TokenType.OR =>
-        val orToken = consume(TokenType.OR)
-        guardAgainstQueryField("after 'OR'.")
-        if (isAtEnd) {
-          error(
+        return createQueryBinary(left, [andToken, this.queryBinary()])
+      }
+      case TokenType.OR: {
+        const orToken = this.consume(TokenType.OR)
+        this.guardAgainstQueryField("after 'OR'.")
+        if (this.isAtEnd()) {
+          throw this.error(
             "There must be a query following 'OR', e.g. this OR that."
           )
         }
-        QueryBinary(left, Some((orToken, queryBinary)))
-      case _ => QueryBinary(left)
+        return createQueryBinary(left, [(orToken, this.queryBinary())]);
+      }
+      default: {
+        return createQueryBinary(left)
+      }
     }
+  }
 
-  private def queryContent: QueryContent =
-    val content: QueryGroup | QueryStr | QueryBinary = peek().tokenType match
-      case TokenType.LEFT_BRACKET => queryGroup
-      case TokenType.STRING       => queryStr
-      case token if List(TokenType.AND, TokenType.OR).contains(token) =>
-        throw error(
-          s"An ${token.toString()} keyword must have a search term before and after it, e.g. this ${token.toString} that."
-        )
-      case _ =>
-        throw error(s"I didn't expect what I found after '${previous().lexeme}'")
+  private queryContent(): QueryContent {
+    switch(this.peek().tokenType) {
+      case TokenType.LEFT_BRACKET:
+        return createQueryContent(this.queryGroup());
+      case TokenType.STRING:
+        return createQueryContent(this.queryStr());
 
-    QueryContent(content)
+      default: {
+        if ([TokenType.AND, TokenType.OR].includes(token)) {
+          throw this.error(
+            `An ${token.tostring()} keyword must have a search term before and after it, e.g. this ${token.tostring} that.`
+          )
+        } else {
+          throw this.error(`I didn't expect what I found after '${this.previous().lexeme}'`)
+        }
+      }
+    }
+  }
 
-  private def queryGroup: QueryGroup =
+  private queryGroup(): QueryGroup {
     consume(TokenType.LEFT_BRACKET, "Groups should start with a left bracket")
 
-    if (isAtEnd || peek().tokenType == TokenType.RIGHT_BRACKET) {
-      throw error(
+    if (this.isAtEnd() || this.peek().tokenType == TokenType.RIGHT_BRACKET) {
+      throw this.error(
         "Groups must contain some content. Put a search term between the brackets!"
       )
     }
 
-    guardAgainstQueryField(
+    this.guardAgainstQueryField(
       "within a group. Try putting this query outside of the brackets!"
     )
 
-    val binary = queryBinary
+    const binary = this.queryBinary()
     consume(TokenType.RIGHT_BRACKET, "Groups must end with a right bracket.")
 
-    QueryGroup(binary)
+    return createQueryGroup(binary)
+  }
 
-  private def queryStr: QueryStr =
-    val token = consume(TokenType.STRING, "Expected a string")
-    QueryStr(token.literal.getOrElse(""))
+  private queryStr(): QueryStr {
+    const token = consume(TokenType.STRING, "Expected a string")
+    return createQueryStr(token.literal.getOrElse(""))
+  }
 
-  private def queryField: QueryField =
-    val key = Try {
+  private queryField(): QueryField {
+    const key = try {
       consume(TokenType.QUERY_FIELD_KEY, "Expected a search key, e.g. +tag")
-    }.recover { _ =>
+    } catcH
       consume(TokenType.PLUS, "Expected at least a +")
     }.get
 
-    val value = Try {
+    const value = Try {
       consume(TokenType.QUERY_VALUE, s"Expected a search value, e.g. +tag:news")
     }.recoverWith { _ =>
       Try {
@@ -115,9 +133,10 @@ class Parser(tokens: List[Token]):
     }.toOption
 
     QueryField(key, value)
+  }
 
-  private def queryOutputModifier: QueryOutputModifier =
-    val key = Try {
+  private  queryOutputModifier: QueryOutputModifier() =
+    const key = Try {
       consume(
         TokenType.QUERY_OUTPUT_MODIFIER_KEY,
         "Expected a query modifier key, e.g. @show-fields"
@@ -126,7 +145,7 @@ class Parser(tokens: List[Token]):
       consume(TokenType.AT, "Expected at least an @")
     }.get
 
-    val value = Try {
+    const value = Try {
       consume(
         TokenType.QUERY_VALUE,
         "Expected a value for the query modifier, e.g. @show-fields:all"
@@ -139,7 +158,7 @@ class Parser(tokens: List[Token]):
 
     QueryOutputModifier(key, value)
 
-  private def matchTokens(tokens: TokenType*) =
+  private  matchTokens(tokens: TokenType*)() =
     tokens.exists(token =>
       if (check(token)) {
         advance()
@@ -150,7 +169,7 @@ class Parser(tokens: List[Token]):
   /** Throw a sensible parse error when a query field or output modifier is
     * found in the wrong place.
     */
-  private def guardAgainstQueryField(errorLocation: String) =
+  private  guardAgainstQueryField(errorLocation: string)() =
     peek().tokenType match {
       case TokenType.AT =>
         throw error(
@@ -161,12 +180,12 @@ class Parser(tokens: List[Token]):
           s"You cannot put queries for tags, sections etc. ${errorLocation}"
         )
       case TokenType.QUERY_FIELD_KEY =>
-        val queryFieldNode = queryField
+        const queryFieldNode = queryField
         throw error(
           s"You cannot query for ${queryFieldNode.key.literal.getOrElse("")}s ${errorLocation}"
         )
       case TokenType.QUERY_OUTPUT_MODIFIER_KEY =>
-        val queryFieldNode = queryOutputModifier
+        const queryFieldNode = queryOutputModifier
         throw error(
           s"You cannot add an output modifier for ${queryFieldNode.key.literal
               .getOrElse("")}s ${errorLocation}"
@@ -174,23 +193,23 @@ class Parser(tokens: List[Token]):
       case _ => ()
     }
 
-  private def check(tokenType: TokenType) =
+  private  check(tokenType: TokenType)() =
     if (isAtEnd) false else peek().tokenType == tokenType
 
-  private def isAtEnd = peek().tokenType == EOF
+  private  isAtEnd = peek().tokenType == E()OF
 
-  private def peek() = tokens(current)
+  private  peek() = tokens(curren()t)
 
-  private def advance() =
+  private  advance()() =
     if (!isAtEnd) current = current + 1
     previous()
 
-  private def consume(tokenType: TokenType, message: String = "") = {
+  private  consume(tokenType: TokenType, message: string = "") =() {
     if (check(tokenType)) advance()
     else throw error(message)
   }
 
-  private def previous() = tokens(current - 1)
+  private  previous() = tokens(current - ()1)
 
-  private def error(message: String) =
+  private  error(message: string)() =
     new ParseError(peek().start, message)

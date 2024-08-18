@@ -1,12 +1,11 @@
 import { Token } from "./token";
 
-class Scanner {
+export class Scanner {
   private tokens: Array<Token> = [];
   private start = 0;
   private current = 0;
   private line = 1;
   private hasError = false;
-  private reservedChars = '+@:()"';
 
   constructor(private program: String) {}
 
@@ -75,7 +74,8 @@ class Scanner {
         return;
       case '"':
         this.addString();
-      case _:
+        return;
+      default:
         if (this.isReservedWord()) {
           this.addIdentifier();
         } else {
@@ -86,7 +86,7 @@ class Scanner {
   };
 
   private addKey = (tokenType: TokenType) => {
-    while (this.peek() != ":" && !this.peek().isWhitespace && !this.isAtEnd)
+    while (this.peek() != ":" && !isWhitespace(this.peek()) && !this.isAtEnd)
       this.advance();
 
     if (this.current - this.start == 1) this.addToken(tokenType);
@@ -98,7 +98,7 @@ class Scanner {
   };
 
   private addValue = () => {
-    while (!this.peek().isWhitespace && !this.isAtEnd) this.advance();
+    while (isWhitespace(this.peek()) && !this.isAtEnd) this.advance();
 
     if (this.current - this.start == 1) {
       this.addToken(TokenType.QUERY_VALUE);
@@ -115,7 +115,7 @@ class Scanner {
   };
 
   private addIdentifier = () => {
-    while (this.peek().isLetterOrDigit) {
+    while (isLetterOrDigit(this.peek())) {
       this.advance();
     }
     const text = this.program.substring(this.start, this.current);
@@ -127,7 +127,11 @@ class Scanner {
   };
 
   private addUnquotedString = () => {
-    while (!this.peek().isWhitespace && this.peek() != ")" && !this.isAtEnd()) {
+    while (
+      !isWhitespace(this.peek()) &&
+      this.peek() != ")" &&
+      !this.isAtEnd()
+    ) {
       this.advance();
     }
 
@@ -141,11 +145,7 @@ class Scanner {
     while (this.peek() != '"' && !this.isAtEnd()) this.advance();
 
     if (this.isAtEnd())
-      this.error(
-        this.addIdentifier,
-        this.line,
-        "Unterminated string at end of file"
-      );
+      this.error(this.line, "Unterminated string at end of file");
     else this.advance();
     this.addToken(
       TokenType.STRING,
@@ -166,21 +166,7 @@ class Scanner {
     return this.program[previous];
   };
 
-  private matchChar = (expected: string) => {
-    if (this.isAtEnd() || this.program[this.current] != expected) {
-      return false;
-    } else {
-      this.current = this.current + 1;
-      return true;
-    }
-  };
-
   private peek = () => (this.isAtEnd() ? "\u0000" : this.program[this.current]);
-
-  private peekNext = () =>
-    this.current + 1 >= this.program.length
-      ? "\u0000"
-      : this.program[this.current + 1];
 
   private error = (line: number, message: String) =>
     this.report(line, "", message);

@@ -1,9 +1,11 @@
+import { Token } from "../Query"
 import { QueryList } from "./ast"
+import { Scanner } from "./scanner"
 
 type CqlError = { message: String, position?: number }
 
 export type CqlResult = {
-    tokens: Array<Token>,
+    tokens: Token[],
     ast?: QueryList,
     queryResult?: String,
     // Map from tokenType to a map of literals and their suggestions.
@@ -17,7 +19,7 @@ class Cql {
 
   public run = (program: string): Promise<CqlResult> => {
     const scanner = new Scanner(program)
-    const tokens = scanner.scanTokens
+    const tokens = scanner.scanTokens()
     const parser = new Parser(tokens)
 
     try {

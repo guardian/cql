@@ -1,39 +1,63 @@
-export type Query = QueryList | QueryStr | QueryField | QueryOutputModifier;
+import { Token } from "./token";
 
-export type QueryList = {
-  type: "QueryList";
-  exprs: Array<QueryBinary | QueryField | QueryOutputModifier>;
+export type QueryArray = {
+  type: "QueryArray";
+  content: (QueryBinary | QueryField)[];
 };
+
+export const createQueryArray = (content: QueryArray["content"]): QueryArray => ({
+  type: "QueryArray",
+  content,
+});
 
 export type QueryBinary = {
   type: "QueryBinary";
   left: QueryContent;
-  right?: [Token, QueryBinary];
+  right?: [Token, QueryContent];
 };
+
+export const createQueryBinary = (
+  left: QueryBinary["left"],
+  right?: QueryBinary["right"]
+): QueryBinary => ({
+  type: "QueryBinary",
+  left,
+  right,
+});
 
 export type QueryContent = {
   type: "QueryContent";
   content: QueryStr | QueryBinary | QueryGroup;
 };
 
-export type QueryGroup = {
-  type: "QueryGroup";
-  content: QueryBinary;
-};
+export const createQueryContent = (
+  content: QueryContent["content"]
+): QueryContent => ({
+  type: "QueryContent",
+  content,
+});
 
-export type QueryStr = {
-  type: "QueryStr";
-  searchExpr: String;
-};
+export type QueryGroup = { type: "QueryGroup"; content: QueryBinary };
 
-export type QueryField = {
-  type: "QueryField";
-  key: Token;
-  value?: Token;
-};
+export const createQueryGroup = (content: QueryGroup["content"]): QueryGroup => ({
+  type: "QueryGroup",
+  content,
+});
 
-export type QueryOutputModifier = {
-  type: "QueryOutputModifier";
-  key: Token;
-  value: Token;
-};
+export type QueryStr = { type: "QueryStr"; searchExpr: string };
+
+export const createQueryStr = (searchExpr: string): QueryStr => ({
+  type: "QueryStr",
+  searchExpr,
+});
+
+export type QueryField = { type: "QueryField"; key: Token; value?: Token };
+
+export const createQueryField = (
+  key: QueryField["key"],
+  value: QueryField["value"]
+): QueryField => ({
+  type: "QueryField",
+  key,
+  value,
+});
