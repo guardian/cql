@@ -1,4 +1,4 @@
-import { Token } from "./token";
+import { Token, TokenType } from "./token";
 
 export class Scanner {
   private tokens: Array<Token> = [];

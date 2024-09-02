@@ -5,7 +5,9 @@ export type QueryArray = {
   content: (QueryBinary | QueryField)[];
 };
 
-export const createQueryArray = (content: QueryArray["content"]): QueryArray => ({
+export const createQueryArray = (
+  content: QueryArray["content"]
+): QueryArray => ({
   type: "QueryArray",
   content,
 });
@@ -13,7 +15,7 @@ export const createQueryArray = (content: QueryArray["content"]): QueryArray => 
 export type QueryBinary = {
   type: "QueryBinary";
   left: QueryContent;
-  right?: [Token, QueryContent];
+  right?: [Token, QueryBinary];
 };
 
 export const createQueryBinary = (
@@ -39,7 +41,9 @@ export const createQueryContent = (
 
 export type QueryGroup = { type: "QueryGroup"; content: QueryBinary };
 
-export const createQueryGroup = (content: QueryGroup["content"]): QueryGroup => ({
+export const createQueryGroup = (
+  content: QueryGroup["content"]
+): QueryGroup => ({
   type: "QueryGroup",
   content,
 });
