@@ -1,73 +1,39 @@
-package cql.lang
+import { createQueryField, QueryField } from "./ast";
+import { Token, TokenType } from "./token";
 
-import org.scalatest._
-
-import flatspec._
-import matchers._
-import funspec.AnyFunSpec
-import org.scalatest.funspec.AsyncFunSpec
-import cql.lang.{QueryField, QueryOutputModifier}
-
-abstract class BaseTest extends AsyncFunSpec with should.Matchers {
-  def leftParenToken(start: Int = 0) =
-    Token(TokenType.LEFT_BRACKET, "(", Some("("), start, start + 1)
-  def rightParenToken(start: Int = 0) =
-    Token(TokenType.RIGHT_BRACKET, ")", Some(")"), start, start + 1)
-  def andToken(start: Int = 0) =
-    Token(TokenType.AND, "AND", Some("AND"), start, start + 3)
-  def eofToken(start: Int) = Token(TokenType.EOF, "", None, start, start)
-  def colonToken(start: Int) = Token(TokenType.COLON, "", None, start, start)
-  def unquotedStringToken(str: String, start: Int = 0) =
-    Token(TokenType.STRING, str, Some(str), start, start + str.length - 1)
-  def quotedStringToken(str: String, start: Int = 0) = Token(
-    TokenType.STRING,
-    s"\"$str\"",
-    Some(str),
+export const leftParenToken = (start: number = 0) =>
+  new Token(TokenType.LEFT_BRACKET, "(", "(", start, start + 1);
+export const rightParenToken = (start: number = 0) =>
+  new Token(TokenType.RIGHT_BRACKET, ")", ")", start, start + 1);
+export const andToken = (start: number = 0) =>
+  new Token(TokenType.AND, "AND", "AND", start, start + 3);
+export const eofToken = (start: number) =>
+  new Token(TokenType.EOF, "", undefined, start, start);
+export const colonToken = (start: number) =>
+  new Token(TokenType.COLON, "", undefined, start, start);
+export const unquotedStringToken = (str: string, start: number = 0) =>
+  new Token(TokenType.STRING, str, str, start, start + str.length - 1);
+export const quotedStringToken = (str: string, start: number = 0) =>
+  new Token(TokenType.STRING, `\"${str}\"`, str, start, start + str.length + 1);
+export const queryFieldKeyToken = (str: string, start: number = 0) =>
+  new Token(TokenType.QUERY_FIELD_KEY, `+$str`, str, start, start + str.length);
+export const queryOutputModifierKeyToken = (str: string, start: number = 0) =>
+  new Token(
+    TokenType.QUERY_OUTPUT_MODIFIER_KEY,
+    `@${str}`,
+    str,
     start,
-    start + str.length + 1
-  )
-  def queryFieldKeyToken(str: String, start: Int = 0) =
-    Token(
-      TokenType.QUERY_FIELD_KEY,
-      s"+$str",
-      Some(str),
-      start,
-      start + str.length
-    )
-  def queryOutputModifierKeyToken(str: String, start: Int = 0) =
-    Token(
-      TokenType.QUERY_OUTPUT_MODIFIER_KEY,
-      s"@$str",
-      Some(str),
-      start,
-      start + str.length
-    )
-  def queryValueToken(str: String, start: Int = 0) =
-    Token(
-      TokenType.QUERY_VALUE,
-      s":$str",
-      Some(str),
-      start,
-      start + str.length
-    )
+    start + str.length
+  );
+export const queryValueToken = (str: string, start: number = 0) =>
+  new Token(TokenType.QUERY_VALUE, `:$str`, str, start, start + str.length);
 
-  def queryField(
-      key: String,
-      value: Option[String],
-      start: Int = 0
-  ): QueryField =
-    QueryField(
-      queryFieldKeyToken(key, start),
-      value.map { str => queryValueToken(str, start + key.length + 2) }
-    )
-
-  def queryOutputModifier(
-      key: String,
-      value: Option[String],
-      start: Int = 0
-  ): QueryOutputModifier =
-    QueryOutputModifier(
-      queryOutputModifierKeyToken(key, start),
-      value.map { str => queryValueToken(str, start + key.length + 2) }
-    )
-}
+export const queryField = (
+  key: string,
+  value?: string,
+  start: number = 0
+): QueryField =>
+  createQueryField(
+    queryFieldKeyToken(key, start),
+    value ? queryValueToken(value, start + key.length + 2) : undefined
+  );
