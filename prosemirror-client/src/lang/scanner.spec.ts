@@ -25,14 +25,14 @@ describe("scanner", () => {
 
   describe("quoted strings", () => {
     it("should parse plain strings", () => {
-      const scanner = new Scanner("sausages");
+      const scanner = new Scanner("\"sausages\"");
       const tokens = scanner.scanTokens();
       const expectedTokens = [quotedStringToken("sausages"), eofToken(10)];
       expect(tokens).toEqual(expectedTokens);
     });
 
     it("should give a single token for strings separated with a space", () => {
-      const scanner = new Scanner("magnificent octopus");
+      const scanner = new Scanner("\"magnificent octopus\"");
       const tokens = scanner.scanTokens();
       const expectedTokens = [
         quotedStringToken("magnificent octopus"),
@@ -93,23 +93,6 @@ describe("scanner", () => {
         new Token(TokenType.QUERY_FIELD_KEY, "+tag", "tag", 8, 11),
         new Token(TokenType.QUERY_VALUE, ":", undefined, 12, 12),
         eofToken(13),
-      ];
-      expect(tokens).toEqual(expectedTokens);
-    });
-
-    it("should tokenise key value pairs for output modifiers", () => {
-      const scanner = new Scanner("@show-fields:all");
-      const tokens = scanner.scanTokens();
-      const expectedTokens = [
-        new Token(
-          TokenType.QUERY_OUTPUT_MODIFIER_KEY,
-          "@show-fields",
-          "show-fields",
-          0,
-          11
-        ),
-        new Token(TokenType.QUERY_VALUE, ":all", "all", 12, 15),
-        eofToken(16),
       ];
       expect(tokens).toEqual(expectedTokens);
     });

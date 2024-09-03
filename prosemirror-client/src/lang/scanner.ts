@@ -1,16 +1,16 @@
 import { Token, TokenType } from "./token";
+import { isLetterOrDigit, isWhitespace } from "./util";
 
 export class Scanner {
   private tokens: Array<Token> = [];
   private start = 0;
   private current = 0;
   private line = 1;
-  private hasError = false;
 
-  constructor(private program: String) {}
+  constructor(private program: string) {}
 
   public scanTokens = (): Token[] => {
-    while (!this.isAtEnd) {
+    while (!this.isAtEnd()) {
       // We are at the beginning of the next lexeme.
       this.start = this.current;
       this.scanToken();
@@ -34,7 +34,7 @@ export class Scanner {
             new Token(
               TokenType.STRING,
               prevToken.lexeme + " " + token.lexeme,
-              prevToken.literal ?? "" + " " + token.literal ?? "",
+              (prevToken.literal ?? "") + " " + (token.literal ?? ""),
               prevToken.start,
               token.end
             )
@@ -44,7 +44,7 @@ export class Scanner {
       }
     }, [] as Token[]);
 
-  private isAtEnd = () => this.current == this.program.length;
+  private isAtEnd = () => this.current === this.program.length;
 
   private scanToken = () => {
     switch (this.advance()) {
@@ -86,7 +86,7 @@ export class Scanner {
   };
 
   private addKey = (tokenType: TokenType) => {
-    while (this.peek() != ":" && !isWhitespace(this.peek()) && !this.isAtEnd)
+    while (this.peek() != ":" && !isWhitespace(this.peek()) && !this.isAtEnd())
       this.advance();
 
     if (this.current - this.start == 1) this.addToken(tokenType);
@@ -98,7 +98,7 @@ export class Scanner {
   };
 
   private addValue = () => {
-    while (isWhitespace(this.peek()) && !this.isAtEnd) this.advance();
+    while (!isWhitespace(this.peek()) && !this.isAtEnd()) this.advance();
 
     if (this.current - this.start == 1) {
       this.addToken(TokenType.QUERY_VALUE);
@@ -118,9 +118,11 @@ export class Scanner {
     while (isLetterOrDigit(this.peek())) {
       this.advance();
     }
+
     const text = this.program.substring(this.start, this.current);
     const maybeReservedWord =
       Token.reservedWords[text as keyof typeof Token.reservedWords];
+
     return maybeReservedWord
       ? this.addToken(maybeReservedWord)
       : this.error(this.line, "Expected identifier");
@@ -142,11 +144,16 @@ export class Scanner {
   };
 
   private addString = () => {
-    while (this.peek() != '"' && !this.isAtEnd()) this.advance();
+    while (this.peek() != '"' && !this.isAtEnd()) {
+      this.advance();
+    }
 
-    if (this.isAtEnd())
+    if (this.isAtEnd()) {
       this.error(this.line, "Unterminated string at end of file");
-    else this.advance();
+    } else {
+      this.advance();
+    }
+
     this.addToken(
       TokenType.STRING,
       this.program.substring(this.start + 1, this.current - 1)
@@ -155,6 +162,13 @@ export class Scanner {
 
   private addToken = (tokenType: TokenType, literal?: string) => {
     const text = this.program.substring(this.start, this.current);
+    // console.log({
+    //   program: this.program,
+    //   text,
+    //   literal,
+    //   start: this.start,
+    //   end: this.current,
+    // });
     this.tokens = this.tokens.concat(
       new Token(tokenType, text, literal, this.start, this.current - 1)
     );

@@ -1,22 +1,22 @@
 export enum TokenType {
   // Single-character tokens.
-  PLUS,
-  COLON,
-  AT,
-  LEFT_BRACKET,
-  RIGHT_BRACKET,
+  PLUS = "PLUS",
+  COLON = "COLON",
+  AT = "AT",
+  LEFT_BRACKET = "LEFT_BRACKET",
+  RIGHT_BRACKET = "RIGHT_BRACKET",
 
   // Literals.
-  STRING,
-  NUMBER,
-  QUERY_OUTPUT_MODIFIER_KEY,
-  QUERY_FIELD_KEY,
-  QUERY_VALUE,
+  STRING = "STRING",
+  NUMBER = "NUMBER",
+  QUERY_OUTPUT_MODIFIER_KEY = "QUERY_OUTPUT_MODIFIER_KEY",
+  QUERY_FIELD_KEY = "QUERY_FIELD_KEY",
+  QUERY_VALUE = "QUERY_VALUE",
 
   // Keywords.
-  AND,
-  OR,
-  EOF,
+  AND = "AND",
+  OR = "OR",
+  EOF = "EOF",
 }
 
 export class Token {

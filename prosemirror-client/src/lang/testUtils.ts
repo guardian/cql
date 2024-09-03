@@ -14,7 +14,7 @@ export const colonToken = (start: number) =>
 export const unquotedStringToken = (str: string, start: number = 0) =>
   new Token(TokenType.STRING, str, str, start, start + str.length - 1);
 export const quotedStringToken = (str: string, start: number = 0) =>
-  new Token(TokenType.STRING, `\"${str}\"`, str, start, start + str.length + 1);
+  new Token(TokenType.STRING, `"${str}"`, str, start, start + str.length + 1);
 export const queryFieldKeyToken = (str: string, start: number = 0) =>
   new Token(TokenType.QUERY_FIELD_KEY, `+$str`, str, start, start + str.length);
 export const queryOutputModifierKeyToken = (str: string, start: number = 0) =>

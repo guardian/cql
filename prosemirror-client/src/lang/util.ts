@@ -1,5 +1,5 @@
-const whitespaceR = /s/g;
-const isWhitespace = (str: string) => str.match(whitespaceR);
+const whitespaceR = /\s/;
+export const isWhitespace = (str: string) => whitespaceR.test(str);
 
-const letterOrDigitR = /[0-9A-z]/g;
-const isLetterOrDigit = (str: string) => str.match(letterOrDigitR);
+const letterOrDigitR = /[0-9A-z]/;
+export const  isLetterOrDigit = (str: string) => letterOrDigitR.test(str);
