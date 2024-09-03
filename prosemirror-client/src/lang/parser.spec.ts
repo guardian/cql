@@ -1,143 +1,158 @@
-package cql.lang
+import { describe, expect, it } from "bun:test";
+import { ok, Result, ResultKind } from "../util/result";
+import { createQueryArray, QueryArray } from "./ast";
+import {
+  andToken,
+  colonToken,
+  eofToken,
+  leftParenToken,
+  queryFieldKeyToken,
+  queryOutputModifierKeyToken,
+  queryValueToken,
+  quotedStringToken,
+  rightParenToken,
+  unquotedStringToken,
+} from "./testUtils";
+import { Parser } from "./parser";
+import { getPermutations } from "./util";
+import { Token } from "./token";
 
-import cql.lang.{QueryList, QueryOutputModifier}
-import concurrent.ExecutionContext.Implicits.global // Todo: sticking plaster
-import scala.util.Failure
-import scala.util.Success
-import scala.util.Try
-import org.scalatest.compatible.Assertion
-import org.scalatest.matchers.should.Matchers
+describe("parser", () => {
+  const assertFailure = (
+    queryList: Result<Error, QueryArray>,
+    strContains: String
+  ) => {
+    switch (queryList.kind) {
+      case ResultKind.Err: {
+        expect(queryList.err.message).toContain(strContains);
+      }
+      default: {
+        throw new Error("This should not parse");
+      }
+    }
+  };
 
-class ParserTest extends BaseTest with Matchers {
-  def assertFailure(queryList: Try[QueryList], strContains: String): Assertion =
-    queryList match
-      case Failure(exception) =>
-        exception.getMessage() should include(strContains)
-      case Success(value) => fail("This should not parse")
+  it("should handle unmatched parenthesis", () => {
+    const tokens = [leftParenToken(), eofToken(2)];
+    const result = new Parser(tokens).parse();
+    assertFailure(result, "Groups must contain some content");
+  });
 
-  it("should handle unmatched parenthesis") {
-    val tokens = List(leftParenToken(), eofToken(2))
-    val result = new Parser(tokens).parse()
-    assertFailure(result, "Groups must contain some content")
-  }
+  it("should handle an empty token list", () => {
+    const tokens = [eofToken(0)];
+    const result = new Parser(tokens).parse();
+    expect(result).toBe(ok(createQueryArray([])));
+  });
 
-  it("should handle an empty token list") {
-    val tokens = List(eofToken(0))
-    val result = new Parser(tokens).parse()
-    result shouldBe Success(QueryList(List.empty))
-  }
+  it("should handle an unbalanced binary", () => {
+    const tokens = [quotedStringToken("example"), andToken(7), eofToken(0)];
+    const result = new Parser(tokens).parse();
+    assertFailure(result, "There must be a query following 'AND'");
+  });
 
-  it("should handle an unbalanced binary") {
-    val tokens = List(quotedStringToken("example"), andToken(7), eofToken(0))
-    val result = new Parser(tokens).parse()
-    assertFailure(result, "There must be a query following 'AND'")
-  }
+  it("should handle an unbalanced binary within parenthesis", () => {
+    const tokens = [
+      leftParenToken(),
+      quotedStringToken("example"),
+      andToken(8),
+      rightParenToken(9),
+      eofToken(10),
+    ];
+    const result = new Parser(tokens).parse();
+    assertFailure(result, "I didn't expect what I found after 'AND'");
+  });
 
-  it("should handle an unbalanced binary within parenthesis") {
-    val tokens = List(leftParenToken(), quotedStringToken("example"), andToken(8), rightParenToken(9), eofToken(10))
-    val result = new Parser(tokens).parse()
-    assertFailure(result, "I didn't expect what I found after 'AND'")
-  }
+  it("should handle a query field incorrectly nested in parentheses", () => {
+    const tokens = [
+      leftParenToken(),
+      queryFieldKeyToken("tag", 1),
+      eofToken(5),
+    ];
+    const result = new Parser(tokens).parse();
+    assertFailure(result, "You cannot query for tags within a group");
+  });
 
-  it("should handle a query field incorrectly nested in parentheses") {
-    val tokens =
-      List(leftParenToken(), queryFieldKeyToken("tag", 1), eofToken(5))
-    val result = new Parser(tokens).parse()
-    assertFailure(result, "You cannot query for tags within a group")
-  }
-
-  it("should handle a query field incorrectly following binary operators") {
-    val tokens = List(
+  it("should handle a query field incorrectly following binary operators", () => {
+    const tokens = [
       quotedStringToken("a"),
       andToken(1),
       queryFieldKeyToken("tag", 5),
-      eofToken(8)
-    )
-    val result = new Parser(tokens).parse()
-    assertFailure(result, "You cannot query for tags after 'AND'")
-  }
+      eofToken(8),
+    ];
+    const result = new Parser(tokens).parse();
+    assertFailure(result, "You cannot query for tags after 'AND'");
+  });
 
-  it("should handle an empty query field key") {
-    val tokens = List(
+  it("should handle an empty query field key", () => {
+    const tokens = [
       quotedStringToken("a"),
       queryFieldKeyToken("", 2),
-      eofToken(5)
-    )
-    val result = new Parser(tokens).parse()
-    result shouldBe Success(
-      QueryList(
-        List(
+      eofToken(5),
+    ];
+    const result = new Parser(tokens).parse();
+    expect(result).toBe(
+      ok(
+        createQueryList([
           QueryBinary(QueryContent(QueryStr("a")), None),
-          QueryField(
-            queryFieldKeyToken("", 2),
-            None
-          )
-        )
+          QueryField(queryFieldKeyToken("", 2), None),
+        ])
       )
-    )
-  }
+    );
+  });
 
-  it("should handle a query output modifier") {
-    val tokens = List(
+  it("should handle a query output modifier", () => {
+    const tokens = [
       queryOutputModifierKeyToken("tag", 1),
       queryValueToken("all", 4),
-      eofToken(5)
-    )
-    val result = new Parser(tokens).parse()
-    result shouldBe Success(
-      QueryList(
-        List(
+      eofToken(5),
+    ];
+    const result = new Parser(tokens).parse();
+    expect(result).toBe(
+      ok(
+        createQueryList([
           QueryOutputModifier(
             queryOutputModifierKeyToken("tag", 1),
             Some(queryValueToken("all", 4))
-          )
-        )
+          ),
+        ])
       )
-    )
-  }
+    );
+  });
 
-  it("should handle a solo binary operator") {
-    val tokens = List(
-      andToken()
-    )
-    val result = new Parser(tokens).parse()
+  it("should handle a solo binary operator", () => {
+    const tokens = [andToken()];
+    const result = new Parser(tokens).parse();
     assertFailure(
       result,
       "An AND keyword must have a search term before and after it, e.g. this AND that"
-    )
-  }
+    );
+  });
 
-  it("should handle empty groups") {
-    val tokens = List(
-      leftParenToken(),
-      rightParenToken(1)
-    )
-    val result = new Parser(tokens).parse()
-    assertFailure(result, "Groups must contain some content.")
-  }
+  it("should handle empty groups", () => {
+    const tokens = [leftParenToken(), rightParenToken(1)];
+    const result = new Parser(tokens).parse();
+    assertFailure(result, "Groups must contain some content.");
+  });
 
-  it("should handle a query value with no query key") {
-    val tokens = List(
-      quotedStringToken("example"),
-      queryValueToken("", 7)
-    )
-    val result = new Parser(tokens).parse()
-    assertFailure(result, "unexpected ':'")
-  }
+  it("should handle a query value with no query key", () => {
+    const tokens = [quotedStringToken("example"), queryValueToken("", 7)];
+    const result = new Parser(tokens).parse();
+    assertFailure(result, "unexpected ':'");
+  });
 
-  it("should handle a colon with no query key after another query") {
-    val tokens = List(
+  it("should handle a colon with no query key after another query", () => {
+    const tokens = [
       queryFieldKeyToken("tag", 5),
       queryValueToken("news", 8),
       colonToken(13),
-      eofToken(14)
-    )
-    val result = new Parser(tokens).parse()
-    assertFailure(result, "unexpected ':'")
-  }
+      eofToken(14),
+    ];
+    const result = new Parser(tokens).parse();
+    assertFailure(result, "unexpected ':'");
+  });
 
-  it("should not crash on arbitrary tokens") {
-    val tokenPermutations = List(
+  it("should not crash on arbitrary tokens", () => {
+    const tokens = [
       queryFieldKeyToken("tag"),
       queryValueToken("news"),
       queryOutputModifierKeyToken("show-fields"),
@@ -148,13 +163,22 @@ class ParserTest extends BaseTest with Matchers {
       quotedStringToken("sausages"),
       rightParenToken(1),
       unquotedStringToken("eggs"),
-      eofToken(14)
-    ).permutations.take(1000).toList
+      eofToken(14),
+    ];
 
-    tokenPermutations.map { tokens =>
-      new Parser(tokens).parse()
+    const tokenPermutations: Token[][] = [];
+    const generator = getPermutations(tokens);
+
+    for (let i = 0; i < 1000; i++) {
+      const next = generator.next();
+      if (!next.done) {
+        tokenPermutations.push(next.value);
+      }
     }
 
-    assert(true)
-  }
-}
+    tokenPermutations.map((tokens) => new Parser(tokens).parse());
+
+    // No crash
+    expect(true).toBe(true);
+  });
+});
