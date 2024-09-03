@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { ok, Result, ResultKind } from "../util/result";
-import { createQueryArray, QueryArray } from "./ast";
+import { createQueryArray, createQueryBinary, createQueryContent, createQueryField, createQueryStr, QueryArray } from "./ast";
 import {
   andToken,
   colonToken,
@@ -25,6 +25,7 @@ describe("parser", () => {
     switch (queryList.kind) {
       case ResultKind.Err: {
         expect(queryList.err.message).toContain(strContains);
+        return;
       }
       default: {
         throw new Error("This should not parse");
@@ -41,7 +42,7 @@ describe("parser", () => {
   it("should handle an empty token list", () => {
     const tokens = [eofToken(0)];
     const result = new Parser(tokens).parse();
-    expect(result).toBe(ok(createQueryArray([])));
+    expect(result).toEqual(ok(createQueryArray([])));
   });
 
   it("should handle an unbalanced binary", () => {
@@ -77,7 +78,8 @@ describe("parser", () => {
       quotedStringToken("a"),
       andToken(1),
       queryFieldKeyToken("tag", 5),
-      eofToken(8),
+      queryValueToken("b", 8),
+      eofToken(10),
     ];
     const result = new Parser(tokens).parse();
     assertFailure(result, "You cannot query for tags after 'AND'");
@@ -90,30 +92,11 @@ describe("parser", () => {
       eofToken(5),
     ];
     const result = new Parser(tokens).parse();
-    expect(result).toBe(
+    expect(result).toEqual(
       ok(
-        createQueryList([
-          QueryBinary(QueryContent(QueryStr("a")), None),
-          QueryField(queryFieldKeyToken("", 2), None),
-        ])
-      )
-    );
-  });
-
-  it("should handle a query output modifier", () => {
-    const tokens = [
-      queryOutputModifierKeyToken("tag", 1),
-      queryValueToken("all", 4),
-      eofToken(5),
-    ];
-    const result = new Parser(tokens).parse();
-    expect(result).toBe(
-      ok(
-        createQueryList([
-          QueryOutputModifier(
-            queryOutputModifierKeyToken("tag", 1),
-            Some(queryValueToken("all", 4))
-          ),
+        createQueryArray([
+          createQueryBinary(createQueryContent(createQueryStr("a")), undefined),
+          createQueryField(queryFieldKeyToken("", 2), undefined),
         ])
       )
     );

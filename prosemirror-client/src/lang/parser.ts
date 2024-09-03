@@ -14,6 +14,7 @@ import {
   QueryStr,
 } from "./ast";
 import { TokenType } from "./token";
+import { either, err, mapError, ok, Result } from "../util/result";
 
 class ParseError extends Error {
   constructor(public position: number, public message: string) {
@@ -23,28 +24,30 @@ class ParseError extends Error {
 
 export class Parser {
   private current: number = 0;
-  private skipTypes = [];
 
   constructor(private tokens: Token[]) {}
 
-  public parse(): QueryArray {
+  public parse(): Result<ParseError, QueryArray> {
     return this.queryArray();
   }
 
-  // program    -> statement* EOF
   private queryArray() {
-    const queries: (QueryBinary | QueryField)[] = [];
-    while (this.peek().tokenType !== TokenType.EOF) {
-      queries.push(this.query());
+    try {
+      const queries: (QueryBinary | QueryField)[] = [];
+      while (this.peek().tokenType !== TokenType.EOF) {
+        queries.push(this.query());
+      }
+
+      return ok(createQueryArray(queries));
+    } catch (e) {
+      if (e instanceof ParseError) {
+        return err(e);
+      }
+      throw e;
     }
-    return createQueryArray(queries);
   }
 
   private startOfQueryField = [TokenType.QUERY_FIELD_KEY, TokenType.PLUS];
-  private startOfQueryOutputModifier = [
-    TokenType.QUERY_OUTPUT_MODIFIER_KEY,
-    TokenType.AT,
-  ];
   private startOfQueryValue = [TokenType.QUERY_VALUE, TokenType.COLON];
 
   private query(): QueryBinary | QueryField {
@@ -94,7 +97,6 @@ export class Parser {
         return createQueryContent(this.queryGroup());
       case TokenType.STRING:
         return createQueryContent(this.queryStr());
-
       default: {
         const token = this.peek().tokenType;
         if ([TokenType.AND, TokenType.OR].includes(token)) {
@@ -103,7 +105,7 @@ export class Parser {
           );
         } else {
           throw this.error(
-            `I didn't expect what I found after '${this.previous().lexeme}'`
+            `I didn't expect what I found after '${this.previous()?.lexeme}'`
           );
         }
       }
@@ -147,43 +149,37 @@ export class Parser {
       `Expected a search key, e.g. +tag`
     );
 
-    const value = this.consume(
+    const maybeValue = this.safeConsume(
       TokenType.QUERY_VALUE,
       `Expected a search value, e.g. +tag:new`
     );
 
-    return createQueryField(key, value);
+    const value = mapError(() =>
+      this.safeConsume(
+        TokenType.COLON,
+        `Expected an ':' after the search key ${key.lexeme}`
+      )
+    )(maybeValue);
+
+    return either(
+      () => createQueryField(key, undefined),
+      (value: Token) => createQueryField(key, value)
+    )(value);
   }
 
-  private matchTokens = (tokens: TokenType[]) =>
-    tokens.some((token) => {
-      if (this.check(token)) {
-        this.advance();
-        return true;
-      } else {
-        return false;
-      }
-    });
-
-  /** Throw a sensible parse error when a query field or output modifier is
+  /**
+   * Throw a sensible parse error when a query field or output modifier is
    * found in the wrong place.
    */
   private guardAgainstQueryField = (errorLocation: string) => {
     switch (this.peek().tokenType) {
-      case TokenType.AT: {
-        throw this.error(
-          `You cannot put output modifiers (e.g. @show-fields:all) ${errorLocation}`
-        );
-      }
       case TokenType.PLUS: {
-        throw this.error(
-          `You cannot put queries for tags, sections etc. ${errorLocation}"`
-        );
+        throw this.error(`You cannot put query fields ${errorLocation}"`);
       }
       case TokenType.QUERY_FIELD_KEY: {
         const queryFieldNode = this.queryField();
         throw this.error(
-          `You cannot query for ${queryFieldNode.key.literal} ${errorLocation}`
+          `You cannot query for ${queryFieldNode.key.literal}s ${errorLocation}`
         );
       }
       default:
@@ -205,8 +201,9 @@ export class Parser {
 
   private advance = () => {
     if (!this.isAtEnd()) {
+      const currentToken = this.tokens[this.current];
       this.current = this.current + 1;
-      return this.tokens[this.current];
+      return currentToken;
     } else {
       return this.previous();
     }
@@ -217,6 +214,20 @@ export class Parser {
       return this.advance();
     } else {
       throw this.error(message);
+    }
+  };
+
+  private safeConsume = (
+    tokenType: TokenType,
+    message: string = ""
+  ): Result<ParseError, Token> => {
+    try {
+      return ok(this.consume(tokenType, message));
+    } catch (e) {
+      if (e instanceof ParseError) {
+        return err(e);
+      }
+      throw e;
     }
   };
 

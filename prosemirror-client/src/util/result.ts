@@ -73,7 +73,7 @@ const either =
  * @param result The Result
  */
 const mapError =
-  <E, A, F extends Result<E, A>>(f: (e: E) => F) =>
+  <E, A>(f: (e: E) => Result<E, A>) =>
   (result: Result<E, A>): Result<E, A> =>
     result.kind === ResultKind.Err ? f(result.err) : result;
 
