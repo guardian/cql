@@ -1,197 +1,199 @@
-package cql.lang
+import { TextSuggestionOption, TypeaheadField } from "./typeahead";
 
-import scala.concurrent.Future
-import com.gu.contentapi.client.{ContentApiClient, GuardianContentClient}
-import scala.concurrent.ExecutionContext.Implicits.global
+export class TypeaheadHelpersCapi {
+  public constructor(public client: GuardianContentClient) {}
 
-class TypeaheadHelpersCapi(client: GuardianContentClient) {
-
-  val fieldResolvers = List(
-    TypeaheadField(
+  fieldResolvers = [
+    new TypeaheadField(
       "tag",
       "Tag",
       "Search by content tags, e.g. sport/football",
-      getTags
+      this.getTags
     ),
-    TypeaheadField(
+    new TypeaheadField(
       "section",
       "Section",
       "Search by content sections, e.g. section/news",
-      getSections
+      this.getSections
     ),
-    TypeaheadField(
+    new TypeaheadField(
       "from-date",
       "From date",
       "The date to search from",
-      suggestionType = "DATE"
+      undefined,
+      "DATE"
     ),
-    TypeaheadField(
+    new TypeaheadField(
       "to-date",
       "To date",
       "The date to search to",
-      suggestionType = "DATE"
+      undefined,
+      "DATE"
     ),
-    TypeaheadField(
+    new TypeaheadField(
       "format",
       "Format",
       "The format to return the results in",
-      List(
-        TextSuggestionOption("JSON", "json", Some("JSON format")),
-        TextSuggestionOption("XML", "xml", Some("XML format"))
-      )
+      [
+        new TextSuggestionOption("JSON", "json", "JSON format"),
+        new TextSuggestionOption("XML", "xml", "XML format"),
+      ]
     ),
-    TypeaheadField(
+    new TypeaheadField(
       "query-fields",
       "Query fields",
       "Specify in which indexed fields query terms should be searched on, e.g. 'body', 'body, thumbnail'"
     ),
-    TypeaheadField(
+    new TypeaheadField(
       "reference",
       "Reference",
       "Return only content with those references, e.g. 'isbn/9780718178949'"
     ),
-    TypeaheadField(
+    new TypeaheadField(
       "reference-type",
       "Reference type",
       "Return only content with references of those types, e.g. 'isbn'"
     ),
-    TypeaheadField(
+    new TypeaheadField(
       "rights",
       "Rights",
       "Return only content with those rights",
-      List(
-        TextSuggestionOption(
+      [
+        new TextSuggestionOption(
           "Syndicatable",
           "syndicatable",
-          Some("Content that can be syndicated")
+          "Content that can be syndicated"
         ),
-        TextSuggestionOption(
+        new TextSuggestionOption(
           "Subscription databases",
           "syndicatable",
-          Some("Content that is available to developer-tier keys")
-        )
-      )
+          "Content that is available to developer-tier keys"
+        ),
+      ]
     ),
-    TypeaheadField(
+    new TypeaheadField(
       "ids",
       "IDs",
       "Return only content with those IDs, e.g. technology/2014/feb/17/flappy-bird-clones-apple-google"
     ),
-    TypeaheadField(
+    new TypeaheadField(
       "Production office",
       "production-office",
       "Return only content from those production offices, e.g. 'aus', 'uk,aus'",
-      List(
-        TextSuggestionOption("UK", "uk", Some("The UK production office")),
-        TextSuggestionOption(
+      [
+        new TextSuggestionOption("UK", "uk", "The UK production office"),
+        new TextSuggestionOption(
           "Australia",
           "aus",
-          Some("The Australia production office")
+          "The Australia production office"
         ),
-        TextSuggestionOption("US", "us", Some("The US production office"))
-      )
+        new TextSuggestionOption("US", "us", "The US production office"),
+      ]
     ),
-    TypeaheadField(
+    new TypeaheadField(
       "Language",
       "lang",
       "Return content that has the given ISO language code, e.g. 'en', 'fr'"
     ),
-    TypeaheadField(
+    new TypeaheadField(
       "Star rating",
       "star-rating",
       "Return only content with a given star rating",
-      List(
-        TextSuggestionOption("1", "1"),
-        TextSuggestionOption("2", "2"),
-        TextSuggestionOption("3", "3"),
-        TextSuggestionOption("4", "4"),
-        TextSuggestionOption("5", "5")
-      )
-    )
-  )
-
-  val outputModifierResolvers = List(
-    TypeaheadField(
+      [
+        new TextSuggestionOption("1", "1"),
+        new TextSuggestionOption("2", "2"),
+        new TextSuggestionOption("3", "3"),
+        new TextSuggestionOption("4", "4"),
+        new TextSuggestionOption("5", "5"),
+      ]
+    ),
+    new TypeaheadField(
       "show-fields",
       "Show fields",
       "Determine the list of fields to return",
-      List(
-        TextSuggestionOption("all", "all", Some("Description")),
-        TextSuggestionOption("trailText", "trailText", Some("Description")),
-        TextSuggestionOption("headline", "headline", Some("Description")),
-        TextSuggestionOption(
+      [
+        new TextSuggestionOption("all", "all", "Description"),
+        new TextSuggestionOption("trailText", "trailText", "Description"),
+        new TextSuggestionOption("headline", "headline", "Description"),
+        new TextSuggestionOption(
           "showInRelatedContent",
           "showInRelatedContent",
-          Some("Description")
+          "Description"
         ),
-        TextSuggestionOption("body", "body", Some("Description")),
-        TextSuggestionOption("lastModified", "lastModified", Some("Description")),
-        TextSuggestionOption(
+        new TextSuggestionOption("body", "body", "Description"),
+        new TextSuggestionOption("lastModified", "lastModified", "Description"),
+        new TextSuggestionOption(
           "hasStoryPackage",
           "hasStoryPackage",
-          Some("Description")
+          "Description"
         ),
-        TextSuggestionOption("score", "score", Some("Description")),
-        TextSuggestionOption("standfirst", "standfirst", Some("Description")),
-        TextSuggestionOption("shortUrl", "shortUrl", Some("Description")),
-        TextSuggestionOption("thumbnail", "thumbnail", Some("Description")),
-        TextSuggestionOption("wordcount", "wordcount", Some("Description")),
-        TextSuggestionOption("commentable", "commentable", Some("Description")),
-        TextSuggestionOption("isPremoderated", "isPremoderated", Some("Description")),
-        TextSuggestionOption("allowUgc", "allowUgc", Some("Description")),
-        TextSuggestionOption("byline", "byline", Some("Description")),
-        TextSuggestionOption("publication", "publication", Some("Description")),
-        TextSuggestionOption(
+        new TextSuggestionOption("score", "score", "Description"),
+        new TextSuggestionOption("standfirst", "standfirst", "Description"),
+        new TextSuggestionOption("shortUrl", "shortUrl", "Description"),
+        new TextSuggestionOption("thumbnail", "thumbnail", "Description"),
+        new TextSuggestionOption("wordcount", "wordcount", "Description"),
+        new TextSuggestionOption("commentable", "commentable", "Description"),
+        new TextSuggestionOption(
+          "isPremoderated",
+          "isPremoderated",
+          "Description"
+        ),
+        new TextSuggestionOption("allowUgc", "allowUgc", "Description"),
+        new TextSuggestionOption("byline", "byline", "Description"),
+        new TextSuggestionOption("publication", "publication", "Description"),
+        new TextSuggestionOption(
           "internalPageCode",
           "internalPageCode",
-          Some("Description")
+          "Description"
         ),
-        TextSuggestionOption(
+        new TextSuggestionOption(
           "productionOffice",
           "productionOffice",
-          Some("Description")
+          "Description"
         ),
-        TextSuggestionOption(
+        new TextSuggestionOption(
           "shouldHideAdverts",
           "shouldHideAdverts",
-          Some("Description")
+          "Description"
         ),
-        TextSuggestionOption(
+        new TextSuggestionOption(
           "liveBloggingNow",
           "liveBloggingNow",
-          Some("Description")
+          "Description"
         ),
-        TextSuggestionOption(
+        new TextSuggestionOption(
           "commentCloseDate",
           "commentCloseDate",
-          Some("Description")
+          "Description"
         ),
-        TextSuggestionOption("starRating", "starRating", Some("Description"))
-      )
-    )
-  )
+        new TextSuggestionOption("starRating", "starRating", "Description"),
+      ]
+    ),
+  ];
 
-  private def getTags(str: String): Future[List[TextSuggestionOption]] =
-    val query = str match
-      case ""  => ContentApiClient.tags
-      case str => ContentApiClient.tags.q(str)
-    client.getResponse(query).map { response =>
-      response.results.map { tag =>
-        TextSuggestionOption(
-          tag.webTitle,
-          tag.id,
-          tag.description
+  private getTags(str: String): Promise<TextSuggestionOption[]> {
+    const query =
+      str === "" ? ContentApiClient.tags : ContentApiClient.tags.q(str);
+    return this.client
+      .getResponse(query)
+      .then((response) =>
+        response.results.map(
+          (tag) =>
+            new TextSuggestionOption(tag.webTitle, tag.id, tag.description)
         )
-      }.toList
-    }
+      );
+  }
 
-  private def getSections(str: String): Future[List[TextSuggestionOption]] =
-    val query = str match
-      case ""  => ContentApiClient.sections
-      case str => ContentApiClient.sections.q(str)
-    client.getResponse(query).map { response =>
-      response.results.map { section =>
-        TextSuggestionOption(section.webTitle, section.id, Some(section.webTitle))
-      }.toList
-    }
+  private getSections(str: String): Promise<TextSuggestionOption[]> {
+    const query =
+      str === "" ? ContentApiClient.sections : ContentApiClient.sections.q(str);
+    return this.client
+      .getResponse(query)
+      .then((response) =>
+        response.results.map(
+          (tag) =>
+            new TextSuggestionOption(tag.webTitle, tag.id, section.webTitle)
+        )
+      );
+  }
 }

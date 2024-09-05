@@ -1,48 +1,40 @@
-package cql.lang
+import { TextSuggestionOption, TypeaheadField } from "./typeahead";
 
-import scala.concurrent.Future
-
-class TestTypeaheadHelpers {
-  val fieldResolvers = List(
-    TypeaheadField(
+export class TestTypeaheadHelpers {
+  public fieldResolvers = [
+    new TypeaheadField(
       "tag",
       "Tag",
       "Search by content tags, e.g. sport/football",
-      getTags
+      this.getTags
     ),
-    TypeaheadField(
+    new TypeaheadField(
       "section",
       "Section",
       "Search by content sections, e.g. section/news",
-      getSections
-    )
-  )
-
-  val outputModifierResolvers = List(
-    TypeaheadField(
-      "from-date",
-      "From date",
-      "The date to search from",
-      List.empty
+      this.getSections
     ),
-    TypeaheadField("to-date", "To date", "The date to search to", List.empty)
-  )
+    new TypeaheadField("from-date", "From date", "The date to search from", []),
+    new TypeaheadField("to-date", "To date", "The date to search to", []),
+  ];
 
-  private def getTags(str: String): Future[List[TextSuggestionOption]] =
-    Future.successful(
-      List(
-        TextSuggestionOption("Tags are magic", "tags-are-magic", Some("A magic tag"))
-      )
-    )
+  private getTags(_: string): Promise<TextSuggestionOption[]> {
+    return Promise.resolve([
+      new TextSuggestionOption(
+        "Tags are magic",
+        "tags-are-magic",
+        "A magic tag"
+      ),
+    ]);
+  }
 
-  private def getSections(str: String): Future[List[TextSuggestionOption]] =
-    Future.successful(
-      List(
-        TextSuggestionOption(
-          "Also sections",
-          "sections-are-magic",
-          Some("Sections are less magic")
-        )
-      )
-    )
+  private getSections(_: string): Promise<TextSuggestionOption[]> {
+    return Promise.resolve([
+      new TextSuggestionOption(
+        "Also sections",
+        "sections-are-magic",
+        "Sections are less magic"
+      ),
+    ]);
+  }
 }

@@ -15,7 +15,9 @@ export const createQueryArray = (
 export type QueryBinary = {
   type: "QueryBinary";
   left: QueryContent;
-  right?: [Token, QueryBinary];
+  right?: [Token, QueryBinary
+
+  ];
 };
 
 export const createQueryBinary = (
