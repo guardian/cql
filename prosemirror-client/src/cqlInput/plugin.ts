@@ -124,9 +124,9 @@ export const createCqlPlugin = ({
           suggestions: maybeNewState ? maybeNewState.suggestions : suggestions,
           error: maybeNewState
             ? maybeNewState.error
-            // Remove the error state if the document changes – the document may be
+            : // Remove the error state if the document changes – the document may be
             // valid, and the server will report if it is not
-            : !tr.docChanged
+            !tr.docChanged
             ? error
             : undefined,
         };
@@ -309,7 +309,7 @@ export const createCqlPlugin = ({
             ast,
             queryResult,
             error,
-          } = await cqlService.fetchResult(query);
+          } = (await cqlService.fetchResult(query)).result;
 
           if (queryResult) {
             onChange({ query: queryResult, cqlQuery: query });
@@ -363,7 +363,7 @@ export const createCqlPlugin = ({
           const prevQuery = cqlPluginKey.getState(prevState)?.queryStr!;
           const {
             queryStr: currentQuery = "",
-            suggestions,
+            suggestions = [],
             mapping,
             error,
           } = cqlPluginKey.getState(view.state)!;

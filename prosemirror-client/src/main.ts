@@ -1,7 +1,7 @@
 import { createCqlInput } from "./cqlInput/CqlInput";
 import applyDevTools from "prosemirror-dev-tools";
 import "./style.css";
-import { CqlService } from "./services/CqlService";
+import { CqlClientService, CqlServerService } from "./services/CqlService";
 
 const debugEl = document.createElement("div");
 debugEl.className = "CqlSandbox__debug-container";
@@ -9,7 +9,7 @@ debugEl.className = "CqlSandbox__debug-container";
 document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
   <h1>Rich query sandbox</h1>
   <cql-input id="cql-input" popover-container-id="popover-container"></cql-input>
-  
+
   <div id="cql-sandbox" class="CqlSandbox">
     <div class="CqlSandbox__query-results">
       <div>
@@ -36,14 +36,14 @@ const cqlEl = document.getElementById("cql")!;
 const queryEl = document.getElementById("query")!;
 cqlInput?.addEventListener("queryChange", ((e: CustomEvent) => {
   queryEl.innerHTML = e.detail.query;
-  cqlEl.innerHTML = e.detail.cqlQuery
+  cqlEl.innerHTML = e.detail.cqlQuery;
 }) as EventListener);
 
 const params = new URLSearchParams(window.location.search);
 const endpoint = params.get("endpoint");
 
-const initialEndpoint = endpoint || "http://localhost:5050";
-const cqlService = new CqlService(initialEndpoint);
+const initialEndpoint = endpoint || "http://content.guardianapis.com";
+const cqlService = new CqlClientService(initialEndpoint, "test");
 const CqlInput = createCqlInput(cqlService, debugEl);
 
 customElements.define("cql-input", CqlInput);

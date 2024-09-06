@@ -1,17 +1,13 @@
-export type CqlResult = {
-  tokens: Array<Token>;
-  ast?: QueryList;
-  queryResult?: string;
-  // Map from tokenType to a map of literals and their suggestions.
-  // Avoiding TokenType as type to avoid serialisation shenanigans in prototype.
-  suggestions: Array<TypeaheadSuggestion>;
-  error?: CqlError;
-};
+import { QueryArray } from "../lang/ast";
+import { Cql, CqlResult } from "../lang/Cql";
+import { Token } from "../lang/token";
+import { Typeahead } from "../lang/typeahead";
+import { TypeaheadHelpersCapi } from "../lang/typeaheadHelpersCapi";
 
 export type CqlError = {
-  position?: number,
+  position?: number;
   message: string;
-}
+};
 
 export type TypeaheadSuggestion = {
   from: number;
@@ -29,7 +25,11 @@ type Suggestions = {
 };
 
 type TextSuggestion = { suggestions: Array<TextSuggestionOption> };
-type TextSuggestionOption = { label: string; value: string, description: string };
+type TextSuggestionOption = {
+  label: string;
+  value: string;
+  description: string;
+};
 type DateSuggestion = { validFrom?: string; validTo?: string };
 
 export interface CqlServiceInterface {
@@ -40,7 +40,7 @@ export interface CqlServiceInterface {
   cancel(): void;
 }
 
-export class CqlService implements CqlServiceInterface {
+export class CqlServerService implements CqlServiceInterface {
   private abortController: AbortController | undefined;
 
   constructor(private url: string) {}
@@ -58,6 +58,29 @@ export class CqlService implements CqlServiceInterface {
     });
 
     return (await request.json()) as CqlResult;
+  }
+
+  public cancel() {
+    this.abortController?.abort();
+  }
+}
+
+export class CqlClientService implements CqlServiceInterface {
+  private abortController: AbortController | undefined;
+  private cql: Cql;
+
+  constructor(private capiBaseUrl: string, apiKey: string) {
+    const typeaheadResolvers = new TypeaheadHelpersCapi(capiBaseUrl, apiKey);
+    const typeahead = new Typeahead(typeaheadResolvers.fieldResolvers);
+    this.cql = new Cql(typeahead);
+  }
+
+  public setUrl(url: string) {
+    this.capiBaseUrl = url;
+  }
+
+  public async fetchResult(query: string) {
+    return await this.cql.run(query);
   }
 
   public cancel() {

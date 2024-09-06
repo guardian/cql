@@ -78,12 +78,6 @@ class Typeahead(
     fieldResolvers: List[TypeaheadField],
     outputModifierResolvers: List[TypeaheadField]
 ) {
-  private val typeaheadTokenResolverMap = Map(
-    TokenType.QUERY_FIELD_KEY -> suggestFieldKey,
-    TokenType.QUERY_OUTPUT_MODIFIER_KEY -> suggestOutputModifierKey,
-    TokenType.QUERY_VALUE -> suggestFieldValue
-  )
-
   private val typeaheadFieldEntries = TextSuggestion(
     fieldResolvers.map { case TypeaheadField(id, label, description, _, _) =>
       TextSuggestionOption(label, id, Some(description))

@@ -3,7 +3,7 @@ import type { SectionsResponse } from "@guardian/content-api-models/v1/sectionsR
 import { TextSuggestionOption, TypeaheadField } from "./typeahead";
 
 export class TypeaheadHelpersCapi {
-  public constructor(private baseUrl: string) {}
+  public constructor(private baseUrl: string, private apiKey: string) {}
 
   fieldResolvers = [
     new TypeaheadField(
@@ -195,10 +195,12 @@ export class TypeaheadHelpersCapi {
   }
 
   private async getJson<T>(path: string, query: string): Promise<T> {
+    const params = new URLSearchParams({
+      q: query,
+      "api-key": this.apiKey,
+    });
     return (await (
-      await fetch(
-        `${this.baseUrl}/${path}${query ? `?q=${encodeURI(query)}` : ""}`
-      )
+      await fetch(`${this.baseUrl}/${path}${params.toString()}`)
     ).json()) as T;
   }
 }

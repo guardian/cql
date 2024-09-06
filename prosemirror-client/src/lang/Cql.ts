@@ -12,7 +12,7 @@ export class CqlResult {
       tokens: Token[];
       ast?: QueryArray;
       suggestions?: TypeaheadSuggestion[];
-      queryResult?: String;
+      queryResult?: string;
       error?: Error;
     }
   ) {}
