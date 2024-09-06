@@ -161,10 +161,10 @@ export class Parser {
       )
     )(maybeValue);
 
-    return either(
+    return either(value)(
       () => createQueryField(key, undefined),
       (value: Token) => createQueryField(key, value)
-    )(value);
+    );
   }
 
   /**

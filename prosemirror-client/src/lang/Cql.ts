@@ -1,64 +1,66 @@
-import { Token } from "../Query"
-import { QueryList } from "./ast"
-import { Scanner } from "./scanner"
+import { either, Result } from "../util/result";
+import { QueryArray } from "./ast";
+import { queryStrFromQueryArray } from "./capiQueryString";
+import { Parser } from "./parser";
+import { Scanner } from "./scanner";
+import { Token } from "./token";
+import { Typeahead, TypeaheadSuggestion } from "./typeahead";
 
-type CqlError = { message: String, position?: number }
-
-export type CqlResult = {
-    tokens: Token[],
-    ast?: QueryList,
-    queryResult?: String,
-    // Map from tokenType to a map of literals and their suggestions.
-    // Avoiding TokenType as type to avoid serialisation shenanigans in prototype.
-    suggestions: Array<TypeaheadSuggestion>,
-    error?: CqlError
+export class CqlResult {
+  constructor(
+    public result: {
+      tokens: Token[];
+      ast?: QueryArray;
+      suggestions?: TypeaheadSuggestion[];
+      queryResult?: String;
+      error?: Error;
+    }
+  ) {}
 }
 
-class Cql {
+export class Cql {
   constructor(public typeahead: Typeahead) {}
 
   public run = (program: string): Promise<CqlResult> => {
-    const scanner = new Scanner(program)
-    const tokens = scanner.scanTokens()
-    const parser = new Parser(tokens)
+    const scanner = new Scanner(program);
+    const tokens = scanner.scanTokens();
+    const parser = new Parser(tokens);
+    const result = parser.parse();
 
-    try {
-      parser.parse() match
-      case Success(expr) =>
-        typeahead.getSuggestions(expr).map { suggestions =>
-          Try { CapiQueryString.build(expr) } match
-            case Success(capiQueryStr) =>
-              CqlResult(
-                tokens,
-                Some(expr),
-                Some(capiQueryStr),
-                suggestions,
-                None
-              )
-            case Failure(e: Throwable) =>
-              CqlResult(
-                tokens,
-                Some(expr),
-                None,
-                suggestions,
-                Some(CqlError(e.getMessage, None))
-              )
-        }
-      case Failure(e) =>
-        val error = e match {
-          case ParseError(position, message) =>
-            CqlError(message, Some(position))
-          case e: Throwable => CqlError(e.getMessage)
-        }
-
-        Future.successful(
-          CqlResult(
+    return either(result)(
+      (error) =>
+        Promise.resolve(
+          new CqlResult({
             tokens,
-            None,
-            None,
-            List.empty,
-            Some(error)
-          )
-        )
+            error,
+          })
+        ),
+      async (queryArr) => {
+        const suggestions = await this.typeahead.getSuggestions(queryArr);
+
+        const result = {
+          tokens,
+          ast: queryArr,
+          suggestions,
+        };
+
+        const queryStringResult: Result<Error, string> =
+          queryStrFromQueryArray(queryArr);
+
+        return either(queryStringResult)(
+          (error) =>
+            new CqlResult({
+              ...result,
+              error,
+            }),
+          (queryResult) =>
+            new CqlResult({
+              ...result,
+              tokens,
+              queryResult,
+            })
+        );
       }
+    );
+  };
 }

@@ -1,54 +1,51 @@
-package cql.lang
+import { describe, expect, it } from "bun:test";
+import { TestTypeaheadHelpers } from "./typeaheadHelpersTest";
+import { Typeahead } from "./typeahead";
+import { Cql } from "./Cql";
 
-import concurrent.ExecutionContext.Implicits.global // Todo: sticking plaster
+describe("a program", () => {
+  const typeaheadHelpers = new TestTypeaheadHelpers();
+  const typeahead = new Typeahead(typeaheadHelpers.fieldResolvers);
 
-class CqlTest extends BaseTest {
-  describe("a program") {
-    val typeaheadHelpers = new TestTypeaheadHelpers()
-    val typeahead = new Typeahead(typeaheadHelpers.fieldResolvers, List.empty)
+  const cql = new Cql(typeahead);
+  it("should produce a query string", async () => {
+    const cqlResult = await cql.run("+section:commentisfree");
+    expect(cqlResult.result.queryResult).toBe("section=commentisfree");
+  });
 
-    val cql = new Cql(typeahead)
-    it("should produce a query string") {
-      cql.run("+section:commentisfree").map { result =>
-        result.queryResult shouldBe Some("section=commentisfree")
-      }
-    }
+  it("should combine bare strings and search params", async () => {
+    const cqlResult = await cql.run("marina +section:commentisfree");
+    expect(cqlResult.result.queryResult).toBe("q=marina&section=commentisfree");
+  });
 
-    it("should combine bare strings and search params") {
-      cql.run("marina +section:commentisfree").map { result =>
-        result.queryResult shouldBe Some("q=marina&section=commentisfree")
-      }
-    }
+  it("should combine quoted strings and search params", async () => {
+    const cqlResult = await cql.run('"marina" +section:commentisfree');
+    expect(cqlResult.result.queryResult).toBe("q=marina&section=commentisfree");
+  });
 
-    it("should combine quoted strings and search params") {
-      cql.run("\"marina\" +section:commentisfree").map { result =>
-        result.queryResult shouldBe Some("q=marina&section=commentisfree")
-      }
-    }
+  it("should permit boolean operations", async () => {
+    const cqlResult = await cql.run('"marina" AND hyde +section:commentisfree');
+    expect(cqlResult.result.queryResult).toBe(
+      "q=marina%20AND%20hyde&section=commentisfree"
+    );
+  });
 
-    it("should permit boolean operations") {
-      cql.run("\"marina\" AND hyde +section:commentisfree").map { result =>
-        result.queryResult shouldBe Some(
-          "q=marina%20AND%20hyde&section=commentisfree"
-        )
-      }
-    }
+  it("should permit groups - 1", async () => {
+    const cqlResult = await cql.run(
+      '"marina" (hyde OR abramovic) +section:commentisfree'
+    );
 
-    it("should permit groups - 1") {
-      cql.run("\"marina\" AND (hyde OR abramovic) +section:commentisfree").map {
-        result =>
-          result.queryResult shouldBe Some(
-            "q=marina%20AND%20(hyde%20OR%20abramovic)&section=commentisfree"
-          )
-      }
-    }
+    expect(cqlResult.result.queryResult).toBe(
+      "q=marina%20(hyde%20OR%20abramovic)&section=commentisfree"
+    );
+  });
 
-    it("should permit groups - 2") {
-      cql.run("(hyde OR abramovic) +section:commentisfree").map { result =>
-        result.queryResult shouldBe Some(
-          "q=(hyde%20OR%20abramovic)&section=commentisfree"
-        )
-      }
-    }
-  }
-}
+  it("should permit groups - 2", async () => {
+    const cqlResult = await cql.run(
+      "(hyde OR abramovic) +section:commentisfree"
+    );
+    expect(cqlResult.result.queryResult).toBe(
+      "q=(hyde%20OR%20abramovic)&section=commentisfree"
+    );
+  });
+});

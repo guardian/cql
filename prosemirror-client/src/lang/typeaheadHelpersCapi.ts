@@ -1,7 +1,9 @@
+import type { TagsResponse } from "@guardian/content-api-models/v1/tagsResponse";
+import type { SectionsResponse } from "@guardian/content-api-models/v1/sectionsResponse";
 import { TextSuggestionOption, TypeaheadField } from "./typeahead";
 
 export class TypeaheadHelpersCapi {
-  public constructor(public client: GuardianContentClient) {}
+  public constructor(private baseUrl: string) {}
 
   fieldResolvers = [
     new TypeaheadField(
@@ -171,29 +173,32 @@ export class TypeaheadHelpersCapi {
     ),
   ];
 
-  private getTags(str: String): Promise<TextSuggestionOption[]> {
-    const query =
-      str === "" ? ContentApiClient.tags : ContentApiClient.tags.q(str);
-    return this.client
-      .getResponse(query)
-      .then((response) =>
-        response.results.map(
-          (tag) =>
-            new TextSuggestionOption(tag.webTitle, tag.id, tag.description)
-        )
-      );
+  private getTags(str: string): Promise<TextSuggestionOption[]> {
+    return this.getJson<TagsResponse>("tags", str).then((response) =>
+      response.results.map(
+        (tag) => new TextSuggestionOption(tag.webTitle, tag.id, tag.description)
+      )
+    );
   }
 
-  private getSections(str: String): Promise<TextSuggestionOption[]> {
-    const query =
-      str === "" ? ContentApiClient.sections : ContentApiClient.sections.q(str);
-    return this.client
-      .getResponse(query)
-      .then((response) =>
-        response.results.map(
-          (tag) =>
-            new TextSuggestionOption(tag.webTitle, tag.id, section.webTitle)
-        )
-      );
+  private getSections(str: string): Promise<TextSuggestionOption[]> {
+    return this.getJson<SectionsResponse>("tags", str).then((response) =>
+      response.results.map(
+        (section) =>
+          new TextSuggestionOption(
+            section.webTitle,
+            section.id,
+            section.webTitle
+          )
+      )
+    );
+  }
+
+  private async getJson<T>(path: string, query: string): Promise<T> {
+    return (await (
+      await fetch(
+        `${this.baseUrl}/${path}${query ? `?q=${encodeURI(query)}` : ""}`
+      )
+    ).json()) as T;
   }
 }

@@ -62,8 +62,8 @@ function fromUnsafe<A, E>(f: () => A, error: E): Result<E, A> {
  * )(flakyTaskResult)
  */
 const either =
-  <E, A, C>(f: (e: E) => C, g: (a: A) => C) =>
-  (result: Result<E, A>): C =>
+  <E, A>(result: Result<E, A>) =>
+  <C>(f: (e: E) => C, g: (a: A) => C) =>
     result.kind === ResultKind.Ok ? g(result.value) : f(result.err);
 
 /**
@@ -129,10 +129,10 @@ type Partitioned<E, A> = { errs: E[]; oks: A[] };
 const partition = <E, A>(results: Array<Result<E, A>>): Partitioned<E, A> =>
   results.reduce(
     ({ errs, oks }: Partitioned<E, A>, result) =>
-      either<E, A, Partitioned<E, A>>(
+      either<E, A>(result)<Partitioned<E, A>>(
         (err) => ({ errs: [...errs, err], oks }),
         (ok) => ({ errs, oks: [...oks, ok] })
-      )(result),
+      ),
     { errs: [], oks: [] }
   );
 
