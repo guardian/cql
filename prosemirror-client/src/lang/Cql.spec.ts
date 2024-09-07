@@ -30,6 +30,13 @@ describe("a program", () => {
     );
   });
 
+  it("should permit field queries", async () => {
+    const cqlResult = await cql.run('+tag:example');
+    expect(cqlResult.result.queryResult).toBe(
+      "tag=example"
+    );
+  });
+
   it("should permit groups - 1", async () => {
     const cqlResult = await cql.run(
       '"marina" (hyde OR abramovic) +section:commentisfree'

@@ -1,11 +1,19 @@
 import { describe, expect, it } from "bun:test";
 import { ok, Result, ResultKind } from "../util/result";
-import { createQueryArray, createQueryBinary, createQueryContent, createQueryField, createQueryStr, QueryArray } from "./ast";
+import {
+  createQueryArray,
+  createQueryBinary,
+  createQueryContent,
+  createQueryField,
+  createQueryStr,
+  QueryArray,
+} from "./ast";
 import {
   andToken,
   colonToken,
   eofToken,
   leftParenToken,
+  queryField,
   queryFieldKeyToken,
   queryOutputModifierKeyToken,
   queryValueToken,
@@ -43,6 +51,16 @@ describe("parser", () => {
     const tokens = [eofToken(0)];
     const result = new Parser(tokens).parse();
     expect(result).toEqual(ok(createQueryArray([])));
+  });
+
+  it("should handle a query field", () => {
+    const tokens = [
+      queryFieldKeyToken("ta"),
+      queryValueToken("", 3),
+      eofToken(4),
+    ];
+    const result = new Parser(tokens).parse();
+    expect(result).toEqual(ok(createQueryArray([queryField("ta", "")])));
   });
 
   it("should handle an unbalanced binary", () => {

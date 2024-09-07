@@ -16,7 +16,13 @@ export const unquotedStringToken = (str: string, start: number = 0) =>
 export const quotedStringToken = (str: string, start: number = 0) =>
   new Token(TokenType.STRING, `"${str}"`, str, start, start + str.length + 1);
 export const queryFieldKeyToken = (str: string, start: number = 0) =>
-  new Token(TokenType.QUERY_FIELD_KEY, `+${str}`, str, start, start + str.length);
+  new Token(
+    TokenType.QUERY_FIELD_KEY,
+    `+${str}`,
+    str,
+    start,
+    start + str.length
+  );
 export const queryOutputModifierKeyToken = (str: string, start: number = 0) =>
   new Token(
     TokenType.QUERY_OUTPUT_MODIFIER_KEY,
@@ -35,5 +41,7 @@ export const queryField = (
 ): QueryField =>
   createQueryField(
     queryFieldKeyToken(key, start),
-    value ? queryValueToken(value, start + key.length + 2) : undefined
+    value !== undefined
+      ? queryValueToken(value, start + key.length + 1)
+      : undefined
   );

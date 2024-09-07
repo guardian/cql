@@ -45,6 +45,18 @@ describe("scanner", () => {
 
   describe("search params", () => {
     it("should tokenise key value pairs for fields", () => {
+      const scanner = new Scanner("+tag:");
+      const tokens = scanner.scanTokens();
+      const expectedTokens = [
+        new Token(TokenType.QUERY_FIELD_KEY, "+tag", "tag", 0, 3),
+        new Token(TokenType.QUERY_VALUE, ":", undefined, 4, 4),
+        eofToken(5),
+      ];
+
+      expect(tokens).toEqual(expectedTokens);
+    });
+
+    it("should tokenise key value pairs for fields", () => {
       const scanner = new Scanner("+tag:tone/news");
       const tokens = scanner.scanTokens();
       const expectedTokens = [
