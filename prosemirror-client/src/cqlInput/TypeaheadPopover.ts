@@ -1,9 +1,9 @@
 import { Mapping } from "prosemirror-transform";
-import { TypeaheadSuggestion } from "../services/CqlService";
 import { EditorView } from "prosemirror-view";
 import { schema } from "./schema";
 import { TextSelection } from "prosemirror-state";
 import { Popover } from "./Popover";
+import { TypeaheadSuggestion } from "../lang/types";
 
 type MenuItem = {
   label: string;
@@ -38,8 +38,7 @@ export class TypeaheadPopover extends Popover {
     }
   }
 
-  public isRenderingNavigableMenu = () =>
-    !!this.currentSuggestion?.suggestions.TextSuggestion;
+  public isRenderingNavigableMenu = () => !!this.currentSuggestion?.suggestions;
 
   public updateItemsFromSuggestions = (
     typeaheadSuggestions: TypeaheadSuggestion[],
@@ -59,7 +58,7 @@ export class TypeaheadPopover extends Popover {
     const mappedSuggestions = typeaheadSuggestions.map((suggestion) => {
       const start = mapping.map(suggestion.from, -1);
       const end = mapping.map(suggestion.to);
-      return { ...suggestion, from: start, to: end };
+      return { ...suggestion, from: start, to: end } as TypeaheadSuggestion;
     });
 
     this.updateDebugSuggestions(mappedSuggestions);
@@ -78,16 +77,16 @@ export class TypeaheadPopover extends Popover {
     }
 
     this.currentSuggestion = suggestionThatCoversSelection;
-    const { from, to, suggestions } = suggestionThatCoversSelection;
+    const { from, to, suggestions, type } = suggestionThatCoversSelection;
     const { node } = this.view.domAtPos(from);
 
     this.renderPopover(node as HTMLElement);
 
-    if (suggestions.TextSuggestion) {
-      this.renderTextSuggestion(suggestions.TextSuggestion.suggestions);
+    if (type === "TEXT") {
+      this.renderTextSuggestion(suggestions);
     }
 
-    if (suggestions.DateSuggestion) {
+    if (type === "DATE") {
       const value = this.view.state.doc.textBetween(from, to);
 
       this.renderDateSuggestion(value);
@@ -102,9 +101,7 @@ export class TypeaheadPopover extends Popover {
 
   public applyOption = () => {
     const suggestion =
-      this.currentSuggestion?.suggestions.TextSuggestion?.suggestions[
-        this.currentOptionIndex
-      ];
+      this.currentSuggestion?.suggestions[this.currentOptionIndex];
 
     if (!this.currentSuggestion || !suggestion) {
       console.warn(
@@ -136,8 +133,7 @@ export class TypeaheadPopover extends Popover {
   };
 
   private moveSelection = (by: number) => {
-    const suggestions =
-      this.currentSuggestion?.suggestions.TextSuggestion?.suggestions!;
+    const suggestions = this.currentSuggestion?.suggestions!;
     this.currentOptionIndex =
       (this.currentOptionIndex + by + (by < 0 ? suggestions.length! : 0)) %
       suggestions.length!;
@@ -194,7 +190,7 @@ export class TypeaheadPopover extends Popover {
         this.view.state.selection.to
       }
             </p>
-            
+
       <div>${suggestions.map((suggestion) =>
         JSON.stringify(suggestion, undefined, "  ")
       )}</div>`;

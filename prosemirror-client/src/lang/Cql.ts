@@ -4,7 +4,8 @@ import { queryStrFromQueryArray } from "./capiQueryString";
 import { Parser } from "./parser";
 import { Scanner } from "./scanner";
 import { Token } from "./token";
-import { Typeahead, TypeaheadSuggestion } from "./typeahead";
+import { Typeahead } from "./typeahead";
+import { TypeaheadSuggestion } from "./types";
 
 export class CqlResult {
   constructor(

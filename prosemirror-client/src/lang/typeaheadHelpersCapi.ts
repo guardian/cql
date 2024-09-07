@@ -1,6 +1,7 @@
 import type { TagsResponse } from "@guardian/content-api-models/v1/tagsResponse";
 import type { SectionsResponse } from "@guardian/content-api-models/v1/sectionsResponse";
-import { TextSuggestionOption, TypeaheadField } from "./typeahead";
+import { TypeaheadField } from "./typeahead";
+import { TextSuggestionOption } from "./types";
 
 export class TypeaheadHelpersCapi {
   public constructor(private baseUrl: string, private apiKey: string) {}

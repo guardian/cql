@@ -1,6 +1,4 @@
-import { QueryArray } from "../lang/ast";
 import { Cql, CqlResult } from "../lang/Cql";
-import { Token } from "../lang/token";
 import { Typeahead } from "../lang/typeahead";
 import { TypeaheadHelpersCapi } from "../lang/typeaheadHelpersCapi";
 
@@ -8,29 +6,6 @@ export type CqlError = {
   position?: number;
   message: string;
 };
-
-export type TypeaheadSuggestion = {
-  from: number;
-  to: number;
-  // The suffix to apply if this suggestion is accepted at the trailing edge of the query.
-  // E.g. when we have typed '+ta' accept the key suggestion 'tag', we'll want to apply '+tag:'
-  // to trigger typeahead for the value.
-  suffix: string;
-  suggestions: Suggestions;
-};
-
-type Suggestions = {
-  TextSuggestion?: TextSuggestion;
-  DateSuggestion: DateSuggestion;
-};
-
-type TextSuggestion = { suggestions: Array<TextSuggestionOption> };
-type TextSuggestionOption = {
-  label: string;
-  value: string;
-  description: string;
-};
-type DateSuggestion = { validFrom?: string; validTo?: string };
 
 export interface CqlServiceInterface {
   setUrl(url: string): void;

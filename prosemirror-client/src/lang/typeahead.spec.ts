@@ -5,12 +5,9 @@ import {
   queryValueToken,
   quotedStringToken,
 } from "./testUtils";
-import {
-  TextSuggestionOption,
-  Typeahead,
-  TypeaheadSuggestion,
-} from "./typeahead";
+import { Typeahead } from "./typeahead";
 import { TestTypeaheadHelpers } from "./typeaheadHelpersTest";
+import { TextSuggestionOption, TypeaheadSuggestion } from "./types";
 
 describe("typeahead", () => {
   const typeaheadQueryClient = new TestTypeaheadHelpers();
@@ -43,6 +40,7 @@ describe("typeahead", () => {
             "Search by content tags, e.g. sport/football"
           ),
         ],
+        "TEXT",
         ":"
       ),
     ]);
@@ -69,6 +67,7 @@ describe("typeahead", () => {
             "Search by content tags, e.g. sport/football"
           ),
         ],
+        "TEXT",
         ":"
       ),
       new TypeaheadSuggestion(
@@ -81,6 +80,7 @@ describe("typeahead", () => {
             "A magic tag"
           ),
         ],
+        "TEXT",
         " "
       ),
     ]);
@@ -103,6 +103,7 @@ describe("typeahead", () => {
             "Search by content tags, e.g. sport/football"
           ),
         ],
+        "TEXT",
         ":"
       ),
       new TypeaheadSuggestion(
@@ -115,7 +116,7 @@ describe("typeahead", () => {
             "A magic tag"
           ),
         ],
-
+        "TEXT",
         " "
       ),
     ]);
@@ -143,9 +144,10 @@ describe("typeahead", () => {
             "The date to search from"
           ),
         ],
+        "TEXT",
         ":"
       ),
-      new TypeaheadSuggestion(9, 9, [], " "),
+      new TypeaheadSuggestion(9, 9, [], "TEXT", " "),
     ]);
   });
 });

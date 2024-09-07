@@ -1,9 +1,5 @@
 import { DecorationSet } from "prosemirror-view";
-import {
-  CqlError,
-  CqlServiceInterface,
-  TypeaheadSuggestion,
-} from "../services/CqlService";
+import { CqlError, CqlServiceInterface } from "../services/CqlService";
 import {
   AllSelection,
   Plugin,
@@ -29,6 +25,7 @@ import { DELETE_CHIP_INTENT, chipWrapper, doc, schema } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { QueryChangeEventDetail } from "./dom";
 import { ErrorPopover } from "./ErrorPopover";
+import { TypeaheadSuggestion } from "../lang/types";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 

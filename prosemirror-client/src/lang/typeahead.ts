@@ -1,37 +1,16 @@
 import { QueryArray, QueryField } from "./ast";
 import { Token } from "./token";
-
-export class TypeaheadSuggestion {
-  constructor(
-    public from: number,
-    public to: number,
-    public suggestions: Suggestion[],
-    // The suffix to apply if this suggestion is accepted at the trailing edge of the query.
-    // E.g. when we have typed '+ta' accept the key suggestion 'tag', we'll want to apply '+tag:'
-    // to trigger typeahead for the value.
-    public suffix?: string
-  ) {}
-}
-
-type Suggestion = TextSuggestionOption | DateSuggestion;
-
-export class TextSuggestionOption {
-  public constructor(
-    public label: string,
-    public value: string,
-    public description?: string
-  ) {}
-}
-
-export class DateSuggestion {
-  constructor(public validFrom?: string, public validTo?: string) {}
-}
+import {
+  DateSuggestion,
+  Suggestion,
+  TextSuggestionOption,
+  TypeaheadSuggestion,
+  TypeaheadType,
+} from "./types";
 
 export type TypeaheadResolver =
   | ((str: string) => Promise<TextSuggestionOption[]>)
   | TextSuggestionOption[];
-
-type TypeaheadType = "TEXT" | "DATE";
 
 export class TypeaheadField {
   constructor(
@@ -95,7 +74,13 @@ export class Typeahead {
     }
 
     return [
-      new TypeaheadSuggestion(keyToken.start, keyToken.end, suggestions, ":"),
+      new TypeaheadSuggestion(
+        keyToken.start,
+        keyToken.end,
+        suggestions,
+        "TEXT",
+        ":"
+      ),
     ];
   }
 
@@ -109,17 +94,27 @@ export class Typeahead {
     }
 
     const keySuggestions = this.getSuggestionsForKeyToken(key);
-    const valueSuggestions = this.suggestFieldValue(
+    const maybeValueSuggestions = this.suggestFieldValue(
       key.literal ?? "",
       value.literal ?? ""
-    ).then(
-      (suggestions) =>
-        new TypeaheadSuggestion(value.start, value.end, suggestions, " ")
     );
 
-    return Promise.all([keySuggestions, valueSuggestions]).then((_) =>
-      _.flat()
-    );
+    if (!maybeValueSuggestions) {
+      return Promise.resolve(keySuggestions);
+    }
+
+    const [suggestionType, eventuallySuggestions] = maybeValueSuggestions;
+
+    return eventuallySuggestions.then((suggestions) => [
+      ...keySuggestions,
+      new TypeaheadSuggestion(
+        value.start,
+        value.end,
+        suggestions,
+        suggestionType,
+        " "
+      ),
+    ]);
   }
 
   private suggestFieldKey(str: string): TextSuggestionOption[] | undefined {
@@ -138,17 +133,20 @@ export class Typeahead {
     }
   }
 
-  private suggestFieldValue(key: string, str: string): Promise<Suggestion[]> {
+  private suggestFieldValue(
+    key: string,
+    str: string
+  ): [TypeaheadType, Promise<Suggestion[]>] | undefined {
     const resolver = this.fieldResolvers.find((_) => _.id == key);
 
     if (!resolver) {
-      return Promise.resolve([]);
+      return undefined;
     }
 
     if (resolver.suggestionType === "DATE") {
-      return Promise.resolve([new DateSuggestion()]);
+      return ["DATE", Promise.resolve([new DateSuggestion()])];
     } else {
-      return resolver.resolveSuggestions(str);
+      return ["TEXT", resolver.resolveSuggestions(str)];
     }
   }
 }
