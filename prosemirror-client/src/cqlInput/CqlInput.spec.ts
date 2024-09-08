@@ -114,10 +114,14 @@ test("accepts the given value when a popover appears", async () => {
 test("ctrl-a moves the caret to the beginning of the input", async () => {
   const { container } = mountComponent("example ");
   await typeIntoInput(container, "{Control>}a{/Control}<");
+
+  await findByShadowText(container, "<example");
 });
 
 test("ctrl-e moves the caret to the end of the input", async () => {
   const { container } = mountComponent("example ");
   await moveCursorToStart(container);
   await typeIntoInput(container, "{Control>}e{/Control}>");
+
+  await findByShadowText(container, "example >");
 });
