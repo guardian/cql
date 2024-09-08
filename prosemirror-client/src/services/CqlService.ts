@@ -55,7 +55,16 @@ export class CqlClientService implements CqlServiceInterface {
   }
 
   public async fetchResult(query: string) {
-    return await this.cql.run(query);
+    this.abortController = new AbortController();
+
+    return new Promise<CqlResult>((resolve, reject) => {
+      if (this.abortController) {
+        this.abortController.signal.addEventListener("abort", () => {
+          reject(new DOMException("Aborted", "AbortError"));
+        });
+      }
+      this.cql.run(query).then(resolve);
+    });
   }
 
   public cancel() {

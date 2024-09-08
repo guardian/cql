@@ -10,29 +10,29 @@ describe("a program", () => {
   const cql = new Cql(typeahead);
   it("should produce a query string", async () => {
     const cqlResult = await cql.run("+section:commentisfree");
-    expect(cqlResult.result.queryResult).toBe("section=commentisfree");
+    expect(cqlResult.queryResult).toBe("section=commentisfree");
   });
 
   it("should combine bare strings and search params", async () => {
     const cqlResult = await cql.run("marina +section:commentisfree");
-    expect(cqlResult.result.queryResult).toBe("q=marina&section=commentisfree");
+    expect(cqlResult.queryResult).toBe("q=marina&section=commentisfree");
   });
 
   it("should combine quoted strings and search params", async () => {
     const cqlResult = await cql.run('"marina" +section:commentisfree');
-    expect(cqlResult.result.queryResult).toBe("q=marina&section=commentisfree");
+    expect(cqlResult.queryResult).toBe("q=marina&section=commentisfree");
   });
 
   it("should permit boolean operations", async () => {
     const cqlResult = await cql.run('"marina" AND hyde +section:commentisfree');
-    expect(cqlResult.result.queryResult).toBe(
+    expect(cqlResult.queryResult).toBe(
       "q=marina%20AND%20hyde&section=commentisfree"
     );
   });
 
   it("should permit field queries", async () => {
     const cqlResult = await cql.run('+tag:example');
-    expect(cqlResult.result.queryResult).toBe(
+    expect(cqlResult.queryResult).toBe(
       "tag=example"
     );
   });
@@ -42,7 +42,7 @@ describe("a program", () => {
       '"marina" (hyde OR abramovic) +section:commentisfree'
     );
 
-    expect(cqlResult.result.queryResult).toBe(
+    expect(cqlResult.queryResult).toBe(
       "q=marina%20(hyde%20OR%20abramovic)&section=commentisfree"
     );
   });
@@ -51,7 +51,7 @@ describe("a program", () => {
     const cqlResult = await cql.run(
       "(hyde OR abramovic) +section:commentisfree"
     );
-    expect(cqlResult.result.queryResult).toBe(
+    expect(cqlResult.queryResult).toBe(
       "q=(hyde%20OR%20abramovic)&section=commentisfree"
     );
   });
