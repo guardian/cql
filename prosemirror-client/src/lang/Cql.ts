@@ -1,22 +1,22 @@
 import { either, Result } from "../util/result";
-import { QueryArray } from "./ast";
-import { queryStrFromQueryArray } from "./capiQueryString";
+import { QueryList } from "./ast";
+import { queryStrFromQueryList } from "./capiQueryString";
 import { Parser } from "./parser";
 import { Scanner } from "./scanner";
 import { Token } from "./token";
 import { Typeahead } from "./typeahead";
 import { TypeaheadSuggestion } from "./types";
 
-export class CqlResult {
-  constructor(
-    public result: {
-      tokens: Token[];
-      ast?: QueryArray;
-      suggestions?: TypeaheadSuggestion[];
-      queryResult?: string;
-      error?: Error;
-    }
-  ) {}
+export type CqlResult = {
+  tokens: Token[];
+  ast?: QueryList;
+  suggestions?: TypeaheadSuggestion[];
+  queryResult?: string;
+  error?: Error;
+};
+
+export class CqlResultEnvelope {
+  constructor(public result: CqlResult) {}
 }
 
 export class Cql {
@@ -28,10 +28,10 @@ export class Cql {
     const parser = new Parser(tokens);
     const result = parser.parse();
 
-    return either(result)(
+    const eventuallyResult = either(result)(
       (error) =>
         Promise.resolve(
-          new CqlResult({
+          new CqlResultEnvelope({
             tokens,
             error,
           })
@@ -46,16 +46,16 @@ export class Cql {
         };
 
         const queryStringResult: Result<Error, string> =
-          queryStrFromQueryArray(queryArr);
+          queryStrFromQueryList(queryArr);
 
         return either(queryStringResult)(
           (error) =>
-            new CqlResult({
+            new CqlResultEnvelope({
               ...result,
               error,
             }),
           (queryResult) =>
-            new CqlResult({
+            new CqlResultEnvelope({
               ...result,
               tokens,
               queryResult,
@@ -63,5 +63,6 @@ export class Cql {
         );
       }
     );
+    return eventuallyResult.then((resultEnvelope) => resultEnvelope.result);
   };
 }

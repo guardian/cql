@@ -71,31 +71,25 @@
       "from": 8,
       "to": 11,
       "suffix": ":",
-      "suggestions": {
-        "TextSuggestion": {
-          "suggestions": [
-            {
-              "label": "Tag",
-              "value": "tag"
-            }
-          ]
+      "type": "TEXT",
+      "suggestions": [
+        {
+          "label": "Tag",
+          "value": "tag"
         }
-      }
+      ]
     },
     {
       "from": 12,
       "to": 26,
       "suffix": " ",
-      "suggestions": {
-        "TextSuggestion": {
-          "suggestions": [
-            {
-              "label": "Tags are magic",
-              "value": "tags-are-magic"
-            }
-          ]
+      "type": "TEXT",
+      "suggestions": [
+        {
+          "label": "Tags are magic",
+          "value": "tags-are-magic"
         }
-      }
+      ]
     }
   ],
   "error": null

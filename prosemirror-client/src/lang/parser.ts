@@ -1,12 +1,12 @@
 import { Token } from "./token";
 import {
-  createQueryArray,
+  createQueryList,
   createQueryBinary,
   createQueryContent,
   createQueryField,
   createQueryGroup,
   createQueryStr,
-  QueryArray,
+  QueryList,
   QueryBinary,
   QueryContent,
   QueryField,
@@ -27,18 +27,18 @@ export class Parser {
 
   constructor(private tokens: Token[]) {}
 
-  public parse(): Result<ParseError, QueryArray> {
-    return this.queryArray();
+  public parse(): Result<ParseError, QueryList> {
+    return this.QueryList();
   }
 
-  private queryArray() {
+  private QueryList() {
     try {
       const queries: (QueryBinary | QueryField)[] = [];
       while (this.peek().tokenType !== TokenType.EOF) {
         queries.push(this.query());
       }
 
-      return ok(createQueryArray(queries));
+      return ok(createQueryList(queries));
     } catch (e) {
       if (e instanceof ParseError) {
         return err(e);

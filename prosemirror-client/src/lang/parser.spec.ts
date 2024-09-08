@@ -1,12 +1,12 @@
 import { describe, expect, it } from "bun:test";
 import { ok, Result, ResultKind } from "../util/result";
 import {
-  createQueryArray,
+  createQueryList,
   createQueryBinary,
   createQueryContent,
   createQueryField,
   createQueryStr,
-  QueryArray,
+  QueryList,
 } from "./ast";
 import {
   andToken,
@@ -27,7 +27,7 @@ import { Token } from "./token";
 
 describe("parser", () => {
   const assertFailure = (
-    queryList: Result<Error, QueryArray>,
+    queryList: Result<Error, QueryList>,
     strContains: String
   ) => {
     switch (queryList.kind) {
@@ -50,7 +50,7 @@ describe("parser", () => {
   it("should handle an empty token list", () => {
     const tokens = [eofToken(0)];
     const result = new Parser(tokens).parse();
-    expect(result).toEqual(ok(createQueryArray([])));
+    expect(result).toEqual(ok(createQueryList([])));
   });
 
   it("should handle a query field", () => {
@@ -60,7 +60,7 @@ describe("parser", () => {
       eofToken(4),
     ];
     const result = new Parser(tokens).parse();
-    expect(result).toEqual(ok(createQueryArray([queryField("ta", "")])));
+    expect(result).toEqual(ok(createQueryList([queryField("ta", "")])));
   });
 
   it("should handle an unbalanced binary", () => {
@@ -112,7 +112,7 @@ describe("parser", () => {
     const result = new Parser(tokens).parse();
     expect(result).toEqual(
       ok(
-        createQueryArray([
+        createQueryList([
           createQueryBinary(createQueryContent(createQueryStr("a")), undefined),
           createQueryField(queryFieldKeyToken("", 2), undefined),
         ])

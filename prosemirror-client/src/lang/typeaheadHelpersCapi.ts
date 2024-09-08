@@ -6,7 +6,33 @@ import { TextSuggestionOption } from "./types";
 export class TypeaheadHelpersCapi {
   public constructor(private baseUrl: string, private apiKey: string) {}
 
-  fieldResolvers = [
+  private getTags = (
+    str: string,
+    signal: AbortSignal
+  ): Promise<TextSuggestionOption[]> =>
+    this.getJson<{ response: TagsResponse }>("tags", str, signal).then((body) =>
+      body.response.results.map(
+        (tag) => new TextSuggestionOption(tag.webTitle, tag.id, tag.description)
+      )
+    );
+
+  private getSections = (
+    str: string,
+    signal: AbortSignal
+  ): Promise<TextSuggestionOption[]> =>
+    this.getJson<{ response: SectionsResponse }>("tags", str, signal).then(
+      (body) =>
+        body.response.results.map(
+          (section) =>
+            new TextSuggestionOption(
+              section.webTitle,
+              section.id,
+              section.webTitle
+            )
+        )
+    );
+
+  public fieldResolvers = [
     new TypeaheadField(
       "tag",
       "Tag",
@@ -174,34 +200,17 @@ export class TypeaheadHelpersCapi {
     ),
   ];
 
-  private getTags(str: string): Promise<TextSuggestionOption[]> {
-    return this.getJson<TagsResponse>("tags", str).then((response) =>
-      response.results.map(
-        (tag) => new TextSuggestionOption(tag.webTitle, tag.id, tag.description)
-      )
-    );
-  }
-
-  private getSections(str: string): Promise<TextSuggestionOption[]> {
-    return this.getJson<SectionsResponse>("tags", str).then((response) =>
-      response.results.map(
-        (section) =>
-          new TextSuggestionOption(
-            section.webTitle,
-            section.id,
-            section.webTitle
-          )
-      )
-    );
-  }
-
-  private async getJson<T>(path: string, query: string): Promise<T> {
+  private async getJson<T>(
+    path: string,
+    query: string,
+    signal: AbortSignal
+  ): Promise<T> {
     const params = new URLSearchParams({
       q: query,
       "api-key": this.apiKey,
     });
     return (await (
-      await fetch(`${this.baseUrl}/${path}${params.toString()}`)
+      await fetch(`${this.baseUrl}/${path}?${params.toString()}`, { signal })
     ).json()) as T;
   }
 }

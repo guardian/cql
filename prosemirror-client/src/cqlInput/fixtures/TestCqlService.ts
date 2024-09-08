@@ -1,14 +1,15 @@
-import { CqlResult, CqlServiceInterface } from "../../services/CqlService";
+import { CqlServiceInterface } from "../../services/CqlService";
 import empty from "./responses/<empty>.json";
 import example_plus from "./responses/example_+.json";
 import example_pluscolon from "./responses/example_+:.json";
 import example_plustagcolon from "./responses/example_+tag:.json";
 import example_tags_are_magic from "./responses/example_+tag:tags-are-magic.json";
 import { createTextResponse } from "./responses/createTextResponse";
+import { CqlResult } from "../../lang/Cql";
 
 const resultFixtures: Record<string, CqlResult> = {
   e: createTextResponse("e"),
-  ex: createTextResponse("ex"), 
+  ex: createTextResponse("ex"),
   exa: createTextResponse("exa"),
   exam: createTextResponse("exam"),
   examp: createTextResponse("examp"),
@@ -24,7 +25,7 @@ const resultFixtures: Record<string, CqlResult> = {
   "example +tag:tags-are-magic": example_tags_are_magic,
   "example +tag:tags-are-magic ": example_tags_are_magic,
   "example +tag:tags-are-magic  ": example_tags_are_magic,
-} as any;
+};
 
 export class TestCqlService implements CqlServiceInterface {
   private abortController: AbortController | undefined;

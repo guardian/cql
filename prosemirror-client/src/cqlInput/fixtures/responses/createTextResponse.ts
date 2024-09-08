@@ -1,4 +1,6 @@
-export const createTextResponse = (text: string) => ({
+import { CqlResult } from "../../../lang/Cql";
+
+export const createTextResponse = (text: string): CqlResult => ({
   tokens: [
     {
       type: "Token",

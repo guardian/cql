@@ -306,7 +306,7 @@ export const createCqlPlugin = ({
             ast,
             queryResult,
             error,
-          } = (await cqlService.fetchResult(query)).result;
+          } = await cqlService.fetchResult(query);
 
           if (queryResult) {
             onChange({ query: queryResult, cqlQuery: query });

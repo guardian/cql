@@ -1,14 +1,14 @@
 import { Token } from "./token";
 
-export type QueryArray = {
-  type: "QueryArray";
+export type QueryList = {
+  type: "QueryList";
   content: (QueryBinary | QueryField)[];
 };
 
-export const createQueryArray = (
-  content: QueryArray["content"]
-): QueryArray => ({
-  type: "QueryArray",
+export const createQueryList = (
+  content: QueryList["content"]
+): QueryList => ({
+  type: "QueryList",
   content,
 });
 

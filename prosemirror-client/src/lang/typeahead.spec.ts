@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { createQueryArray, createQueryField } from "./ast";
+import { createQueryList, createQueryField } from "./ast";
 import {
   queryFieldKeyToken,
   queryValueToken,
@@ -14,11 +14,11 @@ describe("typeahead", () => {
   const typeahead = new Typeahead(typeaheadQueryClient.fieldResolvers);
 
   it("should give no typeahead where none is warranted", async () => {
-    expect(await typeahead.getSuggestions(createQueryArray([]))).toEqual([]);
+    expect(await typeahead.getSuggestions(createQueryList([]))).toEqual([]);
 
     expect(
       await typeahead.getSuggestions(
-        createQueryArray([
+        createQueryList([
           createQueryField(queryFieldKeyToken("", 0), undefined),
         ])
       )
@@ -27,7 +27,7 @@ describe("typeahead", () => {
 
   it("should give typeahead suggestions for query meta keys", async () => {
     const suggestions = await typeahead.getSuggestions(
-      createQueryArray([createQueryField(quotedStringToken("ta"), undefined)])
+      createQueryList([createQueryField(quotedStringToken("ta"), undefined)])
     );
     expect(suggestions).toEqual([
       new TypeaheadSuggestion(
@@ -48,7 +48,7 @@ describe("typeahead", () => {
 
   it("should give typeahead suggestions for both query meta keys and values", async () => {
     const suggestions = await typeahead.getSuggestions(
-      createQueryArray([
+      createQueryList([
         createQueryField(
           queryFieldKeyToken("tag", 0),
           queryValueToken("tags-are-magic", 5)
@@ -88,7 +88,7 @@ describe("typeahead", () => {
 
   it("should give value suggestions for an empty string", async () => {
     const suggestions = await typeahead.getSuggestions(
-      createQueryArray([
+      createQueryList([
         createQueryField(queryFieldKeyToken("tag", 0), queryValueToken("", 4)),
       ])
     );
@@ -124,7 +124,7 @@ describe("typeahead", () => {
 
   it("should give a suggestion of type DATE given e.g. 'from-date'", async () => {
     const suggestions = await typeahead.getSuggestions(
-      createQueryArray([
+      createQueryList([
         createQueryField(
           queryFieldKeyToken("from-date", 0),
           queryValueToken("", 9)

@@ -1,5 +1,5 @@
 import { err, ok, Result } from "../util/result";
-import { QueryBinary, QueryContent, QueryArray } from "./ast";
+import { QueryBinary, QueryContent, QueryList } from "./ast";
 
 class CapiQueryStringError extends Error {
   public constructor(message: string) {
@@ -7,8 +7,8 @@ class CapiQueryStringError extends Error {
   }
 }
 
-export const queryStrFromQueryArray = (
-  program: QueryArray
+export const queryStrFromQueryList = (
+  program: QueryList
 ): Result<Error, string> => {
   const searchStrs = program.content.flatMap((expr) => {
     switch (expr.type) {

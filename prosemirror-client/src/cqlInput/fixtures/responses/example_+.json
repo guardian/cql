@@ -1,102 +1,95 @@
 {
-    "tokens" : [
+  "tokens": [
+    {
+      "type": "Token",
+      "tokenType": "STRING",
+      "lexeme": "example",
+      "start": 0,
+      "end": 6,
+      "literal": "example"
+    },
+    {
+      "type": "Token",
+      "tokenType": "QUERY_FIELD_KEY",
+      "lexeme": "+",
+      "start": 8,
+      "end": 8,
+      "literal": null
+    },
+    {
+      "type": "Token",
+      "tokenType": "QUERY_VALUE",
+      "lexeme": ":",
+      "start": 9,
+      "end": 9,
+      "literal": null
+    },
+    {
+      "type": "Token",
+      "tokenType": "EOF",
+      "lexeme": "",
+      "start": 12,
+      "end": 12,
+      "literal": null
+    }
+  ],
+  "ast": {
+    "type": "QueryList",
+    "content": [
       {
-        "type" : "Token",
-        "tokenType" : "STRING",
-        "lexeme" : "example",
-        "start" : 0,
-        "end" : 6,
-        "literal" : "example"
+        "type": "QueryBinary",
+        "left": {
+          "type": "QueryContent",
+          "searchExpr": "example"
+        },
+        "right": null
       },
       {
-        "type" : "Token",
-        "tokenType" : "QUERY_FIELD_KEY",
-        "lexeme" : "+",
-        "start" : 8,
-        "end" : 8,
-        "literal" : null
-      },
-      {
-        "type" : "Token",
-        "tokenType" : "QUERY_VALUE",
-        "lexeme" : ":",
-        "start" : 9,
-        "end" : 9,
-        "literal" : null
-      },
-      {
-        "type" : "Token",
-        "tokenType" : "EOF",
-        "lexeme" : "",
-        "start" : 12,
-        "end" : 12,
-        "literal" : null
+        "type": "QueryField",
+        "key": {
+          "type": "Token",
+          "tokenType": "QUERY_FIELD_KEY",
+          "lexeme": "+",
+          "start": 8,
+          "end": 8,
+          "literal": null
+        },
+        "value": {
+          "type": "Token",
+          "tokenType": "QUERY_VALUE",
+          "lexeme": ":",
+          "start": 9,
+          "end": 9,
+          "literal": null
+        }
       }
-    ],
-    "ast" : {
-      "type" : "QueryList",
-      "content" : [
+    ]
+  },
+  "queryResult": "q=example&=",
+  "suggestions": [
+    {
+      "from": 8,
+      "to": 8,
+      "suffix": ":",
+      "type": "TEXT",
+      "suggestions": [
         {
-          "type" : "QueryBinary",
-          "left" : {
-            "type" : "QueryContent",
-            "searchExpr" : "example"
-          },
-          "right" : null
+          "label": "Tag",
+          "value": "tag"
         },
         {
-          "type" : "QueryField",
-          "key" : {
-            "type" : "Token",
-            "tokenType" : "QUERY_FIELD_KEY",
-            "lexeme" : "+",
-            "start" : 8,
-            "end" : 8,
-            "literal" : null
-          },
-          "value" : {
-            "type" : "Token",
-            "tokenType" : "QUERY_VALUE",
-            "lexeme" : ":",
-            "start" : 9,
-            "end" : 9,
-            "literal" : null
-          }
+          "label": "Section",
+          "value": "section"
         }
       ]
     },
-    "queryResult" : "q=example&=",
-    "suggestions" : [
-      {
-        "from" : 8,
-        "to" : 8,
-        "suffix" : ":",
-        "suggestions" : {
-          "TextSuggestion" : {
-            "suggestions" : [
-              {
-                "label" : "Tag",
-                "value" : "tag"
-              },
-              {
-                "label" : "Section",
-                "value" : "section"
-              }
-            ]
-          }
-        }
-      },
-      {
-        "from" : 9,
-        "to" : 9,
-        "suffix" : " ",
-        "suggestions" : {
-          "TextSuggestion" : {
-            "suggestions" : [
-            ]
-          }
-        }
-      }
-    ],
-    "error" : null
-  }
+    {
+      "from": 9,
+      "to": 9,
+      "suffix": " ",
+      "type": "TEXT",
+      "suggestions": []
+    }
+  ],
+  "error": null
+}
