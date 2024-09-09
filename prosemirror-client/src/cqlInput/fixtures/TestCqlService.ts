@@ -1,9 +1,9 @@
 import { CqlServiceInterface } from "../../services/CqlService";
-import empty from "./responses/<empty>.json";
-import example_plus from "./responses/example_+.json";
-import example_pluscolon from "./responses/example_+:.json";
-import example_plustagcolon from "./responses/example_+tag:.json";
-import example_tags_are_magic from "./responses/example_+tag:tags-are-magic.json";
+import empty from "./responses/<empty>";
+import example_plus from "./responses/example_+";
+import example_pluscolon from "./responses/example_+:";
+import example_plustagcolon from "./responses/example_+tag:";
+import example_tags_are_magic from "./responses/example_+tag:tags-are-magic";
 import { createTextResponse } from "./responses/createTextResponse";
 import { CqlResult } from "../../lang/Cql";
 

@@ -3,7 +3,6 @@ import { CqlResult } from "../../../lang/Cql";
 export const createTextResponse = (text: string): CqlResult => ({
   tokens: [
     {
-      type: "Token",
       tokenType: "STRING",
       lexeme: text,
       start: 0,
@@ -11,12 +10,11 @@ export const createTextResponse = (text: string): CqlResult => ({
       literal: text,
     },
     {
-      type: "Token",
       tokenType: "EOF",
       lexeme: "",
       start: text.length,
       end: text.length,
-      literal: null,
+      literal: undefined,
     },
   ],
   ast: {
@@ -26,13 +24,16 @@ export const createTextResponse = (text: string): CqlResult => ({
         type: "QueryBinary",
         left: {
           type: "QueryContent",
-          searchExpr: text,
+          content: {
+            type: "QueryStr",
+            searchExpr: text,
+          },
         },
-        right: null,
+        right: undefined,
       },
     ],
   },
   queryResult: `q=${text}`,
   suggestions: [],
-  error: null,
+  error: undefined,
 });

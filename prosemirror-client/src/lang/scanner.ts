@@ -187,6 +187,5 @@ export class Scanner {
 
   private report = (line: number, where: String, message: String) => {
     console.log(`[line ${line}] Error${where}: ${message}`);
-    this.hasError = true;
   };
 }

@@ -3,7 +3,7 @@ import { EditorView } from "prosemirror-view";
 import { schema } from "./schema";
 import { TextSelection } from "prosemirror-state";
 import { Popover } from "./Popover";
-import { TypeaheadSuggestion } from "../lang/types";
+import { TextSuggestionOption, TypeaheadSuggestion } from "../lang/types";
 
 type MenuItem = {
   label: string;
@@ -83,7 +83,7 @@ export class TypeaheadPopover extends Popover {
     this.renderPopover(node as HTMLElement);
 
     if (type === "TEXT") {
-      this.renderTextSuggestion(suggestions);
+      this.renderTextSuggestion(suggestions as MenuItem[]);
     }
 
     if (type === "DATE") {
@@ -100,8 +100,9 @@ export class TypeaheadPopover extends Popover {
   public moveSelectionDown = () => this.moveSelection(1);
 
   public applyOption = () => {
-    const suggestion =
-      this.currentSuggestion?.suggestions[this.currentOptionIndex];
+    const suggestion = this.currentSuggestion?.suggestions[
+      this.currentOptionIndex
+    ] as TextSuggestionOption;
 
     if (!this.currentSuggestion || !suggestion) {
       console.warn(
@@ -137,7 +138,7 @@ export class TypeaheadPopover extends Popover {
     this.currentOptionIndex =
       (this.currentOptionIndex + by + (by < 0 ? suggestions.length! : 0)) %
       suggestions.length!;
-    this.renderTextSuggestion(suggestions!);
+    this.renderTextSuggestion(suggestions as MenuItem[]);
   };
 
   private renderTextSuggestion(items: MenuItem[]) {

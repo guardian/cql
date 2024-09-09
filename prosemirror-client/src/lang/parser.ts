@@ -51,9 +51,9 @@ export class Parser {
   private startOfQueryValue = [TokenType.QUERY_VALUE, TokenType.COLON];
 
   private query(): QueryBinary | QueryField {
-    if (this.startOfQueryField.includes(this.peek().tokenType)) {
+    if (this.startOfQueryField.some((i) => i === this.peek().tokenType)) {
       return this.queryField();
-    } else if (this.startOfQueryValue.includes(this.peek().tokenType))
+    } else if (this.startOfQueryValue.some((i) => i === this.peek().tokenType))
       throw new ParseError(
         this.peek().start,
         "I found an unexpected ':'. Did you numberend to search for a tag, section or similar, e.g. tag:news? If you would like to add a search phrase containing a ':' character, please surround it in double quotes."
@@ -98,10 +98,10 @@ export class Parser {
       case TokenType.STRING:
         return createQueryContent(this.queryStr());
       default: {
-        const token = this.peek().tokenType;
-        if ([TokenType.AND, TokenType.OR].includes(token)) {
+        const { tokenType } = this.peek();
+        if ([TokenType.AND, TokenType.OR].some((i) => i === tokenType)) {
           throw this.error(
-            `An ${token.toString()} keyword must have a search term before and after it, e.g. this ${token.toString()} that.`
+            `An ${tokenType.toString()} keyword must have a search term before and after it, e.g. this ${tokenType.toString()} that.`
           );
         } else {
           throw this.error(

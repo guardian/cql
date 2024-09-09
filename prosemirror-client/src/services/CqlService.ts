@@ -43,15 +43,16 @@ export class CqlServerService implements CqlServiceInterface {
 export class CqlClientService implements CqlServiceInterface {
   private abortController: AbortController | undefined;
   private cql: Cql;
+  private typeaheadResolvers: TypeaheadHelpersCapi;
 
-  constructor(private capiBaseUrl: string, apiKey: string) {
-    const typeaheadResolvers = new TypeaheadHelpersCapi(capiBaseUrl, apiKey);
-    const typeahead = new Typeahead(typeaheadResolvers.fieldResolvers);
+  constructor(capiBaseUrl: string, apiKey: string) {
+    this.typeaheadResolvers = new TypeaheadHelpersCapi(capiBaseUrl, apiKey);
+    const typeahead = new Typeahead(this.typeaheadResolvers.fieldResolvers);
     this.cql = new Cql(typeahead);
   }
 
   public setUrl(url: string) {
-    this.capiBaseUrl = url;
+    this.typeaheadResolvers.setBaseUrl(url);
   }
 
   public async fetchResult(query: string) {

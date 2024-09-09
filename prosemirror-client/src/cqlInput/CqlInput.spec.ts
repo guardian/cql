@@ -125,3 +125,9 @@ test("ctrl-e moves the caret to the end of the input", async () => {
 
   await findByShadowText(container, "example >");
 });
+
+test("permits content before query fields", async () => {
+  const { container } = mountComponent("+tag");
+  await typeIntoInput(container, "{Control>}a{/Control}<");
+  await findByShadowText(container, "<");
+});

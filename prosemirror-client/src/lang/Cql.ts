@@ -22,7 +22,7 @@ export class CqlResultEnvelope {
 export class Cql {
   constructor(public typeahead: Typeahead) {}
 
-  public run = (program: string): Promise<CqlResult> => {
+  public run = (program: string, signal?: AbortSignal): Promise<CqlResult> => {
     const scanner = new Scanner(program);
     const tokens = scanner.scanTokens();
     const parser = new Parser(tokens);
@@ -37,7 +37,7 @@ export class Cql {
           })
         ),
       async (queryArr) => {
-        const suggestions = await this.typeahead.getSuggestions(queryArr);
+        const suggestions = await this.typeahead.getSuggestions(queryArr, signal);
 
         const result = {
           tokens,

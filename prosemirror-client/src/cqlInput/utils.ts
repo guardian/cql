@@ -13,6 +13,7 @@ import {
 import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection } from "prosemirror-state";
 import { ERROR_CLASS } from "./plugin";
+import { Token } from "../lang/token";
 
 const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE"];
 
@@ -211,7 +212,14 @@ export const isBeginningKeyValPair = (
   return firstDiffChar ? keyValPairChars.includes(firstDiffChar) : false;
 };
 
-const getFirstDiff = (first: string, second: string): string | undefined => {
+const getFirstDiff = (_first: string, _second: string): string | undefined => {
+  const first = _first.trim();
+  const second = _second.trim();
+
+  if (first.length < second.length) {
+    return second[first.length];
+  }
+
   for (let i = 0; i < first.length; i++) {
     if (second[i] !== first[i]) {
       return second[i];

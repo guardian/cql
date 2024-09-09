@@ -6,9 +6,13 @@ import { TextSuggestionOption } from "./types";
 export class TypeaheadHelpersCapi {
   public constructor(private baseUrl: string, private apiKey: string) {}
 
+  public setBaseUrl(baseUrl: string) {
+    this.baseUrl = baseUrl;
+  }
+
   private getTags = (
     str: string,
-    signal: AbortSignal
+    signal?: AbortSignal
   ): Promise<TextSuggestionOption[]> =>
     this.getJson<{ response: TagsResponse }>("tags", str, signal).then((body) =>
       body.response.results.map(
@@ -18,7 +22,7 @@ export class TypeaheadHelpersCapi {
 
   private getSections = (
     str: string,
-    signal: AbortSignal
+    signal?: AbortSignal
   ): Promise<TextSuggestionOption[]> =>
     this.getJson<{ response: SectionsResponse }>("tags", str, signal).then(
       (body) =>
@@ -203,7 +207,7 @@ export class TypeaheadHelpersCapi {
   private async getJson<T>(
     path: string,
     query: string,
-    signal: AbortSignal
+    signal?: AbortSignal
   ): Promise<T> {
     const params = new URLSearchParams({
       q: query,

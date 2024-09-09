@@ -1,7 +1,7 @@
 import { createCqlInput } from "./cqlInput/CqlInput";
 import applyDevTools from "prosemirror-dev-tools";
 import "./style.css";
-import { CqlClientService, CqlServerService } from "./services/CqlService";
+import { CqlClientService } from "./services/CqlService";
 
 const debugEl = document.createElement("div");
 debugEl.className = "CqlSandbox__debug-container";

@@ -9,7 +9,7 @@ import {
 } from "./types";
 
 export type TypeaheadResolver =
-  | ((str: string, signal: AbortSignal) => Promise<TextSuggestionOption[]>)
+  | ((str: string, signal?: AbortSignal) => Promise<TextSuggestionOption[]>)
   | TextSuggestionOption[];
 
 export class TypeaheadField {
@@ -23,7 +23,7 @@ export class TypeaheadField {
 
   public resolveSuggestions(
     str: string,
-    signal: AbortSignal
+    signal?: AbortSignal
   ): Promise<TextSuggestionOption[]> {
     if (Array.isArray(this.resolver)) {
       return Promise.resolve(
@@ -50,7 +50,7 @@ export class Typeahead {
 
   public getSuggestions(
     program: QueryList,
-    signal: AbortSignal
+    signal?: AbortSignal
   ): Promise<TypeaheadSuggestion[]> {
     const suggestions = program.content
       .map((expr) => {
@@ -92,7 +92,7 @@ export class Typeahead {
 
   private async suggestQueryField(
     q: QueryField,
-    signal: AbortSignal
+    signal?: AbortSignal
   ): Promise<TypeaheadSuggestion[]> {
     const { key, value } = q;
 
@@ -144,7 +144,7 @@ export class Typeahead {
   private suggestFieldValue(
     key: string,
     str: string,
-    signal: AbortSignal
+    signal?: AbortSignal
   ): [TypeaheadType, Promise<Suggestion[]>] | undefined {
     const resolver = this.fieldResolvers.find((_) => _.id == key);
 

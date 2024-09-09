@@ -1,10 +1,10 @@
 import { describe, expect, test } from "bun:test";
-import _tokensWithOneKVPair from "./fixtures/tokens/tokensWithOneKVPair.json";
-import _tokensWithTwoKVPairs from "./fixtures/tokens/tokensWithTwoKVPairs.json";
-import _tokensWithParens from "./fixtures/tokens/tokensWithParens.json";
-import _tokensWithParensAndKVPair from "./fixtures/tokens/tokensWithParensAndKVPair.json";
-import _tokensWithTrailingWhitespace from "./fixtures/tokens/tokensWithTrailingWhitespace.json";
-import _tokensWithTagAtBeginning from "./fixtures/tokens/tokensWithTagAtBeginning.json";
+import _tokensWithOneKVPair from "./fixtures/tokens/tokensWithOneKVPair";
+import _tokensWithTwoKVPairs from "./fixtures/tokens/tokensWithTwoKVPairs";
+import _tokensWithParens from "./fixtures/tokens/tokensWithParens";
+import _tokensWithParensAndKVPair from "./fixtures/tokens/tokensWithParensAndKVPair";
+import _tokensWithTrailingWhitespace from "./fixtures/tokens/tokensWithTrailingWhitespace";
+import _tokensWithTagAtBeginning from "./fixtures/tokens/tokensWithTagAtBeginning";
 import {
   ProseMirrorToken,
   mapTokens,
@@ -41,7 +41,7 @@ describe("utils", () => {
       return tokenType !== "EOF" ? node.textBetween(from, to) : "";
     });
   }
-  
+
 
   describe("tokensToNode", () => {
     test("creates nodes from a list of tokens - 1", () => {
