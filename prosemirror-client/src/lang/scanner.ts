@@ -162,13 +162,6 @@ export class Scanner {
 
   private addToken = (tokenType: TokenType, literal?: string) => {
     const text = this.program.substring(this.start, this.current);
-    // console.log({
-    //   program: this.program,
-    //   text,
-    //   literal,
-    //   start: this.start,
-    //   end: this.current,
-    // });
     this.tokens = this.tokens.concat(
       new Token(tokenType, text, literal, this.start, this.current - 1)
     );

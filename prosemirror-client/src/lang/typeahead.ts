@@ -69,11 +69,7 @@ export class Typeahead {
   }
 
   private getSuggestionsForKeyToken(keyToken: Token): TypeaheadSuggestion[] {
-    if (!keyToken.literal) {
-      return [];
-    }
-
-    const suggestions = this.suggestFieldKey(keyToken.literal);
+    const suggestions = this.suggestFieldKey(keyToken.literal ?? "");
 
     if (!suggestions) {
       return [];

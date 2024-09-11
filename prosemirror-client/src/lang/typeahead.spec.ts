@@ -13,7 +13,7 @@ describe("typeahead", () => {
   const typeaheadQueryClient = new TestTypeaheadHelpers();
   const typeahead = new Typeahead(typeaheadQueryClient.fieldResolvers);
 
-  it("should give no typeahead where none is warranted", async () => {
+  it("should give all options for empty queryFields", async () => {
     expect(await typeahead.getSuggestions(createQueryList([]))).toEqual([]);
 
     expect(
@@ -22,7 +22,36 @@ describe("typeahead", () => {
           createQueryField(queryFieldKeyToken("", 0), undefined),
         ])
       )
-    ).toEqual([]);
+    ).toEqual([
+      new TypeaheadSuggestion(
+        0,
+        0,
+        [
+          new TextSuggestionOption(
+            "Tag",
+            "tag",
+            "Search by content tags, e.g. sport/football"
+          ),
+          new TextSuggestionOption(
+            "Section",
+            "section",
+            "Search by content sections, e.g. section/news"
+          ),
+          new TextSuggestionOption(
+            "From date",
+            "from-date",
+            "The date to search from"
+          ),
+          new TextSuggestionOption(
+            "To date",
+            "to-date",
+            "The date to search to"
+          ),
+        ],
+        "TEXT",
+        ":"
+      ),
+    ]);
   });
 
   it("should give typeahead suggestions for query meta keys", async () => {

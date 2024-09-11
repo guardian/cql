@@ -2,6 +2,7 @@ import { createCqlInput } from "./cqlInput/CqlInput";
 import applyDevTools from "prosemirror-dev-tools";
 import "./style.css";
 import { CqlClientService } from "./services/CqlService";
+import { TypeaheadHelpersCapi } from "./lang/typeaheadHelpersCapi";
 
 const debugEl = document.createElement("div");
 debugEl.className = "CqlSandbox__debug-container";
@@ -43,7 +44,8 @@ const params = new URLSearchParams(window.location.search);
 const endpoint = params.get("endpoint");
 
 const initialEndpoint = endpoint || "http://content.guardianapis.com";
-const cqlService = new CqlClientService(initialEndpoint, "test");
+const typeaheadHelpers = new TypeaheadHelpersCapi(initialEndpoint, "test");
+const cqlService = new CqlClientService(typeaheadHelpers.fieldResolvers);
 const CqlInput = createCqlInput(cqlService, debugEl);
 
 customElements.define("cql-input", CqlInput);
@@ -56,7 +58,7 @@ const endpointInput = document.getElementById("endpoint") as HTMLInputElement;
 endpointInput?.addEventListener("input", (event) => {
   const endpoint = (event.target as HTMLInputElement).value;
   setUrlParam("endpoint", endpoint);
-  cqlService.setUrl(endpoint);
+  typeaheadHelpers.setBaseUrl(endpoint);
 });
 endpointInput.value = initialEndpoint;
 

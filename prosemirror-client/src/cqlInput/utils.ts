@@ -113,6 +113,7 @@ export const tokensToDoc = (tokens: ProseMirrorToken[]): Node => {
       case "QUERY_FIELD_KEY":
         const tokenKey = token.literal;
         const tokenValue = tokens[index + 1]?.literal;
+
         return acc.concat(
           chipWrapper.create(undefined, [
             chip.create(undefined, [
@@ -180,19 +181,32 @@ export const tokensToDecorations = (
     );
 };
 
-export const queryStrFromDoc = (doc: Node) => {
+export const docToQueryStr = (doc: Node) => {
   let str: string = "";
 
-  doc.descendants((node) => {
+  doc.descendants((node, _pos, parent, index) => {
     switch (node.type.name) {
       case "searchText":
         str += node.textContent;
         return false;
+      case "chipWrapper":
+        // Add whitespace to separate chips from previous searchText if none is
+        // already present.
+        const maybePrecedingNode = index > 0 && parent?.nodeAt(index - 1);
+        const isPrecededWithoutWhitespace =
+          !maybePrecedingNode ||
+            !maybePrecedingNode.textContent.endsWith(" ");
+
+        if (isPrecededWithoutWhitespace) {
+          str += " ";
+        }
+
+        return;
       case "chipKey":
         str += `+${node.textContent}`;
         return false;
       case "chipValue":
-        str += node.textContent.length > 0 ? `:${node.textContent} ` : "";
+        str += node.textContent.trim().length > 0 ? `:${node.textContent} ` : "";
         return false;
       default:
         return true;
@@ -202,7 +216,7 @@ export const queryStrFromDoc = (doc: Node) => {
   return str;
 };
 
-const keyValPairChars = ["+", "@"];
+const keyValPairChars = ["+"];
 
 export const isBeginningKeyValPair = (
   first: string,
@@ -217,7 +231,7 @@ const getFirstDiff = (_first: string, _second: string): string | undefined => {
   const second = _second.trim();
 
   if (first.length < second.length) {
-    return second[first.length];
+    return second[second.length - 1];
   }
 
   for (let i = 0; i < first.length; i++) {

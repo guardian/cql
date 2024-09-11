@@ -1,25 +1,26 @@
-import { test, mock, expect } from "bun:test";
+import { describe, it, mock, expect, beforeEach } from "bun:test";
 import {
   contentEditableTestId,
   createCqlInput,
   typeaheadTestId,
 } from "./CqlInput";
-import { TestCqlService } from "./fixtures/TestCqlService";
 import { findByTestId } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import {
   findByShadowTestId,
   findByShadowText,
 } from "shadow-dom-testing-library";
+import { CqlClientService } from "../services/CqlService";
+import { TestTypeaheadHelpers } from "../lang/typeaheadHelpersTest";
 
 mock.module("../CqlService", () => ({}));
 
-const testCqlService = new TestCqlService("url");
+const typeheadHelpers = new TestTypeaheadHelpers();
+const testCqlService = new CqlClientService(typeheadHelpers.fieldResolvers);
 const cqlInput = createCqlInput(testCqlService);
 window.customElements.define("cql-input", cqlInput);
 
 const mountComponent = (query: string) => {
-  document.body.innerHTML = "";
   const container = document.body;
   const input = document.createElement("cql-input");
   input.setAttribute("data-testid", "cql-input");
@@ -33,6 +34,8 @@ const mountComponent = (query: string) => {
     (e) => (valueContainer.value = e.detail.cqlQuery)
   );
 
+  moveCursorToStart(container);
+
   return { container, valueContainer };
 };
 
@@ -42,10 +45,11 @@ const findContentEditable = (container: HTMLElement) =>
 const typeIntoInput = async (container: HTMLElement, text: string) => {
   const contentEditable = await findContentEditable(container);
   contentEditable.focus();
-  await userEvent.keyboard(text);
+
+  await userEvent.keyboard(text, { delay: 1 });
 };
 
-const moveCursor = async (contentEditableEl: HTMLElement, index: number) => {
+const moveCursor = (contentEditableEl: HTMLElement, index: number) => {
   const range = document.createRange();
   const selection = window.getSelection();
   range.setStart(contentEditableEl, index);
@@ -73,61 +77,73 @@ const selectPopoverOption = async (
   await typeIntoInput(container, "{Enter}");
 };
 
-test("renders a custom element", async () => {
-  const { container } = mountComponent("");
-  await findByTestId(container, "cql-input");
-});
+describe("CqlInput", () => {
+  beforeEach(() => {
+    document.body.innerHTML = "";
+  });
 
-test("accepts and displays a basic query", async () => {
-  const { container } = mountComponent("");
+  it("accepts and displays a basic query", async () => {
+    const { container, valueContainer } = mountComponent("");
 
-  // Multiple chars here trip the input up. Is this a problem with the test, or the system?
-  await typeIntoInput(container, "e");
-  await findByShadowText(container, "e");
-});
+    await typeIntoInput(container, "example");
+    expect(valueContainer.value).toBe("example");
+  });
 
-test("displays an initial value", async () => {
-  const { container } = mountComponent("example");
-  await findByShadowText(container, "example");
-});
+  it("renders a custom element", async () => {
+    const { container } = mountComponent("");
+    await findByTestId(container, "cql-input");
+  });
 
-test("displays a popover when a tag prompt is entered", async () => {
-  const { container } = mountComponent("example ");
-  await moveCursorToEnd(container);
-  await typeIntoInput(container, "+");
+  it("displays an initial value", async () => {
+    const { container } = mountComponent("example");
+    await findByShadowText(container, "example");
+  });
 
-  const popoverContainer = await findByShadowTestId(container, typeaheadTestId);
-  await findByShadowText(popoverContainer, "Tag");
-  await findByShadowText(popoverContainer, "Section");
-});
+  it("displays a popover when a tag prompt is entered", async () => {
+    const { container } = mountComponent("");
 
-test("accepts the given value when a popover appears", async () => {
-  const { container, valueContainer } = mountComponent("example ");
-  await moveCursorToEnd(container);
-  await typeIntoInput(container, "+");
-  await selectPopoverOption(container, "Tag");
-  await findByShadowText(container, "tag");
+    await typeIntoInput(container, "example +");
 
-  expect(valueContainer.value).toBe("example +tag:  ");
-});
+    const popoverContainer = await findByShadowTestId(
+      container,
+      typeaheadTestId
+    );
+    await findByShadowText(popoverContainer, "Tag");
+    await findByShadowText(popoverContainer, "Section");
+  });
 
-test("ctrl-a moves the caret to the beginning of the input", async () => {
-  const { container } = mountComponent("example ");
-  await typeIntoInput(container, "{Control>}a{/Control}<");
+  it("accepts the given value when a popover appears", async () => {
+    const { container, valueContainer } = mountComponent("");
+    await moveCursorToEnd(container);
+    await typeIntoInput(container, " example +");
+    await selectPopoverOption(container, "Tag");
+    await findByShadowText(container, "tag");
 
-  await findByShadowText(container, "<example");
-});
+    expect(valueContainer.value).toBe("example +tag");
+  });
 
-test("ctrl-e moves the caret to the end of the input", async () => {
-  const { container } = mountComponent("example ");
-  await moveCursorToStart(container);
-  await typeIntoInput(container, "{Control>}e{/Control}>");
+  it("ctrl-a moves the caret to the beginning of the input", async () => {
+    const { container } = mountComponent("a");
+    await typeIntoInput(container, "{Control>}a{/Control}");
+    await typeIntoInput(container, "b");
 
-  await findByShadowText(container, "example >");
-});
+    await findByShadowText(container, "ba");
+  });
 
-test("permits content before query fields", async () => {
-  const { container } = mountComponent("+tag");
-  await typeIntoInput(container, "{Control>}a{/Control}<");
-  await findByShadowText(container, "<");
+  it("ctrl-e moves the caret to the end of the input", async () => {
+    const { container } = mountComponent("a");
+    await moveCursorToStart(container);
+    await typeIntoInput(container, "{Control>}e{/Control}");
+    await typeIntoInput(container, "b");
+
+    await findByShadowText(container, "ab");
+  });
+
+  it("permits content before query fields", async () => {
+    const { container, valueContainer } = mountComponent("+tag");
+
+    await typeIntoInput(container, "a");
+
+    expect(valueContainer.value).toBe("a +tag");
+  });
 });

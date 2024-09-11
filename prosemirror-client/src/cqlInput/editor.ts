@@ -65,7 +65,9 @@ export const createEditor = ({
       view.updateState(view.state.apply(tr));
 
       // Ensure that we always have space for text after the last wrapper node
-      if (view.state.doc.lastChild?.type.name === "chipWrapper") {
+      const endsWithChip =
+        view.state.doc.lastChild?.type.name === "chipWrapper";
+      if (endsWithChip) {
         const tr = view.state.tr;
         tr.insert(
           view.state.doc.nodeSize - 2,

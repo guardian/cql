@@ -10,7 +10,7 @@ import {
   getNewSelection,
   isBeginningKeyValPair,
   createProseMirrorTokenToDocumentMap,
-  queryStrFromDoc,
+  docToQueryStr,
   tokensToDecorations,
   tokensToDoc,
   toProseMirrorTokens,
@@ -21,7 +21,12 @@ import {
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
-import { DELETE_CHIP_INTENT, chipWrapper, doc, schema } from "./schema";
+import {
+  DELETE_CHIP_INTENT,
+  chipWrapper,
+  doc,
+  schema,
+} from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { QueryChangeEventDetail } from "./dom";
 import { ErrorPopover } from "./ErrorPopover";
@@ -30,8 +35,6 @@ import { TypeaheadSuggestion } from "../lang/types";
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
 type PluginState = {
-  // The query string that represents the most recent document state seen by the language server.
-  queryStr?: string;
   // A mapping from ProseMirrorToken positions to document positions.
   mapping: Mapping;
 } & ServiceState;
@@ -86,22 +89,18 @@ export const createCqlPlugin = ({
   return new Plugin<PluginState>({
     key: cqlPluginKey,
     state: {
-      init(config) {
-        const queryStr = config.doc ? queryStrFromDoc(config.doc) : undefined;
+      init() {
         return {
-          queryStr,
           tokens: [],
           suggestions: [],
           mapping: new Mapping(),
           error: undefined,
         };
       },
-      apply(tr, { tokens, suggestions, mapping, error }, _, newState) {
+      apply(tr, { tokens, suggestions, mapping, error }) {
         const maybeError: string | undefined = tr.getMeta(ACTION_SERVER_ERROR);
-
         if (maybeError) {
           return {
-            queryStr: "",
             tokens: [],
             suggestions,
             mapping,
@@ -113,7 +112,6 @@ export const createCqlPlugin = ({
           tr.getMeta(ACTION_NEW_STATE);
 
         return {
-          queryStr: queryStrFromDoc(newState.doc),
           mapping: maybeNewState
             ? createProseMirrorTokenToDocumentMap(maybeNewState.tokens)
             : mapping,
@@ -275,13 +273,13 @@ export const createCqlPlugin = ({
       // Serialise outgoing content to a CQL string for portability in both plain text and html
       clipboardTextSerializer(content) {
         const node = doc.create(undefined, content.content);
-        const queryStr = queryStrFromDoc(node);
+        const queryStr = docToQueryStr(node);
         return queryStr;
       },
       clipboardSerializer: {
         serializeFragment: (fragment: Fragment) => {
           const node = doc.create(undefined, fragment);
-          const queryStr = queryStrFromDoc(node);
+          const queryStr = docToQueryStr(node);
           const plainTextNode = DOMSerializer.fromSchema(schema).serializeNode(
             schema.text(queryStr)
           );
@@ -308,8 +306,8 @@ export const createCqlPlugin = ({
             error,
           } = await cqlService.fetchResult(query);
 
-          if (queryResult) {
-            onChange({ query: queryResult, cqlQuery: query });
+          if (query) {
+            onChange({ query: queryResult ?? "", cqlQuery: query });
           }
 
           const tokens = toProseMirrorTokens(_tokens);
@@ -353,17 +351,18 @@ export const createCqlPlugin = ({
         }
       };
 
-      fetchQueryAndUpdateDoc(cqlPluginKey.getState(view.state)?.queryStr!);
+      fetchQueryAndUpdateDoc(docToQueryStr(view.state.doc));
 
       return {
         update(view, prevState) {
-          const prevQuery = cqlPluginKey.getState(prevState)?.queryStr!;
+          const prevQuery = docToQueryStr(prevState.doc);
           const {
-            queryStr: currentQuery = "",
             suggestions = [],
             mapping,
             error,
           } = cqlPluginKey.getState(view.state)!;
+
+          const currentQuery = docToQueryStr(view.state.doc);
 
           typeaheadPopover?.updateItemsFromSuggestions(suggestions, mapping);
           errorPopover?.updateErrorMessage(error);

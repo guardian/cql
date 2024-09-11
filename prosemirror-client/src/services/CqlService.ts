@@ -1,6 +1,5 @@
 import { Cql, CqlResult } from "../lang/Cql";
-import { Typeahead } from "../lang/typeahead";
-import { TypeaheadHelpersCapi } from "../lang/typeaheadHelpersCapi";
+import { Typeahead, TypeaheadField } from "../lang/typeahead";
 
 export type CqlError = {
   position?: number;
@@ -8,8 +7,6 @@ export type CqlError = {
 };
 
 export interface CqlServiceInterface {
-  setUrl(url: string): void;
-
   fetchResult(query: string): Promise<CqlResult>;
 
   cancel(): void;
@@ -43,16 +40,10 @@ export class CqlServerService implements CqlServiceInterface {
 export class CqlClientService implements CqlServiceInterface {
   private abortController: AbortController | undefined;
   private cql: Cql;
-  private typeaheadResolvers: TypeaheadHelpersCapi;
 
-  constructor(capiBaseUrl: string, apiKey: string) {
-    this.typeaheadResolvers = new TypeaheadHelpersCapi(capiBaseUrl, apiKey);
-    const typeahead = new Typeahead(this.typeaheadResolvers.fieldResolvers);
+  constructor(resolvers: TypeaheadField[]) {
+    const typeahead = new Typeahead(resolvers);
     this.cql = new Cql(typeahead);
-  }
-
-  public setUrl(url: string) {
-    this.typeaheadResolvers.setBaseUrl(url);
   }
 
   public async fetchResult(query: string) {
