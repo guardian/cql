@@ -38,7 +38,6 @@ export class Cql {
         ),
       async (queryArr) => {
         const suggestions = await this.typeahead.getSuggestions(queryArr, signal);
-
         const result = {
           tokens,
           ast: queryArr,

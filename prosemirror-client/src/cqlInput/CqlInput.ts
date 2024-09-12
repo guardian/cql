@@ -1,6 +1,7 @@
+import { EditorView } from "prosemirror-view";
 import { CqlServiceInterface } from "../services/CqlService";
 import { QueryChangeEventDetail } from "./dom";
-import { createEditor } from "./editor";
+import { createEditorView } from "./editor";
 import { VISIBLE_CLASS } from "./plugin";
 
 const baseFontSize = 28;
@@ -139,6 +140,8 @@ export const createCqlInput = (
   class CqlInput extends HTMLElement {
     static observedAttributes = ["initialValue"];
 
+    private editorView: EditorView | undefined;
+
     connectedCallback() {
       const cqlInputId = "cql-input";
       const cqlTypeaheadId = "cql-typeahead";
@@ -166,7 +169,7 @@ export const createCqlInput = (
         );
       };
 
-      const editorNode = createEditor({
+      const editorView = createEditorView({
         initialValue: this.getAttribute("initial-value") ?? "",
         mountEl: cqlInput,
         typeaheadEl,
@@ -177,7 +180,11 @@ export const createCqlInput = (
         onChange,
       });
 
-      editorNode.setAttribute("data-testid", contentEditableTestId);
+      editorView.dom.setAttribute("data-testid", contentEditableTestId);
+    }
+
+    disconnectedCallback() {
+      this.editorView?.destroy();
     }
   }
 

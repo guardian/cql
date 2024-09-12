@@ -13,7 +13,7 @@ declare module window {
   export let CQL_VIEW: EditorView;
 }
 
-export const createEditor = ({
+export const createEditorView = ({
   initialValue = "",
   mountEl,
   typeaheadEl,
@@ -40,6 +40,7 @@ export const createEditor = ({
     onChange,
     debugEl,
   });
+
   const view = new EditorView(mountEl, {
     state: EditorState.create({
       doc: doc.create(undefined, [
@@ -80,5 +81,5 @@ export const createEditor = ({
 
   window.CQL_VIEW = view;
 
-  return view.dom;
+  return view;
 };
