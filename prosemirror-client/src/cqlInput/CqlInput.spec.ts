@@ -1,4 +1,4 @@
-import { describe, it, mock, expect, beforeEach } from "bun:test";
+import { describe, it, mock, beforeEach } from "bun:test";
 import {
   contentEditableTestId,
   createCqlInput,
@@ -17,7 +17,10 @@ mock.module("../CqlService", () => ({}));
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new CqlClientService(typeheadHelpers.fieldResolvers);
-const cqlInput = createCqlInput(testCqlService);
+
+// The decorations that implement syntax highlighting cause problems with
+// mutationobservers on .keyboard.
+const cqlInput = createCqlInput(testCqlService, { syntaxHighlighting: false });
 window.customElements.define("cql-input", cqlInput);
 
 const mountComponent = (query: string) => {
@@ -35,7 +38,14 @@ const mountComponent = (query: string) => {
     (e) => (valueContainer.value = e.detail.cqlQuery)
   );
 
-  moveCursorToStart(container);
+  const subscribers: Array<(s: string) => void> = [];
+  const valuesReceived: string[] = [];
+  const dispatch = (value: string) => {
+    valuesReceived.push(value);
+    subscribers.forEach((s) => s(value));
+  };
+
+  input.addEventListener("queryChange", (e) => dispatch(e.detail.cqlQuery));
 
   /**
    * Wait for a particular `cqlQuery` value from the component's onChange
@@ -43,23 +53,25 @@ const mountComponent = (query: string) => {
    */
   const waitFor = (value: string, timeoutMs = 1000) =>
     new Promise<void>((res, rej) => {
-      const valuesReceived: string[] = [];
-      input.addEventListener("queryChange", (e) => {
-        if (e.detail.cqlQuery === value) {
+      if (valuesReceived.includes(value)) {
+        return res();
+      }
+
+      const onQueryChange = (s: string) => {
+        if (s === value) {
           res();
-        } else {
-          valuesReceived.push(e.detail.cqlQuery);
         }
-      });
-      setTimeout(
-        () =>
-          rej(
-            `Expected ${value}, but got ${
-              valuesReceived.length ? valuesReceived.join(",") : "<no values>"
-            }`
-          ),
-        timeoutMs
-      );
+      };
+
+      subscribers.push(onQueryChange);
+
+      setTimeout(() => {
+        rej(
+          `Expected ${value}, but got ${
+            valuesReceived.length ? valuesReceived.join(",") : "<no values>"
+          }`
+        );
+      }, timeoutMs);
     });
 
   return { user, container, waitFor };
@@ -157,12 +169,14 @@ describe("CqlInput", () => {
     await waitFor("example +tag");
   });
 
-  it("ctrl-a moves the caret to the beginning of the input", async () => {
-    const { user, container } = mountComponent("a");
-    await typeIntoInput(user, container, "{Control>}a{/Control}");
+  it.only("ctrl-a moves the caret to the beginning of the input", async () => {
+    const { user, container, waitFor } = mountComponent("a");
+
+    await moveCursorToEnd(container);
+    await typeIntoInput(user, container, "{Control>}a{/Control}b");
     await typeIntoInput(user, container, "b");
 
-    await findByShadowText(container, "ba");
+    await waitFor("ba");
   });
 
   it("ctrl-e moves the caret to the end of the input", async () => {

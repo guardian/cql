@@ -1,13 +1,11 @@
 import { EditorView } from "prosemirror-view";
-import { CqlServiceInterface } from "../services/CqlService";
-import { createCqlPlugin } from "./plugin";
-import { EditorState } from "prosemirror-state";
+import { EditorState, Plugin } from "prosemirror-state";
 import { doc, schema, searchText } from "./schema";
 import { baseKeymap } from "prosemirror-commands";
 import { undo, redo, history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
-import { QueryChangeEventDetail } from "./dom";
 import { bottomOfLine, topOfLine } from "./commands";
+import { docToQueryStr } from "./utils";
 
 declare module window {
   export let CQL_VIEW: EditorView;
@@ -16,31 +14,12 @@ declare module window {
 export const createEditorView = ({
   initialValue = "",
   mountEl,
-  typeaheadEl,
-  errorEl,
-  errorMsgEl,
-  debugEl,
-  cqlService,
-  onChange,
+  plugins,
 }: {
   initialValue: string;
   mountEl: HTMLElement;
-  typeaheadEl: HTMLElement;
-  errorEl: HTMLElement;
-  errorMsgEl: HTMLElement;
-  cqlService: CqlServiceInterface;
-  onChange: (detail: QueryChangeEventDetail) => void;
-  debugEl?: HTMLElement;
+  plugins: Plugin[];
 }) => {
-  const plugin = createCqlPlugin({
-    cqlService,
-    typeaheadEl,
-    errorEl,
-    errorMsgEl,
-    onChange,
-    debugEl,
-  });
-
   const view = new EditorView(mountEl, {
     state: EditorState.create({
       doc: doc.create(undefined, [
@@ -51,7 +30,7 @@ export const createEditorView = ({
       ]),
       schema: schema,
       plugins: [
-        plugin,
+        ...plugins,
         keymap({
           "Mod-z": undo,
           "Mod-y": redo,
@@ -63,19 +42,17 @@ export const createEditorView = ({
       ],
     }),
     dispatchTransaction(tr) {
-      view.updateState(view.state.apply(tr));
-
       // Ensure that we always have space for text after the last wrapper node
-      const endsWithChip =
-        view.state.doc.lastChild?.type.name === "chipWrapper";
+      const endsWithChip = tr.doc.lastChild?.type.name === "chipWrapper";
       if (endsWithChip) {
         const tr = view.state.tr;
         tr.insert(
           view.state.doc.nodeSize - 2,
           schema.nodes.searchText.create(undefined)
         );
-        view.updateState(view.state.apply(tr));
       }
+
+      view.updateState(view.state.apply(tr));
     },
   });
 

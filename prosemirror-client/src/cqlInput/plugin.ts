@@ -26,6 +26,7 @@ import { DOMSerializer, Fragment } from "prosemirror-model";
 import { QueryChangeEventDetail } from "./dom";
 import { ErrorPopover } from "./ErrorPopover";
 import { TypeaheadSuggestion } from "../lang/types";
+import { CqlConfig } from "./CqlInput";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -62,11 +63,13 @@ export const createCqlPlugin = ({
   errorMsgEl,
   onChange,
   debugEl,
+  config,
 }: {
   cqlService: CqlServiceInterface;
   typeaheadEl: HTMLElement;
   errorEl: HTMLElement;
   errorMsgEl: HTMLElement;
+  config: CqlConfig;
   onChange: (detail: QueryChangeEventDetail) => void;
   debugEl?: HTMLElement;
 }) => {
@@ -201,9 +204,13 @@ export const createCqlPlugin = ({
           ? [errorToDecoration(mapping.map(error.position))]
           : [];
 
+        const maybeTokensToDecorations = config.syntaxHighlighting
+          ? tokensToDecorations(tokens)
+          : [];
+
         return DecorationSet.create(state.doc, [
           ...maybeErrorDeco,
-          ...tokensToDecorations(tokens),
+          ...maybeTokensToDecorations,
         ]);
       },
       handleKeyDown(view, event) {
@@ -297,13 +304,9 @@ export const createCqlPlugin = ({
             tokens: _tokens,
             suggestions,
             ast,
-            queryResult,
             error,
+            queryResult
           } = await cqlService.fetchResult(query);
-
-          if (query) {
-            onChange({ query: queryResult ?? "", cqlQuery: query });
-          }
 
           const tokens = toProseMirrorTokens(_tokens);
           const newDoc = tokensToDoc(tokens);
@@ -327,11 +330,19 @@ export const createCqlPlugin = ({
           const docSelection = new AllSelection(view.state.doc);
           const tr = view.state.tr;
 
-          tr.replaceWith(docSelection.from, docSelection.to, newDoc)
-            .setSelection(
+          if (!newDoc.eq(view.state.doc)) {
+            tr.replaceWith(
+              docSelection.from,
+              docSelection.to,
+              newDoc
+            ).setSelection(
               getNewSelection(userSelection, shouldWrapSelectionInKey, tr.doc)
-            )
-            .setMeta(ACTION_NEW_STATE, { tokens, suggestions, error });
+            );
+          }
+
+          tr.setMeta(ACTION_NEW_STATE, { tokens, suggestions, error });
+
+          onChange({ cqlQuery: docToQueryStr(newDoc), query: queryResult ?? "" });
 
           view.dispatch(tr);
         } catch (e) {
