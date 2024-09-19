@@ -169,7 +169,7 @@ describe("CqlInput", () => {
     await waitFor("example +tag");
   });
 
-  it.only("ctrl-a moves the caret to the beginning of the input", async () => {
+  it("ctrl-a moves the caret to the beginning of the input", async () => {
     const { user, container, waitFor } = mountComponent("a");
 
     await moveCursorToEnd(container);

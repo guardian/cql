@@ -63,7 +63,7 @@ export const createCqlPlugin = ({
   errorMsgEl,
   onChange,
   debugEl,
-  config,
+  config: { syntaxHighlighting = true },
 }: {
   cqlService: CqlServiceInterface;
   typeaheadEl: HTMLElement;
@@ -204,7 +204,7 @@ export const createCqlPlugin = ({
           ? [errorToDecoration(mapping.map(error.position))]
           : [];
 
-        const maybeTokensToDecorations = config.syntaxHighlighting
+        const maybeTokensToDecorations = syntaxHighlighting
           ? tokensToDecorations(tokens)
           : [];
 
