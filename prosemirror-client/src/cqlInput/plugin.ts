@@ -63,7 +63,7 @@ export const createCqlPlugin = ({
   errorMsgEl,
   onChange,
   debugEl,
-  config: { syntaxHighlighting = true },
+  config: { syntaxHighlighting },
 }: {
   cqlService: CqlServiceInterface;
   typeaheadEl: HTMLElement;
@@ -305,7 +305,7 @@ export const createCqlPlugin = ({
             suggestions,
             ast,
             error,
-            queryResult
+            queryResult,
           } = await cqlService.fetchResult(query);
 
           const tokens = toProseMirrorTokens(_tokens);
@@ -342,7 +342,10 @@ export const createCqlPlugin = ({
 
           tr.setMeta(ACTION_NEW_STATE, { tokens, suggestions, error });
 
-          onChange({ cqlQuery: docToQueryStr(newDoc), query: queryResult ?? "" });
+          onChange({
+            cqlQuery: docToQueryStr(newDoc),
+            query: queryResult ?? "",
+          });
 
           view.dispatch(tr);
         } catch (e) {

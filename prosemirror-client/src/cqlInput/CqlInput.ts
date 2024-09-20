@@ -134,18 +134,20 @@ export const errorTestId = "cql-input-error";
 export const errorMsgTestId = "cql-input-error-message";
 
 export type CqlConfig = {
-  syntaxHighlighting: boolean;
+  syntaxHighlighting?: boolean;
+  debugEl?: HTMLElement;
 };
 
 export const createCqlInput = (
   cqlService: CqlServiceInterface,
-  config: CqlConfig,
-  debugEl?: HTMLElement
+  config: CqlConfig = { syntaxHighlighting: true }
 ) => {
   class CqlInput extends HTMLElement {
     static observedAttributes = ["initialValue"];
 
     private editorView: EditorView | undefined;
+
+    public value = "";
 
     connectedCallback() {
       const cqlInputId = "cql-input";
@@ -167,6 +169,7 @@ export const createCqlInput = (
       const errorMsgEl = shadow.getElementById(cqlErrorMsgId)!;
 
       const onChange = (detail: QueryChangeEventDetail) => {
+        this.value = detail.cqlQuery;
         this.dispatchEvent(
           new CustomEvent("queryChange", {
             detail,
@@ -180,7 +183,6 @@ export const createCqlInput = (
         errorEl,
         errorMsgEl,
         onChange,
-        debugEl,
         config,
       });
 

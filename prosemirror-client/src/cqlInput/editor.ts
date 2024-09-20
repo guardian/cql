@@ -5,7 +5,6 @@ import { baseKeymap } from "prosemirror-commands";
 import { undo, redo, history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
 import { bottomOfLine, topOfLine } from "./commands";
-import { docToQueryStr } from "./utils";
 
 declare module window {
   export let CQL_VIEW: EditorView;

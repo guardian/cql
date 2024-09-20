@@ -46,7 +46,7 @@ const endpoint = params.get("endpoint");
 const initialEndpoint = endpoint || "http://content.guardianapis.com";
 const typeaheadHelpers = new TypeaheadHelpersCapi(initialEndpoint, "test");
 const cqlService = new CqlClientService(typeaheadHelpers.fieldResolvers);
-const CqlInput = createCqlInput(cqlService, debugEl);
+const CqlInput = createCqlInput(cqlService, { debugEl });
 
 customElements.define("cql-input", CqlInput);
 

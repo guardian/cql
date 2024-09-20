@@ -1,42 +1,53 @@
-import { describe, it, mock, beforeEach } from "bun:test";
-import {
-  contentEditableTestId,
-  createCqlInput,
-  typeaheadTestId,
-} from "./CqlInput";
-import { findByTestId } from "@testing-library/dom";
-import userEvent, { UserEvent } from "@testing-library/user-event";
-import {
-  findByShadowTestId,
-  findByShadowText,
-} from "shadow-dom-testing-library";
+import { describe, it, beforeEach } from "bun:test";
+import { errorMsgTestId, errorTestId, typeaheadTestId } from "./CqlInput";
+import { findByTestId, findByText } from "@testing-library/dom";
 import { CqlClientService } from "../services/CqlService";
 import { TestTypeaheadHelpers } from "../lang/typeaheadHelpersTest";
-
-mock.module("../CqlService", () => ({}));
+import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
+import { doc } from "./schema";
+import { createCqlPlugin } from "./plugin";
+import { redo, undo } from "prosemirror-history";
+import { bottomOfLine, topOfLine } from "./commands";
+import { keymap } from "prosemirror-keymap";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new CqlClientService(typeheadHelpers.fieldResolvers);
 
-// The decorations that implement syntax highlighting cause problems with
-// mutationobservers on .keyboard.
-const cqlInput = createCqlInput(testCqlService, { syntaxHighlighting: false });
-window.customElements.define("cql-input", cqlInput);
+const createCqlEditor = () => {
+  const container = document.createElement("div");
+  const typeaheadEl = document.createElement("div");
+  typeaheadEl.setAttribute("data-testid", typeaheadTestId);
+  const errorEl = document.createElement("div");
+  errorEl.setAttribute("data-testid", errorTestId);
+  const errorMsgEl = document.createElement("div");
+  errorMsgEl.setAttribute("data-testid", errorMsgTestId);
 
-const mountComponent = (query: string) => {
-  const user = userEvent.setup();
-  const container = document.body;
-  const input = document.createElement("cql-input");
-  input.setAttribute("data-testid", "cql-input");
-  input.setAttribute("initial-value", query);
-  container.appendChild(input);
+  container.appendChild(typeaheadEl);
+  container.appendChild(errorEl);
+  container.appendChild(errorMsgEl);
 
-  const valueContainer = { value: undefined as string | undefined };
+  const plugin = createCqlPlugin({
+    cqlService: testCqlService,
+    typeaheadEl,
+    errorEl,
+    errorMsgEl,
+    config: { syntaxHighlighting: true },
+    onChange: ({ cqlQuery }) => dispatch(cqlQuery),
+  });
 
-  input.addEventListener(
-    "queryChange",
-    (e) => (valueContainer.value = e.detail.cqlQuery)
-  );
+  const editor = createEditor(doc.create(), {
+    plugins: [
+      plugin,
+      keymap({
+        "Mod-z": undo,
+        "Mod-y": redo,
+        "Ctrl-a": topOfLine,
+        "Ctrl-e": bottomOfLine,
+      }),
+    ],
+  });
+
+  container.appendChild(editor.view.dom);
 
   const subscribers: Array<(s: string) => void> = [];
   const valuesReceived: string[] = [];
@@ -44,8 +55,6 @@ const mountComponent = (query: string) => {
     valuesReceived.push(value);
     subscribers.forEach((s) => s(value));
   };
-
-  input.addEventListener("queryChange", (e) => dispatch(e.detail.cqlQuery));
 
   /**
    * Wait for a particular `cqlQuery` value from the component's onChange
@@ -74,50 +83,17 @@ const mountComponent = (query: string) => {
       }, timeoutMs);
     });
 
-  return { user, container, waitFor };
-};
-
-const findContentEditable = (container: HTMLElement) =>
-  findByShadowTestId(container, contentEditableTestId);
-
-const typeIntoInput = async (
-  user: UserEvent,
-  container: HTMLElement,
-  text: string
-) => {
-  const contentEditable = await findContentEditable(container);
-  contentEditable.focus();
-
-  await user.keyboard(text);
-};
-
-const moveCursor = (contentEditableEl: HTMLElement, index: number) => {
-  const range = document.createRange();
-  const selection = window.getSelection();
-  range.setStart(contentEditableEl, index);
-  range.collapse(true);
-  selection?.removeAllRanges();
-  selection?.addRange(range);
-};
-
-const moveCursorToStart = async (container: HTMLElement) => {
-  const contentEditableEl = await findContentEditable(container);
-  await moveCursor(contentEditableEl, 0);
-};
-
-const moveCursorToEnd = async (container: HTMLElement) => {
-  const contentEditableEl = await findContentEditable(container);
-  await moveCursor(contentEditableEl, contentEditableEl.childNodes.length);
+  return { editor, waitFor, container };
 };
 
 const selectPopoverOption = async (
-  user: UserEvent,
+  editor: ProsemirrorTestChain,
   container: HTMLElement,
   optionLabel: string
 ) => {
-  const popoverContainer = await findByShadowTestId(container, typeaheadTestId);
-  await findByShadowText(popoverContainer, optionLabel);
-  await typeIntoInput(user, container, "{Enter}");
+  const popoverContainer = await findByTestId(container, typeaheadTestId);
+  await findByText(popoverContainer, optionLabel);
+  await editor.press("Enter");
 };
 
 describe("CqlInput", () => {
@@ -126,72 +102,59 @@ describe("CqlInput", () => {
   });
 
   it("accepts and displays a basic query", async () => {
-    const { user, container, waitFor } = mountComponent("");
+    const { editor, waitFor } = createCqlEditor();
 
-    await typeIntoInput(user, container, "example");
+    await editor.insertText("example");
 
     await waitFor("example");
   });
 
-  it("renders a custom element", async () => {
-    const { container } = mountComponent("");
-    await findByTestId(container, "cql-input");
-  });
-
-  it("displays an initial value", async () => {
-    const { container } = mountComponent("example");
-    await findByShadowText(container, "example");
-  });
-
   it("displays a popover when a tag prompt is entered", async () => {
-    const { user, container } = mountComponent("");
+    const { editor, container } = createCqlEditor();
 
-    await typeIntoInput(user, container, "example +");
+    await editor.insertText("example +");
 
-    const popoverContainer = await findByShadowTestId(
-      container,
-      typeaheadTestId
-    );
+    const popoverContainer = await findByTestId(container, typeaheadTestId);
 
-    await findByShadowText(popoverContainer, "Tag");
-    await findByShadowText(popoverContainer, "Section");
+    await findByText(popoverContainer, "Tag");
+    await findByText(popoverContainer, "Section");
   });
 
   it("accepts the given value when a popover appears", async () => {
-    const { user, container, waitFor } = mountComponent("");
-    await moveCursorToEnd(container);
-    await typeIntoInput(user, container, " example +");
+    const { editor, container, waitFor } = createCqlEditor();
+    await editor.insertText("example +");
 
     await waitFor("example +");
 
-    await selectPopoverOption(user, container, "Tag");
+    await selectPopoverOption(editor, container, "Tag");
 
     await waitFor("example +tag");
   });
 
   it("ctrl-a moves the caret to the beginning of the input", async () => {
-    const { user, container, waitFor } = mountComponent("a");
+    const { editor, waitFor } = createCqlEditor();
 
-    await moveCursorToEnd(container);
-    await typeIntoInput(user, container, "{Control>}a{/Control}b");
-    await typeIntoInput(user, container, "b");
+    await editor.insertText("a").shortcut("Ctrl-a").insertText("b");
 
     await waitFor("ba");
   });
 
   it("ctrl-e moves the caret to the end of the input", async () => {
-    const { user, container } = mountComponent("a");
-    await moveCursorToStart(container);
-    await typeIntoInput(user, container, "{Control>}e{/Control}");
-    await typeIntoInput(user, container, "b");
+    const { editor, waitFor } = createCqlEditor();
 
-    await findByShadowText(container, "ab");
+    await editor
+      .insertText("a")
+      .selectText("start")
+      .shortcut("Ctrl-e")
+      .insertText("b");
+
+    await waitFor("ab");
   });
 
   it("permits content before query fields", async () => {
-    const { user, container, waitFor } = mountComponent("+tag");
+    const { editor, waitFor } = createCqlEditor();
 
-    await typeIntoInput(user, container, "a");
+    await editor.insertText("+tag").shortcut("Ctrl-a").insertText("a ");
 
     await waitFor("a +tag");
   });
