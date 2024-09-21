@@ -8,7 +8,7 @@ import _tokensWithTagAtBeginning from "./fixtures/tokens/tokensWithTagAtBeginnin
 import {
   ProseMirrorToken,
   mapTokens,
-  toProseMirrorTokens,
+  toProseMirrorRanges,
   tokensToDoc,
 } from "./utils";
 import {
@@ -22,15 +22,15 @@ import {
 } from "./schema";
 
 describe("utils", () => {
-  const tokensWithOneKVPair = toProseMirrorTokens(_tokensWithOneKVPair);
-  const tokensWithParens = toProseMirrorTokens(_tokensWithParens);
-  const tokensWithParensAndKVPair = toProseMirrorTokens(
+  const tokensWithOneKVPair = toProseMirrorRanges(_tokensWithOneKVPair);
+  const tokensWithParens = toProseMirrorRanges(_tokensWithParens);
+  const tokensWithParensAndKVPair = toProseMirrorRanges(
     _tokensWithParensAndKVPair
   );
-  const tokensWithTrailingWhitespace = toProseMirrorTokens(
+  const tokensWithTrailingWhitespace = toProseMirrorRanges(
     _tokensWithTrailingWhitespace
   );
-  const tokensWithTagAtBeginning = toProseMirrorTokens(
+  const tokensWithTagAtBeginning = toProseMirrorRanges(
     _tokensWithTagAtBeginning
   );
 

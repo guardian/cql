@@ -1,9 +1,13 @@
-import { Mapping } from "prosemirror-transform";
 import { EditorView } from "prosemirror-view";
-import { schema } from "./schema";
+import { chipKey, chipValue, schema, searchText } from "./schema";
 import { TextSelection } from "prosemirror-state";
 import { Popover } from "./Popover";
-import { TextSuggestionOption, TypeaheadSuggestion } from "../lang/types";
+import {
+  MappedTypeaheadSuggestion,
+  TextSuggestionOption,
+  TypeaheadSuggestion,
+} from "../lang/types";
+import { Node, ResolvedPos } from "prosemirror-model";
 
 type MenuItem = {
   label: string;
@@ -41,8 +45,7 @@ export class TypeaheadPopover extends Popover {
   public isRenderingNavigableMenu = () => !!this.currentSuggestion?.suggestions;
 
   public updateItemsFromSuggestions = (
-    typeaheadSuggestions: TypeaheadSuggestion[],
-    mapping: Mapping
+    typeaheadSuggestions: MappedTypeaheadSuggestion[]
   ) => {
     if (
       !typeaheadSuggestions.length ||
@@ -55,15 +58,10 @@ export class TypeaheadPopover extends Popover {
     }
 
     const currentState = this.view.state;
-    const mappedSuggestions = typeaheadSuggestions.map((suggestion) => {
-      const start = mapping.map(suggestion.from, -1);
-      const end = mapping.map(suggestion.to);
-      return { ...suggestion, from: start, to: end } as TypeaheadSuggestion;
-    });
 
-    this.updateDebugSuggestions(mappedSuggestions);
+    this.updateDebugSuggestions(typeaheadSuggestions);
 
-    const suggestionThatCoversSelection = mappedSuggestions.find(
+    const suggestionThatCoversSelection = typeaheadSuggestions.find(
       ({ from, to, suggestions }) =>
         currentState.selection.from >= from &&
         currentState.selection.to <= to &&
@@ -115,6 +113,8 @@ export class TypeaheadPopover extends Popover {
     this.applyValueToInput(suggestion.value);
   };
 
+  private nodeSequence = [chipKey, chipValue, searchText];
+
   private applyValueToInput = (value: string) => {
     if (!this.currentSuggestion) {
       return;
@@ -123,14 +123,55 @@ export class TypeaheadPopover extends Popover {
     const { from, to } = this.currentSuggestion;
     const tr = this.view.state.tr;
 
-    this.view.dispatch(
-      tr.replaceRangeWith(from, to, schema.text(value)).setSelection(
-        // +1 to tip the selection into the next available node's text
-        // position after applying the suggestion e.g. key -> value, value ->
-        // searchText
-        TextSelection.near(tr.doc.resolve(from + value.length + 1))
-      )
+    tr.replaceRangeWith(from, to, schema.text(value));
+
+    const $pos = tr.doc.resolve(from + 1);
+    const suggestionNode = $pos.node();
+    const nodeTypeAfterIndex = this.nodeSequence.indexOf(suggestionNode.type);
+
+    if (nodeTypeAfterIndex === -1) {
+      console.warn(
+        `No node found to follow node of type ${suggestionNode.type.name}`
+      );
+      return;
+    }
+
+    const nodeTypeToSelect = this.nodeSequence[nodeTypeAfterIndex + 1];
+
+    if (!nodeTypeToSelect) {
+      console.warn(
+        `Could not find a node to search for after pos ${from} with ${suggestionNode.type.name}`
+      );
+      return;
+    }
+
+    let insertPos: number | undefined;
+    tr.doc.nodesBetween(from, tr.doc.nodeSize - 2, (node, pos) => {
+      if (insertPos !== undefined) {
+        return false;
+      }
+
+      if (node.type === nodeTypeToSelect) {
+        insertPos = pos;
+      }
+    });
+
+    if (insertPos === undefined) {
+      const defaultPos = tr.selection.to;
+      console.warn(
+        `Attempted to find a cursor position after node ${suggestionNode.type.name} at ${$pos.pos}, but could not find a valid subsequent node. Defaulting to the current position, ${defaultPos}`
+      );
+      insertPos = defaultPos;
+    }
+
+    tr.setSelection(
+      // +1 to tip the selection into the next available node's text
+      // position after applying the suggestion e.g. key -> value, value ->
+      // searchText
+      TextSelection.create(tr.doc, insertPos)
     );
+
+    this.view.dispatch(tr);
   };
 
   private moveSelection = (by: number) => {

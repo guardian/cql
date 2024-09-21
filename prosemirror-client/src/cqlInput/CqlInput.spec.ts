@@ -109,15 +109,28 @@ describe("CqlInput", () => {
     await waitFor("example");
   });
 
-  it("displays a popover when a tag prompt is entered", async () => {
-    const { editor, container } = createCqlEditor();
+  describe("typeahead", () => {
+    it("displays a popover for chip keys at the start of a query", async () => {
+      const { editor, container } = createCqlEditor();
 
-    await editor.insertText("example +");
+      await editor.insertText("example +");
 
-    const popoverContainer = await findByTestId(container, typeaheadTestId);
+      const popoverContainer = await findByTestId(container, typeaheadTestId);
 
-    await findByText(popoverContainer, "Tag");
-    await findByText(popoverContainer, "Section");
+      await findByText(popoverContainer, "Tag");
+      await findByText(popoverContainer, "Section");
+    });
+
+    it("displays a popover for chip keys after search text", async () => {
+      const { editor, container } = createCqlEditor();
+
+      await editor.insertText("+");
+
+      const popoverContainer = await findByTestId(container, typeaheadTestId);
+
+      await findByText(popoverContainer, "Tag");
+      await findByText(popoverContainer, "Section");
+    });
   });
 
   it("accepts the given value when a popover appears", async () => {

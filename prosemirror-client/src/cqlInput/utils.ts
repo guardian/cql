@@ -14,6 +14,9 @@ import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection } from "prosemirror-state";
 import { ERROR_CLASS } from "./plugin";
 import { Token } from "../lang/token";
+import { MappedTypeaheadSuggestion, TypeaheadSuggestion } from "../lang/types";
+import { CqlResult } from "../lang/Cql";
+import { CqlError } from "../services/CqlService";
 
 const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE"];
 
@@ -194,8 +197,7 @@ export const docToQueryStr = (doc: Node) => {
         // already present.
         const maybePrecedingNode = index > 0 && parent?.nodeAt(index - 1);
         const isPrecededWithoutWhitespace =
-          !maybePrecedingNode ||
-            !maybePrecedingNode.textContent.endsWith(" ");
+          !maybePrecedingNode || !maybePrecedingNode.textContent.endsWith(" ");
 
         if (isPrecededWithoutWhitespace) {
           str += " ";
@@ -206,7 +208,8 @@ export const docToQueryStr = (doc: Node) => {
         str += `+${node.textContent}`;
         return false;
       case "chipValue":
-        str += node.textContent.trim().length > 0 ? `:${node.textContent} ` : "";
+        str +=
+          node.textContent.trim().length > 0 ? `:${node.textContent} ` : "";
         return false;
       default:
         return true;
@@ -292,12 +295,41 @@ export type ProseMirrorToken = Omit<Token, "start" | "end"> & {
  *  a b c
  * 0 1 2 3
  */
-export const toProseMirrorTokens = (tokens: Token[]): ProseMirrorToken[] =>
+export const toProseMirrorRanges = (tokens: Token[]): ProseMirrorToken[] =>
   tokens.map(({ start, end, ...token }) => ({
     ...token,
     from: start,
     to: end + 1,
   }));
+
+export const toMappedSuggestions = (
+  typeaheadSuggestions: TypeaheadSuggestion[],
+  mapping: Mapping
+) =>
+  typeaheadSuggestions.map((suggestion) => {
+    const from = mapping.map(suggestion.from, -1);
+    const to = mapping.map(suggestion.to + 1);
+    return { ...suggestion, from, to } as MappedTypeaheadSuggestion;
+  });
+
+export const toMappedError = (error: CqlError, mapping: Mapping) => ({
+  message: error.message,
+  position: error?.position ? mapping.map(error.position) : undefined,
+});
+
+export const mapResult = (result: CqlResult) => {
+  const tokens = toProseMirrorRanges(result.tokens);
+  const mapping = createProseMirrorTokenToDocumentMap(tokens);
+  const error = result.error && toMappedError(result.error, mapping);
+  const suggestions = toMappedSuggestions(result.suggestions ?? [], mapping);
+
+  return {
+    ...result,
+    tokens,
+    suggestions,
+    error,
+  };
+};
 
 /**
  * Apply a delete intent to the node at the given range:

@@ -9,15 +9,14 @@ import {
 import {
   getNewSelection,
   isBeginningKeyValPair,
-  createProseMirrorTokenToDocumentMap,
   docToQueryStr,
   tokensToDecorations,
   tokensToDoc,
-  toProseMirrorTokens,
   ProseMirrorToken,
   applyDeleteIntent,
   errorToDecoration,
   getErrorMessage,
+  mapResult,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
@@ -25,19 +24,14 @@ import { DELETE_CHIP_INTENT, chipWrapper, doc, schema } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { QueryChangeEventDetail } from "./dom";
 import { ErrorPopover } from "./ErrorPopover";
-import { TypeaheadSuggestion } from "../lang/types";
+import { MappedTypeaheadSuggestion } from "../lang/types";
 import { CqlConfig } from "./CqlInput";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
 type PluginState = {
-  // A mapping from ProseMirrorToken positions to document positions.
-  mapping: Mapping;
-} & ServiceState;
-
-type ServiceState = {
   tokens: ProseMirrorToken[];
-  suggestions: TypeaheadSuggestion[];
+  suggestions: MappedTypeaheadSuggestion[];
   error: CqlError | undefined;
 };
 
@@ -62,8 +56,7 @@ export const createCqlPlugin = ({
   errorEl,
   errorMsgEl,
   onChange,
-  debugEl,
-  config: { syntaxHighlighting },
+  config: { syntaxHighlighting, debugEl },
 }: {
   cqlService: CqlServiceInterface;
   typeaheadEl: HTMLElement;
@@ -71,7 +64,6 @@ export const createCqlPlugin = ({
   errorMsgEl: HTMLElement;
   config: CqlConfig;
   onChange: (detail: QueryChangeEventDetail) => void;
-  debugEl?: HTMLElement;
 }) => {
   let typeaheadPopover: TypeaheadPopover | undefined;
   let errorPopover: ErrorPopover | undefined;
@@ -95,24 +87,20 @@ export const createCqlPlugin = ({
           error: undefined,
         };
       },
-      apply(tr, { tokens, suggestions, mapping, error }) {
+      apply(tr, { tokens, suggestions, error }) {
         const maybeError: string | undefined = tr.getMeta(ACTION_SERVER_ERROR);
         if (maybeError) {
           return {
             tokens: [],
             suggestions,
-            mapping,
             error: { message: maybeError },
           };
         }
 
-        const maybeNewState: ServiceState | undefined =
+        const maybeNewState: PluginState | undefined =
           tr.getMeta(ACTION_NEW_STATE);
 
         return {
-          mapping: maybeNewState
-            ? createProseMirrorTokenToDocumentMap(maybeNewState.tokens)
-            : mapping,
           tokens: maybeNewState ? maybeNewState.tokens : tokens,
           suggestions: maybeNewState ? maybeNewState.suggestions : suggestions,
           error: maybeNewState
@@ -198,10 +186,10 @@ export const createCqlPlugin = ({
         },
       },
       decorations: (state) => {
-        const { tokens, error, mapping } = cqlPluginKey.getState(state)!;
+        const { tokens, error } = cqlPluginKey.getState(state)!;
 
         const maybeErrorDeco = error?.position
-          ? [errorToDecoration(mapping.map(error.position))]
+          ? [errorToDecoration(error.position)]
           : [];
 
         const maybeTokensToDecorations = syntaxHighlighting
@@ -300,15 +288,10 @@ export const createCqlPlugin = ({
         try {
           cqlService.cancel();
 
-          const {
-            tokens: _tokens,
-            suggestions,
-            ast,
-            error,
-            queryResult,
-          } = await cqlService.fetchResult(query);
+          const result = await cqlService.fetchResult(query);
+          const { tokens, suggestions, ast, error, queryResult } =
+            mapResult(result);
 
-          const tokens = toProseMirrorTokens(_tokens);
           const newDoc = tokensToDoc(tokens);
 
           if (debugASTContainer) {
@@ -365,15 +348,13 @@ export const createCqlPlugin = ({
       return {
         update(view, prevState) {
           const prevQuery = docToQueryStr(prevState.doc);
-          const {
-            suggestions = [],
-            mapping,
-            error,
-          } = cqlPluginKey.getState(view.state)!;
+          const { suggestions = [], error } = cqlPluginKey.getState(
+            view.state
+          )!;
 
           const currentQuery = docToQueryStr(view.state.doc);
 
-          typeaheadPopover?.updateItemsFromSuggestions(suggestions, mapping);
+          typeaheadPopover?.updateItemsFromSuggestions(suggestions);
           errorPopover?.updateErrorMessage(error);
 
           if (prevQuery.trim() === currentQuery.trim()) {

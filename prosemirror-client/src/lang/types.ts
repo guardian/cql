@@ -11,6 +11,8 @@ export class TypeaheadSuggestion<T extends TypeaheadType = TypeaheadType> {
   ) {}
 }
 
+export type MappedTypeaheadSuggestion = TypeaheadSuggestion
+
 type SuggestionTypeMap = {
   TEXT: TextSuggestionOption;
   DATE: DateSuggestion;
