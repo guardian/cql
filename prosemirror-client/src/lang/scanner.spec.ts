@@ -21,6 +21,27 @@ describe("scanner", () => {
       ];
       expect(tokens).toEqual(expectedTokens);
     });
+
+    it("should preserve whitespace at the end of the document", () => {
+      const scanner = new Scanner("magnificent octopus ");
+      const tokens = scanner.scanTokens();
+      const expectedTokens = [
+        unquotedStringToken("magnificent octopus "),
+        eofToken(20),
+      ];
+      expect(tokens).toEqual(expectedTokens);
+    });
+
+    it("should preserve whitespace at the end of string tokens", () => {
+      const scanner = new Scanner("a  +tag");
+      const tokens = scanner.scanTokens();
+      const expectedTokens = [
+        unquotedStringToken("a "),
+        new Token(TokenType.QUERY_FIELD_KEY, "+tag", "tag", 3, 6),
+        eofToken(7),
+      ];
+      expect(tokens).toEqual(expectedTokens);
+    });
   });
 
   describe("quoted strings", () => {

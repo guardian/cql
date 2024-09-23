@@ -44,7 +44,8 @@ export class Scanner {
       }
     }, [] as Token[]);
 
-  private isAtEnd = () => this.current === this.program.length;
+  private isAtEnd = (offset: number = 0) =>
+    this.current + offset === this.program.length;
 
   private scanToken = () => {
     switch (this.advance()) {
@@ -130,7 +131,10 @@ export class Scanner {
 
   private addUnquotedString = () => {
     while (
-      !isWhitespace(this.peek()) &&
+      // Consume whitespace up until the last whitespace char
+      (!isWhitespace(this.peek()) ||
+        isWhitespace(this.peek(1)) ||
+        this.isAtEnd(1)) &&
       this.peek() != ")" &&
       !this.isAtEnd()
     ) {
@@ -173,7 +177,10 @@ export class Scanner {
     return this.program[previous];
   };
 
-  private peek = () => (this.isAtEnd() ? "\u0000" : this.program[this.current]);
+  private peek = (offset: number = 0) =>
+    this.program[this.current + offset] === undefined
+      ? "\u0000"
+      : this.program[this.current + offset];
 
   private error = (line: number, message: String) =>
     this.report(line, "", message);
