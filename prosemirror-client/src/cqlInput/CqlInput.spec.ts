@@ -101,12 +101,14 @@ describe("CqlInput", () => {
     document.body.innerHTML = "";
   });
 
-  it("accepts and displays a basic query", async () => {
-    const { editor, waitFor } = createCqlEditor();
+  describe("input", () => {
+    it("accepts and displays a basic query", async () => {
+      const { editor, waitFor } = createCqlEditor();
 
-    await editor.insertText("example");
+      await editor.insertText("example");
 
-    await waitFor("example");
+      await waitFor("example");
+    });
   });
 
   describe("typeahead", () => {
@@ -132,7 +134,7 @@ describe("CqlInput", () => {
       await findByText(popoverContainer, "Section");
     });
 
-    it.only("displays a popover for chip keys after another chip", async () => {
+    it("displays a popover for chip keys after another chip", async () => {
       const { editor, container } = createCqlEditor();
 
       await editor.insertText("+tag:a +");
@@ -155,31 +157,33 @@ describe("CqlInput", () => {
     });
   });
 
-  it("ctrl-a moves the caret to the beginning of the input", async () => {
-    const { editor, waitFor } = createCqlEditor();
+  describe("caret movement and selection", () => {
+    it("ctrl-a moves the caret to the beginning of the input", async () => {
+      const { editor, waitFor } = createCqlEditor();
 
-    await editor.insertText("a").shortcut("Ctrl-a").insertText("b");
+      await editor.insertText("a").shortcut("Ctrl-a").insertText("b");
 
-    await waitFor("ba");
-  });
+      await waitFor("ba");
+    });
 
-  it("ctrl-e moves the caret to the end of the input", async () => {
-    const { editor, waitFor } = createCqlEditor();
+    it("ctrl-e moves the caret to the end of the input", async () => {
+      const { editor, waitFor } = createCqlEditor();
 
-    await editor
-      .insertText("a")
-      .selectText("start")
-      .shortcut("Ctrl-e")
-      .insertText("b");
+      await editor
+        .insertText("a")
+        .selectText("start")
+        .shortcut("Ctrl-e")
+        .insertText("b");
 
-    await waitFor("ab");
-  });
+      await waitFor("ab");
+    });
 
-  it("permits content before query fields", async () => {
-    const { editor, waitFor } = createCqlEditor();
+    it("permits content before query fields", async () => {
+      const { editor, waitFor } = createCqlEditor();
 
-    await editor.insertText("+tag").shortcut("Ctrl-a").insertText("a ");
+      await editor.insertText("+tag").shortcut("Ctrl-a").insertText("a ");
 
-    await waitFor("a +tag");
+      await waitFor("a +tag");
+    });
   });
 });
