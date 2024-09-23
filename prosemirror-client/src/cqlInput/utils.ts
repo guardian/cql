@@ -18,7 +18,31 @@ import { MappedTypeaheadSuggestion, TypeaheadSuggestion } from "../lang/types";
 import { CqlResult } from "../lang/Cql";
 import { CqlError } from "../services/CqlService";
 
-const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE"];
+const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE", "EOF"];
+
+const joinSearchTextTokens = (tokens: ProseMirrorToken[]) =>
+  tokens.reduce((acc, token) => {
+    console.log(token.tokenType);
+    if (tokensToPreserve.includes(token.tokenType)) {
+      return acc.concat(token);
+    }
+
+    const prevToken = acc.at(-1);
+
+    if (!prevToken || tokensToPreserve.includes(prevToken.tokenType)) {
+      return acc.concat(token);
+    }
+
+    const padLength = token.from - prevToken.from;
+
+    return acc.slice(0, acc.length - 1).concat({
+      ...token,
+      from: prevToken.from,
+      tokenType: "STRING",
+      literal: undefined,
+      lexeme: prevToken.lexeme.padEnd(padLength, " ") + token.lexeme,
+    });
+  }, [] as ProseMirrorToken[]);
 
 /**
  * Create a mapping from ProseMirrorToken positions to document positions.
@@ -47,24 +71,11 @@ export const createProseMirrorTokenToDocumentMap = (
   // We only distinguish between key/val tokens here – other tokens are universally
   // represented as searchText. We join the other tokens into single ranges so we
   // can provide mappings for their node representation.
-  const compactedTokenRanges = tokens.reduce((acc, { from, to, tokenType }) => {
-    if (tokensToPreserve.includes(tokenType)) {
-      return acc.concat({ from, to, tokenType });
-    }
-
-    const prevToken = acc.at(-1);
-
-    if (!prevToken || tokensToPreserve.includes(prevToken.tokenType)) {
-      return acc.concat({ from, to, tokenType });
-    }
-
-    return acc
-      .slice(0, acc.length - 1)
-      .concat({ from: prevToken.from, to, tokenType });
-  }, [] as { from: number; to: number; tokenType: string }[]);
+  const compactedTokenRanges = joinSearchTextTokens(tokens);
 
   const ranges = compactedTokenRanges.reduce<[number, number, number][]>(
     (ranges, { tokenType, from, to }) => {
+      console.log({tokenType, from, to})
       switch (tokenType) {
         case "QUERY_FIELD_KEY":
           // We add mappings here to accommodate the positions occupied by node boundaries.
@@ -76,7 +87,7 @@ export const createProseMirrorTokenToDocumentMap = (
           );
         case "QUERY_VALUE":
           return ranges.concat(
-            // leading char ('+')
+            // leading char (':')
             [from - 1, 0, 1],
             // chipValue end (+1)
             [to, 0, 1]
@@ -84,7 +95,7 @@ export const createProseMirrorTokenToDocumentMap = (
         default:
           return ranges.concat(
             [from, 0, 1], // searchText begin (+1)
-            [to, 0, 1] // searchText end (+1)
+            [to, 0, 0] // searchText end (+1)
           );
       }
     },
@@ -110,59 +121,40 @@ export const mapTokens = (tokens: ProseMirrorToken[]): ProseMirrorToken[] => {
 /**
  * Create a ProseMirror document from an array of ProseMirrorTokens.
  */
-export const tokensToDoc = (tokens: ProseMirrorToken[]): Node => {
-  const nodes = tokens.reduce<Node[]>((acc, token, index): Node[] => {
-    switch (token.tokenType) {
-      case "QUERY_FIELD_KEY":
-        const tokenKey = token.literal;
-        const tokenValue = tokens[index + 1]?.literal;
+export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
+  const nodes = joinSearchTextTokens(_tokens).reduce<Node[]>(
+    (acc, token, index, tokens): Node[] => {
+      switch (token.tokenType) {
+        case "QUERY_FIELD_KEY":
+          const tokenKey = token.literal;
+          const tokenValue = tokens[index + 1]?.literal;
 
-        return acc.concat(
-          chipWrapper.create(undefined, [
-            chip.create(undefined, [
-              chipKey.create(
-                undefined,
-                tokenKey ? schema.text(tokenKey) : undefined
-              ),
-              chipValue.create(undefined, schema.text(tokenValue ?? " ")),
-            ]),
-          ])
-        );
-      case "QUERY_VALUE":
-      case "EOF":
-        return acc;
-      default:
-        // If this token terminates and the next token begins ahead of it, add
-        // the whitespace that separates them.
-        const nextTokenPos = tokens[index + 1]?.from;
+          return acc.concat(
+            chipWrapper.create(undefined, [
+              chip.create(undefined, [
+                chipKey.create(
+                  undefined,
+                  tokenKey ? schema.text(tokenKey) : undefined
+                ),
+                chipValue.create(
+                  undefined,
+                  tokenValue ? schema.text(tokenValue) : undefined
+                ),
+              ]),
+            ])
+          );
+        case "QUERY_VALUE":
+        case "EOF":
+          return acc;
+        default:
+          return acc.concat(
+            searchText.create(undefined, schema.text(token.lexeme))
+          );
+      }
+    },
+    [] as Node[]
+  );
 
-        const lexemeIncludingTrailingWhitespace = nextTokenPos
-          ? token.lexeme.padEnd(nextTokenPos - token.from, " ")
-          : token.lexeme;
-
-        // Join non-KV pairs into a single searchText node
-        const prevNode = acc[acc.length - 1];
-        if (prevNode?.type === searchText) {
-          return acc
-            .slice(0, acc.length - 1)
-            .concat(
-              searchText.create(
-                undefined,
-                schema.text(
-                  `${prevNode.textContent}${lexemeIncludingTrailingWhitespace}`
-                )
-              )
-            );
-        }
-
-        return acc.concat(
-          searchText.create(
-            undefined,
-            schema.text(lexemeIncludingTrailingWhitespace)
-          )
-        );
-    }
-  }, [] as Node[]);
 
   return doc.create(undefined, nodes);
 };
@@ -187,25 +179,13 @@ export const tokensToDecorations = (
 export const docToQueryStr = (doc: Node) => {
   let str: string = "";
 
-  doc.descendants((node, _pos, parent, index) => {
+  doc.descendants((node, _pos) => {
     switch (node.type.name) {
       case "searchText":
         str += node.textContent;
         return false;
-      case "chipWrapper":
-        // Add whitespace to separate chips from previous searchText if none is
-        // already present.
-        const maybePrecedingNode = index > 0 && parent?.nodeAt(index - 1);
-        const isPrecededWithoutWhitespace =
-          !maybePrecedingNode || !maybePrecedingNode.textContent.endsWith(" ");
-
-        if (isPrecededWithoutWhitespace) {
-          str += " ";
-        }
-
-        return;
       case "chipKey":
-        str += `+${node.textContent}`;
+        str += ` +${node.textContent}`;
         return false;
       case "chipValue":
         str +=
@@ -295,7 +275,7 @@ export type ProseMirrorToken = Omit<Token, "start" | "end"> & {
  *  a b c
  * 0 1 2 3
  */
-export const toProseMirrorRanges = (tokens: Token[]): ProseMirrorToken[] =>
+export const toProseMirrorTokens = (tokens: Token[]): ProseMirrorToken[] =>
   tokens.map(({ start, end, ...token }) => ({
     ...token,
     from: start,
@@ -307,8 +287,8 @@ export const toMappedSuggestions = (
   mapping: Mapping
 ) =>
   typeaheadSuggestions.map((suggestion) => {
-    const from = mapping.map(suggestion.from, -1);
-    const to = mapping.map(suggestion.to + 1);
+    const from = mapping.map(suggestion.from);
+    const to = mapping.map(suggestion.to + 1, -1);
     return { ...suggestion, from, to } as MappedTypeaheadSuggestion;
   });
 
@@ -318,7 +298,7 @@ export const toMappedError = (error: CqlError, mapping: Mapping) => ({
 });
 
 export const mapResult = (result: CqlResult) => {
-  const tokens = toProseMirrorRanges(result.tokens);
+  const tokens = toProseMirrorTokens(result.tokens);
   const mapping = createProseMirrorTokenToDocumentMap(tokens);
   const error = result.error && toMappedError(result.error, mapping);
   const suggestions = toMappedSuggestions(result.suggestions ?? [], mapping);
@@ -329,6 +309,58 @@ export const mapResult = (result: CqlResult) => {
     suggestions,
     error,
   };
+};
+
+// The node to move the caret to after a typeahead selection is made, e.g. when
+// a typeahead value is inserted for a chipKey, move the caret to the next
+// chipValue.
+const typeaheadSelectionSequence = [chipKey, chipValue, searchText];
+
+export const getNextPositionAfterTypeaheadSelection = (
+  currentDoc: Node,
+  currentPos: number
+) => {
+  const $pos = currentDoc.resolve(currentPos);
+  const suggestionNode = $pos.node();
+  const nodeTypeAfterIndex = typeaheadSelectionSequence.indexOf(
+    suggestionNode.type
+  );
+
+  if (nodeTypeAfterIndex === -1) {
+    console.warn(
+      `No node found to follow node of type ${suggestionNode.type.name}`
+    );
+    return;
+  }
+
+  const nodeTypeToSelect = typeaheadSelectionSequence[nodeTypeAfterIndex + 1];
+
+  if (!nodeTypeToSelect) {
+    console.warn(
+      `Could not find a node to search for after pos ${currentPos} with ${suggestionNode.type.name}`
+    );
+    return;
+  }
+
+  let insertPos: number | undefined;
+  currentDoc.nodesBetween(currentPos, currentDoc.nodeSize - 2, (node, pos) => {
+    if (insertPos !== undefined) {
+      return false;
+    }
+
+    if (node.type === nodeTypeToSelect) {
+      insertPos = pos + 1;
+    }
+  });
+
+  if (insertPos === undefined) {
+    console.warn(
+      `Attempted to find a cursor position after node ${suggestionNode.type.name} at ${$pos.pos}, but could not find a valid subsequent node.`
+    );
+    return;
+  }
+
+  return insertPos;
 };
 
 /**

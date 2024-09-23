@@ -131,17 +131,28 @@ describe("CqlInput", () => {
       await findByText(popoverContainer, "Tag");
       await findByText(popoverContainer, "Section");
     });
-  });
 
-  it("accepts the given value when a popover appears", async () => {
-    const { editor, container, waitFor } = createCqlEditor();
-    await editor.insertText("example +");
+    it.only("displays a popover for chip keys after another chip", async () => {
+      const { editor, container } = createCqlEditor();
 
-    await waitFor("example +");
+      await editor.insertText("+tag:a +");
 
-    await selectPopoverOption(editor, container, "Tag");
+      const popoverContainer = await findByTestId(container, typeaheadTestId);
 
-    await waitFor("example +tag");
+      await findByText(popoverContainer, "Tag");
+      await findByText(popoverContainer, "Section");
+    });
+
+    it("accepts the given value when a popover appears", async () => {
+      const { editor, container, waitFor } = createCqlEditor();
+      await editor.insertText("example +");
+
+      await waitFor("example +");
+
+      await selectPopoverOption(editor, container, "Tag");
+
+      await waitFor("example +tag");
+    });
   });
 
   it("ctrl-a moves the caret to the beginning of the input", async () => {

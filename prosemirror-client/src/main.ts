@@ -37,7 +37,7 @@ const cqlEl = document.getElementById("cql")!;
 const queryEl = document.getElementById("query")!;
 cqlInput?.addEventListener("queryChange", ((e: CustomEvent) => {
   queryEl.innerHTML = e.detail.query;
-  cqlEl.innerHTML = e.detail.cqlQuery;
+  cqlEl.innerHTML = e.detail.cqlQuery.replaceAll(" ", "·");
 }) as EventListener);
 
 const params = new URLSearchParams(window.location.search);

@@ -292,6 +292,8 @@ export const createCqlPlugin = ({
           const { tokens, suggestions, ast, error, queryResult } =
             mapResult(result);
 
+          console.log(tokens, suggestions, ast, error, queryResult);
+
           const newDoc = tokensToDoc(tokens);
 
           if (debugASTContainer) {
@@ -357,7 +359,7 @@ export const createCqlPlugin = ({
           typeaheadPopover?.updateItemsFromSuggestions(suggestions);
           errorPopover?.updateErrorMessage(error);
 
-          if (prevQuery.trim() === currentQuery.trim()) {
+          if (prevQuery === currentQuery) {
             return;
           }
 

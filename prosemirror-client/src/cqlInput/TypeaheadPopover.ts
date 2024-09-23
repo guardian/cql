@@ -1,5 +1,5 @@
 import { EditorView } from "prosemirror-view";
-import { chipKey, chipValue, schema, searchText } from "./schema";
+import { schema } from "./schema";
 import { TextSelection } from "prosemirror-state";
 import { Popover } from "./Popover";
 import {
@@ -7,7 +7,7 @@ import {
   TextSuggestionOption,
   TypeaheadSuggestion,
 } from "../lang/types";
-import { Node, ResolvedPos } from "prosemirror-model";
+import { getNextPositionAfterTypeaheadSelection } from "./utils";
 
 type MenuItem = {
   label: string;
@@ -113,8 +113,6 @@ export class TypeaheadPopover extends Popover {
     this.applyValueToInput(suggestion.value);
   };
 
-  private nodeSequence = [chipKey, chipValue, searchText];
-
   private applyValueToInput = (value: string) => {
     if (!this.currentSuggestion) {
       return;
@@ -125,53 +123,16 @@ export class TypeaheadPopover extends Popover {
 
     tr.replaceRangeWith(from, to, schema.text(value));
 
-    const $pos = tr.doc.resolve(from + 1);
-    const suggestionNode = $pos.node();
-    const nodeTypeAfterIndex = this.nodeSequence.indexOf(suggestionNode.type);
-
-    if (nodeTypeAfterIndex === -1) {
-      console.warn(
-        `No node found to follow node of type ${suggestionNode.type.name}`
-      );
-      return;
-    }
-
-    const nodeTypeToSelect = this.nodeSequence[nodeTypeAfterIndex + 1];
-
-    if (!nodeTypeToSelect) {
-      console.warn(
-        `Could not find a node to search for after pos ${from} with ${suggestionNode.type.name}`
-      );
-      return;
-    }
-
-    let insertPos: number | undefined;
-    tr.doc.nodesBetween(from, tr.doc.nodeSize - 2, (node, pos) => {
-      if (insertPos !== undefined) {
-        return false;
-      }
-
-      if (node.type === nodeTypeToSelect) {
-        insertPos = pos;
-      }
-    });
-
-    if (insertPos === undefined) {
-      const defaultPos = tr.selection.to;
-      console.warn(
-        `Attempted to find a cursor position after node ${suggestionNode.type.name} at ${$pos.pos}, but could not find a valid subsequent node. Defaulting to the current position, ${defaultPos}`
-      );
-      insertPos = defaultPos;
-    }
-
-    tr.setSelection(
-      // +1 to tip the selection into the next available node's text
-      // position after applying the suggestion e.g. key -> value, value ->
-      // searchText
-      TextSelection.create(tr.doc, insertPos)
+    let insertPos = getNextPositionAfterTypeaheadSelection(
+      tr.doc,
+      tr.selection.to
     );
 
-    this.view.dispatch(tr);
+    if (insertPos) {
+      tr.setSelection(TextSelection.create(tr.doc, insertPos));
+
+      this.view.dispatch(tr);
+    }
   };
 
   private moveSelection = (by: number) => {

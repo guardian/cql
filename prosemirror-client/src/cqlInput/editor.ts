@@ -40,19 +40,6 @@ export const createEditorView = ({
         history(),
       ],
     }),
-    dispatchTransaction(tr) {
-      // Ensure that we always have space for text after the last wrapper node
-      const endsWithChip = tr.doc.lastChild?.type.name === "chipWrapper";
-      if (endsWithChip) {
-        const tr = view.state.tr;
-        tr.insert(
-          view.state.doc.nodeSize - 2,
-          schema.nodes.searchText.create(undefined)
-        );
-      }
-
-      view.updateState(view.state.apply(tr));
-    },
   });
 
   window.CQL_VIEW = view;
