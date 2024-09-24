@@ -4,16 +4,16 @@ import { findByTestId, findByText } from "@testing-library/dom";
 import { CqlClientService } from "../services/CqlService";
 import { TestTypeaheadHelpers } from "../lang/typeaheadHelpersTest";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
-import { doc } from "./schema";
 import { createCqlPlugin } from "./plugin";
 import { redo, undo } from "prosemirror-history";
 import { bottomOfLine, topOfLine } from "./commands";
 import { keymap } from "prosemirror-keymap";
+import { logNode, mapResult, tokensToDoc } from "./utils";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new CqlClientService(typeheadHelpers.fieldResolvers);
 
-const createCqlEditor = () => {
+const createCqlEditor = async (initialQuery: string = "") => {
   const container = document.createElement("div");
   const typeaheadEl = document.createElement("div");
   typeaheadEl.setAttribute("data-testid", typeaheadTestId);
@@ -35,7 +35,15 @@ const createCqlEditor = () => {
     onChange: ({ cqlQuery }) => dispatch(cqlQuery),
   });
 
-  const editor = createEditor(doc.create(), {
+  const queryToProseMirrorTokens = async (query: string) => {
+    const result = await testCqlService.fetchResult(query);
+    const { tokens } = mapResult(result);
+    return tokensToDoc(tokens);
+  };
+
+  const doc = await queryToProseMirrorTokens(initialQuery)
+
+  const editor = createEditor(doc, {
     plugins: [
       plugin,
       keymap({
@@ -46,6 +54,8 @@ const createCqlEditor = () => {
       }),
     ],
   });
+
+  editor.selectText('end')
 
   container.appendChild(editor.view.dom);
 
@@ -103,7 +113,7 @@ describe("CqlInput", () => {
 
   describe("input", () => {
     it("accepts and displays a basic query", async () => {
-      const { editor, waitFor } = createCqlEditor();
+      const { editor, waitFor } = await createCqlEditor();
 
       await editor.insertText("example");
 
@@ -113,7 +123,7 @@ describe("CqlInput", () => {
 
   describe("typeahead", () => {
     it("displays a popover for chip keys at the start of a query", async () => {
-      const { editor, container } = createCqlEditor();
+      const { editor, container } = await createCqlEditor();
 
       await editor.insertText("example +");
 
@@ -124,7 +134,7 @@ describe("CqlInput", () => {
     });
 
     it("displays a popover for chip keys after search text", async () => {
-      const { editor, container } = createCqlEditor();
+      const { editor, container } = await createCqlEditor();
 
       await editor.insertText("+");
 
@@ -135,9 +145,9 @@ describe("CqlInput", () => {
     });
 
     it("displays a popover for chip keys after another chip", async () => {
-      const { editor, container } = createCqlEditor();
+      const { editor, container } = await createCqlEditor("+tag:a");
 
-      await editor.insertText("+tag:a +");
+      editor.insertText(" +");
 
       const popoverContainer = await findByTestId(container, typeaheadTestId);
 
@@ -146,7 +156,7 @@ describe("CqlInput", () => {
     });
 
     it("accepts the given value when a popover appears", async () => {
-      const { editor, container, waitFor } = createCqlEditor();
+      const { editor, container, waitFor } = await createCqlEditor();
       await editor.insertText("example +");
 
       await waitFor("example +");
@@ -159,7 +169,7 @@ describe("CqlInput", () => {
 
   describe("caret movement and selection", () => {
     it("ctrl-a moves the caret to the beginning of the input", async () => {
-      const { editor, waitFor } = createCqlEditor();
+      const { editor, waitFor } = await createCqlEditor();
 
       await editor.insertText("a").shortcut("Ctrl-a").insertText("b");
 
@@ -167,7 +177,7 @@ describe("CqlInput", () => {
     });
 
     it("ctrl-e moves the caret to the end of the input", async () => {
-      const { editor, waitFor } = createCqlEditor();
+      const { editor, waitFor } = await createCqlEditor();
 
       await editor
         .insertText("a")
@@ -179,7 +189,7 @@ describe("CqlInput", () => {
     });
 
     it("permits content before query fields", async () => {
-      const { editor, waitFor } = createCqlEditor();
+      const { editor, waitFor } = await createCqlEditor();
 
       await editor.insertText("+tag").shortcut("Ctrl-a").insertText("a ");
 

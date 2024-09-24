@@ -32,7 +32,6 @@ describe("utils", () => {
     const tokens = await queryToProseMirrorTokens(query);
     const mappedTokens = mapTokens(tokens);
     const node = tokensToDoc(tokens);
-    logNode(node);
     return mappedTokens.map(({ from, to, tokenType }) => {
       return tokenType !== "EOF" ? node.textBetween(from, to) : "";
     });

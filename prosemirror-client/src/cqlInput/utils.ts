@@ -22,7 +22,6 @@ const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE", "EOF"];
 
 const joinSearchTextTokens = (tokens: ProseMirrorToken[]) =>
   tokens.reduce((acc, token) => {
-    console.log(token.tokenType);
     if (tokensToPreserve.includes(token.tokenType)) {
       return acc.concat(token);
     }
@@ -44,6 +43,30 @@ const joinSearchTextTokens = (tokens: ProseMirrorToken[]) =>
     });
   }, [] as ProseMirrorToken[]);
 
+const getQueryFieldKeyRange = (from: number): [number, number, number] =>
+  // chip begin (+1)
+  // chipKey begin (+1)
+  // leading char ('+') (+1)
+  [from - 1, 0, 3];
+
+const getQueryValueRanges = (
+  from: number,
+  to: number
+): [number, number, number][] => [
+  // leading char (':')
+  [from - 1, 0, 1],
+  // chipValue end (+1)
+  [to, 0, 1],
+];
+
+const getSearchTextRanges = (
+  from: number,
+  to: number
+): [number, number, number][] => [
+  [from, 0, 1], // searchText begin (+1)
+  [to, 0, 0], // searchText end (+1)
+];
+
 /**
  * Create a mapping from ProseMirrorToken positions to document positions.
  *
@@ -61,9 +84,14 @@ const joinSearchTextTokens = (tokens: ProseMirrorToken[]) =>
  *
  * is represented in ProseMirror as
  *
- *  <doc> <searchText> s t r </searchText> <chipWrapper> <chip> <chipKey> k </chipKey> <chipValue> v </chipValue> </chip> </chipWrapper> </doc>
+ *  <doc> <searchText> s t r </searchText> <chipWrapper> <chip> <chipKey> k
+ *  </chipKey> <chipValue> v </chipValue> </chip> </chipWrapper> </doc>
  * |     |            | | | |             |             |      |         | |          |           | |            |       |              |      |
- * 0     1            2 3 4 5             6             7      8         9 10         11         12 13           14      15             16     17
+ * 0     1            2 3 4 5             6             7      8         9 10 11
+ * 12 13           14      15             16     17
+ *
+ * NB: This function will not fill out the searchText at the beginning or end of
+ * the document, relying on ProseMirror's schema to autofill missing nodes.
  */
 export const createProseMirrorTokenToDocumentMap = (
   tokens: ProseMirrorToken[]
@@ -74,29 +102,24 @@ export const createProseMirrorTokenToDocumentMap = (
   const compactedTokenRanges = joinSearchTextTokens(tokens);
 
   const ranges = compactedTokenRanges.reduce<[number, number, number][]>(
-    (ranges, { tokenType, from, to }) => {
-      console.log({tokenType, from, to})
+    (accRanges, { tokenType, from, to }, index, tokens) => {
       switch (tokenType) {
         case "QUERY_FIELD_KEY":
-          // We add mappings here to accommodate the positions occupied by node boundaries.
-          return ranges.concat(
-            // chip begin (+1)
-            // chipKey begin (+1)
-            // leading char ('+')
-            [from - 1, 0, 3]
+          // If this field is preceded by a field value, we must add a
+          // searchText mapping as well – the editor will add searchText nodes
+          // between consecutive chips, which we must account for.
+          const previousToken = tokens[index - 1];
+          const isPrecededByChip = previousToken?.tokenType === "QUERY_VALUE";
+          return accRanges.concat(
+            ...(isPrecededByChip
+              ? getSearchTextRanges(previousToken?.to, from - 1)
+              : []),
+            getQueryFieldKeyRange(from)
           );
         case "QUERY_VALUE":
-          return ranges.concat(
-            // leading char (':')
-            [from - 1, 0, 1],
-            // chipValue end (+1)
-            [to, 0, 1]
-          );
+          return accRanges.concat(...getQueryValueRanges(from, to));
         default:
-          return ranges.concat(
-            [from, 0, 1], // searchText begin (+1)
-            [to, 0, 0] // searchText end (+1)
-          );
+          return accRanges.concat(...getSearchTextRanges(from, to));
       }
     },
     []
@@ -128,8 +151,10 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
         case "QUERY_FIELD_KEY":
           const tokenKey = token.literal;
           const tokenValue = tokens[index + 1]?.literal;
-
+          const previousToken = tokens[index - 1];
+          const isPrecededByChip = previousToken?.tokenType === "QUERY_VALUE";
           return acc.concat(
+            ...(isPrecededByChip ? [searchText.create()] : []),
             chipWrapper.create(undefined, [
               chip.create(undefined, [
                 chipKey.create(
@@ -154,7 +179,6 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
     },
     [] as Node[]
   );
-
 
   return doc.create(undefined, nodes);
 };

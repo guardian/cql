@@ -292,8 +292,6 @@ export const createCqlPlugin = ({
           const { tokens, suggestions, ast, error, queryResult } =
             mapResult(result);
 
-          console.log(tokens, suggestions, ast, error, queryResult);
-
           const newDoc = tokensToDoc(tokens);
 
           if (debugASTContainer) {
