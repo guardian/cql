@@ -132,9 +132,7 @@ export class Scanner {
   private addUnquotedString = () => {
     while (
       // Consume whitespace up until the last whitespace char
-      (!isWhitespace(this.peek()) ||
-        isWhitespace(this.peek(1)) ||
-        this.isAtEnd(1)) &&
+      (!isWhitespace(this.peek()) || (isWhitespace(this.peek(1)) || this.isAtEnd(1))) &&
       this.peek() != ")" &&
       !this.isAtEnd()
     ) {

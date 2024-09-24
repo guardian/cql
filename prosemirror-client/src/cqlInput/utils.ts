@@ -148,7 +148,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
   const nodes = joinSearchTextTokens(_tokens).reduce<Node[]>(
     (acc, token, index, tokens): Node[] => {
       switch (token.tokenType) {
-        case "QUERY_FIELD_KEY":
+        case "QUERY_FIELD_KEY": {
           const tokenKey = token.literal;
           const tokenValue = tokens[index + 1]?.literal;
           const previousToken = tokens[index - 1];
@@ -168,13 +168,23 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
               ]),
             ])
           );
+        }
         case "QUERY_VALUE":
-        case "EOF":
+        case "EOF": {
+          const previousToken = tokens[index - 1];
+          const previousNode = acc[acc.length - 1];
+          if (previousToken?.to < token.from && previousNode.type === searchText) {
+            return acc.slice(0, acc.length - 1).concat(
+              searchText.create(undefined, schema.text(previousNode.textContent + " "))
+            )
+          }
           return acc;
-        default:
+        }
+        default: {
           return acc.concat(
             searchText.create(undefined, schema.text(token.lexeme))
           );
+        }
       }
     },
     [] as Node[]

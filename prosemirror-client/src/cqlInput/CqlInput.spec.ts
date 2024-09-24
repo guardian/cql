@@ -119,6 +119,14 @@ describe("CqlInput", () => {
 
       await waitFor("example");
     });
+
+    it("accepts whitespace after non-string tokens", async () => {
+      const { editor, waitFor } = await createCqlEditor("a AND");
+
+      await editor.insertText(" ");
+
+      await waitFor("a AND ");
+    });
   });
 
   describe("typeahead", () => {
