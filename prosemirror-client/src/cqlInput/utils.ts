@@ -44,8 +44,7 @@ const joinSearchTextTokens = (tokens: ProseMirrorToken[]) =>
   }, [] as ProseMirrorToken[]);
 
 const getQueryFieldKeyRange = (from: number): [number, number, number] =>
-  // chip begin (+1)
-  // chipKey begin (+1)
+  // chipKey begin (+1) // chip begin (+1)
   // leading char ('+') (+1)
   [from - 1, 0, 3];
 
@@ -59,12 +58,8 @@ const getQueryValueRanges = (
   [to, 0, 1],
 ];
 
-const getSearchTextRanges = (
-  from: number,
-  to: number
-): [number, number, number][] => [
+const getSearchTextRanges = (from: number): [number, number, number][] => [
   [from, 0, 1], // searchText begin (+1)
-  [to, 0, 0], // searchText end (+1)
 ];
 
 /**
@@ -105,21 +100,23 @@ export const createProseMirrorTokenToDocumentMap = (
     (accRanges, { tokenType, from, to }, index, tokens) => {
       switch (tokenType) {
         case "QUERY_FIELD_KEY":
-          // If this field is preceded by a field value, we must add a
-          // searchText mapping as well – the editor will add searchText nodes
-          // between consecutive chips, which we must account for.
+          // If this field is at the start of the document, or preceded by a
+          // field value, the editor will add a searchText node to conform to
+          // the schema, which we must account for, so we add a searchText
+          // mapping.
           const previousToken = tokens[index - 1];
-          const isPrecededByChip = previousToken?.tokenType === "QUERY_VALUE";
+          const shouldAddSearchTextMapping =
+            previousToken?.tokenType === "QUERY_VALUE" || index === 0;
           return accRanges.concat(
-            ...(isPrecededByChip
-              ? getSearchTextRanges(previousToken?.to, from - 1)
+            ...(shouldAddSearchTextMapping
+              ? getSearchTextRanges(previousToken?.to)
               : []),
             getQueryFieldKeyRange(from)
           );
         case "QUERY_VALUE":
           return accRanges.concat(...getQueryValueRanges(from, to));
         default:
-          return accRanges.concat(...getSearchTextRanges(from, to));
+          return accRanges.concat(...getSearchTextRanges(from));
       }
     },
     []
@@ -170,24 +167,51 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           );
         }
         case "QUERY_VALUE":
+          return acc;
         case "EOF": {
           const previousToken = tokens[index - 1];
           const previousNode = acc[acc.length - 1];
-          if (previousToken?.to < token.from && previousNode.type === searchText) {
-            return acc.slice(0, acc.length - 1).concat(
-              searchText.create(undefined, schema.text(previousNode.textContent + " "))
-            )
+          if (
+            previousToken?.to < token.from &&
+            previousNode.type === searchText
+          ) {
+            return acc
+              .slice(0, acc.length - 1)
+              .concat(
+                searchText.create(
+                  undefined,
+                  schema.text(previousNode.textContent + " ")
+                )
+              );
           }
+
+          if (previousNode?.type !== searchText) {
+            // Always end with a searchText node
+            return acc.concat(searchText.create());
+          }
+
           return acc;
         }
         default: {
+          const previousNode = acc[acc.length - 1];
+          if (previousNode?.type === searchText) {
+            return acc
+              .slice(0, acc.length - 1)
+              .concat(
+                searchText.create(
+                  undefined,
+                  schema.text(previousNode.textContent + token.lexeme)
+                )
+              );
+          }
           return acc.concat(
             searchText.create(undefined, schema.text(token.lexeme))
           );
         }
       }
     },
-    [] as Node[]
+    // Our document always starts with an empty searchText node
+    [searchText.create()]
   );
 
   return doc.create(undefined, nodes);

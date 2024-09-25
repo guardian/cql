@@ -32,6 +32,12 @@ describe("utils", () => {
     const tokens = await queryToProseMirrorTokens(query);
     const mappedTokens = mapTokens(tokens);
     const node = tokensToDoc(tokens);
+
+    // Implicitly check that the document created by these functions conforms to
+    // the schema, so we know tests downstream are dealing with correct data -
+    // node.check() will throw if the node content is not valid
+    node.check();
+
     return mappedTokens.map(({ from, to, tokenType }) => {
       return tokenType !== "EOF" ? node.textBetween(from, to) : "";
     });
@@ -46,6 +52,19 @@ describe("utils", () => {
         searchText("text"),
         chipWrapper(chip(chipKey("key"), chipValue("value"))),
         searchText("text")
+      );
+
+      expect(node.toJSON()).toEqual(expected.toJSON());
+    });
+
+    test("should insert a searchText node if the query starts with a KV pair", async () => {
+      const tokens = await queryToProseMirrorTokens("+key:value");
+      const node = tokensToDoc(tokens);
+
+      const expected = doc(
+        searchText(),
+        chipWrapper(chip(chipKey("key"), chipValue("value"))),
+        searchText()
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
@@ -105,9 +124,28 @@ describe("utils", () => {
     });
 
     test("should map tokens to text positions with two queries", async () => {
-      const text = await getTextFromTokenRanges("+key:value +key2:value2");
+      const text = await getTextFromTokenRanges(" +key:value +key2:value2");
 
       expect(text).toEqual(["key", "value", "key2", "value2", ""]);
+    });
+
+    test("should map tokens to text positions with binary queries in the middle of tags", async () => {
+      const text = await getTextFromTokenRanges(
+        " +key:value (a OR b) +key2:value2"
+      );
+
+      expect(text).toEqual([
+        "key",
+        "value",
+        "(",
+        "a",
+        "OR",
+        "b",
+        ")",
+        "key2",
+        "value2",
+        "",
+      ]);
     });
   });
 
