@@ -179,6 +179,9 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             previousToken?.to < token.from &&
             previousNode.type === searchText
           ) {
+            // If there is a gap between the previous searchText token and EOF,
+            // there is whitespace at the end of the query – preserve at most
+            // one char.
             return acc
               .slice(0, acc.length - 1)
               .concat(
@@ -196,20 +199,35 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
 
           return acc;
         }
+        // All other tokens become searchText
         default: {
+          // If the next token is further ahead of this token by more than one position,
+          // it is separated by whitespace – append the whitespace to this node
+          const nextToken = tokens[index + 1];
+          const whitespaceChars = nextToken?.from - token.to - 1;
+          const whitespaceToAdd =
+            whitespaceChars >= 0 ? " ".repeat(whitespaceChars) : "";
+
           const previousNode = acc[acc.length - 1];
           if (previousNode?.type === searchText) {
+            // Join consecutive searchText nodes
             return acc
               .slice(0, acc.length - 1)
               .concat(
                 searchText.create(
                   undefined,
-                  schema.text(previousNode.textContent + token.lexeme)
+                  schema.text(
+                    previousNode.textContent + token.lexeme + whitespaceToAdd
+                  )
                 )
               );
           }
+
           return acc.concat(
-            searchText.create(undefined, schema.text(token.lexeme))
+            searchText.create(
+              undefined,
+              schema.text(token.lexeme + whitespaceToAdd)
+            )
           );
         }
       }

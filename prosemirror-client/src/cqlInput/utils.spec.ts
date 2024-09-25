@@ -1,7 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
   getNextPositionAfterTypeaheadSelection,
-  logNode,
   mapResult,
   mapTokens,
   tokensToDoc,
@@ -64,6 +63,19 @@ describe("utils", () => {
       const expected = doc(
         searchText(),
         chipWrapper(chip(chipKey("key"), chipValue("value"))),
+        searchText()
+      );
+
+      expect(node.toJSON()).toEqual(expected.toJSON());
+    });
+
+    test("should preserve whitespace at end of non-chip tokens", async () => {
+      const tokens = await queryToProseMirrorTokens("this AND  +key");
+      const node = tokensToDoc(tokens);
+
+      const expected = doc(
+        searchText("this AND "),
+        chipWrapper(chip(chipKey("key"), chipValue())),
         searchText()
       );
 
