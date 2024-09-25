@@ -117,8 +117,12 @@ describe("utils", () => {
       ]);
     });
 
+    // @todo: the following tests begin with whitespace because this is how the
+    // editor behaves to leave a gap for insertions at the beginning of the
+    // document. It'd be better were this not necessary, perhaps by hiding it as
+    // an implementation detail.
     test("should map tokens to text positions with a tag at the beginning", async () => {
-      const text = await getTextFromTokenRanges("+tag:test");
+      const text = await getTextFromTokenRanges(" +tag:test");
 
       expect(text).toEqual(["tag", "test", ""]);
     });
