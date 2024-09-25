@@ -147,9 +147,13 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
       switch (token.tokenType) {
         case "QUERY_FIELD_KEY": {
           const tokenKey = token.literal;
-          const tokenValue = tokens[index + 1]?.literal;
+          const nextToken = tokens[index + 1];
+          const tokenValue =
+            nextToken.tokenType === "QUERY_VALUE" ? nextToken.literal : "";
           const previousToken = tokens[index - 1];
-          const isPrecededByChip = previousToken?.tokenType === "QUERY_VALUE";
+          const isPrecededByChip =
+            previousToken?.tokenType === "QUERY_VALUE" ||
+            previousToken?.tokenType === "QUERY_FIELD_KEY";
           return acc.concat(
             ...(isPrecededByChip ? [searchText.create()] : []),
             chipWrapper.create(undefined, [

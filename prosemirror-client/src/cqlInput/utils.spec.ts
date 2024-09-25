@@ -44,7 +44,7 @@ describe("utils", () => {
   };
 
   describe("tokensToNode", () => {
-    test("creates nodes from a list of tokens - 1", async () => {
+    test("creates nodes from a list of tokens", async () => {
       const tokens = await queryToProseMirrorTokens("text +key:value text");
       const node = tokensToDoc(tokens);
 
@@ -75,6 +75,21 @@ describe("utils", () => {
       const node = tokensToDoc(tokens);
 
       const expected = doc(searchText("example   "));
+
+      expect(node.toJSON()).toEqual(expected.toJSON());
+    });
+
+    test("should create chipWrappers for partial tags that precede existing tags", async () => {
+      const tokens = await queryToProseMirrorTokens("+ +tag");
+      const node = tokensToDoc(tokens);
+
+      const expected = doc(
+        searchText(),
+        chipWrapper(chip(chipKey(), chipValue())),
+        searchText(),
+        chipWrapper(chip(chipKey("tag"), chipValue())),
+        searchText()
+      );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
