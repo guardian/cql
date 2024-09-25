@@ -181,7 +181,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           ) {
             // If there is a gap between the previous searchText token and EOF,
             // there is whitespace at the end of the query – preserve at most
-            // one char.
+            // one char to allow users to continue the query
             return acc
               .slice(0, acc.length - 1)
               .concat(
