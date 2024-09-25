@@ -8,7 +8,14 @@ import { createCqlPlugin } from "./plugin";
 import { redo, undo } from "prosemirror-history";
 import { bottomOfLine, topOfLine } from "./commands";
 import { keymap } from "prosemirror-keymap";
-import { logNode, mapResult, tokensToDoc } from "./utils";
+import {
+  createProseMirrorTokenToDocumentMap,
+  docToQueryStr,
+  mapResult,
+  tokensToDoc,
+  toProseMirrorTokens,
+} from "./utils";
+import { TextSelection } from "prosemirror-state";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new CqlClientService(typeheadHelpers.fieldResolvers);
@@ -41,7 +48,23 @@ const createCqlEditor = async (initialQuery: string = "") => {
     return tokensToDoc(tokens);
   };
 
-  const doc = await queryToProseMirrorTokens(initialQuery)
+  const moveCaretToQueryPos = async (pos: number) => {
+    const query = docToQueryStr(editor.view.state.doc);
+    const result = await testCqlService.fetchResult(query);
+    const tokens = toProseMirrorTokens(result.tokens);
+    const mapping = createProseMirrorTokenToDocumentMap(tokens);
+    return editor.command((state, dispatch) => {
+      dispatch?.(
+        state.tr.setSelection(
+          TextSelection.near(state.doc.resolve(mapping.map(pos)))
+        )
+      );
+
+      return true;
+    });
+  };
+
+  const doc = await queryToProseMirrorTokens(initialQuery);
 
   const editor = createEditor(doc, {
     plugins: [
@@ -93,7 +116,7 @@ const createCqlEditor = async (initialQuery: string = "") => {
       }, timeoutMs);
     });
 
-  return { editor, waitFor, container };
+  return { editor, waitFor, container, moveCaretToQueryPos };
 };
 
 const selectPopoverOption = async (
@@ -130,48 +153,77 @@ describe("CqlInput", () => {
   });
 
   describe("typeahead", () => {
-    it("displays a popover for chip keys at the start of a query", async () => {
-      const { editor, container } = await createCqlEditor();
+    describe("chip keys", () => {
+      it("displays a popover at the start of a query", async () => {
+        const { editor, container } = await createCqlEditor();
 
-      await editor.insertText("example +");
+        await editor.insertText("example +");
 
-      const popoverContainer = await findByTestId(container, typeaheadTestId);
+        const popoverContainer = await findByTestId(container, typeaheadTestId);
 
-      await findByText(popoverContainer, "Tag");
-      await findByText(popoverContainer, "Section");
+        await findByText(popoverContainer, "Tag");
+        await findByText(popoverContainer, "Section");
+      });
+
+      it("displays a popover after search text", async () => {
+        const { editor, container } = await createCqlEditor();
+
+        await editor.insertText("+");
+
+        const popoverContainer = await findByTestId(container, typeaheadTestId);
+
+        await findByText(popoverContainer, "Tag");
+        await findByText(popoverContainer, "Section");
+      });
+
+      it("displays a popover after another chip", async () => {
+        const { editor, container } = await createCqlEditor("+tag:a");
+
+        editor.insertText(" +");
+
+        const popoverContainer = await findByTestId(container, typeaheadTestId);
+
+        await findByText(popoverContainer, "Tag");
+        await findByText(popoverContainer, "Section");
+      });
+
+      it("applies the given key when a popover option is selected", async () => {
+        const { editor, container, waitFor } = await createCqlEditor();
+        await editor.insertText("example +");
+
+        await waitFor("example +");
+
+        await selectPopoverOption(editor, container, "Tag");
+
+        await waitFor("example +tag");
+      });
     });
 
-    it("displays a popover for chip keys after search text", async () => {
-      const { editor, container } = await createCqlEditor();
+    describe("chip values", () => {
+      it("displays a popover at the start of a query", async () => {
+        const queryStr = "example +tag";
+        const { editor, container, moveCaretToQueryPos } =
+          await createCqlEditor("example +tag");
 
-      await editor.insertText("+");
+        await moveCaretToQueryPos(queryStr.length);
+        await editor.insertText("t");
 
-      const popoverContainer = await findByTestId(container, typeaheadTestId);
+        const popoverContainer = await findByTestId(container, typeaheadTestId);
 
-      await findByText(popoverContainer, "Tag");
-      await findByText(popoverContainer, "Section");
-    });
+        await findByText(popoverContainer, "Tags are magic");
+      });
 
-    it("displays a popover for chip keys after another chip", async () => {
-      const { editor, container } = await createCqlEditor("+tag:a");
+      it("applies the given key when a popover option is selected", async () => {
+        const queryStr = "example +tag";
+        const { editor, container, waitFor, moveCaretToQueryPos } =
+          await createCqlEditor("example +tag");
 
-      editor.insertText(" +");
+        await moveCaretToQueryPos(queryStr.length);
+        await editor.insertText("t");
+        await selectPopoverOption(editor, container, "Tags are magic");
 
-      const popoverContainer = await findByTestId(container, typeaheadTestId);
-
-      await findByText(popoverContainer, "Tag");
-      await findByText(popoverContainer, "Section");
-    });
-
-    it("accepts the given value when a popover appears", async () => {
-      const { editor, container, waitFor } = await createCqlEditor();
-      await editor.insertText("example +");
-
-      await waitFor("example +");
-
-      await selectPopoverOption(editor, container, "Tag");
-
-      await waitFor("example +tag");
+        await waitFor("example +tag:tags-are-magic ");
+      });
     });
   });
 

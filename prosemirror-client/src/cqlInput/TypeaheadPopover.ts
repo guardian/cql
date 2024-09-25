@@ -123,16 +123,13 @@ export class TypeaheadPopover extends Popover {
 
     tr.replaceRangeWith(from, to, schema.text(value));
 
-    let insertPos = getNextPositionAfterTypeaheadSelection(
-      tr.doc,
-      tr.selection.to
-    );
+    let insertPos = getNextPositionAfterTypeaheadSelection(tr.doc, from);
 
     if (insertPos) {
       tr.setSelection(TextSelection.create(tr.doc, insertPos));
-
-      this.view.dispatch(tr);
     }
+
+    this.view.dispatch(tr);
   };
 
   private moveSelection = (by: number) => {
