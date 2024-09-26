@@ -152,6 +152,11 @@ export class TypeaheadPopover extends Popover {
         }</div>`;
       })
       .join("");
+
+    if (this.currentOptionIndex !== undefined) {
+      const optionEl = this.popoverEl.childNodes.item(this.currentOptionIndex);
+      (optionEl as HTMLElement).scrollIntoView({ block: "nearest" });
+    }
   }
 
   private renderDateSuggestion(value: string) {
