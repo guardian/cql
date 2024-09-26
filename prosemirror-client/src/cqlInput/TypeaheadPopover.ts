@@ -52,6 +52,7 @@ export class TypeaheadPopover extends Popover {
       this.view.state.selection.from !== this.view.state.selection.to
     ) {
       this.currentSuggestion = undefined;
+      this.currentOptionIndex = 0;
       this.popoverEl.hidePopover?.();
       this.popoverEl.innerHTML = "";
       return;
