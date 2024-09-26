@@ -155,7 +155,7 @@ describe("utils", () => {
     });
 
     test("should map tokens to text positions with two queries", async () => {
-      const text = await getTextFromTokenRanges(" +key:value +key2:value2");
+      const text = await getTextFromTokenRanges(" +key:value +key2:value2 ");
 
       expect(text).toEqual(["key", "value", "key2", "value2", ""]);
     });

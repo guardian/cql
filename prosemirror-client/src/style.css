@@ -84,8 +84,70 @@ h6 {
   font-family: monospace;
 }
 
+.CqlDebug__mapping {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6rem;
+}
+
 .Cql__Debug > div {
   flex-grow: 1;
+}
+
+.CqlDebug__queryDiagram {
+  display: flex;
+}
+
+.CqlDebug__queryBox {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 0;
+  width: 25px;
+  padding: 1rem 0;
+}
+
+.CqlDebug__queryBox--offset > .CqlDebug__originalChar {
+  position: absolute;
+  left: 50%;
+  top: 0;
+}
+
+.CqlDebug__queryBox--offset > .CqlDebug__queryChar {
+  position: relative;
+  left: -50%;
+}
+
+.CqlDebug__queryBox > div {
+  width: 1em;
+  height: 1rem;
+}
+
+.CqlDebug__originalChar {
+  background-color: rgb(49, 78, 55);
+}
+
+.CqlDebug__queryChar {
+  background-color: rgb(49, 78, 55);
+}
+
+.CqlDebug__nodeChar {
+  background-color: rgb(130, 82, 82);
+  position: absolute;
+  bottom: 1rem;
+  left: -50%;
+}
+
+.CqlDebug__node {
+  position: relative;
+  left: 50%;
+  top: 2rem;
+  width: 1em;
+  transform: rotate(90deg);
+}
+
+.CqlDebug__nodeDiagram {
+  display: flex;
 }
 
 .CqlSandbox {

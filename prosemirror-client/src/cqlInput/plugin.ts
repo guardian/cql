@@ -26,6 +26,7 @@ import { QueryChangeEventDetail } from "./dom";
 import { ErrorPopover } from "./ErrorPopover";
 import { MappedTypeaheadSuggestion } from "../lang/types";
 import { CqlConfig } from "./CqlInput";
+import { getDebugMappingHTML } from "./debug";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -69,11 +70,15 @@ export const createCqlPlugin = ({
   let errorPopover: ErrorPopover | undefined;
   let debugTokenContainer: HTMLElement | undefined;
   let debugASTContainer: HTMLElement | undefined;
+  let debugMappingContainer: HTMLElement | undefined;
   if (debugEl) {
-    debugTokenContainer = document.createElement("div");
-    debugEl.appendChild(debugTokenContainer);
-    debugASTContainer = document.createElement("div");
-    debugEl.appendChild(debugASTContainer);
+
+    // debugTokenContainer = document.createElement("div");
+    // debugEl.appendChild(debugTokenContainer);
+    // debugASTContainer = document.createElement("div");
+    // debugEl.appendChild(debugASTContainer);
+    debugMappingContainer = document.createElement("div");
+    debugEl.appendChild(debugMappingContainer);
   }
 
   return new Plugin<PluginState>({
@@ -289,7 +294,7 @@ export const createCqlPlugin = ({
           cqlService.cancel();
 
           const result = await cqlService.fetchResult(query);
-          const { tokens, suggestions, ast, error, queryResult } =
+          const { tokens, suggestions, ast, error, queryResult, mapping } =
             mapResult(result);
 
           const newDoc = tokensToDoc(tokens);
@@ -307,6 +312,14 @@ export const createCqlPlugin = ({
               undefined,
               "  "
             )}</div>`;
+          }
+
+          if (debugMappingContainer) {
+            debugMappingContainer.innerHTML = getDebugMappingHTML(
+              query,
+              mapping,
+              newDoc,
+            );
           }
 
           const userSelection = view.state.selection;

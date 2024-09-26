@@ -44,22 +44,27 @@ const joinSearchTextTokens = (tokens: ProseMirrorToken[]) =>
   }, [] as ProseMirrorToken[]);
 
 const getQueryFieldKeyRange = (from: number): [number, number, number] =>
-  // chipKey begin (+1) // chip begin (+1)
+  // chipWrapper begin (-1)
+  // chipKey begin (-1)
+  // chip begin (-1)
   // leading char ('+') (+1)
-  [from - 1, 0, 3];
+  [from - 1, -2, 0];
 
 const getQueryValueRanges = (
   from: number,
   to: number
 ): [number, number, number][] => [
-  // leading char (':')
-  [from - 1, 0, 1],
-  // chipValue end (+1)
-  [to, 0, 1],
+  // chipKey end (-1)
+  // chipValue start (-1)
+  // leading char (':') (+1)
+  [from, -1, 0],
+  // chipValue end (-1)
+  // chip end (-1)
+  [to, -2, 0],
 ];
 
 const getSearchTextRanges = (from: number): [number, number, number][] => [
-  [from, 0, 1], // searchText begin (+1)
+  [from, -1, 0], // searchText begin (+1)
 ];
 
 /**
@@ -388,6 +393,7 @@ export const mapResult = (result: CqlResult) => {
     tokens,
     suggestions,
     error,
+    mapping,
   };
 };
 
