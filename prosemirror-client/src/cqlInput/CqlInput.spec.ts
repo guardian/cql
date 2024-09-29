@@ -1,6 +1,6 @@
 import { describe, it, beforeEach } from "bun:test";
 import { errorMsgTestId, errorTestId, typeaheadTestId } from "./CqlInput";
-import { findByTestId, findByText } from "@testing-library/dom";
+import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
 import { CqlClientService } from "../services/CqlService";
 import { TestTypeaheadHelpers } from "../lang/typeaheadHelpersTest";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
@@ -109,9 +109,9 @@ const createCqlEditor = async (initialQuery: string = "") => {
 
       setTimeout(() => {
         rej(
-          `Expected ${value}, but got ${
+          `Expected '${value}', but got '${
             valuesReceived.length ? valuesReceived.join(",") : "<no values>"
-          }`
+          }'`
         );
       }, timeoutMs);
     });
@@ -256,4 +256,49 @@ describe("CqlInput", () => {
       await waitFor("a +tag:");
     });
   });
+
+  describe("deletion", () => {
+    it("puts the chip in a pending state before deletion - keyboard", async () => {
+      const { editor, waitFor } = await createCqlEditor("+tag:a");
+
+      await editor.press("Backspace")
+
+      await waitFor(" +tag:a ");
+    });
+
+    it("puts the chip in a pending state before deletion - mouse", async () => {
+      const { editor, waitFor } = await createCqlEditor("+tag:a");
+
+      const deleteBtn = await findByText(editor.view.dom, "×")
+      await fireEvent.click(deleteBtn);
+
+      await waitFor(" +tag:a ");
+    });
+
+    it("removes the chip via backspace", async () => {
+      const { editor, waitFor } = await createCqlEditor("+tag:a");
+
+      await editor.press("Backspace").press("Backspace");
+
+      await waitFor("");
+    });
+
+    it("removes the chip via delete", async () => {
+      const { editor, waitFor } = await createCqlEditor("+tag:a");
+
+      await editor.selectText("start").press("Delete").press("Delete");
+
+      await waitFor("");
+    });
+
+    it("removes the chips via click", async () => {
+      const { editor, waitFor } = await createCqlEditor("+tag:a");
+
+      const deleteBtn = await findByText(editor.view.dom, "×")
+      await fireEvent.click(deleteBtn);
+      await fireEvent.click(deleteBtn);
+
+      await waitFor("");
+    });
+  })
 });
