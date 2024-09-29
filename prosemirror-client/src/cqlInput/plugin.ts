@@ -71,14 +71,18 @@ export const createCqlPlugin = ({
   let debugTokenContainer: HTMLElement | undefined;
   let debugASTContainer: HTMLElement | undefined;
   let debugMappingContainer: HTMLElement | undefined;
+  let jsonDebugContainer: HTMLElement | undefined;
   if (debugEl) {
-
-    // debugTokenContainer = document.createElement("div");
-    // debugEl.appendChild(debugTokenContainer);
-    // debugASTContainer = document.createElement("div");
-    // debugEl.appendChild(debugASTContainer);
     debugMappingContainer = document.createElement("div");
+    debugMappingContainer.classList.add("CqlDebug__mapping");
     debugEl.appendChild(debugMappingContainer);
+    jsonDebugContainer = document.createElement("div");
+    jsonDebugContainer.classList.add("CqlDebug__json");
+    debugEl.appendChild(jsonDebugContainer);
+    debugTokenContainer = document.createElement("div");
+    jsonDebugContainer.appendChild(debugTokenContainer);
+    debugASTContainer = document.createElement("div");
+    jsonDebugContainer.appendChild(debugASTContainer);
   }
 
   return new Plugin<PluginState>({
@@ -283,8 +287,17 @@ export const createCqlPlugin = ({
       } as DOMSerializer, // Cast because docs specify only serializeFragment is needed
     },
     view(view) {
-      typeaheadPopover = new TypeaheadPopover(view, typeaheadEl, debugEl);
-      errorPopover = new ErrorPopover(view, errorEl, errorMsgEl, debugEl);
+      typeaheadPopover = new TypeaheadPopover(
+        view,
+        typeaheadEl,
+        jsonDebugContainer
+      );
+      errorPopover = new ErrorPopover(
+        view,
+        errorEl,
+        errorMsgEl,
+        jsonDebugContainer
+      );
 
       const fetchQueryAndUpdateDoc = async (
         query: string,
@@ -318,7 +331,7 @@ export const createCqlPlugin = ({
             debugMappingContainer.innerHTML = getDebugMappingHTML(
               query,
               mapping,
-              newDoc,
+              newDoc
             );
           }
 

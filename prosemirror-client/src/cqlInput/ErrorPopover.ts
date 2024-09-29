@@ -40,11 +40,11 @@ export class ErrorPopover extends Popover {
 
   private updateDebugContainer = (error: CqlError) => {
     if (this.debugContainer) {
-      this.debugContainer.innerHTML = `<div>
+      this.debugContainer.innerHTML = `
         <h2>Error</h2>
         <div>Position: ${error.position ?? "No position given"}</div>
         <div>Message: ${error.message}</div>
-        </div>`;
+      `;
     }
   };
 

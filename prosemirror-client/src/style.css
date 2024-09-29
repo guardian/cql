@@ -78,10 +78,18 @@ h6 {
 }
 
 .CqlSandbox__debug-container {
-  display: flex;
   margin-top: 10px;
   white-space: pre;
   font-family: monospace;
+}
+
+.CqlDebug__json {
+  display: flex;
+}
+
+.CqlDebug__json > div {
+  display: flex;
+  flex-direction: column;
 }
 
 .CqlDebug__mapping {
