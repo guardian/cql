@@ -36,9 +36,14 @@ template.innerHTML = `
     }
 
     chip-key {
-      display: flex;
+      display: inline-flex;
+      padding: 0 5px;
+    }
+
+    chip-value {
       padding-right: 5px;
     }
+
 
     chip-key:after {
       content: ':'
@@ -83,7 +88,11 @@ template.innerHTML = `
       font-size: ${baseFontSize * 0.8}px;
     }
 
-    .Cql__ChipWrapper--is-pending-delete chip {
+    .Cql__ChipWrapperContent {
+      display: inline-flex;
+    }
+
+    .Cql__ChipWrapper--is-pending-delete {
       background-color: darkred;
     }
 

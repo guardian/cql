@@ -5,7 +5,7 @@ export const DELETE_CHIP_INTENT = "DELETE_CHIP_INTENT";
 export const schema = new Schema({
   nodes: {
     doc: {
-      content: "searchText (chipWrapper searchText)*",
+      content: "searchText (chip searchText)*",
     },
     text: {
       group: "inline",
@@ -16,20 +16,15 @@ export const schema = new Schema({
       toDOM: () => ["search-text", 0],
       whitespace: "pre",
     },
-    chipWrapper: {
-      content: "chip*",
-      group: "block",
-      toDOM: () => ["chip-wrapper", 0],
-      attrs: {
-        [DELETE_CHIP_INTENT]: {
-          default: false
-        }
-      }
-    },
     chip: {
-      content: "chipKey chipValue",
+      content: "(chipKey chipValue)?",
       group: "block",
       toDOM: () => ["chip", 0],
+      attrs: {
+        [DELETE_CHIP_INTENT]: {
+          default: false,
+        },
+      },
     },
     chipKey: {
       content: "inline*",
@@ -45,5 +40,4 @@ export const schema = new Schema({
   },
 });
 
-export const { chip, chipKey, chipValue, searchText, chipWrapper, doc } =
-  schema.nodes;
+export const { chip, chipKey, chipValue, searchText, doc } = schema.nodes;

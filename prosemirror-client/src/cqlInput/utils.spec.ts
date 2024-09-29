@@ -12,8 +12,7 @@ import { TestTypeaheadHelpers } from "../lang/typeaheadHelpersTest";
 import { Cql } from "../lang/Cql";
 
 describe("utils", () => {
-  const { chip, chipKey, chipValue, chipWrapper, doc, searchText } =
-    builders(schema);
+  const { chip, chipKey, chipValue, doc, searchText } = builders(schema);
 
   const cql = new Cql(new Typeahead(new TestTypeaheadHelpers().fieldResolvers));
 
@@ -49,7 +48,7 @@ describe("utils", () => {
 
       const expected = doc(
         searchText("text"),
-        chipWrapper(chip(chipKey("key"), chipValue("value"))),
+        chip(chipKey("key"), chipValue("value")),
         searchText("text")
       );
 
@@ -62,7 +61,7 @@ describe("utils", () => {
 
       const expected = doc(
         searchText(),
-        chipWrapper(chip(chipKey("key"), chipValue("value"))),
+        chip(chipKey("key"), chipValue("value")),
         searchText()
       );
 
@@ -75,7 +74,7 @@ describe("utils", () => {
 
       const expected = doc(
         searchText("this AND "),
-        chipWrapper(chip(chipKey("key"), chipValue())),
+        chip(chipKey("key"), chipValue()),
         searchText()
       );
 
@@ -97,9 +96,9 @@ describe("utils", () => {
 
       const expected = doc(
         searchText(),
-        chipWrapper(chip(chipKey(), chipValue())),
+        chip(chipKey(), chipValue()),
         searchText(),
-        chipWrapper(chip(chipKey("tag"), chipValue())),
+        chip(chipKey("tag"), chipValue()),
         searchText()
       );
 
@@ -183,7 +182,7 @@ describe("utils", () => {
   describe("getNextPositionAfterTypeaheadSelection", () => {
     const currentDoc = doc(
       searchText(),
-      chipWrapper(chip(chipKey("key<fromPos>"), chipValue("<toPos>"))),
+      chip(chipKey("key<fromPos>"), chipValue("<toPos>")),
       searchText()
     );
 

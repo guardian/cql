@@ -20,7 +20,7 @@ import {
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "./TypeaheadPopover";
-import { DELETE_CHIP_INTENT, chipWrapper, doc, schema } from "./schema";
+import { chip, DELETE_CHIP_INTENT, doc, schema } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { QueryChangeEventDetail } from "./dom";
 import { ErrorPopover } from "./ErrorPopover";
@@ -129,7 +129,7 @@ export const createCqlPlugin = ({
       if (!oldState.selection.eq(newState.selection)) {
         const posOfChipWrappersToReset: number[] = [];
         newState.doc.descendants((node, pos) => {
-          if (node.type === chipWrapper && node.attrs[DELETE_CHIP_INTENT]) {
+          if (node.type === chip && node.attrs[DELETE_CHIP_INTENT]) {
             posOfChipWrappersToReset.push(pos);
           }
         });
@@ -146,21 +146,26 @@ export const createCqlPlugin = ({
     },
     props: {
       nodeViews: {
-        [chipWrapper.name](initialNode, view, getPos) {
+        [chip.name](initialNode, view, getPos) {
           const handleDeleteClickEvent = () => {
             const pos = getPos();
             if (!pos) {
               return;
             }
-            const node = view.state.doc.resolve(pos).nodeAfter;
+
+            const $pos = view.state.doc.resolve(pos)
+            const node = $pos.nodeAfter;
+
             if (!node) {
               return;
             }
-            applyDeleteIntent(view, pos, pos + node.nodeSize, node);
+
+            applyDeleteIntent(view, pos, pos + node.nodeSize + 1, node);
           };
 
           const dom = document.createElement("chip-wrapper");
           const contentDOM = document.createElement("span");
+          contentDOM.classList.add("Cql__ChipWrapperContent")
           const polarityHandle = document.createElement("span");
           polarityHandle.classList.add("Cql__ChipWrapperPolarityHandle");
           polarityHandle.setAttribute("contentEditable", "false");

@@ -5,7 +5,6 @@ import {
   chip,
   chipKey,
   chipValue,
-  chipWrapper,
   doc,
   schema,
   searchText,
@@ -44,11 +43,10 @@ const joinSearchTextTokens = (tokens: ProseMirrorToken[]) =>
   }, [] as ProseMirrorToken[]);
 
 const getQueryFieldKeyRange = (from: number): [number, number, number] =>
-  // chipWrapper begin (-1)
   // chipKey begin (-1)
   // chip begin (-1)
   // leading char ('+') (+1)
-  [from - 1, -2, 0];
+  [from - 1, -1, 0];
 
 const getQueryValueRanges = (
   from: number,
@@ -59,8 +57,7 @@ const getQueryValueRanges = (
   // leading char (':') (+1)
   [from, -1, 0],
   // chipValue end (-1)
-  // chip end (-1)
-  [to, -2, 0],
+  [to, -1, 0],
 ];
 
 const getSearchTextRanges = (from: number): [number, number, number][] => [
@@ -161,17 +158,16 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             previousToken?.tokenType === "QUERY_FIELD_KEY";
           return acc.concat(
             ...(isPrecededByChip ? [searchText.create()] : []),
-            chipWrapper.create(undefined, [
-              chip.create(undefined, [
-                chipKey.create(
-                  undefined,
-                  tokenKey ? schema.text(tokenKey) : undefined
-                ),
-                chipValue.create(
-                  undefined,
-                  tokenValue ? schema.text(tokenValue) : undefined
-                ),
-              ]),
+
+            chip.create(undefined, [
+              chipKey.create(
+                undefined,
+                tokenKey ? schema.text(tokenKey) : undefined
+              ),
+              chipValue.create(
+                undefined,
+                tokenValue ? schema.text(tokenValue) : undefined
+              ),
             ])
           );
         }
@@ -270,11 +266,13 @@ export const docToQueryStr = (doc: Node) => {
         str += node.textContent;
         return false;
       case "chipKey":
-        str += ` +${node.textContent}`;
+        // Anticipate a chipValue here, adding the colon – if we do not, and a
+        // chipValue is not present, we throw the mappings off.
+        str += ` +${node.textContent}:`;
         return false;
       case "chipValue":
         str +=
-          node.textContent.trim().length > 0 ? `:${node.textContent} ` : "";
+          node.textContent.trim().length > 0 ? `${node.textContent} ` : "";
         return false;
       default:
         return true;
@@ -460,17 +458,18 @@ export const applyDeleteIntent = (
   to: number,
   node: Node
 ) => {
-  if (node.type !== chipWrapper) {
+  if (node.type !== chip) {
     return false;
   }
 
   const tr = view.state.tr;
 
   if (node.attrs[DELETE_CHIP_INTENT]) {
+    // The caret belongs before the deleted chip
     const insertAt = Math.max(0, from - 1);
     tr.deleteRange(from, to)
-      // Prosemirror removes the whitespace in the preceding searchText,
-      // regardless of range, for reasons I've yet to discover – add it back
+      // Ensure whitespace separates the two searchText nodes surrounding the
+      // chip, which are now joined
       .insertText(" ", insertAt)
       .setSelection(TextSelection.create(tr.doc, insertAt));
   } else {
