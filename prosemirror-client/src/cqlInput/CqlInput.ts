@@ -93,11 +93,17 @@ template.innerHTML = `
     }
 
     .Cql__ChipWrapper--is-pending-delete {
-      background-color: darkred;
+      background: repeating-linear-gradient(
+        -45deg,
+        darkred,
+        darkred 10px,
+        #620202 10px,
+        #620202 20px
+      );
     }
 
     .Cql__ChipWrapperDeleteHandle, .Cql__ChipWrapperPolarityHandle {
-      background-color: rgba(0,0,0,0.2);
+      background-color: #3737378f;
       padding: 0 5px;
       cursor: pointer;
     }
