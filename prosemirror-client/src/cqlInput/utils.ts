@@ -272,7 +272,7 @@ export const docToQueryStr = (doc: Node) => {
         return false;
       case "chipValue":
         str +=
-          node.textContent.trim().length > 0 ? `${node.textContent} ` : "";
+          node.textContent.trim().length > 0 ? `${node.textContent} ` : " ";
         return false;
       default:
         return true;

@@ -191,11 +191,9 @@ describe("CqlInput", () => {
         const { editor, container, waitFor } = await createCqlEditor();
         await editor.insertText("example +");
 
-        await waitFor("example +:");
-
         await selectPopoverOption(editor, container, "Tag");
 
-        await waitFor("example +tag:");
+        await waitFor("example +tag: ");
       });
     });
 
@@ -253,7 +251,7 @@ describe("CqlInput", () => {
 
       await editor.insertText("+tag").shortcut("Ctrl-a").insertText("a ");
 
-      await waitFor("a +tag:");
+      await waitFor("a +tag: ");
     });
   });
 
