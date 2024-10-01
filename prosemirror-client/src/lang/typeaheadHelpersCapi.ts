@@ -110,8 +110,8 @@ export class TypeaheadHelpersCapi {
       "Return only content with those IDs, e.g. technology/2014/feb/17/flappy-bird-clones-apple-google"
     ),
     new TypeaheadField(
-      "Production office",
       "production-office",
+      "Production office",
       "Return only content from those production offices, e.g. 'aus', 'uk,aus'",
       [
         new TextSuggestionOption("UK", "uk", "The UK production office"),
@@ -124,13 +124,13 @@ export class TypeaheadHelpersCapi {
       ]
     ),
     new TypeaheadField(
-      "Language",
       "lang",
+      "Language",
       "Return content that has the given ISO language code, e.g. 'en', 'fr'"
     ),
     new TypeaheadField(
-      "Star rating",
       "star-rating",
+      "Star rating",
       "Return only content with a given star rating",
       [
         new TextSuggestionOption("1", "1"),
