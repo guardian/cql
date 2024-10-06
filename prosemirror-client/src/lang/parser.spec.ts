@@ -60,7 +60,13 @@ describe("parser", () => {
       eofToken(4),
     ];
     const result = new Parser(tokens).parse();
-    expect(result).toEqual(ok(createQueryList([queryField("ta", "")])));
+    expect(result).toEqual(
+      ok(
+        createQueryList([
+          createQueryBinary(createQueryContent(queryField("ta", ""))),
+        ])
+      )
+    );
   });
 
   it("should handle an unbalanced binary", () => {
@@ -114,7 +120,12 @@ describe("parser", () => {
       ok(
         createQueryList([
           createQueryBinary(createQueryContent(createQueryStr("a")), undefined),
-          createQueryField(queryFieldKeyToken("", 2), undefined),
+          createQueryBinary(
+            createQueryContent(
+              createQueryField(queryFieldKeyToken("", 2), undefined)
+            ),
+            undefined
+          ),
         ])
       )
     );

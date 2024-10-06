@@ -2,7 +2,7 @@ import { Token } from "./token";
 
 export type QueryList = {
   type: "QueryList";
-  content: (QueryBinary | QueryField)[];
+  content: QueryBinary[];
 };
 
 export const createQueryList = (
@@ -31,7 +31,7 @@ export const createQueryBinary = (
 
 export type QueryContent = {
   type: "QueryContent";
-  content: QueryStr | QueryBinary | QueryGroup;
+  content: QueryStr | QueryBinary | QueryGroup | QueryField;
 };
 
 export const createQueryContent = (

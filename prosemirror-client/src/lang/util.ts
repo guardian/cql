@@ -1,3 +1,5 @@
+import { QueryBinary, QueryContent, QueryField, QueryList } from "./ast";
+
 const whitespaceR = /\s/;
 export const isWhitespace = (str: string) => whitespaceR.test(str);
 
@@ -31,3 +33,25 @@ export function* getPermutations<T>(
 
   return permutation.slice();
 }
+
+export const getQueryFieldsFromQueryList = (
+  queryList: QueryList
+): QueryField[] => queryList.content.flatMap(getQueryFieldsFromQueryBinary);
+
+export const getQueryFieldsFromQueryBinary = (
+  queryBinary: QueryBinary
+): QueryField[] =>
+  getQueryFieldsFromQueryContent(queryBinary.left).concat(
+    queryBinary.right ? getQueryFieldsFromQueryBinary(queryBinary.right[1]) : []
+  );
+
+export const getQueryFieldsFromQueryContent = (
+  queryContent: QueryContent
+): QueryField[] => {
+  switch (queryContent.content.type) {
+    case "QueryField":
+      return [queryContent.content];
+    default:
+      return [];
+  }
+};

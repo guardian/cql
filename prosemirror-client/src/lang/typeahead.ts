@@ -1,4 +1,4 @@
-import { QueryList, QueryField } from "./ast";
+import { QueryList, QueryField, QueryContent, QueryBinary } from "./ast";
 import { Token } from "./token";
 import {
   DateSuggestion,
@@ -7,6 +7,7 @@ import {
   TypeaheadSuggestion,
   TypeaheadType,
 } from "./types";
+import { getQueryFieldsFromQueryList } from "./util";
 
 export type TypeaheadResolver =
   | ((str: string, signal?: AbortSignal) => Promise<TextSuggestionOption[]>)
@@ -52,18 +53,9 @@ export class Typeahead {
     program: QueryList,
     signal?: AbortSignal
   ): Promise<TypeaheadSuggestion[]> {
-    const suggestions = program.content
-      .map((expr) => {
-        switch (expr.type) {
-          case "QueryField": {
-            return this.suggestQueryField(expr, signal);
-          }
-          default: {
-            return Promise.resolve([]);
-          }
-        }
-      })
-      .flat();
+    const suggestions = getQueryFieldsFromQueryList(program).flatMap(
+      (queryField) => this.suggestQueryField(queryField, signal)
+    );
 
     return Promise.all(suggestions).then((suggestions) => suggestions.flat());
   }

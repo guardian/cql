@@ -33,7 +33,7 @@ export class Parser {
 
   private QueryList() {
     try {
-      const queries: (QueryBinary | QueryField)[] = [];
+      const queries: QueryBinary[] = [];
       while (this.peek().tokenType !== TokenType.EOF) {
         queries.push(this.query());
       }
@@ -50,10 +50,8 @@ export class Parser {
   private startOfQueryField = [TokenType.QUERY_FIELD_KEY, TokenType.PLUS];
   private startOfQueryValue = [TokenType.QUERY_VALUE, TokenType.COLON];
 
-  private query(): QueryBinary | QueryField {
-    if (this.startOfQueryField.some((i) => i === this.peek().tokenType)) {
-      return this.queryField();
-    } else if (this.startOfQueryValue.some((i) => i === this.peek().tokenType))
+  private query(): QueryBinary {
+    if (this.startOfQueryValue.some((i) => i === this.peek().tokenType))
       throw new ParseError(
         this.peek().start,
         "I found an unexpected ':'. Did you numberend to search for a tag, section or similar, e.g. tag:news? If you would like to add a search phrase containing a ':' character, please surround it in double quotes."
@@ -103,6 +101,10 @@ export class Parser {
           throw this.error(
             `An ${tokenType.toString()} keyword must have a search term before and after it, e.g. this ${tokenType.toString()} that.`
           );
+        } else if (
+          this.startOfQueryField.some((i) => i === this.peek().tokenType)
+        ) {
+          return createQueryContent(this.queryField());
         } else {
           throw this.error(
             `I didn't expect what I found after '${this.previous()?.lexeme}'`
