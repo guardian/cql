@@ -42,6 +42,16 @@ describe("scanner", () => {
       ];
       expect(tokens).toEqual(expectedTokens);
     });
+
+    it("should interpret strings that start with reserved words as strings", () => {
+      const scanner = new Scanner("ORCOMBE");
+      const tokens = scanner.scanTokens();
+      const expectedTokens = [
+        unquotedStringToken("ORCOMBE"),
+        eofToken(7),
+      ];
+      expect(tokens).toEqual(expectedTokens);
+    });
   });
 
   describe("quoted strings", () => {

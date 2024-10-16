@@ -77,11 +77,7 @@ export class Scanner {
         this.addString();
         return;
       default:
-        if (this.isReservedWord()) {
-          this.addIdentifier();
-        } else {
-          this.addUnquotedString();
-        }
+        this.addIdentifierOrUnquotedString();
         return;
     }
   };
