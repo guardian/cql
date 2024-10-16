@@ -22,10 +22,12 @@ export const TokenType = {
 } as const;
 
 export class Token {
-  public static reservedWords = {
+  public static reservedWordMap = {
     AND: TokenType.AND,
     OR: TokenType.OR,
   } as const;
+
+  public static reservedWordStrs = Object.keys(this.reservedWordMap);
 
   constructor(
     public tokenType: TokenType,

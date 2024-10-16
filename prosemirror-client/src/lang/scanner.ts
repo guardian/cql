@@ -52,9 +52,6 @@ export class Scanner {
       case "+":
         this.addKey(TokenType.QUERY_FIELD_KEY);
         return;
-      case "@":
-        this.addKey(TokenType.QUERY_OUTPUT_MODIFIER_KEY);
-        return;
       case ":":
         this.addValue();
         return;
@@ -67,12 +64,7 @@ export class Scanner {
       case " ":
         return;
       case "\r":
-        return;
       case "\t":
-        return;
-      case "\n":
-        this.line = this.line + 1;
-        return;
       case '"':
         this.addString();
         return;
@@ -105,30 +97,26 @@ export class Scanner {
     }
   };
 
-  private isReservedWord = () => {
-    return Object.keys(Token.reservedWords).some((reservedWord) =>
-      this.program.substring(this.start).startsWith(reservedWord)
-    );
-  };
-
-  private addIdentifier = () => {
+  private addIdentifierOrUnquotedString = () => {
     while (isLetterOrDigit(this.peek())) {
       this.advance();
     }
 
     const text = this.program.substring(this.start, this.current);
     const maybeReservedWord =
-      Token.reservedWords[text as keyof typeof Token.reservedWords];
+      Token.reservedWordMap[text as keyof typeof Token.reservedWordMap];
 
     return maybeReservedWord
       ? this.addToken(maybeReservedWord)
-      : this.error(this.line, "Expected identifier");
+      : this.addUnquotedString();
   };
 
   private addUnquotedString = () => {
     while (
       // Consume whitespace up until the last whitespace char
-      (!isWhitespace(this.peek()) || (isWhitespace(this.peek(1)) || this.isAtEnd(1))) &&
+      (!isWhitespace(this.peek()) ||
+        isWhitespace(this.peek(1)) ||
+        this.isAtEnd(1)) &&
       this.peek() != ")" &&
       !this.isAtEnd()
     ) {
