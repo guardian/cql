@@ -64,11 +64,17 @@ template.innerHTML = `
     #cql-input {
       display: block;
       position: relative;
-      padding: 5px;
       font-size: ${baseFontSize}px;
-      anchor-name: --cql-input;
-      border: 2px solid grey;
+    }
+
+    .Cql__ContentEditable {
+      padding: 5px;
+      outline: 2px solid grey;
       border-radius: ${baseBorderRadius}px;
+    }
+
+    .Cql__ContentEditable.ProseMirror-focused {
+      outline: 2px solid lightblue;
     }
 
     .Cql__Option {
@@ -93,13 +99,8 @@ template.innerHTML = `
     }
 
     .Cql__ChipWrapper--is-pending-delete {
-      background: repeating-linear-gradient(
-        -45deg,
-        darkred,
-        darkred 10px,
-        #620202 10px,
-        #620202 20px
-      );
+      box-shadow: 0 0 0 3px #c52b2b;
+      overflow: hidden;
     }
 
     .Cql__ChipWrapperDeleteHandle, .Cql__ChipWrapperPolarityHandle {
@@ -208,6 +209,7 @@ export const createCqlInput = (
       });
 
       editorView.dom.setAttribute("data-testid", contentEditableTestId);
+      editorView.dom.classList.add("Cql__ContentEditable")
     }
 
     disconnectedCallback() {
