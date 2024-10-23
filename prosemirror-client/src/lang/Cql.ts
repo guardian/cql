@@ -1,4 +1,4 @@
-import { either, Result } from "../util/result";
+import { either, Result } from "../utils/result";
 import { QueryList } from "./ast";
 import { queryStrFromQueryList } from "./capiQueryString";
 import { Parser } from "./parser";

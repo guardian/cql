@@ -1,8 +1,8 @@
 import { EditorView } from "prosemirror-view";
 import { CqlServiceInterface } from "../services/CqlService";
-import { QueryChangeEventDetail } from "./dom";
-import { createEditorView } from "./editor";
-import { createCqlPlugin, VISIBLE_CLASS } from "./plugin";
+import { QueryChangeEventDetail } from "../types/dom";
+import { createEditorView } from "./editor/editor";
+import { createCqlPlugin, VISIBLE_CLASS } from "./editor/plugin";
 
 const baseFontSize = 28;
 const baseBorderRadius = 5;

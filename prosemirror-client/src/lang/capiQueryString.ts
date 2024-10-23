@@ -1,4 +1,4 @@
-import { err, ok, Result } from "../util/result";
+import { err, ok, Result } from "../utils/result";
 import { QueryBinary, QueryContent, QueryList } from "./ast";
 import { getQueryFieldsFromQueryList } from "./util";
 

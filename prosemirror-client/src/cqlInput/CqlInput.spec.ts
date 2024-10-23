@@ -4,9 +4,9 @@ import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
 import { CqlClientService } from "../services/CqlService";
 import { TestTypeaheadHelpers } from "../lang/typeaheadHelpersTest";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
-import { createCqlPlugin } from "./plugin";
+import { createCqlPlugin } from "./editor/plugin";
 import { redo, undo } from "prosemirror-history";
-import { bottomOfLine, topOfLine } from "./commands";
+import { bottomOfLine, topOfLine } from "./editor/commands";
 import { keymap } from "prosemirror-keymap";
 import {
   createProseMirrorTokenToDocumentMap,
@@ -14,7 +14,7 @@ import {
   mapResult,
   tokensToDoc,
   toProseMirrorTokens,
-} from "./utils";
+} from "./editor/utils";
 import { TextSelection } from "prosemirror-state";
 
 const typeheadHelpers = new TestTypeaheadHelpers();

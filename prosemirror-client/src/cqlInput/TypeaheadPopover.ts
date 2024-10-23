@@ -1,5 +1,5 @@
 import { EditorView } from "prosemirror-view";
-import { schema } from "./schema";
+import { schema } from "./editor/schema";
 import { TextSelection } from "prosemirror-state";
 import { Popover } from "./Popover";
 import {
@@ -7,7 +7,7 @@ import {
   TextSuggestionOption,
   TypeaheadSuggestion,
 } from "../lang/types";
-import { getNextPositionAfterTypeaheadSelection } from "./utils";
+import { getNextPositionAfterTypeaheadSelection } from "./editor/utils";
 
 type MenuItem = {
   label: string;

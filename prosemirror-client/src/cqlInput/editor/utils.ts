@@ -12,10 +12,10 @@ import {
 import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection } from "prosemirror-state";
 import { ERROR_CLASS } from "./plugin";
-import { Token } from "../lang/token";
-import { MappedTypeaheadSuggestion, TypeaheadSuggestion } from "../lang/types";
-import { CqlResult } from "../lang/Cql";
-import { CqlError } from "../services/CqlService";
+import { Token } from "../../lang/token";
+import { MappedTypeaheadSuggestion, TypeaheadSuggestion } from "../../lang/types";
+import { CqlResult } from "../../lang/Cql";
+import { CqlError } from "../../services/CqlService";
 
 const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE", "EOF"];
 

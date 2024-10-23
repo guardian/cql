@@ -7,9 +7,9 @@ import {
 } from "./utils";
 import { schema } from "./schema";
 import { builders } from "prosemirror-test-builder";
-import { Typeahead } from "../lang/typeahead";
-import { TestTypeaheadHelpers } from "../lang/typeaheadHelpersTest";
-import { Cql } from "../lang/Cql";
+import { Typeahead } from "../../lang/typeahead";
+import { TestTypeaheadHelpers } from "../../lang/typeaheadHelpersTest";
+import { Cql } from "../../lang/Cql";
 
 describe("utils", () => {
   const { chip, chipKey, chipValue, doc, searchText } = builders(schema);

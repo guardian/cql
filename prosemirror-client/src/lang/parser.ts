@@ -14,7 +14,7 @@ import {
   QueryStr,
 } from "./ast";
 import { TokenType } from "./token";
-import { either, err, mapError, ok, Result } from "../util/result";
+import { either, err, mapError, ok, Result } from "../utils/result";
 
 class ParseError extends Error {
   constructor(public position: number, public message: string) {

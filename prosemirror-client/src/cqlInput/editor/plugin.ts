@@ -1,5 +1,5 @@
 import { DecorationSet } from "prosemirror-view";
-import { CqlError, CqlServiceInterface } from "../services/CqlService";
+import { CqlError, CqlServiceInterface } from "../../services/CqlService";
 import {
   AllSelection,
   Plugin,
@@ -19,13 +19,13 @@ import {
   mapResult,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
-import { TypeaheadPopover } from "./TypeaheadPopover";
+import { TypeaheadPopover } from "../TypeaheadPopover";
 import { chip, DELETE_CHIP_INTENT, doc, schema } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
-import { QueryChangeEventDetail } from "./dom";
-import { ErrorPopover } from "./ErrorPopover";
-import { MappedTypeaheadSuggestion } from "../lang/types";
-import { CqlConfig } from "./CqlInput";
+import { QueryChangeEventDetail } from "../../types/dom";
+import { ErrorPopover } from "../ErrorPopover";
+import { MappedTypeaheadSuggestion } from "../../lang/types";
+import { CqlConfig } from "../CqlInput";
 import { getDebugMappingHTML } from "./debug";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { ok, Result, ResultKind } from "../util/result";
+import { ok, Result, ResultKind } from "../utils/result";
 import {
   createQueryList,
   createQueryBinary,

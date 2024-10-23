@@ -2,7 +2,7 @@ import { Node } from "prosemirror-model";
 import { Mapping } from "prosemirror-transform";
 
 /**
- * Utility function to log node structure to console. Quick, dirty, cursed code.
+ * Utility function to log node structure to console.
  */
 export const logNode = (doc: Node) => {
   console.log(`Log node ${doc.type.name}:`);
