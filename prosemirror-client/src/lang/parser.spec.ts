@@ -10,12 +10,10 @@ import {
 } from "./ast";
 import {
   andToken,
-  colonToken,
   eofToken,
   leftParenToken,
   queryField,
   queryFieldKeyToken,
-  queryOutputModifierKeyToken,
   queryValueToken,
   quotedStringToken,
   rightParenToken,
@@ -152,24 +150,10 @@ describe("parser", () => {
     assertFailure(result, "unexpected ':'");
   });
 
-  it("should handle a colon with no query key after another query", () => {
-    const tokens = [
-      queryFieldKeyToken("tag", 5),
-      queryValueToken("news", 8),
-      colonToken(13),
-      eofToken(14),
-    ];
-    const result = new Parser(tokens).parse();
-    assertFailure(result, "unexpected ':'");
-  });
-
   it("should not crash on arbitrary tokens", () => {
     const tokens = [
       queryFieldKeyToken("tag"),
       queryValueToken("news"),
-      queryOutputModifierKeyToken("show-fields"),
-      queryValueToken("all"),
-      colonToken(13),
       andToken(1),
       leftParenToken(),
       quotedStringToken("sausages"),

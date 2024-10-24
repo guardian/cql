@@ -2,6 +2,7 @@
   font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
   line-height: 1.5;
   font-weight: 400;
+  font-size: 100%;
 
   color-scheme: light dark;
   color: rgba(255, 255, 255, 0.87);
@@ -95,14 +96,36 @@ h6 {
 .CqlDebug__mapping {
   display: flex;
   flex-direction: column;
+}
+
+.CqlDebug__queryDiagramToken,
+.CqlDebug__queryDiagramNode {
   margin-bottom: 6rem;
+}
+
+.CqlDebug__queryDiagramNode > .CqlDebug__queryDiagramLabel {
+  padding-top: 0rem;
+}
+
+.CqlDebug__queryDiagramNode > .CqlDebug__queryDiagramLabel div + div {
+  padding-top: 1rem;
 }
 
 .Cql__Debug > div {
   flex-grow: 1;
 }
-
 .CqlDebug__queryDiagram {
+  display: flex;
+}
+
+.CqlDebug__queryDiagramLabel {
+  padding-top: 2rem;
+  padding-right: 1rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.CqlDebug__queryDiagramContent {
   display: flex;
 }
 
@@ -116,9 +139,9 @@ h6 {
 }
 
 .CqlDebug__queryBox--offset > .CqlDebug__originalChar {
-  position: absolute;
+  position: relative;
   left: 50%;
-  top: 0;
+  top: -2rem;
 }
 
 .CqlDebug__queryBox--offset > .CqlDebug__queryChar {
@@ -139,6 +162,14 @@ h6 {
   background-color: rgb(49, 78, 55);
 }
 
+.CqlDebug__queryChar + .CqlDebug__queryChar {
+  margin-top: 3px;
+}
+
+.CqlDebug__queryCharAlt {
+  background-color: rgb(74, 105, 120);
+}
+
 .CqlDebug__nodeChar {
   background-color: rgb(130, 82, 82);
   position: absolute;
@@ -146,12 +177,16 @@ h6 {
   left: -50%;
 }
 
-.CqlDebug__node {
-  position: relative;
-  left: 50%;
-  top: 2rem;
+.CqlDebug__nodeLabel,
+.CqlDebug__tokenLabel {
+  position: absolute;
+  top: 5rem;
   width: 1em;
   transform: rotate(90deg);
+}
+
+.CqlDebug__nodeLabel {
+  left: 50%;
 }
 
 .CqlDebug__nodeDiagram {

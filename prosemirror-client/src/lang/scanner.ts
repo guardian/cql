@@ -21,9 +21,6 @@ export class Scanner {
     );
   };
 
-  private isAtEnd = (offset: number = 0) =>
-    this.current + offset === this.program.length;
-
   private scanToken = () => {
     switch (this.advance()) {
       case "+":
@@ -55,7 +52,7 @@ export class Scanner {
     while (this.peek() != ":" && !isWhitespace(this.peek()) && !this.isAtEnd())
       this.advance();
 
-    if (this.current - this.start == 1) this.addToken(tokenType);
+    if (this.current - this.start === 1) this.addToken(tokenType);
     else {
       const key = this.program.substring(this.start + 1, this.current);
 
@@ -140,6 +137,9 @@ export class Scanner {
     this.program[this.current + offset] === undefined
       ? "\u0000"
       : this.program[this.current + offset];
+
+  private isAtEnd = (offset: number = 0) =>
+    this.current + offset === this.program.length;
 
   private error = (line: number, message: String) =>
     this.report(line, "", message);

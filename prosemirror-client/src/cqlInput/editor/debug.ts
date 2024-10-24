@@ -1,5 +1,8 @@
 import { Node } from "prosemirror-model";
 import { Mapping } from "prosemirror-transform";
+import { Token } from "../../lang/token";
+
+// Debugging and visualisation utilities.
 
 /**
  * Utility function to log node structure to console.
@@ -19,6 +22,72 @@ export const logNode = (doc: Node) => {
   });
 };
 
+export const getDebugTokenHTML = (tokens: Token[]) => {
+  let html = `
+    <div class="CqlDebug__queryDiagram CqlDebug__queryDiagramToken">
+      <div class="CqlDebug__queryDiagramLabel">
+        <div>Lexeme</div>
+        <div>Literal</div>
+      </div>
+      <div class="CqlDebug__queryDiagramContent">`;
+  tokens.forEach((token, index) => {
+    html += `${Array(Math.max(1, token.lexeme.length))
+      .fill(undefined)
+      .map((_, index) => {
+        const lexemeChar = token.lexeme[index];
+        const literalOffset =
+          token.literal?.length === token.lexeme.length ? 0 : 1;
+        const literalChar = token.literal?.[index - literalOffset];
+        return `
+        <div class="CqlDebug__queryBox">
+          <div class="CqlDebug__queryIndex">${token.start + index}</div>
+          ${
+            lexemeChar !== undefined
+              ? `<div class="CqlDebug__queryChar">${lexemeChar}</div>`
+              : ""
+          }
+              ${
+                literalChar !== undefined
+                  ? `<div class="CqlDebug__queryChar CqlDebug__queryCharAlt">${literalChar}</div>`
+                  : ""
+              }
+          ${
+            index === 0
+              ? `<div class="CqlDebug__tokenLabel">${token.tokenType}</div>`
+              : ""
+          }
+        </div>`;
+      })
+      .join("")}
+      ${
+        tokens[index + 1]?.tokenType !== "EOF" && token.tokenType !== "EOF"
+          ? `<div class="CqlDebug__queryBox"><div class="CqlDebug__queryIndex">${
+              token.end + 1
+            }</div></div>`
+          : ""
+      }`;
+  });
+  html += "</div></div>";
+
+  return html;
+};
+
+export const getOriginalQueryHTML = (query: string) => `
+<div class="CqlDebug__queryDiagram">
+  <div class="CqlDebug__queryDiagramContent">
+  ${query
+    .split("")
+    .map(
+      (char, index) => `
+          <div class="CqlDebug__queryBox">
+              <div class="CqlDebug__queryIndex">${index}</div>
+              <div class="CqlDebug__queryChar">${char}</div>
+          </div>`
+    )
+    .join("")}
+    </div>
+</div>`;
+
 export const getDebugMappingHTML = (
   query: string,
   mapping: Mapping,
@@ -34,24 +103,13 @@ export const getDebugMappingHTML = (
       : [posInfo];
   });
 
-  const queryDiagram = `
-    <p>Original query:</p>
-    <div class="CqlDebug__queryDiagram">
-
-    ${query
-      .split("")
-      .map(
-        (char, index) => `
-            <div class="CqlDebug__queryBox">
-                <div class="CqlDebug__queryIndex">${index}</div>
-                <div class="CqlDebug__queryChar">${char}</div>
-            </div>`
-      )
-      .join("")}
-    </div>`;
-
   let nodeDiagram = `
-    <p>Maps to nodes: </p><div class="CqlDebug__nodeDiagram">`;
+    <div class="CqlDebug__queryDiagram CqlDebug__queryDiagramNode">
+    <div class="CqlDebug__queryDiagramLabel">
+        <div>Mapped query</div>
+        <div>Node text</div>
+      </div>
+      <div class="CqlDebug__nodeDiagram">`;
   const posMap: Record<string, { char?: string; node?: string }> = {};
   doc.nodesBetween(0, doc.content.size, (node, pos) => {
     const content =
@@ -87,13 +145,13 @@ export const getDebugMappingHTML = (
       ([pos, { char, node }]) =>
         `
                 <div class="CqlDebug__queryBox CqlDebug__queryBox--offset" data-pos="${pos}">
-                <div class="CqlDebug__queryIndex">${pos}</div>
+                    <div class="CqlDebug__queryIndex">${pos}</div>
                     ${(queryPosMap[pos] ?? []).map(
                       ({ char }) =>
                         `<div class="CqlDebug__originalChar">${char}</div>`
                     )}
 
-                    <div class="CqlDebug__queryIndex">${pos}</div>
+
                     ${
                       char?.length === 1
                         ? `<div class="CqlDebug__nodeChar">${char}</div>`
@@ -101,7 +159,7 @@ export const getDebugMappingHTML = (
                     }
                     ${
                       node?.length
-                        ? `<div class="CqlDebug__node ${
+                        ? `<div class="CqlDebug__nodeLabel ${
                             node === "text" ? "CqlDebug__textNode" : ""
                           }">${node}</div>`
                         : ""
@@ -110,7 +168,11 @@ export const getDebugMappingHTML = (
     )
     .join("");
 
-  nodeDiagram += `</div>`;
+  nodeDiagram += `
+    </div>
+  </div>`;
 
-  return `<div class="CqlDebug__mapping">${queryDiagram}${nodeDiagram}</div>`;
+  return nodeDiagram;
+
+  //  return `<div class="CqlDebug__mapping">${queryDiagram}${nodeDiagram}</div>`;
 };

@@ -26,7 +26,11 @@ import { QueryChangeEventDetail } from "../../types/dom";
 import { ErrorPopover } from "../ErrorPopover";
 import { MappedTypeaheadSuggestion } from "../../lang/types";
 import { CqlConfig } from "../CqlInput";
-import { getDebugMappingHTML } from "./debug";
+import {
+  getDebugMappingHTML,
+  getDebugTokenHTML,
+  getOriginalQueryHTML,
+} from "./debug";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -153,7 +157,7 @@ export const createCqlPlugin = ({
               return;
             }
 
-            const $pos = view.state.doc.resolve(pos)
+            const $pos = view.state.doc.resolve(pos);
             const node = $pos.nodeAfter;
 
             if (!node) {
@@ -165,7 +169,7 @@ export const createCqlPlugin = ({
 
           const dom = document.createElement("chip-wrapper");
           const contentDOM = document.createElement("span");
-          contentDOM.classList.add("Cql__ChipWrapperContent")
+          contentDOM.classList.add("Cql__ChipWrapperContent");
           const polarityHandle = document.createElement("span");
           polarityHandle.classList.add("Cql__ChipWrapperPolarityHandle");
           polarityHandle.setAttribute("contentEditable", "false");
@@ -333,11 +337,14 @@ export const createCqlPlugin = ({
           }
 
           if (debugMappingContainer) {
-            debugMappingContainer.innerHTML = getDebugMappingHTML(
-              query,
-              mapping,
-              newDoc
-            );
+            debugMappingContainer.innerHTML = `
+              <p>Original query: </p>
+              ${getOriginalQueryHTML(query)}
+              <p>Tokenises to:</p>
+              ${getDebugTokenHTML(result.tokens)}
+              <p>Maps to nodes: </p>
+              ${getDebugMappingHTML(query, mapping, newDoc)}
+            `;
           }
 
           const userSelection = view.state.selection;

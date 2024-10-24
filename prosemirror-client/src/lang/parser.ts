@@ -14,7 +14,7 @@ import {
   QueryStr,
 } from "./ast";
 import { TokenType } from "./token";
-import { either, err, mapError, ok, Result } from "../utils/result";
+import { either, err, ok, Result } from "../utils/result";
 
 class ParseError extends Error {
   constructor(public position: number, public message: string) {
@@ -47,8 +47,8 @@ export class Parser {
     }
   }
 
-  private startOfQueryField = [TokenType.QUERY_FIELD_KEY, TokenType.PLUS];
-  private startOfQueryValue = [TokenType.QUERY_VALUE, TokenType.COLON];
+  private startOfQueryField = [TokenType.QUERY_FIELD_KEY];
+  private startOfQueryValue = [TokenType.QUERY_VALUE];
 
   private query(): QueryBinary {
     if (this.startOfQueryValue.some((i) => i === this.peek().tokenType))
@@ -156,14 +156,7 @@ export class Parser {
       `Expected a search value, e.g. +tag:new`
     );
 
-    const value = mapError(() =>
-      this.safeConsume(
-        TokenType.COLON,
-        `Expected an ':' after the search key ${key.lexeme}`
-      )
-    )(maybeValue);
-
-    return either(value)(
+    return either(maybeValue)(
       () => createQueryField(key, undefined),
       (value: Token) => createQueryField(key, value)
     );
@@ -175,9 +168,6 @@ export class Parser {
    */
   private guardAgainstQueryField = (errorLocation: string) => {
     switch (this.peek().tokenType) {
-      case TokenType.PLUS: {
-        throw this.error(`You cannot put query fields ${errorLocation}"`);
-      }
       case TokenType.QUERY_FIELD_KEY: {
         const queryFieldNode = this.queryField();
         throw this.error(
