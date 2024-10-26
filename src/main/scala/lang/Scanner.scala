@@ -43,7 +43,7 @@ class Scanner(program: String):
   def scanToken =
     advance match {
       case '+' =>
-        addKey(TokenType.QUERY_FIELD_KEY)
+        addKey(TokenType.CHIP_KEY)
       case '@' =>
         addKey(TokenType.QUERY_OUTPUT_MODIFIER_KEY)
       case ':' =>
@@ -75,10 +75,10 @@ class Scanner(program: String):
     while ((!peek.isWhitespace) && !isAtEnd)
       advance
 
-    if (current - start == 1) addToken(TokenType.QUERY_VALUE, None)
+    if (current - start == 1) addToken(TokenType.CHIP_VALUE, None)
     else
       val value = program.substring(start + 1, current)
-      addToken(TokenType.QUERY_VALUE, Some(value))
+      addToken(TokenType.CHIP_VALUE, Some(value))
 
   def isReservedWord =
     Token.reservedWords.exists { case (str, _) =>

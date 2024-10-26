@@ -17,7 +17,7 @@ import { MappedTypeaheadSuggestion, TypeaheadSuggestion } from "../../lang/types
 import { CqlResult } from "../../lang/Cql";
 import { CqlError } from "../../services/CqlService";
 
-const tokensToPreserve = ["QUERY_FIELD_KEY", "QUERY_VALUE", "EOF"];
+const tokensToPreserve = ["CHIP_KEY", "CHIP_VALUE", "EOF"];
 
 const joinSearchTextTokens = (tokens: ProseMirrorToken[]) =>
   tokens.reduce((acc, token) => {
@@ -101,21 +101,21 @@ export const createProseMirrorTokenToDocumentMap = (
   const ranges = compactedTokenRanges.reduce<[number, number, number][]>(
     (accRanges, { tokenType, from, to }, index, tokens) => {
       switch (tokenType) {
-        case "QUERY_FIELD_KEY":
+        case "CHIP_KEY":
           // If this field is at the start of the document, or preceded by a
           // field value, the editor will add a searchText node to conform to
           // the schema, which we must account for, so we add a searchText
           // mapping.
           const previousToken = tokens[index - 1];
           const shouldAddSearchTextMapping =
-            previousToken?.tokenType === "QUERY_VALUE" || index === 0;
+            previousToken?.tokenType === "CHIP_VALUE" || index === 0;
           return accRanges.concat(
             ...(shouldAddSearchTextMapping
               ? getSearchTextRanges(previousToken?.to)
               : []),
             getQueryFieldKeyRange(from)
           );
-        case "QUERY_VALUE":
+        case "CHIP_VALUE":
           return accRanges.concat(...getQueryValueRanges(from, to));
         default:
           return accRanges.concat(...getSearchTextRanges(from));
@@ -147,15 +147,15 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
   const nodes = joinSearchTextTokens(_tokens).reduce<Node[]>(
     (acc, token, index, tokens): Node[] => {
       switch (token.tokenType) {
-        case "QUERY_FIELD_KEY": {
+        case "CHIP_KEY": {
           const tokenKey = token.literal;
           const nextToken = tokens[index + 1];
           const tokenValue =
-            nextToken.tokenType === "QUERY_VALUE" ? nextToken.literal : "";
+            nextToken.tokenType === "CHIP_VALUE" ? nextToken.literal : "";
           const previousToken = tokens[index - 1];
           const isPrecededByChip =
-            previousToken?.tokenType === "QUERY_VALUE" ||
-            previousToken?.tokenType === "QUERY_FIELD_KEY";
+            previousToken?.tokenType === "CHIP_VALUE" ||
+            previousToken?.tokenType === "CHIP_KEY";
           return acc.concat(
             ...(isPrecededByChip ? [searchText.create()] : []),
 
@@ -171,7 +171,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             ])
           );
         }
-        case "QUERY_VALUE":
+        case "CHIP_VALUE":
           return acc;
         case "EOF": {
           const previousToken = tokens[index - 1];
@@ -240,7 +240,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
   return doc.create(undefined, nodes);
 };
 
-const tokensThatAreNotDecorated = ["QUERY_FIELD_KEY", "QUERY_VALUE", "EOF"];
+const tokensThatAreNotDecorated = ["CHIP_KEY", "CHIP_VALUE", "EOF"];
 
 export const tokensToDecorations = (
   tokens: ProseMirrorToken[]

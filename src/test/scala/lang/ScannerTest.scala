@@ -50,9 +50,9 @@ class ScannerTest extends BaseTest {
       val scanner = new Scanner("""+tag:tone/news""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
-        Token(TokenType.QUERY_FIELD_KEY, "+tag", Some("tag"), 0, 3),
+        Token(TokenType.CHIP_KEY, "+tag", Some("tag"), 0, 3),
         Token(
-          TokenType.QUERY_VALUE,
+          TokenType.CHIP_VALUE,
           ":tone/news",
           Some("tone/news"),
           4,
@@ -67,9 +67,9 @@ class ScannerTest extends BaseTest {
       val scanner = new Scanner("""+section:commentisfree""")
       val tokens = scanner.scanTokens
       val expectedTokens = List(
-        Token(TokenType.QUERY_FIELD_KEY, "+section", Some("section"), 0, 7),
+        Token(TokenType.CHIP_KEY, "+section", Some("section"), 0, 7),
         Token(
-          TokenType.QUERY_VALUE,
+          TokenType.CHIP_VALUE,
           ":commentisfree",
           Some("commentisfree"),
           8,
@@ -85,7 +85,7 @@ class ScannerTest extends BaseTest {
       val tokens = scanner.scanTokens
       val expectedTokens = List(
         unquotedStringToken("example"),
-        Token(TokenType.QUERY_FIELD_KEY, "+", None, 8, 8),
+        Token(TokenType.CHIP_KEY, "+", None, 8, 8),
         eofToken(9)
       )
       assert(tokens === expectedTokens)
@@ -98,8 +98,8 @@ class ScannerTest extends BaseTest {
       val tokens = scanner.scanTokens
       val expectedTokens = List(
         unquotedStringToken("example"),
-        Token(TokenType.QUERY_FIELD_KEY, "+tag", Some("tag"), 8, 11),
-        Token(TokenType.QUERY_VALUE, ":", None, 12, 12),
+        Token(TokenType.CHIP_KEY, "+tag", Some("tag"), 8, 11),
+        Token(TokenType.CHIP_VALUE, ":", None, 12, 12),
         eofToken(13)
       )
       assert(tokens === expectedTokens)
@@ -117,7 +117,7 @@ class ScannerTest extends BaseTest {
           11
         ),
         Token(
-          TokenType.QUERY_VALUE,
+          TokenType.CHIP_VALUE,
           ":all",
           Some("all"),
           12,

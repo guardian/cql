@@ -7,8 +7,8 @@ export const TokenType = {
 
   // Literals.
   STRING: "STRING",
-  QUERY_FIELD_KEY: "QUERY_FIELD_KEY",
-  QUERY_VALUE: "QUERY_VALUE",
+  CHIP_KEY: "CHIP_KEY",
+  CHIP_VALUE: "CHIP_VALUE",
 
   // Keywords.
   AND: "AND",

@@ -15,7 +15,7 @@ export const quotedStringToken = (str: string, start: number = 0) =>
   new Token(TokenType.STRING, `"${str}"`, str, start, start + str.length + 1);
 export const queryFieldKeyToken = (str: string, start: number = 0) =>
   new Token(
-    TokenType.QUERY_FIELD_KEY,
+    TokenType.CHIP_KEY,
     `+${str}`,
     str,
     start,
@@ -23,7 +23,7 @@ export const queryFieldKeyToken = (str: string, start: number = 0) =>
   );
 
 export const queryValueToken = (str: string, start: number = 0) =>
-  new Token(TokenType.QUERY_VALUE, `:${str}`, str, start, start + str.length);
+  new Token(TokenType.CHIP_VALUE, `:${str}`, str, start, start + str.length);
 
 export const queryField = (
   key: string,

@@ -28,7 +28,7 @@ abstract class BaseTest extends AsyncFunSpec with should.Matchers {
   )
   def queryFieldKeyToken(str: String, start: Int = 0) =
     Token(
-      TokenType.QUERY_FIELD_KEY,
+      TokenType.CHIP_KEY,
       s"+$str",
       Some(str),
       start,
@@ -44,7 +44,7 @@ abstract class BaseTest extends AsyncFunSpec with should.Matchers {
     )
   def queryValueToken(str: String, start: Int = 0) =
     Token(
-      TokenType.QUERY_VALUE,
+      TokenType.CHIP_VALUE,
       s":$str",
       Some(str),
       start,

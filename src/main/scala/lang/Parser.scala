@@ -22,11 +22,11 @@ class Parser(tokens: List[Token]):
     }
     QueryList(queries)
 
-  val startOfQueryField = List(TokenType.QUERY_FIELD_KEY, TokenType.PLUS)
+  val startOfQueryField = List(TokenType.CHIP_KEY, TokenType.PLUS)
   val startOfQueryOutputModifier =
     List(TokenType.QUERY_OUTPUT_MODIFIER_KEY, TokenType.AT)
   val startOfQueryValue =
-    List(TokenType.QUERY_VALUE, TokenType.COLON)
+    List(TokenType.CHIP_VALUE, TokenType.COLON)
 
   private def query: QueryBinary | QueryField | QueryOutputModifier =
     if (startOfQueryField.contains(peek().tokenType)) queryField
@@ -101,13 +101,13 @@ class Parser(tokens: List[Token]):
 
   private def queryField: QueryField =
     val key = Try {
-      consume(TokenType.QUERY_FIELD_KEY, "Expected a search key, e.g. +tag")
+      consume(TokenType.CHIP_KEY, "Expected a search key, e.g. +tag")
     }.recover { _ =>
       consume(TokenType.PLUS, "Expected at least a +")
     }.get
 
     val value = Try {
-      consume(TokenType.QUERY_VALUE, s"Expected a search value, e.g. +tag:news")
+      consume(TokenType.CHIP_VALUE, s"Expected a search value, e.g. +tag:news")
     }.recoverWith { _ =>
       Try {
         consume(TokenType.COLON, "Expected at least a :")
@@ -128,7 +128,7 @@ class Parser(tokens: List[Token]):
 
     val value = Try {
       consume(
-        TokenType.QUERY_VALUE,
+        TokenType.CHIP_VALUE,
         "Expected a value for the query modifier, e.g. @show-fields:all"
       )
     }.recoverWith { _ =>
@@ -160,7 +160,7 @@ class Parser(tokens: List[Token]):
         throw error(
           s"You cannot put queries for tags, sections etc. ${errorLocation}"
         )
-      case TokenType.QUERY_FIELD_KEY =>
+      case TokenType.CHIP_KEY =>
         val queryFieldNode = queryField
         throw error(
           s"You cannot query for ${queryFieldNode.key.literal.getOrElse("")}s ${errorLocation}"

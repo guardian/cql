@@ -47,8 +47,8 @@ export class Parser {
     }
   }
 
-  private startOfQueryField = [TokenType.QUERY_FIELD_KEY];
-  private startOfQueryValue = [TokenType.QUERY_VALUE];
+  private startOfQueryField = [TokenType.CHIP_KEY];
+  private startOfQueryValue = [TokenType.CHIP_VALUE];
 
   private query(): QueryBinary {
     if (this.startOfQueryValue.some((i) => i === this.peek().tokenType))
@@ -147,12 +147,12 @@ export class Parser {
 
   private queryField(): QueryField {
     const key = this.consume(
-      TokenType.QUERY_FIELD_KEY,
+      TokenType.CHIP_KEY,
       `Expected a search key, e.g. +tag`
     );
 
     const maybeValue = this.safeConsume(
-      TokenType.QUERY_VALUE,
+      TokenType.CHIP_VALUE,
       `Expected a search value, e.g. +tag:new`
     );
 
@@ -168,7 +168,7 @@ export class Parser {
    */
   private guardAgainstQueryField = (errorLocation: string) => {
     switch (this.peek().tokenType) {
-      case TokenType.QUERY_FIELD_KEY: {
+      case TokenType.CHIP_KEY: {
         const queryFieldNode = this.queryField();
         throw this.error(
           `You cannot query for ${queryFieldNode.key.literal}s ${errorLocation}`
