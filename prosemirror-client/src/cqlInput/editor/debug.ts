@@ -60,7 +60,7 @@ export const getDebugTokenHTML = (tokens: Token[]) => {
       })
       .join("")}
       ${
-        tokens[index + 1]?.tokenType !== "EOF" && token.tokenType !== "EOF"
+        tokens[index + 1]?.start > token.end + 1 && tokens[index + 1]?.tokenType !== "EOF" && token.tokenType !== "EOF"
           ? `<div class="CqlDebug__queryBox"><div class="CqlDebug__queryIndex">${
               token.end + 1
             }</div></div>`
