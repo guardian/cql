@@ -35,7 +35,7 @@ export class Parser {
     try {
       const queries: QueryBinary[] = [];
       while (this.peek().tokenType !== TokenType.EOF) {
-        queries.push(this.query());
+        queries.push(this.queryBinary());
       }
 
       return ok(createQueryList(queries));
@@ -50,16 +50,13 @@ export class Parser {
   private startOfQueryField = [TokenType.CHIP_KEY];
   private startOfQueryValue = [TokenType.CHIP_VALUE];
 
-  private query(): QueryBinary {
+  private queryBinary(): QueryBinary {
     if (this.startOfQueryValue.some((i) => i === this.peek().tokenType))
       throw new ParseError(
         this.peek().start,
         "I found an unexpected ':'. Did you numberend to search for a tag, section or similar, e.g. tag:news? If you would like to add a search phrase containing a ':' character, please surround it in double quotes."
       );
-    else return this.queryBinary();
-  }
 
-  private queryBinary(): QueryBinary {
     const left = this.queryContent();
 
     switch (this.peek().tokenType) {
@@ -142,7 +139,7 @@ export class Parser {
   private queryStr(): QueryStr {
     const token = this.consume(TokenType.STRING, "Expected a string");
 
-    return createQueryStr(token.literal ?? "");
+    return createQueryStr(token);
   }
 
   private queryField(): QueryField {

@@ -117,7 +117,10 @@ describe("parser", () => {
     expect(result).toEqual(
       ok(
         createQueryList([
-          createQueryBinary(createQueryContent(createQueryStr("a")), undefined),
+          createQueryBinary(
+            createQueryContent(createQueryStr(quotedStringToken("a"))),
+            undefined
+          ),
           createQueryBinary(
             createQueryContent(
               createQueryField(queryFieldKeyToken("", 2), undefined)

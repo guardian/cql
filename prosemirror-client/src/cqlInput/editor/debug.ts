@@ -1,6 +1,14 @@
 import { Node } from "prosemirror-model";
 import { Mapping } from "prosemirror-transform";
 import { Token } from "../../lang/token";
+import {
+  QueryBinary,
+  QueryContent,
+  QueryField,
+  QueryGroup,
+  QueryList,
+  QueryStr,
+} from "../../lang/ast";
 
 // Debugging and visualisation utilities.
 
@@ -60,7 +68,9 @@ export const getDebugTokenHTML = (tokens: Token[]) => {
       })
       .join("")}
       ${
-        tokens[index + 1]?.start > token.end + 1 && tokens[index + 1]?.tokenType !== "EOF" && token.tokenType !== "EOF"
+        tokens[index + 1]?.start > token.end + 1 &&
+        tokens[index + 1]?.tokenType !== "EOF" &&
+        token.tokenType !== "EOF"
           ? `<div class="CqlDebug__queryBox"><div class="CqlDebug__queryIndex">${
               token.end + 1
             }</div></div>`
