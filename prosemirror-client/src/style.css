@@ -213,3 +213,120 @@ input {
   background: none;
   color: rgba(255, 255, 255, 0.87);
 }
+
+
+.tree--container {
+  display: flex;
+  align-items: center;
+  flex-direction: column;
+  width: 100%;
+}
+
+.tree {
+  display: block;
+  max-width: 100%;
+  margin-top: 5px;
+  overflow-y: scroll;
+}
+
+
+
+  /*https://www.cssscript.com/clean-tree-diagram/*/
+  .tree,
+  .tree ul,
+  .tree li {
+    font-family: monospace;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+    position: relative;
+  }
+
+  .tree {
+    margin: 0 0 1em;
+    text-align: center;
+    white-space: initial;
+  }
+
+  .tree,
+  .tree ul {
+    display: table;
+  }
+
+  .tree ul {
+    width: 100%;
+  }
+
+  .tree li {
+    display: table-cell;
+    padding: .5rem 0;
+    vertical-align: top;
+  }
+
+  .tree li:before {
+    outline: solid 0.5px #666;
+    content: "";
+    left: 0;
+    position: absolute;
+    right: 0;
+    top: -1px;
+  }
+
+  .tree li:first-child:before {
+    left: 50%;
+  }
+
+  .tree li:last-child:before {
+    right: 50%;
+  }
+
+  .tree code,
+  .tree li > span {
+    background-color: #4b6978;
+    border-radius: .2em;
+    display: inline-block;
+    margin: 0 .2em .5em;
+    padding: .2em .5em;
+    position: relative;
+  }
+
+  .node-content {
+    background-color: rgb(71, 75, 86);
+    margin-left: 5px;
+    padding: 1px 5px;
+  }
+
+  .node-pos {
+    line-break:normal;
+    padding: 0 4px;
+  }
+
+  .tree ul:before,
+  .tree code:before,
+  .tree li > span:before {
+    outline: solid 0.5px #666;
+    content: "";
+    height: .5em;
+    left: 50%;
+    position: absolute;
+  }
+
+  .tree ul:before {
+    top: -.5em;
+  }
+
+  .tree code:before,
+  .tree li > span:before {
+    top: -.55em;
+  }
+
+  .tree>li {
+    margin-top: 0;
+  }
+
+  .tree>li:before,
+  .tree>li:after,
+  .tree>li>code:before,
+  .tree>li>.span:before {
+    outline: none;
+  }

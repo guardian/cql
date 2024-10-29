@@ -27,6 +27,7 @@ import { ErrorPopover } from "../ErrorPopover";
 import { MappedTypeaheadSuggestion } from "../../lang/types";
 import { CqlConfig } from "../CqlInput";
 import {
+  getDebugASTHTML,
   getDebugMappingHTML,
   getDebugTokenHTML,
   getOriginalQueryHTML,
@@ -342,6 +343,12 @@ export const createCqlPlugin = ({
               ${getOriginalQueryHTML(query)}
               <p>Tokenises to:</p>
               ${getDebugTokenHTML(result.tokens)}
+              ${
+                result.ast
+                  ? `<p>AST: </p>
+              ${getDebugASTHTML(result.ast)}`
+                  : ""
+              }
               <p>Maps to nodes: </p>
               ${getDebugMappingHTML(query, mapping, newDoc)}
             `;

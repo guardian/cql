@@ -83,20 +83,20 @@ export const getDebugTokenHTML = (tokens: Token[]) => {
 };
 
 export const getOriginalQueryHTML = (query: string) => `
-<div class="CqlDebug__queryDiagram">
-  <div class="CqlDebug__queryDiagramContent">
-  ${query
-    .split("")
-    .map(
-      (char, index) => `
-          <div class="CqlDebug__queryBox">
-              <div class="CqlDebug__queryIndex">${index}</div>
-              <div class="CqlDebug__queryChar">${char}</div>
-          </div>`
-    )
-    .join("")}
-    </div>
-</div>`;
+  <div class="CqlDebug__queryDiagram">
+    <div class="CqlDebug__queryDiagramContent">
+    ${query
+      .split("")
+      .map(
+        (char, index) => `
+            <div class="CqlDebug__queryBox">
+                <div class="CqlDebug__queryIndex">${index}</div>
+                <div class="CqlDebug__queryChar">${char}</div>
+            </div>`
+      )
+      .join("")}
+      </div>
+  </div>`;
 
 export const getDebugMappingHTML = (
   query: string,
@@ -186,3 +186,105 @@ export const getDebugMappingHTML = (
 
   //  return `<div class="CqlDebug__mapping">${queryDiagram}${nodeDiagram}</div>`;
 };
+
+export const getDebugASTHTML = (query: QueryList) => {
+  return `<div class="tree--container">
+    <ul class="tree">
+        <li>
+          ${getNodeHTML(query)}
+          <ul>
+            ${query.content
+              .map((binary) => `<li>${getBinaryHTML(binary)}</li>`)
+              .join("")}
+          </ul>
+        <li>
+      </ul>
+  </div>`;
+};
+
+const getContentHTML = (query: QueryContent) => {
+  const html = (() => {
+    switch (query.content.type) {
+      case "QueryBinary":
+        return getBinaryHTML(query.content);
+      case "QueryField":
+        return getFieldHTML(query.content);
+      case "QueryGroup":
+        return getGroupHTML(query.content);
+      case "QueryStr":
+        return getStrHTML(query.content);
+    }
+  })();
+
+  return `
+    <ul>
+      <li>
+        <span>${getNodeHTML(query)}</span>
+        ${html}
+      </li>
+    </ul>`;
+};
+
+const getBinaryHTML = (query: QueryBinary): string => {
+  return `
+    <ul>
+      <li>
+        <span>${getNodeHTML(query)}</span>
+        <ul>
+          <li>${getContentHTML(query.left)}</li>
+          ${query.right?.[1] ? `<li>${getBinaryHTML(query.right[1])}</li>` : ""}
+        </ul>
+      </li>
+    </ul>
+  `;
+};
+
+const getFieldHTML = (field: QueryField) => {
+  return `
+    <ul>
+      <li>
+        <span>${getNodeHTML(field)}</span>
+        <ul>
+          <li>${getTokenHTML(field.key)}</li>
+          ${field.value ? `<li>${getTokenHTML(field.value)}</li>` : ""}
+        </ul>
+    </ul>
+  `;
+};
+
+const getTokenHTML = (token: Token) => {
+  return `
+    <span>${token.tokenType}
+    <span class="node-content">${token.literal}</span>
+      <span class="node-pos">${token.start}‑${token.end}</span>
+    </span>
+  `;
+};
+
+const getGroupHTML = (group: QueryGroup) => {
+  return `
+    <ul>
+      <li>
+        ${getNodeHTML(group)}
+        ${getBinaryHTML(group.content)}
+      </li>
+    </ul>
+  `;
+};
+
+const getStrHTML = (str: QueryStr) => {
+  return `
+    <ul>
+      <li>
+        <span>
+          ${getNodeHTML(str)}
+          <span class="node-content">${str.searchExpr}</span>
+          <span class="node-pos">${str.token.start}‑${str.token.end}</span>
+        </span>
+      </li>
+    </ul>
+  `;
+};
+
+const getNodeHTML = (node: { type: string }) =>
+  `<span class="node-description">${node.type}</span>`;
