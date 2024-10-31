@@ -28,23 +28,23 @@ export class Parser {
   constructor(private tokens: Token[]) {}
 
   public parse(): Result<ParseError, QueryList> {
-    return this.QueryList();
-  }
-
-  private QueryList() {
     try {
-      const queries: QueryBinary[] = [];
-      while (this.peek().tokenType !== TokenType.EOF) {
-        queries.push(this.queryBinary());
-      }
-
-      return ok(createQueryList(queries));
+      return this.queryList();
     } catch (e) {
       if (e instanceof ParseError) {
         return err(e);
       }
       throw e;
     }
+  }
+
+  private queryList() {
+    const queries: QueryBinary[] = [];
+    while (this.peek().tokenType !== TokenType.EOF) {
+      queries.push(this.queryBinary());
+    }
+
+    return ok(createQueryList(queries));
   }
 
   private startOfQueryField = [TokenType.CHIP_KEY];
