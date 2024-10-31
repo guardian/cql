@@ -12,12 +12,21 @@ describe("scanner", () => {
       expect(tokens).toEqual(expectedTokens);
     });
 
+    it("should give single tokens for strings separated with a space - 1", () => {
+      const scanner = new Scanner("magnificent octopus");
+      const tokens = scanner.scanTokens();
+      const expectedTokens = [
+        unquotedStringToken("magnificent octopus"),
+        eofToken(19),
+      ];
+      expect(tokens).toEqual(expectedTokens);
+    });
+
     it("should preserve whitespace at the end of the document", () => {
       const scanner = new Scanner("magnificent octopus ");
       const tokens = scanner.scanTokens();
       const expectedTokens = [
-        unquotedStringToken("magnificent"),
-        unquotedStringToken("octopus ", 12),
+        unquotedStringToken("magnificent octopus "),
         eofToken(20),
       ];
       expect(tokens).toEqual(expectedTokens);
@@ -148,13 +157,13 @@ describe("scanner", () => {
     });
 
     it("should tokenise groups and boolean operators - 2", () => {
-      const scanner = new Scanner("one AND two");
+      const scanner = new Scanner("one AND two three");
       const tokens = scanner.scanTokens();
       const expectedTokens = [
         unquotedStringToken("one"),
         new Token(TokenType.AND, "AND", undefined, 4, 6),
-        unquotedStringToken("two", 8),
-        eofToken(11),
+        unquotedStringToken("two three", 8),
+        eofToken(17),
       ];
 
       expect(tokens).toEqual(expectedTokens);

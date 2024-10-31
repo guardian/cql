@@ -59,17 +59,6 @@ describe("parser", () => {
       const result = new Parser(tokens).parse();
       assertFailure(result, "Groups must contain some content.");
     });
-
-    it.only("should handle groups with consecutive string tokens", () => {
-      const tokens = [
-        leftParenToken(),
-        unquotedStringToken("a", 1),
-        unquotedStringToken("b", 2),
-        rightParenToken(3),
-      ];
-      const result = new Parser(tokens).parse();
-      expect(result).toEqual(ok(createQueryList([])));
-    });
   });
 
   describe("QueryBoolean", () => {
