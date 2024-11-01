@@ -61,7 +61,7 @@ describe("parser", () => {
       assertFailure(result, "Groups can't be empty");
     });
 
-    it.only("should handle groups with consecutive string tokens", () => {
+    it("should handle groups with consecutive string tokens", () => {
       const tokens = [
         leftParenToken(),
         unquotedStringToken("a", 1),

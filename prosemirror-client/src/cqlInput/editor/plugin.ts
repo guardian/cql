@@ -222,22 +222,38 @@ export const createCqlPlugin = ({
       },
       handleKeyDown(view, event) {
         switch (event.key) {
-          case "+":
+          case "+": {
+            console.log("PLUS");
+            event.preventDefault();
             const { doc, selection } = view.state;
             const maybeTrailingWhitespace =
               selection.from === selection.to &&
-              doc.textBetween(selection.from, selection.to + 1) !== " "
+              !["", " "].some(
+                (str) =>
+                  doc.textBetween(selection.from, selection.to + 1) === str
+              )
                 ? " "
                 : "";
-            view.dispatch(view.state.tr.insertText(`+${maybeTrailingWhitespace}`));
+
+            if (!maybeTrailingWhitespace) {
+              return false;
+            }
+
+            const textToInsert = `+${maybeTrailingWhitespace}`;
+            const tr = view.state.tr.insertText(textToInsert);
+
+            view.dispatch(tr);
+
             return true;
+          }
           // What should the behaviour of tab be?
-          case "Tab":
+          case "Tab": {
             if (event.shiftKey) {
               // Reverse tab
               return true;
             }
             return true;
+          }
           case "Delete": {
             // Look forward for node
             const { anchor } = view.state.selection;
