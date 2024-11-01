@@ -30,19 +30,6 @@ type Result<E, A> = Err<E> | Ok<A>;
 const ok = <A>(a: A): Ok<A> => ({ kind: ResultKind.Ok, value: a });
 const err = <E>(e: E): Err<E> => ({ kind: ResultKind.Err, err: e });
 
-/**
- * Converts an operation that might throw into a `Result`
- * @param f The operation that might throw
- * @param error The error to return if the operation throws
- */
-function fromUnsafe<A, E>(f: () => A, error: E): Result<E, A> {
-  try {
-    return ok(f());
-  } catch (_) {
-    return err(error);
-  }
-}
-
 // ----- Functions ----- //
 
 /**
@@ -142,7 +129,6 @@ export {
   ResultKind,
   ok,
   err,
-  fromUnsafe,
   partition,
   either,
   mapError,

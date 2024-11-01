@@ -124,7 +124,7 @@ export class TypeaheadPopover extends Popover {
 
     tr.replaceRangeWith(from, to, schema.text(value));
 
-    let insertPos = getNextPositionAfterTypeaheadSelection(tr.doc, from);
+    const insertPos = getNextPositionAfterTypeaheadSelection(tr.doc, from);
 
     if (insertPos) {
       tr.setSelection(TextSelection.create(tr.doc, insertPos));
@@ -134,7 +134,7 @@ export class TypeaheadPopover extends Popover {
   };
 
   private moveSelection = (by: number) => {
-    const suggestions = this.currentSuggestion?.suggestions!;
+    const suggestions = this.currentSuggestion?.suggestions ?? [];
     this.currentOptionIndex =
       (this.currentOptionIndex + by + (by < 0 ? suggestions.length! : 0)) %
       suggestions.length!;
@@ -168,14 +168,16 @@ export class TypeaheadPopover extends Popover {
     dateInput.setAttribute("type", "date");
     dateInput.addEventListener("keydown", (e) => {
       switch (e.key) {
-        case "Enter":
+        case "Enter": {
           const value = (e.target as HTMLInputElement).value;
           this.applyValueToInput(value);
           this.view.dom.focus();
           break;
-        case "Escape":
+        }
+        case "Escape": {
           this.view.dom.focus();
           break;
+        }
       }
     });
 

@@ -27,7 +27,7 @@ import { Token } from "./token";
 describe("parser", () => {
   const assertFailure = (
     queryList: Result<Error, QueryList>,
-    strContains: String
+    strContains: string
   ) => {
     switch (queryList.kind) {
       case ResultKind.Err: {

@@ -13,7 +13,10 @@ import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection } from "prosemirror-state";
 import { ERROR_CLASS } from "./plugin";
 import { Token } from "../../lang/token";
-import { MappedTypeaheadSuggestion, TypeaheadSuggestion } from "../../lang/types";
+import {
+  MappedTypeaheadSuggestion,
+  TypeaheadSuggestion,
+} from "../../lang/types";
 import { CqlResult } from "../../lang/Cql";
 import { CqlError } from "../../services/CqlService";
 
@@ -101,7 +104,7 @@ export const createProseMirrorTokenToDocumentMap = (
   const ranges = compactedTokenRanges.reduce<[number, number, number][]>(
     (accRanges, { tokenType, from, to }, index, tokens) => {
       switch (tokenType) {
-        case "CHIP_KEY":
+        case "CHIP_KEY": {
           // If this field is at the start of the document, or preceded by a
           // field value, the editor will add a searchText node to conform to
           // the schema, which we must account for, so we add a searchText
@@ -115,10 +118,13 @@ export const createProseMirrorTokenToDocumentMap = (
               : []),
             getQueryFieldKeyRange(from)
           );
-        case "CHIP_VALUE":
+        }
+        case "CHIP_VALUE": {
           return accRanges.concat(...getQueryValueRanges(from, to));
-        default:
+        }
+        default: {
           return accRanges.concat(...getSearchTextRanges(from));
+        }
       }
     },
     []
@@ -260,7 +266,7 @@ export const tokensToDecorations = (
 export const docToQueryStr = (doc: Node) => {
   let str: string = "";
 
-  doc.descendants((node, _pos) => {
+  doc.descendants((node) => {
     switch (node.type.name) {
       case "searchText":
         str += node.textContent;

@@ -141,10 +141,10 @@ export class Scanner {
   private isAtEnd = (offset: number = 0) =>
     this.current + offset === this.program.length;
 
-  private error = (line: number, message: String) =>
+  private error = (line: number, message: string) =>
     this.report(line, "", message);
 
-  private report = (line: number, where: String, message: String) => {
+  private report = (line: number, where: string, message: string) => {
     console.log(`[line ${line}] Error${where}: ${message}`);
   };
 }

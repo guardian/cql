@@ -19,7 +19,7 @@ import {
   mapResult,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
-import { TypeaheadPopover } from "../TypeaheadPopover";
+import { TypeaheadPopover  } from "../TypeaheadPopover";
 import { chip, DELETE_CHIP_INTENT, doc, schema } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { QueryChangeEventDetail } from "../../types/dom";

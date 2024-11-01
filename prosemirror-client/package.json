@@ -6,26 +6,35 @@
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "lint": "eslint ."
   },
   "devDependencies": {
+    "@eslint/js": "^9.14.0",
     "@guardian/content-api-models": "^25.1.0",
     "@happy-dom/global-registrator": "^15.7.4",
     "@testing-library/dom": "^10.4.0",
     "@testing-library/user-event": "^14.5.2",
     "@types/bun": "latest",
+    "@types/eslint__js": "^8.42.3",
+    "@types/prosemirror-dev-tools": "^3.0.6",
     "jest-prosemirror": "^3.0.0",
+    "prosemirror-dev-tools": "^4.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "shadow-dom-testing-library": "^1.11.3",
-    "typescript": "^5.6.2",
+    "typescript": "^5.6.3",
+    "typescript-eslint": "^8.12.2",
     "vite": "^5.4.6",
-    "vitest": "^1.6.0",
-    "prosemirror-dev-tools": "^4.1.0",
-    "@types/prosemirror-dev-tools": "^3.0.6"
+    "vitest": "^1.6.0"
   },
   "dependencies": {
     "@floating-ui/dom": "^1.6.11",
+    "eslint": "^9.14.0",
+    "eslint-config-prettier": "^9.1.0",
+    "eslint-plugin-prettier": "^5.2.1",
+    "install": "^0.13.0",
+    "npm": "^10.9.0",
     "prosemirror-commands": "^1.6.0",
     "prosemirror-history": "^1.4.1",
     "prosemirror-keymap": "^1.2.2",

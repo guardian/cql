@@ -6,10 +6,6 @@ import { undo, redo, history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
 import { bottomOfLine, topOfLine } from "./commands";
 
-declare module window {
-  export let CQL_VIEW: EditorView;
-}
-
 export const createEditorView = ({
   initialValue = "",
   mountEl,

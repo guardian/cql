@@ -9,9 +9,10 @@ export const isLetterOrDigit = (str: string) => letterOrDigitR.test(str);
 export function* getPermutations<T>(
   permutation: T[]
 ): Generator<T[], T[], unknown> {
-  var length = permutation.length,
-    c = Array(length).fill(0),
-    i = 1,
+  const length = permutation.length,
+    c = Array(length).fill(0);
+
+  let i = 1,
     k,
     p;
 

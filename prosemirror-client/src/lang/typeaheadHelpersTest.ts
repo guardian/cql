@@ -19,7 +19,7 @@ export class TestTypeaheadHelpers {
     new TypeaheadField("to-date", "To date", "The date to search to", []),
   ];
 
-  private getTags(_: string): Promise<TextSuggestionOption[]> {
+  private getTags(): Promise<TextSuggestionOption[]> {
     return Promise.resolve([
       new TextSuggestionOption(
         "Tags are magic",
@@ -29,7 +29,7 @@ export class TestTypeaheadHelpers {
     ]);
   }
 
-  private getSections(_: string): Promise<TextSuggestionOption[]> {
+  private getSections(): Promise<TextSuggestionOption[]> {
     return Promise.resolve([
       new TextSuggestionOption(
         "Also sections",

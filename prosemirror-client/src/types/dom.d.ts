@@ -1,4 +1,4 @@
-import { QueryChangeEventDetail, QueryChangeEvent } from "../cqlInput/CqlInput";
+import { QueryChangeEventDetail } from "../cqlInput/CqlInput";
 
 export type QueryChangeEventDetail = {
   cqlQuery: string;
