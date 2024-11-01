@@ -78,7 +78,7 @@ const createCqlEditor = async (initialQuery: string = "") => {
     ],
   });
 
-  editor.selectText('end')
+  editor.selectText("end");
 
   container.appendChild(editor.view.dom);
 
@@ -222,6 +222,15 @@ describe("editor", () => {
 
         await waitFor("example +tag:tags-are-magic ");
       });
+
+      it("inserts a chip before a string", async () => {
+        const { editor, waitFor } =
+          await createCqlEditor("a");
+
+        await editor.selectText("start").insertText("+");
+
+        await waitFor("+ a");
+      });
     });
   });
 
@@ -259,7 +268,7 @@ describe("editor", () => {
     it("puts the chip in a pending state before deletion - keyboard", async () => {
       const { editor, waitFor } = await createCqlEditor("+tag:a");
 
-      await editor.press("Backspace")
+      await editor.press("Backspace");
 
       await waitFor(" +tag:a ");
     });
@@ -267,7 +276,7 @@ describe("editor", () => {
     it("puts the chip in a pending state before deletion - mouse", async () => {
       const { editor, waitFor } = await createCqlEditor("+tag:a");
 
-      const deleteBtn = await findByText(editor.view.dom, "×")
+      const deleteBtn = await findByText(editor.view.dom, "×");
       await fireEvent.click(deleteBtn);
 
       await waitFor(" +tag:a ");
@@ -292,11 +301,11 @@ describe("editor", () => {
     it("removes the chips via click", async () => {
       const { editor, waitFor } = await createCqlEditor("+tag:a");
 
-      const deleteBtn = await findByText(editor.view.dom, "×")
+      const deleteBtn = await findByText(editor.view.dom, "×");
       await fireEvent.click(deleteBtn);
       await fireEvent.click(deleteBtn);
 
       await waitFor("");
     });
-  })
+  });
 });

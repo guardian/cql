@@ -221,7 +221,16 @@ export const createCqlPlugin = ({
         ]);
       },
       handleKeyDown(view, event) {
-        switch (event.code) {
+        switch (event.key) {
+          case "+":
+            const { doc, selection } = view.state;
+            const maybeTrailingWhitespace =
+              selection.from === selection.to &&
+              doc.textBetween(selection.from, selection.to + 1) !== " "
+                ? " "
+                : "";
+            view.dispatch(view.state.tr.insertText(`+${maybeTrailingWhitespace}`));
+            return true;
           // What should the behaviour of tab be?
           case "Tab":
             if (event.shiftKey) {
