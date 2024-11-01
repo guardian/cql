@@ -189,20 +189,20 @@ export const getDebugMappingHTML = (
 
 export const getDebugASTHTML = (query: QueryList) => {
   return `<div class="tree--container">
-    <ul class="tree">
-        <li>
-          ${getNodeHTML(query)}
-          ${getQueryListHTML(query)}
-        <li>
-      </ul>
+    ${getQueryListHTML(query)}
   </div>`;
 };
 
 const getQueryListHTML = (list: QueryList) => {
-  return `<ul>
-    ${list.content
-      .map((binary) => `<li>${getBinaryHTML(binary)}</li>`)
-      .join("")}
+  return `<ul class="tree">
+    <li>
+      ${getNodeHTML(list)}
+      <ul>
+      ${list.content
+        .map((binary) => `<li>${getBinaryHTML(binary)}</li>`)
+        .join("")}
+      </ul>
+    </li>
   </ul>`;
 };
 

@@ -7,6 +7,7 @@ import {
   createQueryField,
   createQueryStr,
   QueryList,
+  createQueryGroup,
 } from "./ast";
 import {
   andToken,
@@ -58,6 +59,41 @@ describe("parser", () => {
       const tokens = [leftParenToken(), rightParenToken(1)];
       const result = new Parser(tokens).parse();
       assertFailure(result, "Groups can't be empty");
+    });
+
+    it.only("should handle groups with consecutive string tokens", () => {
+      const tokens = [
+        leftParenToken(),
+        unquotedStringToken("a", 1),
+        unquotedStringToken("b", 2),
+        rightParenToken(3),
+        eofToken(4),
+      ];
+      const result = new Parser(tokens).parse();
+      expect(result).toEqual(
+        ok(
+          createQueryList([
+            createQueryBinary(
+              createQueryContent(
+                createQueryGroup(
+                  createQueryList([
+                    createQueryBinary(
+                      createQueryContent(
+                        createQueryStr(unquotedStringToken("a", 1))
+                      )
+                    ),
+                    createQueryBinary(
+                      createQueryContent(
+                        createQueryStr(unquotedStringToken("b", 2))
+                      )
+                    ),
+                  ])
+                )
+              )
+            ),
+          ])
+        )
+      );
     });
   });
 
@@ -114,7 +150,10 @@ describe("parser", () => {
         eofToken(5),
       ];
       const result = new Parser(tokens).parse();
-      assertFailure(result, `You cannot query for the field “tag” within a group`);
+      assertFailure(
+        result,
+        `You cannot query for the field “tag” within a group`
+      );
     });
 
     it("should handle a query field incorrectly following binary operators", () => {

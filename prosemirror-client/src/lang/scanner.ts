@@ -16,33 +16,10 @@ export class Scanner {
       this.scanToken();
     }
 
-    return this.joinStringTokens(this.tokens).concat(
+    return this.tokens.concat(
       new Token(TokenType.EOF, "", undefined, this.current, this.current)
     );
   };
-
-  private joinStringTokens = (tokens: Array<Token>) =>
-    tokens.reduce((acc, token) => {
-      const prevToken = acc[acc.length - 1];
-      if (
-        prevToken?.tokenType === TokenType.STRING &&
-        token.tokenType === TokenType.STRING
-      ) {
-        return acc
-          .slice(0, acc.length - 1)
-          .concat(
-            new Token(
-              TokenType.STRING,
-              prevToken.lexeme + " " + token.lexeme,
-              (prevToken.literal ?? "") + " " + (token.literal ?? ""),
-              prevToken.start,
-              token.end
-            )
-          );
-      } else {
-        return acc.concat(token);
-      }
-    }, [] as Token[]);
 
   private scanToken = () => {
     switch (this.advance()) {
