@@ -1,12 +1,12 @@
 import { describe, it, beforeEach } from "bun:test";
-import { errorMsgTestId, errorTestId, typeaheadTestId } from "./CqlInput";
+import { errorMsgTestId, errorTestId, typeaheadTestId } from "../CqlInput";
 import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
-import { CqlClientService } from "../services/CqlService";
-import { TestTypeaheadHelpers } from "../lang/typeaheadHelpersTest";
+import { CqlClientService } from "../../services/CqlService";
+import { TestTypeaheadHelpers } from "../../lang/typeaheadHelpersTest";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
-import { createCqlPlugin } from "./editor/plugin";
+import { createCqlPlugin } from "./plugin";
 import { redo, undo } from "prosemirror-history";
-import { bottomOfLine, topOfLine } from "./editor/commands";
+import { bottomOfLine, topOfLine } from "./commands";
 import { keymap } from "prosemirror-keymap";
 import {
   createProseMirrorTokenToDocumentMap,
@@ -14,7 +14,7 @@ import {
   mapResult,
   tokensToDoc,
   toProseMirrorTokens,
-} from "./editor/utils";
+} from "./utils";
 import { TextSelection } from "prosemirror-state";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
@@ -129,7 +129,7 @@ const selectPopoverOption = async (
   await editor.press("Enter");
 };
 
-describe("CqlInput", () => {
+describe("editor", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
   });
