@@ -192,14 +192,18 @@ export const getDebugASTHTML = (query: QueryList) => {
     <ul class="tree">
         <li>
           ${getNodeHTML(query)}
-          <ul>
-            ${query.content
-              .map((binary) => `<li>${getBinaryHTML(binary)}</li>`)
-              .join("")}
-          </ul>
+          ${getQueryListHTML(query)}
         <li>
       </ul>
   </div>`;
+};
+
+const getQueryListHTML = (list: QueryList) => {
+  return `<ul>
+    ${list.content
+      .map((binary) => `<li>${getBinaryHTML(binary)}</li>`)
+      .join("")}
+  </ul>`;
 };
 
 const getContentHTML = (query: QueryContent) => {
@@ -266,7 +270,7 @@ const getGroupHTML = (group: QueryGroup) => {
     <ul>
       <li>
         ${getNodeHTML(group)}
-        ${getBinaryHTML(group.content)}
+        ${getQueryListHTML(group.content)}
       </li>
     </ul>
   `;

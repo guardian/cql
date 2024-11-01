@@ -9,36 +9,27 @@ class CapiQueryStringError extends Error {
 }
 
 export const queryStrFromQueryList = (
-  program: QueryList
+  list: QueryList
 ): Result<Error, string> => {
-  const searchStrs = program.content.flatMap((expr) => {
-    switch (expr.type) {
-      case "QueryBinary":
-        return [strFromBinary(expr)];
-      default:
-        return [];
-    }
-  });
+  const searchStrs = strFromList(list);
 
   try {
-    const otherQueries = getQueryFieldsFromQueryList(program).flatMap(
-      (expr) => {
-        switch (expr.type) {
-          case "QueryField": {
-            if (expr.value) {
-              return [`${expr.key.literal ?? ""}=${expr.value.literal ?? ""}`];
-            } else {
-              throw new CapiQueryStringError(
-                `The field '+$${expr.key}' needs a value after it (e.g. +${expr.key}:tone/news)`
-              );
-            }
-          }
-          default: {
-            return [];
+    const otherQueries = getQueryFieldsFromQueryList(list).flatMap((expr) => {
+      switch (expr.type) {
+        case "QueryField": {
+          if (expr.value) {
+            return [`${expr.key.literal ?? ""}=${expr.value.literal ?? ""}`];
+          } else {
+            throw new CapiQueryStringError(
+              `The field '+$${expr.key}' needs a value after it (e.g. +${expr.key}:tone/news)`
+            );
           }
         }
+        default: {
+          return [];
+        }
       }
-    );
+    });
 
     const maybeSearchStr = searchStrs.join(" ").trim();
 
@@ -52,13 +43,24 @@ export const queryStrFromQueryList = (
   }
 };
 
+const strFromList = (list: QueryList): string[] => {
+  return list.content.flatMap((expr) => {
+    switch (expr.type) {
+      case "QueryBinary":
+        return [strFromBinary(expr)];
+      default:
+        return [];
+    }
+  });
+};
+
 const strFromContent = (queryContent: QueryContent): string | undefined => {
   const { content } = queryContent;
   switch (content.type) {
     case "QueryStr":
       return content.searchExpr;
     case "QueryGroup":
-      return `(${strFromBinary(content.content)})`;
+      return `(${strFromList(content.content)})`;
     case "QueryBinary":
       return strFromBinary(content);
     default:

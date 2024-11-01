@@ -37,7 +37,7 @@ export const createQueryContent = (
   content,
 });
 
-export type QueryGroup = { type: "QueryGroup"; content: QueryBinary };
+export type QueryGroup = { type: "QueryGroup"; content: QueryList };
 
 export const createQueryGroup = (
   content: QueryGroup["content"]

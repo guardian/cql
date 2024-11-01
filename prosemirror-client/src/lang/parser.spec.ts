@@ -51,13 +51,13 @@ describe("parser", () => {
     it("should handle unmatched parenthesis", () => {
       const tokens = [leftParenToken(), eofToken(2)];
       const result = new Parser(tokens).parse();
-      assertFailure(result, "Groups must contain some content");
+      assertFailure(result, "Groups can't be empty");
     });
 
     it("should handle empty groups", () => {
       const tokens = [leftParenToken(), rightParenToken(1)];
       const result = new Parser(tokens).parse();
-      assertFailure(result, "Groups must contain some content.");
+      assertFailure(result, "Groups can't be empty");
     });
   });
 
@@ -114,7 +114,7 @@ describe("parser", () => {
         eofToken(5),
       ];
       const result = new Parser(tokens).parse();
-      assertFailure(result, "You cannot query for tags within a group");
+      assertFailure(result, `You cannot query for the field “tag” within a group`);
     });
 
     it("should handle a query field incorrectly following binary operators", () => {
@@ -126,7 +126,7 @@ describe("parser", () => {
         eofToken(10),
       ];
       const result = new Parser(tokens).parse();
-      assertFailure(result, "You cannot query for tags after 'AND'");
+      assertFailure(result, `You cannot query for the field “tag” after 'AND'`);
     });
 
     it("should handle an empty query field key", () => {

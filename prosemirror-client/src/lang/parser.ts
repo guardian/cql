@@ -29,7 +29,7 @@ export class Parser {
 
   public parse(): Result<ParseError, QueryList> {
     try {
-      return this.queryList();
+      return ok(this.queryList());
     } catch (e) {
       if (e instanceof ParseError) {
         return err(e);
@@ -38,20 +38,26 @@ export class Parser {
     }
   }
 
-  private queryList() {
+  /**
+   * @param isRoot is this list nested within a group?
+   */
+  private queryList(isNested: boolean = false) {
     const queries: QueryBinary[] = [];
-    while (this.peek().tokenType !== TokenType.EOF) {
+    while (
+      this.peek().tokenType !== TokenType.EOF &&
+      this.peek().tokenType !== TokenType.RIGHT_BRACKET
+    ) {
+      if (isNested) {
+        this.guardAgainstQueryField("within a group");
+      }
       queries.push(this.queryBinary());
     }
 
-    return ok(createQueryList(queries));
+    return createQueryList(queries);
   }
 
-  private startOfQueryField = [TokenType.CHIP_KEY];
-  private startOfQueryValue = [TokenType.CHIP_VALUE];
-
   private queryBinary(): QueryBinary {
-    if (this.startOfQueryValue.some((i) => i === this.peek().tokenType))
+    if (this.peek().tokenType === TokenType.CHIP_VALUE)
       throw new ParseError(
         this.peek().start,
         "I found an unexpected ':'. Did you numberend to search for a tag, section or similar, e.g. tag:news? If you would like to add a search phrase containing a ':' character, please surround it in double quotes."
@@ -98,9 +104,7 @@ export class Parser {
           throw this.error(
             `An ${tokenType.toString()} keyword must have a search term before and after it, e.g. this ${tokenType.toString()} that.`
           );
-        } else if (
-          this.startOfQueryField.some((i) => i === this.peek().tokenType)
-        ) {
+        } else if (this.peek().tokenType === TokenType.CHIP_KEY) {
           return createQueryContent(this.queryField());
         } else {
           throw this.error(
@@ -117,23 +121,23 @@ export class Parser {
       "Groups should start with a left bracket"
     );
 
-    if (this.isAtEnd() || this.peek().tokenType == TokenType.RIGHT_BRACKET) {
+    if (this.isAtEnd() || this.peek().tokenType === TokenType.RIGHT_BRACKET) {
       throw this.error(
-        "Groups must contain some content. Put a search term between the brackets!"
+        "Groups can't be empty. Put a search term between the brackets!"
       );
     }
 
     this.guardAgainstQueryField(
-      "within a group. Try putting this query outside of the brackets!"
+      "within a group. Try putting this search term outside of the brackets!"
     );
 
-    const binary = this.queryBinary();
+    const list = this.queryList(true);
     this.consume(
       TokenType.RIGHT_BRACKET,
       "Groups must end with a right bracket."
     );
 
-    return createQueryGroup(binary);
+    return createQueryGroup(list);
   }
 
   private queryStr(): QueryStr {
@@ -145,12 +149,12 @@ export class Parser {
   private queryField(): QueryField {
     const key = this.consume(
       TokenType.CHIP_KEY,
-      `Expected a search key, e.g. +tag`
+      "Expected a search key, e.g. +tag"
     );
 
     const maybeValue = this.safeConsume(
       TokenType.CHIP_VALUE,
-      `Expected a search value, e.g. +tag:new`
+      "Expected a search value, e.g. +tag:new"
     );
 
     return either(maybeValue)(
@@ -168,7 +172,7 @@ export class Parser {
       case TokenType.CHIP_KEY: {
         const queryFieldNode = this.queryField();
         throw this.error(
-          `You cannot query for ${queryFieldNode.key.literal}s ${errorLocation}`
+          `You cannot query for the field “${queryFieldNode.key.literal}” ${errorLocation}`
         );
       }
       default:

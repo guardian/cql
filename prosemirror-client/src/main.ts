@@ -43,7 +43,7 @@ cqlInput?.addEventListener("queryChange", ((e: CustomEvent) => {
 const params = new URLSearchParams(window.location.search);
 const endpoint = params.get("endpoint");
 
-const initialEndpoint = endpoint || "http://content.guardianapis.com";
+const initialEndpoint = endpoint || "https://content.guardianapis.com";
 const typeaheadHelpers = new TypeaheadHelpersCapi(initialEndpoint, "test");
 const cqlService = new CqlClientService(typeaheadHelpers.fieldResolvers);
 const CqlInput = createCqlInput(cqlService, { debugEl, syntaxHighlighting: true });
