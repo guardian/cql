@@ -2,11 +2,11 @@ import { Node } from "prosemirror-model";
 import { Mapping } from "prosemirror-transform";
 import { Token } from "../../lang/token";
 import {
+  Query,
   QueryBinary,
   QueryContent,
   QueryField,
   QueryGroup,
-  QueryList,
   QueryStr,
 } from "../../lang/ast";
 
@@ -187,23 +187,15 @@ export const getDebugMappingHTML = (
   //  return `<div class="CqlDebug__mapping">${queryDiagram}${nodeDiagram}</div>`;
 };
 
-export const getDebugASTHTML = (query: QueryList) => {
+export const getDebugASTHTML = (query: Query) => {
   return `<div class="tree--container">
-    ${getQueryListHTML(query)}
+    <ul class="tree">
+      <li>
+        <span>${getNodeHTML(query)}</span>
+        ${query.content ? getBinaryHTML(query.content) : ""}
+      </li>
+    </ul>
   </div>`;
-};
-
-const getQueryListHTML = (list: QueryList) => {
-  return `<ul class="tree">
-    <li>
-      ${getNodeHTML(list)}
-      <ul>
-      ${list.content
-        .map((binary) => `<li>${getBinaryHTML(binary)}</li>`)
-        .join("")}
-      </ul>
-    </li>
-  </ul>`;
 };
 
 const getContentHTML = (query: QueryContent) => {
@@ -230,14 +222,21 @@ const getContentHTML = (query: QueryContent) => {
 };
 
 const getBinaryHTML = (query: QueryBinary): string => {
+  const maybeRight = query.right?.[1];
+
+  const binaryContent = maybeRight
+    ? `
+     <ul>
+        <li>${getContentHTML(query.left)}</li>
+        <li>${getBinaryHTML(maybeRight)}</li>
+      </ul>`
+    : getContentHTML(query.left);
+
   return `
-    <ul>
+    <ul class="tree">
       <li>
         <span>${getNodeHTML(query)}</span>
-        <ul>
-          <li>${getContentHTML(query.left)}</li>
-          ${query.right?.[1] ? `<li>${getBinaryHTML(query.right[1])}</li>` : ""}
-        </ul>
+        ${binaryContent}
       </li>
     </ul>
   `;
@@ -270,7 +269,7 @@ const getGroupHTML = (group: QueryGroup) => {
     <ul>
       <li>
         ${getNodeHTML(group)}
-        ${getQueryListHTML(group.content)}
+        ${getBinaryHTML(group.content)}
       </li>
     </ul>
   `;

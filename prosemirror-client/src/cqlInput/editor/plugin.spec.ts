@@ -129,7 +129,7 @@ const selectPopoverOption = async (
   await editor.press("Enter");
 };
 
-describe("editor", () => {
+describe("plugin", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
   });

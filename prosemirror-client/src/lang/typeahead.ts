@@ -1,4 +1,4 @@
-import { QueryList, QueryField } from "./ast";
+import { Query, QueryField } from "./ast";
 import { Token } from "./token";
 import {
   DateSuggestion,
@@ -7,7 +7,7 @@ import {
   TypeaheadSuggestion,
   TypeaheadType,
 } from "./types";
-import { getQueryFieldsFromQueryList } from "./util";
+import { getQueryFieldsFromQueryBinary } from "./util";
 
 export type TypeaheadResolver =
   | ((str: string, signal?: AbortSignal) => Promise<TextSuggestionOption[]>)
@@ -49,15 +49,21 @@ export class Typeahead {
     );
   }
 
-  public getSuggestions(
-    program: QueryList,
+  public async getSuggestions(
+    program: Query,
     signal?: AbortSignal
   ): Promise<TypeaheadSuggestion[]> {
-    const suggestions = getQueryFieldsFromQueryList(program).flatMap(
-      (queryField) => this.suggestQueryField(queryField, signal)
-    );
+    if (!program.content) {
+      return [];
+    }
 
-    return Promise.all(suggestions).then((suggestions) => suggestions.flat());
+    const eventuallySuggestions = getQueryFieldsFromQueryBinary(
+      program.content
+    ).flatMap((queryField) => this.suggestQueryField(queryField, signal));
+
+    const suggestions = await Promise.all(eventuallySuggestions);
+
+    return suggestions.flat();
   }
 
   private getSuggestionsForKeyToken(keyToken: Token): TypeaheadSuggestion[] {

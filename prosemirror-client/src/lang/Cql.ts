@@ -1,5 +1,5 @@
 import { either, Result } from "../utils/result";
-import { QueryList } from "./ast";
+import { Query } from "./ast";
 import { queryStrFromQueryList } from "./capiQueryString";
 import { Parser } from "./parser";
 import { Scanner } from "./scanner";
@@ -9,8 +9,8 @@ import { TypeaheadSuggestion } from "./types";
 
 export type CqlResult = {
   tokens: Token[];
-  ast?: QueryList;
-  suggestions?: TypeaheadSuggestion[];
+  ast?: Query;
+  suggestions: TypeaheadSuggestion[];
   queryResult?: string;
   error?: Error;
 };
@@ -37,6 +37,7 @@ export class Cql {
           new CqlResultEnvelope({
             tokens,
             error,
+            suggestions: [],
           })
         ),
       async (queryArr) => {

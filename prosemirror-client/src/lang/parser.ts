@@ -1,12 +1,12 @@
 import { Token } from "./token";
 import {
-  createQueryList,
+  createQuery,
   createQueryBinary,
   createQueryContent,
   createQueryField,
   createQueryGroup,
   createQueryStr,
-  QueryList,
+  Query,
   QueryBinary,
   QueryContent,
   QueryField,
@@ -17,7 +17,10 @@ import { TokenType } from "./token";
 import { either, err, ok, Result } from "../utils/result";
 
 class ParseError extends Error {
-  constructor(public position: number, public message: string) {
+  constructor(
+    public position: number,
+    public message: string
+  ) {
     super(message);
   }
 }
@@ -27,9 +30,9 @@ export class Parser {
 
   constructor(private tokens: Token[]) {}
 
-  public parse(): Result<ParseError, QueryList> {
+  public parse(): Result<ParseError, Query> {
     try {
-      return ok(this.queryList());
+      return ok(this.query());
     } catch (e) {
       if (e instanceof ParseError) {
         return err(e);
@@ -38,25 +41,14 @@ export class Parser {
     }
   }
 
-  /**
-   * @param isRoot is this list nested within a group?
-   */
-  private queryList(isNested: boolean = false) {
-    const queries: QueryBinary[] = [];
-    while (
-      this.peek().tokenType !== TokenType.EOF &&
-      this.peek().tokenType !== TokenType.RIGHT_BRACKET
-    ) {
-      if (isNested) {
-        this.guardAgainstQueryField("within a group");
-      }
-      queries.push(this.queryBinary());
-    }
+  private query(): Query {
+    const content =
+      this.peek().tokenType === TokenType.EOF ? undefined : this.queryBinary();
 
-    return createQueryList(queries);
+    return createQuery(content);
   }
 
-  private queryBinary(): QueryBinary {
+  private queryBinary(isNested: boolean = false): QueryBinary {
     if (this.peek().tokenType === TokenType.CHIP_VALUE)
       throw new ParseError(
         this.peek().start,
@@ -64,6 +56,10 @@ export class Parser {
       );
 
     const left = this.queryContent();
+
+    if (isNested) {
+      this.guardAgainstQueryField("within a group");
+    }
 
     switch (this.peek().tokenType) {
       case TokenType.AND: {
@@ -74,7 +70,7 @@ export class Parser {
             "There must be a query following 'AND', e.g. this AND that."
           );
         }
-        return createQueryBinary(left, [andToken, this.queryBinary()]);
+        return createQueryBinary(left, [andToken, this.queryBinary(isNested)]);
       }
       case TokenType.OR: {
         const orToken = this.consume(TokenType.OR);
@@ -84,10 +80,17 @@ export class Parser {
             "There must be a query following 'OR', e.g. this OR that."
           );
         }
-        return createQueryBinary(left, [orToken, this.queryBinary()]);
+        return createQueryBinary(left, [orToken, this.queryBinary(isNested)]);
+      }
+      case TokenType.RIGHT_BRACKET:
+      case TokenType.EOF: {
+        return createQueryBinary(left);
       }
       default: {
-        return createQueryBinary(left);
+        return createQueryBinary(left, [
+          new Token(TokenType.OR, "", undefined, 0, 0),
+          this.queryBinary(isNested),
+        ]);
       }
     }
   }
@@ -131,13 +134,13 @@ export class Parser {
       "within a group. Try putting this search term outside of the brackets!"
     );
 
-    const list = this.queryList(true);
+    const binary = this.queryBinary(true);
     this.consume(
       TokenType.RIGHT_BRACKET,
       "Groups must end with a right bracket."
     );
 
-    return createQueryGroup(list);
+    return createQueryGroup(binary);
   }
 
   private queryStr(): QueryStr {

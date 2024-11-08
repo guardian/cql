@@ -58,9 +58,8 @@ sausages
 Grammar:
 
 ```
-query_list                  -> query* EOF
-query                       -> query_binary | query_field | query_output_modifier
-query_binary                -> query_content ('AND' | 'OR' query_content)*
+query                       -> query_binary?
+query_binary                -> query_content (('AND' | 'OR')? query_content)*
 query_content               -> query_group | query_str | query_quoted_str
 query_group                 -> '(' query_binary* ')'
 query_quoted_str            -> '"' string '"'
@@ -68,9 +67,6 @@ query_str                   -> /\w/
 query_field                 -> '+' query_field_key ':'? query_field_value? // Permit incomplete meta queries for typeahead
 query_field_key             -> 'tag' | 'section' | ...etc
 query_field_value           -> /\w/
-query_output_modifier       -> '@' query_output_modifier_key ':'? query_output_modifier_value
-query_output_modifier_key   -> 'show-fields' ...etc
-query_output_modifier_value -> /\w/
 ```
 
 How do we disambiguate search params from strings in the tokeniser?
@@ -94,8 +90,8 @@ Typeahead will require parsing AST nodes, not just tokens, as typeahead for quer
 
 Typeahead happens on server. Rationale: typeahead must hit CAPI anyhow, so it's dependent on some server somewhere, and making it an LS feature keeps the client simpler.
 
-What do we serve for typeahead? 
-1. Provide values for every incomplete query_field node for every query. Client then keeps those values for display when selection is in right place. 
+What do we serve for typeahead?
+1. Provide values for every incomplete query_field node for every query. Client then keeps those values for display when selection is in right place.
 2. Provide typehead as combination of position and query to server. Store less data upfront, but must query every time position changes.
 
 Option 1. preferable to avoid high request volumes, keep typeahead in sync with query, and keep latency low (chance that typeahead result will be cached, when for example clicking into existing incomplete query_field)

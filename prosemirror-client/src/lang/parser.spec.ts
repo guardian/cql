@@ -1,13 +1,13 @@
 import { describe, expect, it } from "bun:test";
 import { ok, Result, ResultKind } from "../utils/result";
 import {
-  createQueryList,
   createQueryBinary,
   createQueryContent,
   createQueryField,
   createQueryStr,
-  QueryList,
   createQueryGroup,
+  createQuery,
+  Query,
 } from "./ast";
 import {
   andToken,
@@ -22,16 +22,16 @@ import {
 } from "./testUtils";
 import { Parser } from "./parser";
 import { getPermutations } from "./util";
-import { Token } from "./token";
+import { Token, TokenType } from "./token";
 
 describe("parser", () => {
   const assertFailure = (
-    queryList: Result<Error, QueryList>,
+    queryBinary: Result<Error, Query>,
     strContains: string
   ) => {
-    switch (queryList.kind) {
+    switch (queryBinary.kind) {
       case ResultKind.Err: {
-        expect(queryList.err.message).toContain(strContains);
+        expect(queryBinary.err.message).toContain(strContains);
         return;
       }
       default: {
@@ -44,7 +44,7 @@ describe("parser", () => {
     it("should handle an empty token list", () => {
       const tokens = [eofToken(0)];
       const result = new Parser(tokens).parse();
-      expect(result).toEqual(ok(createQueryList([])));
+      expect(result).toEqual(ok(createQuery()));
     });
   });
 
@@ -72,26 +72,27 @@ describe("parser", () => {
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
         ok(
-          createQueryList([
+          createQuery(
             createQueryBinary(
               createQueryContent(
                 createQueryGroup(
-                  createQueryList([
-                    createQueryBinary(
-                      createQueryContent(
-                        createQueryStr(unquotedStringToken("a", 1))
-                      )
+                  createQueryBinary(
+                    createQueryContent(
+                      createQueryStr(unquotedStringToken("a", 1))
                     ),
-                    createQueryBinary(
-                      createQueryContent(
-                        createQueryStr(unquotedStringToken("b", 2))
-                      )
-                    ),
-                  ])
+                    [
+                      new Token(TokenType.OR, "OR", "OR", 0, 0),
+                      createQueryBinary(
+                        createQueryContent(
+                          createQueryStr(unquotedStringToken("b", 2))
+                        )
+                      ),
+                    ]
+                  )
                 )
               )
-            ),
-          ])
+            )
+          )
         )
       );
     });
@@ -136,9 +137,9 @@ describe("parser", () => {
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
         ok(
-          createQueryList([
-            createQueryBinary(createQueryContent(queryField("ta", ""))),
-          ])
+          createQuery(
+            createQueryBinary(createQueryContent(queryField("ta", "")))
+          )
         )
       );
     });
@@ -177,18 +178,20 @@ describe("parser", () => {
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
         ok(
-          createQueryList([
+          createQuery(
             createQueryBinary(
               createQueryContent(createQueryStr(quotedStringToken("a"))),
-              undefined
-            ),
-            createQueryBinary(
-              createQueryContent(
-                createQueryField(queryFieldKeyToken("", 2), undefined)
-              ),
-              undefined
-            ),
-          ])
+              [
+                new Token(TokenType.OR, "OR", "OR", 0, 0),
+                createQueryBinary(
+                  createQueryContent(
+                    createQueryField(queryFieldKeyToken("", 2), undefined)
+                  ),
+                  undefined
+                ),
+              ]
+            )
+          )
         )
       );
     });

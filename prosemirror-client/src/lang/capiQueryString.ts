@@ -1,6 +1,6 @@
 import { err, ok, Result } from "../utils/result";
-import { QueryBinary, QueryContent, QueryList } from "./ast";
-import { getQueryFieldsFromQueryList } from "./util";
+import { Query, QueryBinary, QueryContent } from "./ast";
+import { getQueryFieldsFromQueryBinary } from "./util";
 
 class CapiQueryStringError extends Error {
   public constructor(message: string) {
@@ -8,50 +8,42 @@ class CapiQueryStringError extends Error {
   }
 }
 
-export const queryStrFromQueryList = (
-  list: QueryList
-): Result<Error, string> => {
-  const searchStrs = strFromList(list);
+export const queryStrFromQueryList = (query: Query): Result<Error, string> => {
+  const { content } = query;
+  if (!content) {
+    return ok("");
+  }
+
+  const searchStrs = strFromBinary(content);
 
   try {
-    const otherQueries = getQueryFieldsFromQueryList(list).flatMap((expr) => {
-      switch (expr.type) {
-        case "QueryField": {
-          if (expr.value) {
-            return [`${expr.key.literal ?? ""}=${expr.value.literal ?? ""}`];
-          } else {
-            throw new CapiQueryStringError(
-              `The field '+$${expr.key}' needs a value after it (e.g. +${expr.key}:tone/news)`
-            );
+    const otherQueries = getQueryFieldsFromQueryBinary(content).flatMap(
+      (expr) => {
+        switch (expr.type) {
+          case "QueryField": {
+            if (expr.value) {
+              return [`${expr.key.literal ?? ""}=${expr.value.literal ?? ""}`];
+            } else {
+              throw new CapiQueryStringError(
+                `The field '+$${expr.key}' needs a value after it (e.g. +${expr.key}:tone/news)`
+              );
+            }
+          }
+          default: {
+            return [];
           }
         }
-        default: {
-          return [];
-        }
       }
-    });
+    );
 
-    const maybeSearchStr = searchStrs.join(" ").trim();
-
-    const searchStr = maybeSearchStr.length
-      ? `q=${encodeURI(maybeSearchStr)}`
+    const queryStr = searchStrs.length
+      ? `q=${encodeURI(searchStrs.trim())}`
       : "";
 
-    return ok([searchStr, otherQueries].filter(Boolean).flat().join("&"));
+    return ok([queryStr, otherQueries].filter(Boolean).flat().join("&"));
   } catch (e) {
     return err(e as Error);
   }
-};
-
-const strFromList = (list: QueryList): string[] => {
-  return list.content.flatMap((expr) => {
-    switch (expr.type) {
-      case "QueryBinary":
-        return [strFromBinary(expr)];
-      default:
-        return [];
-    }
-  });
 };
 
 const strFromContent = (queryContent: QueryContent): string | undefined => {
@@ -60,7 +52,7 @@ const strFromContent = (queryContent: QueryContent): string | undefined => {
     case "QueryStr":
       return content.searchExpr;
     case "QueryGroup":
-      return `(${strFromList(content.content)})`;
+      return `(${strFromBinary(content.content).trim()})`;
     case "QueryBinary":
       return strFromBinary(content);
     default:
@@ -71,10 +63,10 @@ const strFromContent = (queryContent: QueryContent): string | undefined => {
 
 const strFromBinary = (queryBinary: QueryBinary): string => {
   const leftStr = strFromContent(queryBinary.left);
+
   const rightStr = queryBinary.right
-    ? `${queryBinary.right[0].tokenType.toString()} ${strFromBinary(
-        queryBinary.right[1]
-      )}`
+    ? `${queryBinary.right[0].lexeme} ${strFromBinary(queryBinary.right[1])}`
     : "";
-  return (leftStr ?? " ") + (rightStr ? ` ${rightStr}` : "");
+
+  return (leftStr ?? "") + (rightStr ? ` ${rightStr.trim()} ` : "");
 };

@@ -1,12 +1,12 @@
 import { Token } from "./token";
 
-export type QueryList = {
-  type: "QueryList";
-  content: QueryBinary[];
+export type Query = {
+  type: "Query";
+  content?: QueryBinary;
 };
 
-export const createQueryList = (content: QueryList["content"]): QueryList => ({
-  type: "QueryList",
+export const createQuery = (content?: QueryBinary): Query => ({
+  type: "Query",
   content,
 });
 
@@ -37,7 +37,7 @@ export const createQueryContent = (
   content,
 });
 
-export type QueryGroup = { type: "QueryGroup"; content: QueryList };
+export type QueryGroup = { type: "QueryGroup"; content: QueryBinary };
 
 export const createQueryGroup = (
   content: QueryGroup["content"]

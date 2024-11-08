@@ -3,7 +3,7 @@ import { TestTypeaheadHelpers } from "./typeaheadHelpersTest";
 import { Typeahead } from "./typeahead";
 import { Cql } from "./Cql";
 
-describe("a program", () => {
+describe("a query", () => {
   const typeaheadHelpers = new TestTypeaheadHelpers();
   const typeahead = new Typeahead(typeaheadHelpers.fieldResolvers);
 
