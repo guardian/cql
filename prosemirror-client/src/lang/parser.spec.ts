@@ -81,7 +81,7 @@ describe("parser", () => {
                       createQueryStr(unquotedStringToken("a", 1))
                     ),
                     [
-                      new Token(TokenType.OR, "OR", "OR", 0, 0),
+                      new Token(TokenType.OR, "", undefined, 0, 0),
                       createQueryBinary(
                         createQueryContent(
                           createQueryStr(unquotedStringToken("b", 2))
@@ -182,7 +182,7 @@ describe("parser", () => {
             createQueryBinary(
               createQueryContent(createQueryStr(quotedStringToken("a"))),
               [
-                new Token(TokenType.OR, "OR", "OR", 0, 0),
+                new Token(TokenType.OR, "", undefined, 0, 0),
                 createQueryBinary(
                   createQueryContent(
                     createQueryField(queryFieldKeyToken("", 2), undefined)
