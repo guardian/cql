@@ -224,7 +224,6 @@ export const createCqlPlugin = ({
         switch (event.key) {
           case "+": {
             console.log("PLUS");
-            event.preventDefault();
             const { doc, selection } = view.state;
             const maybeTrailingWhitespace =
               selection.from === selection.to &&
@@ -238,6 +237,8 @@ export const createCqlPlugin = ({
             if (!maybeTrailingWhitespace) {
               return false;
             }
+
+            event.preventDefault();
 
             const textToInsert = `+${maybeTrailingWhitespace}`;
             const tr = view.state.tr.insertText(textToInsert);
