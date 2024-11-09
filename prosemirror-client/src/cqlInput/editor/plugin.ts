@@ -304,14 +304,14 @@ export const createCqlPlugin = ({
       handleKeyDown(view, event) {
         switch (event.key) {
           case "+": {
-            console.log("PLUS");
             const { doc, selection } = view.state;
+            const suffix = doc.textBetween(
+              selection.from,
+              Math.min(selection.to + 1, doc.nodeSize - 2)
+            );
             const maybeTrailingWhitespace =
               selection.from === selection.to &&
-              !["", " "].some(
-                (str) =>
-                  doc.textBetween(selection.from, selection.to + 1) === str
-              )
+              !["", " "].some((str) => suffix === str)
                 ? " "
                 : "";
 

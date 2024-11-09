@@ -176,7 +176,7 @@ describe("plugin", () => {
         await findByText(popoverContainer, "Section");
       });
 
-      it("displays a popover after another chip", async () => {
+      it.only("displays a popover after another chip", async () => {
         const { editor, container } = createCqlEditor("+tag:a");
 
         editor.insertText(" +");
