@@ -9,7 +9,7 @@ import { TypeaheadSuggestion } from "./types";
 
 export interface CqlResult {
   tokens: Token[];
-  ast?: Query;
+  query?: Query;
   queryResult?: string;
   error?: Error;
 }
@@ -17,7 +17,7 @@ export interface CqlResult {
 export class CqlResultEnvelope implements CqlResult {
   constructor(
     public tokens: Token[],
-    public ast?: Query,
+    public query?: Query,
     public queryResult?: string,
     public error?: Error
   ) {}
@@ -42,6 +42,7 @@ export class Cql {
           (error) => new CqlResultEnvelope(tokens, query, undefined, error),
           (queryResult) => new CqlResultEnvelope(tokens, query, queryResult)
         );
+
       }
     );
   };

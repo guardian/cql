@@ -17,6 +17,7 @@ import {
   errorToDecoration,
   mapResult,
   queryHasChanged,
+  toMappedSuggestions,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "../TypeaheadPopover";
@@ -24,7 +25,6 @@ import { chip, DELETE_CHIP_INTENT, doc, schema } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { QueryChangeEventDetail } from "../../types/dom";
 import { ErrorPopover } from "../ErrorPopover";
-import { MappedTypeaheadSuggestion } from "../../lang/types";
 import { CqlConfig } from "../CqlInput";
 import {
   getDebugASTHTML,
@@ -32,13 +32,16 @@ import {
   getDebugTokenHTML,
   getOriginalQueryHTML,
 } from "./debug";
+import { Query } from "../../lang/ast";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
 type PluginState = {
   tokens: ProseMirrorToken[];
-  suggestions: MappedTypeaheadSuggestion[];
+  queryStr: string;
+  query: Query | undefined;
   error: CqlError | undefined;
+  mapping: Mapping;
 };
 
 const ACTION_NEW_STATE = "NEW_STATE";
@@ -93,20 +96,23 @@ export const createCqlPlugin = ({
   return new Plugin<PluginState>({
     key: cqlPluginKey,
     state: {
-      init() {
+      init(_, state) {
+        const queryStr = docToQueryStr(state.doc);
         return {
           tokens: [],
           suggestions: [],
           mapping: new Mapping(),
+          queryStr,
+          query: cqlService.parseCqlQueryStr(queryStr).query,
           error: undefined,
         };
       },
-      apply(tr, { tokens, suggestions, error }) {
+      apply(tr, state, oldState) {
         const maybeError: string | undefined = tr.getMeta(ACTION_SERVER_ERROR);
         if (maybeError) {
           return {
+            ...state,
             tokens: [],
-            suggestions,
             error: { message: maybeError },
           };
         }
@@ -114,17 +120,17 @@ export const createCqlPlugin = ({
         const maybeNewState: PluginState | undefined =
           tr.getMeta(ACTION_NEW_STATE);
 
-        return {
-          tokens: maybeNewState ? maybeNewState.tokens : tokens,
-          suggestions: maybeNewState ? maybeNewState.suggestions : suggestions,
-          error: maybeNewState
-            ? maybeNewState.error
-            : // Remove the error state if the document changes – the document may be
-              // valid, and the server will report if it is not
-              !tr.docChanged
-              ? error
-              : undefined,
-        };
+        if (!maybeNewState) {
+          if (cqlPluginKey.getState(oldState)?.error && tr.docChanged) {
+            return {
+              ...state,
+              error: undefined,
+            };
+          }
+          return state;
+        }
+
+        return maybeNewState;
       },
     },
     appendTransaction(_, oldState, newState) {
@@ -141,7 +147,13 @@ export const createCqlPlugin = ({
 
         tr = newState.tr;
         const result = cqlService.parseCqlQueryStr(currentQuery);
-        const { tokens, ast, error, queryResult, mapping } = mapResult(result);
+        const {
+          tokens,
+          query: ast,
+          error,
+          queryResult,
+          mapping,
+        } = mapResult(result);
 
         const newDoc = tokensToDoc(tokens);
 
@@ -167,9 +179,9 @@ export const createCqlPlugin = ({
             <p>Tokenises to:</p>
             ${getDebugTokenHTML(result.tokens)}
             ${
-              result.ast
+              result.query
                 ? `<p>AST: </p>
-            ${getDebugASTHTML(result.ast)}`
+            ${getDebugASTHTML(result.query)}`
                 : ""
             }
             <p>Maps to nodes: </p>
@@ -190,9 +202,9 @@ export const createCqlPlugin = ({
           );
         }
 
-        tr.setMeta(ACTION_NEW_STATE, { tokens, error });
+        tr.setMeta(ACTION_NEW_STATE, { tokens, error, query: ast, mapping });
 
-        // @todo: this does not belong here!
+        // @todo: this does not really belong here! Possibly in view? (Side effect)
         onChange({
           cqlQuery: docToQueryStr(newDoc),
           query: queryResult ?? "",
@@ -405,13 +417,16 @@ export const createCqlPlugin = ({
       );
 
       return {
-        update(view) {
-          const { suggestions = [], error } = cqlPluginKey.getState(
-            view.state
-          )!;
+        async update(view) {
+          const { error, query, mapping } = cqlPluginKey.getState(view.state)!;
 
-          typeaheadPopover?.updateItemsFromSuggestions(suggestions);
           errorPopover?.updateErrorMessage(error);
+
+          if (query) {
+            const suggestions = await cqlService.fetchSuggestions(query);
+            const mappedSuggestions = toMappedSuggestions(suggestions, mapping);
+            typeaheadPopover?.updateItemsFromSuggestions(mappedSuggestions);
+          }
         },
       };
     },
