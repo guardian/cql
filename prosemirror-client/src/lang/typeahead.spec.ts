@@ -10,7 +10,7 @@ describe("typeahead", () => {
   const cql = new Cql(typeahead);
 
   const getSuggestions = async (query: string) =>
-    (await cql.run(query)).suggestions;
+    (await cql.parse(query)).suggestions;
 
   it("should give all options for empty queryFields", async () => {
     expect(await getSuggestions("")).toEqual([]);

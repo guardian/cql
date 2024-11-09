@@ -15,11 +15,11 @@ import {
   ProseMirrorToken,
   applyDeleteIntent,
   errorToDecoration,
-  getErrorMessage,
   mapResult,
+  queryHasChanged,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
-import { TypeaheadPopover  } from "../TypeaheadPopover";
+import { TypeaheadPopover } from "../TypeaheadPopover";
 import { chip, DELETE_CHIP_INTENT, doc, schema } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { QueryChangeEventDetail } from "../../types/dom";
@@ -120,15 +120,84 @@ export const createCqlPlugin = ({
           error: maybeNewState
             ? maybeNewState.error
             : // Remove the error state if the document changes – the document may be
-            // valid, and the server will report if it is not
-            !tr.docChanged
-            ? error
-            : undefined,
+              // valid, and the server will report if it is not
+              !tr.docChanged
+              ? error
+              : undefined,
         };
       },
     },
     appendTransaction(_, oldState, newState) {
       let tr: Transaction | undefined;
+
+      const maybeQueries = queryHasChanged(oldState.doc, newState.doc);
+
+      if (maybeQueries) {
+        const { prevQuery, currentQuery } = maybeQueries;
+        const shouldWrapSelectionInKey = isBeginningKeyValPair(
+          prevQuery,
+          currentQuery
+        );
+
+        tr = newState.tr;
+        const result = cqlService.parseCqlQueryStr(currentQuery);
+        const { tokens, ast, error, queryResult, mapping } = mapResult(result);
+
+        const newDoc = tokensToDoc(tokens);
+
+        if (debugASTContainer) {
+          debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
+            ast,
+            undefined,
+            "  "
+          )}</div>`;
+        }
+        if (debugTokenContainer) {
+          debugTokenContainer.innerHTML = `<h2>Tokens</h2><div>${JSON.stringify(
+            tokens,
+            undefined,
+            "  "
+          )}</div>`;
+        }
+
+        if (debugMappingContainer) {
+          debugMappingContainer.innerHTML = `
+            <p>Original query: </p>
+            ${getOriginalQueryHTML(currentQuery)}
+            <p>Tokenises to:</p>
+            ${getDebugTokenHTML(result.tokens)}
+            ${
+              result.ast
+                ? `<p>AST: </p>
+            ${getDebugASTHTML(result.ast)}`
+                : ""
+            }
+            <p>Maps to nodes: </p>
+            ${getDebugMappingHTML(currentQuery, mapping, newDoc)}
+          `;
+        }
+
+        const userSelection = newState.selection;
+        const docSelection = new AllSelection(newState.doc);
+
+        if (!newDoc.eq(newState.doc)) {
+          tr.replaceWith(
+            docSelection.from,
+            docSelection.to,
+            newDoc
+          ).setSelection(
+            getNewSelection(userSelection, shouldWrapSelectionInKey, tr.doc)
+          );
+        }
+
+        tr.setMeta(ACTION_NEW_STATE, { tokens, error });
+
+        // @todo: this does not belong here!
+        onChange({
+          cqlQuery: docToQueryStr(newDoc),
+          query: queryResult ?? "",
+        });
+      }
 
       // If the selection has changed, reset any chips that are pending delete
       if (!oldState.selection.eq(newState.selection)) {
@@ -335,109 +404,14 @@ export const createCqlPlugin = ({
         jsonDebugContainer
       );
 
-      const fetchQueryAndUpdateDoc = async (
-        query: string,
-        shouldWrapSelectionInKey: boolean = false
-      ) => {
-        try {
-          cqlService.cancel();
-
-          const result = await cqlService.fetchResult(query);
-          const { tokens, suggestions, ast, error, queryResult, mapping } =
-            mapResult(result);
-
-          const newDoc = tokensToDoc(tokens);
-
-          if (debugASTContainer) {
-            debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
-              ast,
-              undefined,
-              "  "
-            )}</div>`;
-          }
-          if (debugTokenContainer) {
-            debugTokenContainer.innerHTML = `<h2>Tokens</h2><div>${JSON.stringify(
-              tokens,
-              undefined,
-              "  "
-            )}</div>`;
-          }
-
-          if (debugMappingContainer) {
-            debugMappingContainer.innerHTML = `
-              <p>Original query: </p>
-              ${getOriginalQueryHTML(query)}
-              <p>Tokenises to:</p>
-              ${getDebugTokenHTML(result.tokens)}
-              ${
-                result.ast
-                  ? `<p>AST: </p>
-              ${getDebugASTHTML(result.ast)}`
-                  : ""
-              }
-              <p>Maps to nodes: </p>
-              ${getDebugMappingHTML(query, mapping, newDoc)}
-            `;
-          }
-
-          const userSelection = view.state.selection;
-          const docSelection = new AllSelection(view.state.doc);
-          const tr = view.state.tr;
-
-          if (!newDoc.eq(view.state.doc)) {
-            tr.replaceWith(
-              docSelection.from,
-              docSelection.to,
-              newDoc
-            ).setSelection(
-              getNewSelection(userSelection, shouldWrapSelectionInKey, tr.doc)
-            );
-          }
-
-          tr.setMeta(ACTION_NEW_STATE, { tokens, suggestions, error });
-
-          onChange({
-            cqlQuery: docToQueryStr(newDoc),
-            query: queryResult ?? "",
-          });
-
-          view.dispatch(tr);
-        } catch (e) {
-          // Ignore aborts
-          if (e instanceof DOMException && e?.name === "AbortError") {
-            return;
-          }
-
-          const tr = view.state.tr;
-          tr.setMeta(ACTION_SERVER_ERROR, `Error: ${getErrorMessage(e)}`);
-          view.dispatch(tr);
-        }
-      };
-
-      fetchQueryAndUpdateDoc(docToQueryStr(view.state.doc));
-
       return {
-        update(view, prevState) {
-          const prevQuery = docToQueryStr(prevState.doc);
+        update(view) {
           const { suggestions = [], error } = cqlPluginKey.getState(
             view.state
           )!;
 
-          const currentQuery = docToQueryStr(view.state.doc);
-
           typeaheadPopover?.updateItemsFromSuggestions(suggestions);
           errorPopover?.updateErrorMessage(error);
-
-          if (prevQuery === currentQuery) {
-            return;
-          }
-
-          const shouldWrapSelectionInKey = isBeginningKeyValPair(
-            prevQuery,
-            currentQuery
-          );
-
-          fetchQueryAndUpdateDoc(currentQuery, shouldWrapSelectionInKey);
         },
       };
     },

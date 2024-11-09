@@ -17,7 +17,7 @@ describe("utils", () => {
   const cql = new Cql(new Typeahead(new TestTypeaheadHelpers().fieldResolvers));
 
   const queryToProseMirrorTokens = async (query: string) => {
-    const result = await cql.run(query);
+    const result = await cql.parse(query);
     const { tokens } = mapResult(result);
     return tokens;
   };

@@ -390,12 +390,10 @@ export const mapResult = (result: CqlResult) => {
   const tokens = toProseMirrorTokens(result.tokens);
   const mapping = createProseMirrorTokenToDocumentMap(tokens);
   const error = result.error && toMappedError(result.error, mapping);
-  const suggestions = toMappedSuggestions(result.suggestions ?? [], mapping);
 
   return {
     ...result,
     tokens,
-    suggestions,
     error,
     mapping,
   };
@@ -517,3 +515,17 @@ export const errorToDecoration = (position: number): Decoration => {
 
 export const getErrorMessage = (e: unknown) =>
   e instanceof Error ? e.message : String(e);
+
+export const queryHasChanged = (
+  oldDoc: Node,
+  newDoc: Node
+): { prevQuery: string; currentQuery: string } | undefined => {
+  if (oldDoc === newDoc) {
+    return;
+  }
+
+  const prevQuery = docToQueryStr(oldDoc);
+  const currentQuery = docToQueryStr(newDoc);
+
+  return prevQuery !== currentQuery ? { prevQuery, currentQuery } : undefined;
+};

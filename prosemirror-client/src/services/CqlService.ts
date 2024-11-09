@@ -1,5 +1,7 @@
+import { Query } from "../lang/ast";
 import { Cql, CqlResult } from "../lang/Cql";
 import { Typeahead, TypeaheadField } from "../lang/typeahead";
+import { TypeaheadSuggestion } from "../lang/types";
 
 export type CqlError = {
   position?: number;
@@ -7,34 +9,9 @@ export type CqlError = {
 };
 
 export interface CqlServiceInterface {
-  fetchResult(query: string): Promise<CqlResult>;
-
-  cancel(): void;
-}
-
-export class CqlServerService implements CqlServiceInterface {
-  private abortController: AbortController | undefined;
-
-  constructor(private url: string) {}
-
-  public setUrl(url: string) {
-    this.url = url;
-  }
-
-  public async fetchResult(query: string) {
-    this.abortController = new AbortController();
-    const urlParams = new URLSearchParams();
-    urlParams.append("query", query);
-    const request = await fetch(`${this.url}/cql?${urlParams}`, {
-      signal: this.abortController.signal,
-    });
-
-    return (await request.json()) as CqlResult;
-  }
-
-  public cancel() {
-    this.abortController?.abort();
-  }
+  parseCqlQueryStr(queryStr: string): CqlResult;
+  fetchSuggestions(query: Query): Promise<TypeaheadSuggestion[]>;
+  cancelSuggestions(): void;
 }
 
 export class CqlClientService implements CqlServiceInterface {
@@ -46,20 +23,26 @@ export class CqlClientService implements CqlServiceInterface {
     this.cql = new Cql(typeahead);
   }
 
-  public fetchResult(query: string) {
+  public parseCqlQueryStr(queryStr: string) {
     this.abortController = new AbortController();
 
-    return new Promise<CqlResult>((resolve, reject) => {
+    return this.cql.parse(queryStr);
+  }
+
+  public fetchSuggestions(query: Query): Promise<TypeaheadSuggestion[]> {
+    this.abortController = new AbortController();
+
+    return new Promise((resolve, reject) => {
       if (this.abortController) {
         this.abortController.signal.addEventListener("abort", () => {
           reject(new DOMException("Aborted", "AbortError"));
         });
       }
-      this.cql.run(query).then(resolve);
+      this.cql.getSuggestions(query).then(resolve);
     });
   }
 
-  public cancel() {
+  public cancelSuggestions() {
     this.abortController?.abort();
   }
 }

@@ -7,71 +7,49 @@ import { Token } from "./token";
 import { Typeahead } from "./typeahead";
 import { TypeaheadSuggestion } from "./types";
 
-export type CqlResult = {
+export interface CqlResult {
   tokens: Token[];
   ast?: Query;
-  suggestions: TypeaheadSuggestion[];
   queryResult?: string;
   error?: Error;
-};
+}
 
-export class CqlResultEnvelope {
-  constructor(public result: CqlResult) {}
+export class CqlResultEnvelope implements CqlResult {
+  constructor(
+    public tokens: Token[],
+    public ast?: Query,
+    public queryResult?: string,
+    public error?: Error
+  ) {}
 }
 
 export class Cql {
   constructor(public typeahead: Typeahead) {}
 
-  public run = async (
-    program: string,
-    signal?: AbortSignal
-  ): Promise<CqlResult> => {
-    const scanner = new Scanner(program);
+  public parse = (queryStr: string) => {
+    const scanner = new Scanner(queryStr);
     const tokens = scanner.scanTokens();
     const parser = new Parser(tokens);
     const result = parser.parse();
 
-    const eventuallyResult = either(result)(
-      (error) =>
-        Promise.resolve(
-          new CqlResultEnvelope({
-            tokens,
-            error,
-            suggestions: [],
-          })
-        ),
-      async (queryArr) => {
-        const suggestions = await this.typeahead.getSuggestions(
-          queryArr,
-          signal
-        );
-        const result = {
-          tokens,
-          ast: queryArr,
-          suggestions,
-        };
-
+    return either(result)(
+      (error) => new CqlResultEnvelope(tokens, undefined, undefined, error),
+      (query) => {
         const queryStringResult: Result<Error, string> =
-          queryStrFromQueryList(queryArr);
+          queryStrFromQueryList(query);
 
         return either(queryStringResult)(
-          (error) =>
-            new CqlResultEnvelope({
-              ...result,
-              error,
-            }),
-          (queryResult) =>
-            new CqlResultEnvelope({
-              ...result,
-              tokens,
-              queryResult,
-            })
+          (error) => new CqlResultEnvelope(tokens, query, undefined, error),
+          (queryResult) => new CqlResultEnvelope(tokens, query, queryResult)
         );
       }
     );
-
-    const resultEnvelope = await eventuallyResult;
-
-    return resultEnvelope.result;
   };
+
+  public getSuggestions(
+    query: Query,
+    signal?: AbortSignal
+  ): Promise<TypeaheadSuggestion[]> {
+    return this.typeahead.getSuggestions(query, signal);
+  }
 }
