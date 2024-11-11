@@ -6,6 +6,9 @@ export const isWhitespace = (str: string) => whitespaceR.test(str);
 const letterOrDigitR = /[0-9A-z]/;
 export const isLetterOrDigit = (str: string) => letterOrDigitR.test(str);
 
+const reservedCharR = /[+:())]/;
+export const isReservedChar = (str: string) => reservedCharR.test(str);
+
 export function* getPermutations<T>(
   permutation: T[]
 ): Generator<T[], T[], unknown> {
