@@ -23,28 +23,39 @@ export class Scanner {
 
   private scanToken = () => {
     switch (this.advance()) {
-      case "+":
+      case "+": {
         this.addKey(TokenType.CHIP_KEY);
         return;
-      case ":":
+      }
+      case ":": {
         this.addValue();
         return;
-      case "(":
+      }
+      case "(": {
         this.addToken(TokenType.LEFT_BRACKET);
         return;
-      case ")":
+      }
+      case ")": {
         this.addToken(TokenType.RIGHT_BRACKET);
         return;
-      case " ":
+      }
+      case " ": {
+        // Permit whitespace at the start of the document
+        if (this.current === 1) {
+          this.addIdentifierOrUnquotedString();
+        }
         return;
+      }
       case "\r":
       case "\t":
-      case '"':
+      case '"': {
         this.addString();
         return;
-      default:
+      }
+      default: {
         this.addIdentifierOrUnquotedString();
         return;
+      }
     }
   };
 
