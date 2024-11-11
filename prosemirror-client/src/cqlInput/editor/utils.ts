@@ -84,11 +84,9 @@ const getSearchTextRanges = (from: number): [number, number, number][] => [
  *
  * is represented in ProseMirror as
  *
- *  <doc> <searchText> s t r </searchText> <chipWrapper> <chip> <chipKey> k
- *  </chipKey> <chipValue> v </chipValue> </chip> </chipWrapper> </doc>
+ *  <doc> <searchText> s t r </searchText> <chipWrapper> <chip> <chipKey> k </chipKey> <chipValue> v </chipValue> </chip> </chipWrapper> </doc>
  * |     |            | | | |             |             |      |         | |          |           | |            |       |              |      |
- * 0     1            2 3 4 5             6             7      8         9 10 11
- * 12 13           14      15             16     17
+ * 0     1            2 3 4 5             6             7      8         9 10         11         12 13           14      15             16     17
  *
  * NB: This function will not fill out the searchText at the beginning or end of
  * the document, relying on ProseMirror's schema to autofill missing nodes.

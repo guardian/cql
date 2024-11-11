@@ -93,6 +93,77 @@ export const createCqlPlugin = ({
     jsonDebugContainer.appendChild(debugASTContainer);
   }
 
+  /**
+   * Replaces the current document with the query it produces once parsed.
+   *
+   * Side-effect: mutates the given transaction, and re-applies debug UI if provided.
+   */
+  const applyQueryToTr = (
+    tr: Transaction,
+    cqlService: CqlServiceInterface,
+    prevQuery?: string
+  ) => {
+    const currentQuery = docToQueryStr(tr.doc);
+    const shouldWrapSelectionInKey =
+      !!prevQuery && isBeginningKeyValPair(prevQuery, currentQuery);
+
+    const result = cqlService.parseCqlQueryStr(currentQuery);
+    const {
+      tokens,
+      query: ast,
+      error,
+      mapping,
+      queryResult,
+    } = mapResult(result);
+
+    const newDoc = tokensToDoc(tokens);
+
+    if (debugASTContainer) {
+      debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
+        ast,
+        undefined,
+        "  "
+      )}</div>`;
+    }
+    if (debugTokenContainer) {
+      debugTokenContainer.innerHTML = `<h2>Tokens</h2><div>${JSON.stringify(
+        tokens,
+        undefined,
+        "  "
+      )}</div>`;
+    }
+
+    if (debugMappingContainer) {
+      debugMappingContainer.innerHTML = `
+            <p>Original query: </p>
+            ${getOriginalQueryHTML(currentQuery)}
+            <p>Tokenises to:</p>
+            ${getDebugTokenHTML(result.tokens)}
+            ${
+              result.query
+                ? `<p>AST: </p>
+            ${getDebugASTHTML(result.query)}`
+                : ""
+            }
+            <p>Maps to nodes: </p>
+            ${getDebugMappingHTML(currentQuery, mapping, newDoc)}
+          `;
+    }
+
+    const userSelection = tr.selection;
+    const docSelection = new AllSelection(tr.doc);
+
+    if (!newDoc.eq(tr.doc)) {
+      tr.replaceWith(docSelection.from, docSelection.to, newDoc).setSelection(
+        getNewSelection(userSelection, shouldWrapSelectionInKey, tr.doc)
+      );
+    }
+
+    tr.setMeta(ACTION_NEW_STATE, { tokens, error, query: ast, mapping });
+
+    return { queryResult, tr };
+  };
+
   return new Plugin<PluginState>({
     key: cqlPluginKey,
     state: {
@@ -139,74 +210,17 @@ export const createCqlPlugin = ({
       const maybeQueries = queryHasChanged(oldState.doc, newState.doc);
 
       if (maybeQueries) {
-        const { prevQuery, currentQuery } = maybeQueries;
-        const shouldWrapSelectionInKey = isBeginningKeyValPair(
-          prevQuery,
-          currentQuery
+        const { queryResult, tr: newTr } = applyQueryToTr(
+          newState.tr,
+          cqlService,
+          maybeQueries.prevQuery
         );
 
-        tr = newState.tr;
-        const result = cqlService.parseCqlQueryStr(currentQuery);
-        const {
-          tokens,
-          query: ast,
-          error,
-          queryResult,
-          mapping,
-        } = mapResult(result);
-
-        const newDoc = tokensToDoc(tokens);
-
-        if (debugASTContainer) {
-          debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
-            ast,
-            undefined,
-            "  "
-          )}</div>`;
-        }
-        if (debugTokenContainer) {
-          debugTokenContainer.innerHTML = `<h2>Tokens</h2><div>${JSON.stringify(
-            tokens,
-            undefined,
-            "  "
-          )}</div>`;
-        }
-
-        if (debugMappingContainer) {
-          debugMappingContainer.innerHTML = `
-            <p>Original query: </p>
-            ${getOriginalQueryHTML(currentQuery)}
-            <p>Tokenises to:</p>
-            ${getDebugTokenHTML(result.tokens)}
-            ${
-              result.query
-                ? `<p>AST: </p>
-            ${getDebugASTHTML(result.query)}`
-                : ""
-            }
-            <p>Maps to nodes: </p>
-            ${getDebugMappingHTML(currentQuery, mapping, newDoc)}
-          `;
-        }
-
-        const userSelection = newState.selection;
-        const docSelection = new AllSelection(newState.doc);
-
-        if (!newDoc.eq(newState.doc)) {
-          tr.replaceWith(
-            docSelection.from,
-            docSelection.to,
-            newDoc
-          ).setSelection(
-            getNewSelection(userSelection, shouldWrapSelectionInKey, tr.doc)
-          );
-        }
-
-        tr.setMeta(ACTION_NEW_STATE, { tokens, error, query: ast, mapping });
+        tr = newTr;
 
         // @todo: this does not really belong here! Possibly in view? (Side effect)
         onChange({
-          cqlQuery: docToQueryStr(newDoc),
+          cqlQuery: docToQueryStr(tr.doc),
           query: queryResult ?? "",
         });
       }
@@ -416,6 +430,14 @@ export const createCqlPlugin = ({
         jsonDebugContainer
       );
 
+      // Set up initial document with parsed query
+
+      const { tr, queryResult } = applyQueryToTr(view.state.tr, cqlService);
+      view.dispatch(tr);
+      onChange({
+        cqlQuery: docToQueryStr(tr.doc),
+        query: queryResult ?? "",
+      });
       return {
         async update(view) {
           const { error, query, mapping } = cqlPluginKey.getState(view.state)!;

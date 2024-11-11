@@ -33,6 +33,13 @@ const createCqlEditor = (initialQuery: string = "") => {
   container.appendChild(errorEl);
   container.appendChild(errorMsgEl);
 
+  const subscribers: Array<(s: string) => void> = [];
+  const valuesReceived: string[] = [];
+  const dispatch = (value: string) => {
+    valuesReceived.push(value);
+    subscribers.forEach((s) => s(value));
+  };
+
   const plugin = createCqlPlugin({
     cqlService: testCqlService,
     typeaheadEl,
@@ -81,13 +88,6 @@ const createCqlEditor = (initialQuery: string = "") => {
   editor.selectText("end");
 
   container.appendChild(editor.view.dom);
-
-  const subscribers: Array<(s: string) => void> = [];
-  const valuesReceived: string[] = [];
-  const dispatch = (value: string) => {
-    valuesReceived.push(value);
-    subscribers.forEach((s) => s(value));
-  };
 
   /**
    * Wait for a particular `cqlQuery` value from the component's onChange
@@ -176,10 +176,10 @@ describe("plugin", () => {
         await findByText(popoverContainer, "Section");
       });
 
-      it.only("displays a popover after another chip", async () => {
+      it("displays a popover after another chip", async () => {
         const { editor, container } = createCqlEditor("+tag:a");
 
-        editor.insertText(" +");
+        editor.insertText("+");
 
         const popoverContainer = await findByTestId(container, typeaheadTestId);
 
@@ -228,14 +228,7 @@ describe("plugin", () => {
 
         await editor.selectText(1).insertText("+");
 
-        // We absolutely do not expect two + chars here, but the test
-        // consistently gives one. This does not appear in production insofar as
-        // I'm able to see. It may be an artefact of the async language server,
-        // which may disappear in future work. In any case, the important thing
-        // is that there's a space between the : and the a, which is inserted to
-        // ensure that the chip does not use the existing string as its key
-        // (which would look like `+a:`)
-        await waitFor(" ++: a");
+        await waitFor(" +: a");
       });
     });
   });
@@ -262,11 +255,11 @@ describe("plugin", () => {
     });
 
     it("permits content before query fields", async () => {
-      const { editor, waitFor } = createCqlEditor();
+      const { editor, waitFor } = createCqlEditor("+tag");
 
-      await editor.insertText("+tag").shortcut("Ctrl-a").insertText("a ");
+      await editor.insertText("b").shortcut("Ctrl-a").insertText("a");
 
-      await waitFor("a +tag: ");
+      await waitFor("a +tag: b");
     });
   });
 

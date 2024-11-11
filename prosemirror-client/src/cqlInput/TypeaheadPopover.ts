@@ -77,6 +77,9 @@ export class TypeaheadPopover extends Popover {
 
     this.currentSuggestion = suggestionThatCoversSelection;
     const { from, to, suggestions, type } = suggestionThatCoversSelection;
+    if (this.view.isDestroyed) {
+      return;
+    }
     const { node } = this.view.domAtPos(from);
 
     this.renderPopover(node as HTMLElement);
