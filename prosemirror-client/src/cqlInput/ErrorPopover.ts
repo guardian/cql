@@ -15,7 +15,7 @@ export class ErrorPopover extends Popover {
     debugEl?: HTMLElement,
     private debounceTime = 500
   ) {
-    super(view, popoverEl);
+    super(popoverEl);
 
     this.contentEl = document.createElement("div");
     popoverEl.appendChild(this.contentEl);
