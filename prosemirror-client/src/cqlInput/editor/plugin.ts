@@ -81,6 +81,7 @@ export const createCqlPlugin = ({
   let debugASTContainer: HTMLElement | undefined;
   let debugMappingContainer: HTMLElement | undefined;
   let jsonDebugContainer: HTMLElement | undefined;
+  let debugSuggestionsContainer: HTMLElement | undefined;
   if (debugEl) {
     debugMappingContainer = document.createElement("div");
     debugMappingContainer.classList.add("CqlDebug__mapping");
@@ -92,6 +93,8 @@ export const createCqlPlugin = ({
     jsonDebugContainer.appendChild(debugTokenContainer);
     debugASTContainer = document.createElement("div");
     jsonDebugContainer.appendChild(debugASTContainer);
+    debugSuggestionsContainer = document.createElement("div");
+    jsonDebugContainer.appendChild(debugSuggestionsContainer);
   }
 
   /**
@@ -439,8 +442,7 @@ export const createCqlPlugin = ({
       typeaheadPopover = new TypeaheadPopover(
         view,
         typeaheadEl,
-        applySuggestion,
-        jsonDebugContainer
+        applySuggestion
       );
       errorPopover = new ErrorPopover(
         view,
@@ -467,6 +469,19 @@ export const createCqlPlugin = ({
             const suggestions = await cqlService.fetchSuggestions(query);
             const mappedSuggestions = toMappedSuggestions(suggestions, mapping);
             typeaheadPopover?.updateItemsFromSuggestions(mappedSuggestions);
+
+            if (debugSuggestionsContainer) {
+              debugSuggestionsContainer.innerHTML = `
+                <h2>Typeahead</h2>
+                    <p>Current selection: ${view.state.selection.from}-${
+                      view.state.selection.to
+                    }
+                    </p>
+
+              <div>${mappedSuggestions.map((suggestion) =>
+                JSON.stringify(suggestion, undefined, "  ")
+              )}</div>`;
+            }
           }
         },
       };

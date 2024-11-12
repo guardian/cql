@@ -13,7 +13,6 @@ type MenuItem = {
 };
 
 export class TypeaheadPopover extends Popover {
-  private debugContainer: HTMLElement | undefined;
   private currentSuggestion: TypeaheadSuggestion | undefined;
   private currentOptionIndex = 0;
 
@@ -21,7 +20,6 @@ export class TypeaheadPopover extends Popover {
     public view: EditorView,
     public popoverEl: HTMLElement,
     public applySuggestion: (from: number, to: number, value: string) => void,
-    debugEl?: HTMLElement
   ) {
     super(popoverEl);
     popoverEl.addEventListener("click", (e: MouseEvent) => {
@@ -33,11 +31,6 @@ export class TypeaheadPopover extends Popover {
         this.applyOption();
       }
     });
-
-    if (debugEl) {
-      this.debugContainer = document.createElement("div");
-      debugEl.appendChild(this.debugContainer);
-    }
   }
 
   public isRenderingNavigableMenu = () => !!this.currentSuggestion?.suggestions;
@@ -57,8 +50,6 @@ export class TypeaheadPopover extends Popover {
     }
 
     const currentState = this.view.state;
-
-    this.updateDebugSuggestions(typeaheadSuggestions);
 
     const suggestionThatCoversSelection = typeaheadSuggestions.find(
       ({ from, to, suggestions }) =>
@@ -181,19 +172,4 @@ export class TypeaheadPopover extends Popover {
       dateInput.focus();
     }
   }
-
-  private updateDebugSuggestions = (suggestions: TypeaheadSuggestion[]) => {
-    if (this.debugContainer) {
-      this.debugContainer.innerHTML = `
-        <h2>Typeahead</h2>
-            <p>Current selection: ${this.view.state.selection.from}-${
-        this.view.state.selection.to
-      }
-            </p>
-
-      <div>${suggestions.map((suggestion) =>
-        JSON.stringify(suggestion, undefined, "  ")
-      )}</div>`;
-    }
-  };
 }
