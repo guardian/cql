@@ -209,9 +209,15 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           // If the next token is further ahead of this token by more than one position,
           // it is separated by whitespace – append the whitespace to this node
           const nextToken = tokens[index + 1];
-          const whitespaceChars = nextToken?.from - token.to - 1;
-          const whitespaceToAdd =
-            whitespaceChars >= 0 ? " ".repeat(whitespaceChars) : "";
+          const trailingWhitespaceChars = nextToken
+            ? Math.max(nextToken?.from - token.to - 1, 0)
+            : 0;
+          const trailingWhitespace = " ".repeat(trailingWhitespaceChars);
+
+          // If we are at the beginning of our token list and the `from` is not 0, the document
+          // begins with whitespace — prepend the whitespace to this node
+          const prevToken = tokens[index - 1];
+          const leadingWhitespace = " ".repeat(prevToken ? 0 : token.from);
 
           const previousNode = acc[acc.length - 1];
           if (previousNode?.type === searchText) {
@@ -222,7 +228,10 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
                 searchText.create(
                   undefined,
                   schema.text(
-                    previousNode.textContent + token.lexeme + whitespaceToAdd
+                    leadingWhitespace +
+                      previousNode.textContent +
+                      token.lexeme +
+                      trailingWhitespace
                   )
                 )
               );
@@ -231,7 +240,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           return acc.concat(
             searchText.create(
               undefined,
-              schema.text(token.lexeme + whitespaceToAdd)
+              schema.text(leadingWhitespace + token.lexeme + trailingWhitespace)
             )
           );
         }
