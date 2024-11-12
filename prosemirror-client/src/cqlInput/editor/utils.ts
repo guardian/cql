@@ -206,16 +206,18 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
         }
         // All other tokens become searchText
         default: {
-          // If the next token is further ahead of this token by more than one position,
-          // it is separated by whitespace – append the whitespace to this node
+          // If the next token is further ahead of this token by more than one
+          // position, it is separated by whitespace – append the whitespace to
+          // this node
           const nextToken = tokens[index + 1];
           const trailingWhitespaceChars = nextToken
             ? Math.max(nextToken?.from - token.to - 1, 0)
             : 0;
           const trailingWhitespace = " ".repeat(trailingWhitespaceChars);
 
-          // If we are at the beginning of our token list and the `from` is not 0, the document
-          // begins with whitespace — prepend the whitespace to this node
+          // If we are at the beginning of our token list and the `from` is not
+          // 0, the document begins with whitespace — prepend the whitespace to
+          // this node
           const prevToken = tokens[index - 1];
           const leadingWhitespace = " ".repeat(prevToken ? 0 : token.from);
 

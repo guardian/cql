@@ -1,5 +1,4 @@
 import { computePosition, flip, offset, shift } from "@floating-ui/dom";
-import { EditorView } from "prosemirror-view";
 
 export type VirtualElement = {
   getBoundingClientRect: () => {
@@ -16,7 +15,6 @@ export type VirtualElement = {
 
 export abstract class Popover {
   public constructor(
-    protected view: EditorView,
     protected popoverEl: HTMLElement
   ) {}
 

@@ -4,6 +4,7 @@ import {
   AllSelection,
   Plugin,
   PluginKey,
+  TextSelection,
   Transaction,
 } from "prosemirror-state";
 import {
@@ -18,6 +19,7 @@ import {
   mapResult,
   queryHasChanged,
   toMappedSuggestions,
+  getNextPositionAfterTypeaheadSelection,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "../TypeaheadPopover";
@@ -94,9 +96,9 @@ export const createCqlPlugin = ({
   }
 
   /**
-   * Replaces the current document with the query it produces once parsed.
+   * Replaces the current document with the query it produces on parse.
    *
-   * Side-effect: mutates the given transaction, and re-applies debug UI if provided.
+   * Side-effects: mutates the given transaction, and re-applies debug UI if provided.
    */
   const applyQueryToTr = (
     tr: Transaction,
@@ -418,9 +420,24 @@ export const createCqlPlugin = ({
       } as DOMSerializer, // Cast because docs specify only serializeFragment is needed
     },
     view(view) {
+      const applySuggestion = (from: number, to: number, value: string) => {
+        const tr = view.state.tr;
+
+        tr.replaceRangeWith(from, to, schema.text(value));
+
+        const insertPos = getNextPositionAfterTypeaheadSelection(tr.doc, from);
+
+        if (insertPos) {
+          tr.setSelection(TextSelection.create(tr.doc, insertPos));
+        }
+
+        view.dispatch(tr);
+      }
+
       typeaheadPopover = new TypeaheadPopover(
         view,
         typeaheadEl,
+        applySuggestion,
         jsonDebugContainer
       );
       errorPopover = new ErrorPopover(

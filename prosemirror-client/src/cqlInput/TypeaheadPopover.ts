@@ -1,13 +1,10 @@
-import { EditorView } from "prosemirror-view";
-import { schema } from "./editor/schema";
-import { TextSelection } from "prosemirror-state";
 import { Popover } from "./Popover";
 import {
   MappedTypeaheadSuggestion,
   TextSuggestionOption,
   TypeaheadSuggestion,
 } from "../lang/types";
-import { getNextPositionAfterTypeaheadSelection } from "./editor/utils";
+import { EditorView } from "prosemirror-view";
 
 type MenuItem = {
   label: string;
@@ -23,9 +20,10 @@ export class TypeaheadPopover extends Popover {
   public constructor(
     public view: EditorView,
     public popoverEl: HTMLElement,
+    public applySuggestion: (from: number, to: number, value: string) => void,
     debugEl?: HTMLElement
   ) {
-    super(view, popoverEl);
+    super(popoverEl);
     popoverEl.addEventListener("click", (e: MouseEvent) => {
       if (
         e.target instanceof HTMLElement &&
@@ -123,17 +121,8 @@ export class TypeaheadPopover extends Popover {
     }
 
     const { from, to } = this.currentSuggestion;
-    const tr = this.view.state.tr;
 
-    tr.replaceRangeWith(from, to, schema.text(value));
-
-    const insertPos = getNextPositionAfterTypeaheadSelection(tr.doc, from);
-
-    if (insertPos) {
-      tr.setSelection(TextSelection.create(tr.doc, insertPos));
-    }
-
-    this.view.dispatch(tr);
+    this.applySuggestion(from, to, value);
   };
 
   private moveSelection = (by: number) => {
