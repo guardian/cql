@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from "bun:test";
+import { describe, it, beforeEach, expect } from "bun:test";
 import { errorMsgTestId, errorTestId, typeaheadTestId } from "../CqlInput";
 import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
 import { CqlClientService } from "../../services/CqlService";
@@ -11,6 +11,7 @@ import { keymap } from "prosemirror-keymap";
 import {
   createProseMirrorTokenToDocumentMap,
   docToQueryStr,
+  getNodeTypeAtSelection,
   mapResult,
   tokensToDoc,
   toProseMirrorTokens,
@@ -165,10 +166,13 @@ describe("plugin", () => {
         await findByText(popoverContainer, "Section");
       });
 
-      it("displays a popover after search text", async () => {
+      it("displays a popover after search text, moving the caret to key position", async () => {
         const { editor, container } = createCqlEditor();
 
         await editor.insertText("+");
+
+        const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+        expect(nodeAtCaret.name).toBe("chipKey");
 
         const popoverContainer = await findByTestId(container, typeaheadTestId);
 
@@ -180,6 +184,9 @@ describe("plugin", () => {
         const { editor, container } = createCqlEditor("+tag:a");
 
         editor.insertText("+");
+
+        const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+        expect(nodeAtCaret.name).toBe("chipKey");
 
         const popoverContainer = await findByTestId(container, typeaheadTestId);
 

@@ -9,7 +9,6 @@ import {
 } from "prosemirror-state";
 import {
   getNewSelection,
-  isBeginningKeyValPair,
   docToQueryStr,
   tokensToDecorations,
   tokensToDoc,
@@ -106,8 +105,6 @@ export const createCqlPlugin = ({
     prevQuery?: string
   ) => {
     const currentQuery = docToQueryStr(tr.doc);
-    const shouldWrapSelectionInKey =
-      !!prevQuery && isBeginningKeyValPair(prevQuery, currentQuery);
 
     const result = cqlService.parseCqlQueryStr(currentQuery);
     const {
@@ -157,7 +154,12 @@ export const createCqlPlugin = ({
 
     if (!newDoc.eq(tr.doc)) {
       tr.replaceWith(docSelection.from, docSelection.to, newDoc).setSelection(
-        getNewSelection(userSelection, shouldWrapSelectionInKey, tr.doc)
+        getNewSelection({
+          selection: userSelection,
+          doc: tr.doc,
+          currentQuery,
+          prevQuery,
+        })
       );
     }
 
@@ -432,7 +434,7 @@ export const createCqlPlugin = ({
         }
 
         view.dispatch(tr);
-      }
+      };
 
       typeaheadPopover = new TypeaheadPopover(
         view,

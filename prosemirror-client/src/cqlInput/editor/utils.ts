@@ -300,9 +300,12 @@ export const docToQueryStr = (doc: Node) => {
 const keyValPairChars = ["+"];
 
 export const isBeginningKeyValPair = (
-  first: string,
+  first: string | undefined,
   second: string
 ): boolean => {
+  if (!first) {
+    return keyValPairChars.includes(second[0]);
+  }
   const firstDiffChar = getFirstDiff(first, second);
   return firstDiffChar ? keyValPairChars.includes(firstDiffChar) : false;
 };
@@ -334,13 +337,24 @@ export const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
   return found;
 };
 
-export const getNewSelection = (
-  currentSelection: Selection,
-  shouldWrapSelectionInKey: boolean,
-  doc: Node
-): Selection => {
+export const getNewSelection = ({
+  selection,
+  doc,
+  prevQuery,
+  currentQuery,
+}: {
+  selection: Selection;
+  doc: Node;
+  prevQuery?: string;
+  currentQuery: string;
+}): Selection => {
+  const shouldWrapSelectionInKey = isBeginningKeyValPair(
+    prevQuery,
+    currentQuery
+  );
+
   if (shouldWrapSelectionInKey) {
-    const nodePos = findNodeAt(currentSelection.from, doc, chipKey);
+    const nodePos = findNodeAt(selection.from, doc, chipKey);
 
     if (nodePos !== -1) {
       const $pos = doc.resolve(nodePos);
@@ -353,8 +367,8 @@ export const getNewSelection = (
 
   return TextSelection.create(
     doc,
-    Math.min(currentSelection.from, doc.nodeSize - 2),
-    Math.min(currentSelection.to, doc.nodeSize - 2)
+    Math.min(selection.from, doc.nodeSize - 2),
+    Math.min(selection.to, doc.nodeSize - 2)
   );
 };
 
@@ -537,4 +551,18 @@ export const queryHasChanged = (
   const currentQuery = docToQueryStr(newDoc);
 
   return prevQuery !== currentQuery ? { prevQuery, currentQuery } : undefined;
+};
+
+export const getNodeTypeAtSelection = (view: EditorView) => {
+  const {
+    doc,
+    selection: { from, to },
+  } = view.state;
+  if (from !== to) {
+    throw new Error(
+      `[getNodeTypeAtPos]: Selection is not collapsed (${from}-${to})`
+    );
+  }
+
+  return doc.resolve(from).node().type;
 };
