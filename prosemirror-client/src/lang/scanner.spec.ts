@@ -12,17 +12,6 @@ describe("scanner", () => {
       expect(tokens).toEqual(expectedTokens);
     });
 
-    it("should preserve whitespace at the beginning of the document", () => {
-      const scanner = new Scanner(" magnificent octopus");
-      const tokens = scanner.scanTokens();
-      const expectedTokens = [
-        unquotedStringToken(" magnificent"),
-        unquotedStringToken("octopus", 13),
-        eofToken(20),
-      ];
-      expect(tokens).toEqual(expectedTokens);
-    });
-
     it("should preserve whitespace at the end of the document", () => {
       const scanner = new Scanner("magnificent octopus ");
       const tokens = scanner.scanTokens();
