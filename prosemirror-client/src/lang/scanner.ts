@@ -1,5 +1,5 @@
 import { Token, TokenType } from "./token";
-import { isLetterOrDigit, isReservedChar, isWhitespace } from "./util";
+import { isLetterOrDigit, isWhitespace } from "./util";
 
 export class Scanner {
   private tokens: Array<Token> = [];
@@ -41,8 +41,7 @@ export class Scanner {
       }
       case " ": {
         // Permit whitespace at the start of the document
-        if (this.current === 1 && isLetterOrDigit(this.peek())) {
-          this.advance();
+        if (this.current === 1) {
           this.addIdentifierOrUnquotedString();
         }
         return;
@@ -103,7 +102,7 @@ export class Scanner {
       (!isWhitespace(this.peek()) ||
         isWhitespace(this.peek(1)) ||
         this.isAtEnd(1)) &&
-      !isReservedChar(this.peek()) &&
+      this.peek() != ")" &&
       !this.isAtEnd()
     ) {
       this.advance();
