@@ -202,6 +202,15 @@ describe("plugin", () => {
 
         await waitFor("example +tag: ");
       });
+
+      it("applies the given key when a popover option is selected at the start of the query", async () => {
+        const { editor, container, waitFor } = createCqlEditor();
+        await editor.insertText("+");
+
+        await selectPopoverOption(editor, container, "Tag");
+
+        await waitFor("+tag: ");
+      });
     });
 
     describe("chip values", () => {
@@ -235,7 +244,7 @@ describe("plugin", () => {
 
         await editor.selectText(1).insertText("+");
 
-        await waitFor(" +: a");
+        await waitFor("+: a");
       });
     });
   });
@@ -276,7 +285,7 @@ describe("plugin", () => {
 
       await editor.press("Backspace");
 
-      await waitFor(" +tag:a ");
+      await waitFor("+tag:a ");
     });
 
     it("puts the chip in a pending state before deletion - mouse", async () => {
@@ -285,7 +294,7 @@ describe("plugin", () => {
       const deleteBtn = await findByText(editor.view.dom, "×");
       await fireEvent.click(deleteBtn);
 
-      await waitFor(" +tag:a ");
+      await waitFor("+tag:a ");
     });
 
     it("removes the chip via backspace", async () => {

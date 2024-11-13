@@ -21,7 +21,7 @@ import {
   unquotedStringToken,
 } from "./testUtils";
 import { Parser } from "./parser";
-import { getPermutations } from "./util";
+import { getPermutations } from "./utils";
 import { Token, TokenType } from "./token";
 
 describe("parser", () => {

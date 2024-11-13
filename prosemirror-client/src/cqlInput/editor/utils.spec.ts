@@ -1,5 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
+  docToQueryStr,
   getNextPositionAfterTypeaheadSelection,
   mapResult,
   mapTokens,
@@ -120,90 +121,138 @@ describe("utils", () => {
   });
 
   describe("mapTokens", () => {
-    test("should map tokens to text positions with parens", async () => {
-      const text = await getTextFromTokenRanges("(b OR c)");
+    describe("should map tokens to text positions", () => {
+      test("with parens", async () => {
+        const text = await getTextFromTokenRanges("(b OR c)");
 
-      expect(text).toEqual(["(", "b", "OR", "c", ")", ""]);
-    });
+        expect(text).toEqual(["(", "b", "OR", "c", ")", ""]);
+      });
 
-    test("should map tokens to text positions with search text and tag", async () => {
-      const text = await getTextFromTokenRanges("text +key:value text");
+      test("with search text and tag", async () => {
+        const text = await getTextFromTokenRanges("text +key:value text");
 
-      expect(text).toEqual(["text", "key", "value", "text", ""]);
-    });
+        expect(text).toEqual(["text", "key", "value", "text", ""]);
+      });
 
-    test("should map tokens to text positions with parens and tags", async () => {
-      const text = await getTextFromTokenRanges(
-        "text (b OR c) +key:value text (b OR c)"
-      );
+      test("with parens and tags", async () => {
+        const text = await getTextFromTokenRanges(
+          "text (b OR c) +key:value text (b OR c)"
+        );
 
-      expect(text).toEqual([
-        "text",
-        "(",
-        "b",
-        "OR",
-        "c",
-        ")",
-        "key",
-        "value",
-        "text",
-        "(",
-        "b",
-        "OR",
-        "c",
-        ")",
-        "",
-      ]);
-    });
+        expect(text).toEqual([
+          "text",
+          "(",
+          "b",
+          "OR",
+          "c",
+          ")",
+          "key",
+          "value",
+          "text",
+          "(",
+          "b",
+          "OR",
+          "c",
+          ")",
+          "",
+        ]);
+      });
 
-    // @todo: the following tests begin with whitespace because this is how the
-    // editor behaves to leave a gap for insertions at the beginning of the
-    // document. It'd be better were this not necessary, perhaps by hiding it as
-    // an implementation detail.
-    test("should map tokens to text positions with a tag at the beginning", async () => {
-      const text = await getTextFromTokenRanges(" +tag:test");
+      test("with a tag at the beginning", async () => {
+        const text = await getTextFromTokenRanges("+tag:test");
 
-      expect(text).toEqual(["tag", "test", ""]);
-    });
+        expect(text).toEqual(["tag", "test", ""]);
+      });
 
-    test("should map tokens to text positions with two queries", async () => {
-      const text = await getTextFromTokenRanges(" +key:value +key2:value2 ");
+      test("with two queries", async () => {
+        const text = await getTextFromTokenRanges("+key:value +key2:value2 ");
 
-      expect(text).toEqual(["key", "value", "key2", "value2", ""]);
-    });
+        expect(text).toEqual(["key", "value", "key2", "value2", ""]);
+      });
 
-    test("should map tokens to text positions with binary queries in the middle of tags", async () => {
-      const text = await getTextFromTokenRanges(
-        " +key:value (a OR b) +key2:value2"
-      );
+      test("with an incomplete chip", async () => {
+        const text = await getTextFromTokenRanges("+: a b c");
 
-      expect(text).toEqual([
-        "key",
-        "value",
-        "(",
-        "a",
-        "OR",
-        "b",
-        ")",
-        "key2",
-        "value2",
-        "",
-      ]);
+        expect(text).toEqual(["", "", "a", "b", "c", ""]);
+      });
+
+      test("with binary queries in the middle of tags", async () => {
+        const text = await getTextFromTokenRanges(
+          "+key:value (a OR b) +key2:value2"
+        );
+
+        expect(text).toEqual([
+          "key",
+          "value",
+          "(",
+          "a",
+          "OR",
+          "b",
+          ")",
+          "key2",
+          "value2",
+          "",
+        ]);
+      });
     });
   });
 
   describe("getNextPositionAfterTypeaheadSelection", () => {
-    const currentDoc = doc(
-      searchText(),
-      chip(chipKey("key<fromPos>"), chipValue("<toPos>")),
-      searchText()
-    );
+    test("should move to value position from the end of a key", () => {
+      const currentDoc = doc(
+        searchText(),
+        chip(chipKey("key<fromPos>"), chipValue("<toPos>")),
+        searchText()
+      );
 
-    const insertPos = getNextPositionAfterTypeaheadSelection(
-      currentDoc,
-      currentDoc.tag.fromPos
-    );
+      const insertPos = getNextPositionAfterTypeaheadSelection(
+        currentDoc,
+        currentDoc.tag.fromPos
+      );
 
-    expect(insertPos).toBe(currentDoc.tag.toPos);
+      expect(insertPos).toBe(currentDoc.tag.toPos);
+    });
+
+    test("should move to searchText position from the end of a value", () => {
+      const currentDoc = doc(
+        searchText(),
+        chip(chipKey("key"), chipValue("<fromPos>")),
+        searchText("<toPos>")
+      );
+
+      const insertPos = getNextPositionAfterTypeaheadSelection(
+        currentDoc,
+        currentDoc.tag.fromPos
+      );
+
+      expect(insertPos).toBe(currentDoc.tag.toPos);
+    });
   });
+
+  describe("docToQueryStr", () => {
+
+    test("should convert a doc to a query string", () => {
+      const queryDoc = doc(
+        searchText("example"),
+        chip(chipKey("tag"), chipValue("tags-are-magic")),
+        searchText()
+      );
+
+      const queryStr = "example +tag:tags-are-magic ";
+
+      expect(docToQueryStr(queryDoc)).toBe(queryStr);
+    });
+
+    test("should not prepend whitespace when the doc starts with a chip", () => {
+      const queryDoc = doc(
+        searchText(""),
+        chip(chipKey("tag"), chipValue("tags-are-magic")),
+        searchText()
+      );
+
+      const queryStr = "+tag:tags-are-magic ";
+
+      expect(docToQueryStr(queryDoc)).toBe(queryStr);
+    });
+  })
 });

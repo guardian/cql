@@ -7,7 +7,7 @@ import {
   TypeaheadSuggestion,
   TypeaheadType,
 } from "./types";
-import { getQueryFieldsFromQueryBinary } from "./util";
+import { getQueryFieldsFromQueryBinary } from "./utils";
 
 export type TypeaheadResolver =
   | ((str: string, signal?: AbortSignal) => Promise<TextSuggestionOption[]>)

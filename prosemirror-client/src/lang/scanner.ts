@@ -1,5 +1,5 @@
 import { Token, TokenType } from "./token";
-import { isLetterOrDigit, isWhitespace } from "./util";
+import { isLetterOrDigit, isWhitespace } from "./utils";
 
 export class Scanner {
   private tokens: Array<Token> = [];

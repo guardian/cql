@@ -45,11 +45,15 @@ const joinSearchTextTokens = (tokens: ProseMirrorToken[]) =>
     });
   }, [] as ProseMirrorToken[]);
 
-const getQueryFieldKeyRange = (from: number): [number, number, number] =>
+const getQueryFieldKeyRange = (
+  from: number,
+  isFirst: boolean
+): [number, number, number] =>
+  // leading char ('+') (+1)
   // chipKey begin (-1)
   // chip begin (-1)
-  // leading char ('+') (+1)
-  [from - 1, -1, 0];
+  // 🤔 Unclear why we need an extra bump when our query field is the first token
+  [from - 1, isFirst ? -2 : -1, 0];
 
 const getQueryValueRanges = (
   from: number,
@@ -105,16 +109,17 @@ export const createProseMirrorTokenToDocumentMap = (
         case "CHIP_KEY": {
           // If this field is at the start of the document, or preceded by a
           // field value, the editor will add a searchText node to conform to
-          // the schema, which we must account for, so we add a searchText
-          // mapping.
+          // the schema, so we add a searchText mapping to account for the
+          // additional node.
           const previousToken = tokens[index - 1];
           const shouldAddSearchTextMapping =
             previousToken?.tokenType === "CHIP_VALUE" || index === 0;
+
           return accRanges.concat(
             ...(shouldAddSearchTextMapping
               ? getSearchTextRanges(previousToken?.to)
               : []),
-            getQueryFieldKeyRange(from)
+            getQueryFieldKeyRange(from, index === 0)
           );
         }
         case "CHIP_VALUE": {
@@ -277,20 +282,25 @@ export const docToQueryStr = (doc: Node) => {
 
   doc.descendants((node) => {
     switch (node.type.name) {
-      case "searchText":
+      case "searchText": {
         str += node.textContent;
         return false;
-      case "chipKey":
+      }
+      case "chipKey": {
+        const leadingWhitespace = str.trim() === "" ? "" : " ";
         // Anticipate a chipValue here, adding the colon – if we do not, and a
         // chipValue is not present, we throw the mappings off.
-        str += ` +${node.textContent}:`;
+        str += `${leadingWhitespace}+${node.textContent}:`;
         return false;
-      case "chipValue":
+      }
+      case "chipValue": {
         str +=
           node.textContent.trim().length > 0 ? `${node.textContent} ` : " ";
         return false;
-      default:
+      }
+      default: {
         return true;
+      }
     }
   });
 
@@ -306,16 +316,19 @@ export const isBeginningKeyValPair = (
   if (!first) {
     return keyValPairChars.includes(second[0]);
   }
-  const firstDiffChar = getFirstDiff(first, second);
+  const firstDiffChar = getFirstNonWhitespaceDiff(first, second);
   return firstDiffChar ? keyValPairChars.includes(firstDiffChar) : false;
 };
 
-const getFirstDiff = (_first: string, _second: string): string | undefined => {
-  const first = _first.trim();
-  const second = _second.trim();
+const getFirstNonWhitespaceDiff = (
+  _first: string,
+  _second: string
+): string | undefined => {
+  const first = _first.replaceAll(" ", "");
+  const second = _second.replaceAll(" ", "");
 
   if (first.length < second.length) {
-    return second[second.length - 1];
+    return second[first.length];
   }
 
   for (let i = 0; i < first.length; i++) {
@@ -341,17 +354,14 @@ export const getNewSelection = ({
   selection,
   doc,
   prevQuery,
-  currentQuery,
+  query,
 }: {
   selection: Selection;
   doc: Node;
   prevQuery?: string;
-  currentQuery: string;
+  query: string;
 }): Selection => {
-  const shouldWrapSelectionInKey = isBeginningKeyValPair(
-    prevQuery,
-    currentQuery
-  );
+  const shouldWrapSelectionInKey = isBeginningKeyValPair(prevQuery, query);
 
   if (shouldWrapSelectionInKey) {
     const nodePos = findNodeAt(selection.from, doc, chipKey);
@@ -422,9 +432,9 @@ export const mapResult = (result: CqlResult) => {
   };
 };
 
-// The node to move the caret to after a typeahead selection is made, e.g. when
-// a typeahead value is inserted for a chipKey, move the caret to the next
-// chipValue.
+// The sequences of nodes to move the caret to after a typeahead selection is
+// made, e.g. when a typeahead value is inserted for a chipKey, move the caret
+// to the next chipValue.
 const typeaheadSelectionSequence = [chipKey, chipValue, searchText];
 
 export const getNextPositionAfterTypeaheadSelection = (
@@ -433,6 +443,7 @@ export const getNextPositionAfterTypeaheadSelection = (
 ) => {
   const $pos = currentDoc.resolve(currentPos);
   const suggestionNode = $pos.node();
+
   const nodeTypeAfterIndex = typeaheadSelectionSequence.indexOf(
     suggestionNode.type
   );
@@ -506,24 +517,6 @@ export const applyDeleteIntent = (
   view.dispatch(tr);
 
   return true;
-};
-
-/**
- * Utility function to log node structure to console.
- */
-export const logNode = (doc: Node) => {
-  console.log(`Log node ${doc.type.name}:`);
-
-  doc.nodesBetween(0, doc.content.size, (node, pos) => {
-    const indent = doc.resolve(pos).depth * 4;
-    const content =
-      node.type.name === "text" ? `'${node.textContent}'` : undefined;
-    console.log(
-      `${" ".repeat(indent)} ${node.type.name} ${pos}-${pos + node.nodeSize} ${
-        content ? content : ""
-      }`
-    );
-  });
 };
 
 export const errorToDecoration = (position: number): Decoration => {

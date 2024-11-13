@@ -1,6 +1,6 @@
 import { err, ok, Result } from "../utils/result";
 import { Query, QueryBinary, QueryContent } from "./ast";
-import { getQueryFieldsFromQueryBinary } from "./util";
+import { getQueryFieldsFromQueryBinary } from "./utils";
 
 class CapiQueryStringError extends Error {
   public constructor(message: string) {

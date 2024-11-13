@@ -107,9 +107,9 @@ export const createCqlPlugin = ({
     cqlService: CqlServiceInterface,
     prevQuery?: string
   ) => {
-    const currentQuery = docToQueryStr(tr.doc);
+    const queryBeforeParse = docToQueryStr(tr.doc);
 
-    const result = cqlService.parseCqlQueryStr(currentQuery);
+    const result = cqlService.parseCqlQueryStr(queryBeforeParse);
     const {
       tokens,
       query: ast,
@@ -119,6 +119,7 @@ export const createCqlPlugin = ({
     } = mapResult(result);
 
     const newDoc = tokensToDoc(tokens);
+    const queryAfterParse = docToQueryStr(newDoc); // The document may have changed as a result of the parse.
 
     if (debugASTContainer) {
       debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
@@ -138,7 +139,7 @@ export const createCqlPlugin = ({
     if (debugMappingContainer) {
       debugMappingContainer.innerHTML = `
             <p>Original query: </p>
-            ${getOriginalQueryHTML(currentQuery)}
+            ${getOriginalQueryHTML(queryAfterParse)}
             <p>Tokenises to:</p>
             ${getDebugTokenHTML(result.tokens)}
             ${
@@ -148,7 +149,7 @@ export const createCqlPlugin = ({
                 : ""
             }
             <p>Maps to nodes: </p>
-            ${getDebugMappingHTML(currentQuery, mapping, newDoc)}
+            ${getDebugMappingHTML(queryAfterParse, mapping, newDoc)}
           `;
     }
 
@@ -160,13 +161,19 @@ export const createCqlPlugin = ({
         getNewSelection({
           selection: userSelection,
           doc: tr.doc,
-          currentQuery,
+          query: queryAfterParse,
           prevQuery,
         })
       );
     }
 
-    tr.setMeta(ACTION_NEW_STATE, { tokens, error, query: ast, mapping });
+    tr.setMeta(ACTION_NEW_STATE, {
+      tokens,
+      error,
+      query: ast,
+      mapping,
+      queryStr: queryAfterParse,
+    });
 
     return { queryResult, tr };
   };
@@ -430,7 +437,10 @@ export const createCqlPlugin = ({
 
         tr.replaceRangeWith(from, to, schema.text(value));
 
-        const insertPos = getNextPositionAfterTypeaheadSelection(tr.doc, from);
+        const insertPos = getNextPositionAfterTypeaheadSelection(
+          tr.doc,
+          tr.mapping.map(to)
+        );
 
         if (insertPos) {
           tr.setSelection(TextSelection.create(tr.doc, insertPos));
