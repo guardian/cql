@@ -211,6 +211,23 @@ describe("plugin", () => {
 
         await waitFor("+tag: ");
       });
+
+      it("displays a popover after another chip", async () => {
+        const { editor, container, waitFor } = createCqlEditor("+tag:a");
+
+        editor.insertText("+");
+
+        const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+        expect(nodeAtCaret.name).toBe("chipKey");
+
+        const popoverContainer = await findByTestId(container, typeaheadTestId);
+
+        await findByText(popoverContainer, "Tag");
+        await findByText(popoverContainer, "Section");
+        await selectPopoverOption(editor, container, "Tag");
+
+        await waitFor("+tag:a +tag: ");
+      });
     });
 
     describe("chip values", () => {
@@ -248,7 +265,9 @@ describe("plugin", () => {
       });
 
       it("inserts a single whitespace between chips", async () => {
-        const { editor, waitFor } = createCqlEditor("+tag:+tag:tags-are-magic ");
+        const { editor, waitFor } = createCqlEditor(
+          "+tag:+tag:tags-are-magic "
+        );
 
         await editor.insertText("+");
 

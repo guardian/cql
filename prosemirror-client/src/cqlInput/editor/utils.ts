@@ -45,15 +45,12 @@ const joinSearchTextTokens = (tokens: ProseMirrorToken[]) =>
     });
   }, [] as ProseMirrorToken[]);
 
-const getQueryFieldKeyRange = (
-  from: number,
-  isFirst: boolean
-): [number, number, number] =>
+const getQueryFieldKeyRange = (from: number): [number, number, number] =>
   // leading char ('+') (+1)
   // chipKey begin (-1)
   // chip begin (-1)
   // 🤔 Unclear why we need an extra bump when our query field is the first token
-  [from - 1, isFirst ? -2 : -1, 0];
+  [from - 1, -1, 0];
 
 const getQueryValueRanges = (
   from: number,
@@ -67,8 +64,20 @@ const getQueryValueRanges = (
   [to, -1, 0],
 ];
 
-const getSearchTextRanges = (from: number): [number, number, number][] => [
+const getSearchTextRanges = (
+  from: number,
+  to: number
+): [number, number, number][] => [
   [from, -1, 0], // searchText begin (+1)
+  // If the searchText node has content, it will begin with whitespace in the
+  // query, which pushes subsequent content forward one position. This cancels
+  // out searchText end (+1), so only add a mapping for the node end if the
+  // searchText node has content.
+  //
+  // This is a slightly obscure solution to this problem - we could also use the
+  // gaps between the token positions and the token literal length to account
+  // for this discrepancy, too.
+  ...(from === to ? [[to, -1, 0] as [number, number, number]] : []),
 ];
 
 /**
@@ -117,16 +126,16 @@ export const createProseMirrorTokenToDocumentMap = (
 
           return accRanges.concat(
             ...(shouldAddSearchTextMapping
-              ? getSearchTextRanges(previousToken?.to)
+              ? getSearchTextRanges(previousToken?.to, previousToken?.to)
               : []),
-            getQueryFieldKeyRange(from, index === 0)
+            getQueryFieldKeyRange(from)
           );
         }
         case "CHIP_VALUE": {
           return accRanges.concat(...getQueryValueRanges(from, to));
         }
         default: {
-          return accRanges.concat(...getSearchTextRanges(from));
+          return accRanges.concat(...getSearchTextRanges(from, to));
         }
       }
     },
@@ -287,7 +296,8 @@ export const docToQueryStr = (doc: Node) => {
         return false;
       }
       case "chipKey": {
-        const leadingWhitespace = str.trim() === "" || str.endsWith(" ") ? "" : " ";
+        const leadingWhitespace =
+          str.trim() === "" || str.endsWith(" ") ? "" : " ";
         // Anticipate a chipValue here, adding the colon – if we do not, and a
         // chipValue is not present, we throw the mappings off.
         str += `${leadingWhitespace}+${node.textContent}:`;
