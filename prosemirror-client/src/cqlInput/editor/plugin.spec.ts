@@ -246,6 +246,14 @@ describe("plugin", () => {
 
         await waitFor("+: a");
       });
+
+      it("inserts a single whitespace between chips", async () => {
+        const { editor, waitFor } = createCqlEditor("+tag:+tag:tags-are-magic ");
+
+        await editor.insertText("+");
+
+        await waitFor("+tag:+tag:tags-are-magic +: ");
+      });
     });
   });
 

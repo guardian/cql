@@ -254,5 +254,18 @@ describe("utils", () => {
 
       expect(docToQueryStr(queryDoc)).toBe(queryStr);
     });
+
+    test("should join chips with a single whitespace", () => {
+      const queryDoc = doc(
+        searchText(""),
+        chip(chipKey("tag"), chipValue("tags-are-magic")),
+        chip(chipKey("tag"), chipValue("tags-are-magic")),
+        searchText()
+      );
+
+      const queryStr = "+tag:tags-are-magic +tag:tags-are-magic ";
+
+      expect(docToQueryStr(queryDoc)).toBe(queryStr);
+    });
   })
 });
