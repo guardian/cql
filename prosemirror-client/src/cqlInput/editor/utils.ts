@@ -287,7 +287,7 @@ export const docToQueryStr = (doc: Node) => {
         return false;
       }
       case "chipKey": {
-        const leadingWhitespace = str.trim() === "" ? "" : " ";
+        const leadingWhitespace = str.trim() === "" || str.endsWith(" ") ? "" : " ";
         // Anticipate a chipValue here, adding the colon – if we do not, and a
         // chipValue is not present, we throw the mappings off.
         str += `${leadingWhitespace}+${node.textContent}:`;
