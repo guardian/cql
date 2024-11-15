@@ -317,37 +317,6 @@ export const docToQueryStr = (doc: Node) => {
   return str;
 };
 
-const keyValPairChars = ["+"];
-
-export const isBeginningKeyValPair = (
-  first: string | undefined,
-  second: string
-): boolean => {
-  if (!first) {
-    return keyValPairChars.includes(second[0]);
-  }
-  const firstDiffChar = getFirstNonWhitespaceDiff(first, second);
-  return firstDiffChar ? keyValPairChars.includes(firstDiffChar) : false;
-};
-
-const getFirstNonWhitespaceDiff = (
-  _first: string,
-  _second: string
-): string | undefined => {
-  const first = _first.replaceAll(" ", "");
-  const second = _second.replaceAll(" ", "");
-
-  if (first.length < second.length) {
-    return second[first.length];
-  }
-
-  for (let i = 0; i < first.length; i++) {
-    if (second[i] !== first[i]) {
-      return second[i];
-    }
-  }
-};
-
 export const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
   let found = -1;
   doc.nodesBetween(pos - 1, doc.content.size, (node, pos) => {
@@ -363,15 +332,14 @@ export const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
 export const getNewSelection = ({
   selection,
   doc,
-  prevQuery,
-  query,
 }: {
   selection: Selection;
   doc: Node;
-  prevQuery?: string;
-  query: string;
 }): Selection => {
-  const shouldWrapSelectionInKey = isBeginningKeyValPair(prevQuery, query);
+  const shouldWrapSelectionInKey =
+    selection.from === selection.to &&
+    // Is the selection just before the start of a chip?
+    doc.resolve(selection.from).nodeAfter?.type === chip;
 
   if (shouldWrapSelectionInKey) {
     const nodePos = findNodeAt(selection.from, doc, chipKey);

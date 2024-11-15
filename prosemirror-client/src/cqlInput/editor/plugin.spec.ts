@@ -306,6 +306,14 @@ describe("plugin", () => {
 
       await waitFor("a +tag: b");
     });
+
+    it("permits additional query fields before query fields", async () => {
+      const { editor, waitFor } = createCqlEditor("+2");
+
+      await editor.shortcut("Ctrl-a").insertText("+1");
+
+      await waitFor("+1: +2: ");
+    });
   });
 
   describe("deletion", () => {

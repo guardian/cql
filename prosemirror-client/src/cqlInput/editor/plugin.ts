@@ -102,11 +102,7 @@ export const createCqlPlugin = ({
    *
    * Side-effects: mutates the given transaction, and re-applies debug UI if provided.
    */
-  const applyQueryToTr = (
-    tr: Transaction,
-    cqlService: CqlServiceInterface,
-    prevQuery?: string
-  ) => {
+  const applyQueryToTr = (tr: Transaction, cqlService: CqlServiceInterface) => {
     const queryBeforeParse = docToQueryStr(tr.doc);
 
     const result = cqlService.parseCqlQueryStr(queryBeforeParse);
@@ -161,8 +157,6 @@ export const createCqlPlugin = ({
         getNewSelection({
           selection: userSelection,
           doc: tr.doc,
-          query: queryAfterParse,
-          prevQuery,
         })
       );
     }
@@ -226,8 +220,7 @@ export const createCqlPlugin = ({
       if (maybeQueries) {
         const { queryResult, tr: newTr } = applyQueryToTr(
           newState.tr,
-          cqlService,
-          maybeQueries.prevQuery
+          cqlService
         );
 
         tr = newTr;
