@@ -25,7 +25,7 @@ export const queryStrFromQueryList = (query: Query): Result<Error, string> => {
               return [`${expr.key.literal ?? ""}=${expr.value.literal ?? ""}`];
             } else {
               throw new CapiQueryStringError(
-                `The field '+$${expr.key}' needs a value after it (e.g. +${expr.key}:tone/news)`
+                `The field '${expr.key.literal}' needs a value after it (e.g. '${expr.key.literal}:tone/news')`
               );
             }
           }

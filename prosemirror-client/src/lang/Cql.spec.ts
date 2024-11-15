@@ -24,17 +24,17 @@ describe("a query", () => {
   });
 
   it("should permit boolean operations", async () => {
-    const cqlResult = await cql.parse('"marina" AND hyde +section:commentisfree');
+    const cqlResult = await cql.parse(
+      '"marina" AND hyde +section:commentisfree'
+    );
     expect(cqlResult.queryResult).toBe(
       "q=marina%20AND%20hyde&section=commentisfree"
     );
   });
 
   it("should permit field queries", async () => {
-    const cqlResult = await cql.parse('+tag:example');
-    expect(cqlResult.queryResult).toBe(
-      "tag=example"
-    );
+    const cqlResult = await cql.parse("+tag:example");
+    expect(cqlResult.queryResult).toBe("tag=example");
   });
 
   it("should permit groups - 1", async () => {
@@ -53,6 +53,15 @@ describe("a query", () => {
     );
     expect(cqlResult.queryResult).toBe(
       "q=(hyde%20OR%20abramovic)&section=commentisfree"
+    );
+  });
+
+  it("should provide an error when keys are missing values", async () => {
+    const cqlResult = await cql.parse(
+      "+tag"
+    );
+    expect(cqlResult.error?.message).toBe(
+      "The field 'tag' needs a value after it (e.g. 'tag:tone/news')"
     );
   });
 });
