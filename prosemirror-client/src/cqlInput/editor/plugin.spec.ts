@@ -199,6 +199,8 @@ describe("plugin", () => {
         await editor.insertText("example +");
 
         await selectPopoverOption(editor, container, "Tag");
+        const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+        expect(nodeAtCaret.name).toBe("chipValue");
 
         await waitFor("example +tag: ");
       });
