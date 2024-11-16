@@ -8,7 +8,7 @@ import {
   Transaction,
 } from "prosemirror-state";
 import {
-  getNewSelection,
+  maybeMoveSelectionIntoChipKey,
   docToQueryStr,
   tokensToDecorations,
   tokensToDoc,
@@ -149,14 +149,14 @@ export const createCqlPlugin = ({
           `;
     }
 
-    const userSelection = tr.selection;
     const docSelection = new AllSelection(tr.doc);
 
     if (!newDoc.eq(tr.doc)) {
+      const selectionPriorToInsertion = tr.selection;
       tr.replaceWith(docSelection.from, docSelection.to, newDoc).setSelection(
-        getNewSelection({
-          selection: userSelection,
-          doc: tr.doc,
+        maybeMoveSelectionIntoChipKey({
+          selection: selectionPriorToInsertion,
+          currentDoc: tr.doc,
         })
       );
     }

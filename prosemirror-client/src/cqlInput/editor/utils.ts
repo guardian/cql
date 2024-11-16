@@ -329,23 +329,30 @@ export const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
   return found;
 };
 
-export const getNewSelection = ({
+/**
+ * Return a selection pointing into a chipKey if the current selection precedes
+ * or is just within a chip.
+ */
+export const maybeMoveSelectionIntoChipKey = ({
   selection,
-  doc,
+  currentDoc,
 }: {
   selection: Selection;
-  doc: Node;
+  currentDoc: Node;
 }): Selection => {
+  const $from = currentDoc.resolve(selection.from);
+  const nodeAtCurrentSelection = $from.node().type;
+  const nodeTypeAfterCurrentSelection = $from.nodeAfter?.type;
   const shouldWrapSelectionInKey =
     selection.from === selection.to &&
     // Is the selection just before the start of a chip?
-    doc.resolve(selection.from).nodeAfter?.type === chip;
+    (nodeAtCurrentSelection === chip || nodeTypeAfterCurrentSelection === chip);
 
   if (shouldWrapSelectionInKey) {
-    const nodePos = findNodeAt(selection.from, doc, chipKey);
+    const nodePos = findNodeAt(selection.from, currentDoc, chipKey);
 
     if (nodePos !== -1) {
-      const $pos = doc.resolve(nodePos);
+      const $pos = currentDoc.resolve(nodePos);
       const selection = TextSelection.near($pos, 1);
       if (selection) {
         return selection;
@@ -354,9 +361,9 @@ export const getNewSelection = ({
   }
 
   return TextSelection.create(
-    doc,
-    Math.min(selection.from, doc.nodeSize - 2),
-    Math.min(selection.to, doc.nodeSize - 2)
+    currentDoc,
+    Math.min(selection.from, currentDoc.nodeSize - 2),
+    Math.min(selection.to, currentDoc.nodeSize - 2)
   );
 };
 
@@ -428,7 +435,7 @@ export const getNextPositionAfterTypeaheadSelection = (
 
   if (nodeTypeAfterIndex === -1) {
     console.warn(
-      `No node found to follow node of type ${suggestionNode.type.name}`
+      `Attempted to find a selection, but the position ${currentPos} w/in node ${suggestionNode.type.name} is not one of ${typeaheadSelectionSequence.map((_) => _.name).join(",")}`
     );
     return;
   }
@@ -437,7 +444,7 @@ export const getNextPositionAfterTypeaheadSelection = (
 
   if (!nodeTypeToSelect) {
     console.warn(
-      `Could not find a node to search for after pos ${currentPos} with ${suggestionNode.type.name}`
+      `Attempted to find a selection, but the position ${currentPos} w/in node ${suggestionNode.type.name} does not have anything to follow a node of type ${nodeTypeAfterIndex}`
     );
     return;
   }
@@ -455,7 +462,7 @@ export const getNextPositionAfterTypeaheadSelection = (
 
   if (insertPos === undefined) {
     console.warn(
-      `Attempted to find a cursor position after node ${suggestionNode.type.name} at ${$pos.pos}, but could not find a valid subsequent node.`
+      `Attempted to find a selection after node ${suggestionNode.type.name} at ${$pos.pos}, but could not find a node of type ${nodeTypeToSelect.allowsMarkType.name}`
     );
     return;
   }
