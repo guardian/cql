@@ -4,7 +4,6 @@ import {
   AllSelection,
   Plugin,
   PluginKey,
-  TextSelection,
   Transaction,
 } from "prosemirror-state";
 import {
@@ -18,7 +17,6 @@ import {
   mapResult,
   queryHasChanged,
   toMappedSuggestions,
-  getNextPositionAfterTypeaheadSelection,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "../TypeaheadPopover";
@@ -429,15 +427,6 @@ export const createCqlPlugin = ({
         const tr = view.state.tr;
 
         tr.replaceRangeWith(from, to, schema.text(value));
-
-        const insertPos = getNextPositionAfterTypeaheadSelection(
-          tr.doc,
-          tr.mapping.map(to)
-        );
-
-        if (insertPos) {
-          tr.setSelection(TextSelection.create(tr.doc, insertPos));
-        }
 
         view.dispatch(tr);
       };
