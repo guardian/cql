@@ -428,7 +428,6 @@ export const getNextPositionAfterTypeaheadSelection = (
 ) => {
   const $pos = currentDoc.resolve(currentPos);
   const suggestionNode = $pos.node();
-
   const nodeTypeAfterIndex = typeaheadSelectionSequence.indexOf(
     suggestionNode.type
   );
@@ -462,7 +461,7 @@ export const getNextPositionAfterTypeaheadSelection = (
 
   if (insertPos === undefined) {
     console.warn(
-      `Attempted to find a selection after node ${suggestionNode.type.name} at ${$pos.pos}, but could not find a node of type ${nodeTypeToSelect.allowsMarkType.name}`
+      `Attempted to find a selection after node ${suggestionNode.type.name} at ${$pos.pos}, but could not find a node of type ${nodeTypeToSelect.name}`
     );
     return;
   }

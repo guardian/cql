@@ -430,10 +430,7 @@ export const createCqlPlugin = ({
 
         tr.replaceRangeWith(from, to, schema.text(value));
 
-        const insertPos = getNextPositionAfterTypeaheadSelection(
-          tr.doc,
-          tr.mapping.map(to)
-        );
+        const insertPos = getNextPositionAfterTypeaheadSelection(tr.doc, to);
 
         if (insertPos) {
           tr.setSelection(TextSelection.create(tr.doc, insertPos));

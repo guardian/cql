@@ -233,7 +233,7 @@ describe("plugin", () => {
     });
 
     describe("chip values", () => {
-      it("displays a popover at the start of a query", async () => {
+      it("displays a popover at the start of a value field", async () => {
         const queryStr = "example +tag";
         const { editor, container, moveCaretToQueryPos } =
           createCqlEditor("example +tag");
