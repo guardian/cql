@@ -56,7 +56,7 @@ const createCqlEditor = (initialQuery: string = "") => {
     return tokensToDoc(tokens);
   };
 
-  const moveCaretToQueryPos = (pos: number) => {
+  const moveCaretToQueryPos = (pos: number, offset: number = 0) => {
     const query = docToQueryStr(editor.view.state.doc);
     const result = testCqlService.parseCqlQueryStr(query);
     const tokens = toProseMirrorTokens(result.tokens);
@@ -64,7 +64,7 @@ const createCqlEditor = (initialQuery: string = "") => {
     return editor.command((state, dispatch) => {
       dispatch?.(
         state.tr.setSelection(
-          TextSelection.near(state.doc.resolve(mapping.map(pos)))
+          TextSelection.near(state.doc.resolve(mapping.map(pos) + offset))
         )
       );
 
@@ -275,6 +275,19 @@ describe("plugin", () => {
 
         await waitFor("+tag:+tag:tags-are-magic +: ");
       });
+    });
+  });
+
+  describe("chip behaviour", () => {
+    it("should not de-chip text if the searchText between chips is removed", async () => {
+      const queryStr = "+tag:a b +tag:c";
+      const { editor, moveCaretToQueryPos, waitFor } =
+        createCqlEditor(queryStr);
+
+      await moveCaretToQueryPos(queryStr.indexOf("b"), 1);
+      await editor.backspace();
+
+      await waitFor("+tag:a +tag:c ");
     });
   });
 
