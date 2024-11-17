@@ -1,6 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import {
   docToQueryStr,
+  getNextPositionAfterTypeaheadSelection,
   mapResult,
   mapTokens,
   tokensToDoc,
@@ -193,6 +194,38 @@ describe("utils", () => {
           "",
         ]);
       });
+    });
+  });
+
+  describe("getNextPositionAfterTypeaheadSelection", () => {
+    test("should move to value position from the end of a key", () => {
+      const currentDoc = doc(
+        searchText(),
+        chip(chipKey("key<fromPos>"), chipValue("<toPos>")),
+        searchText()
+      );
+
+      const insertPos = getNextPositionAfterTypeaheadSelection(
+        currentDoc,
+        currentDoc.tag.fromPos
+      );
+
+      expect(insertPos).toBe(currentDoc.tag.toPos);
+    });
+
+    test("should move to searchText position from the end of a value", () => {
+      const currentDoc = doc(
+        searchText(),
+        chip(chipKey("key"), chipValue("<fromPos>")),
+        searchText("<toPos>")
+      );
+
+      const insertPos = getNextPositionAfterTypeaheadSelection(
+        currentDoc,
+        currentDoc.tag.fromPos
+      );
+
+      expect(insertPos).toBe(currentDoc.tag.toPos);
     });
   });
 

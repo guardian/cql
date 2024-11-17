@@ -417,6 +417,59 @@ export const mapResult = (result: CqlResult) => {
   };
 };
 
+// The sequences of nodes to move the caret to after a typeahead selection is
+// made, e.g. when a typeahead value is inserted for a chipKey, move the caret
+// to the next chipValue.
+const typeaheadSelectionSequence = [chipKey, chipValue, searchText];
+
+export const getNextPositionAfterTypeaheadSelection = (
+  currentDoc: Node,
+  currentPos: number
+) => {
+  const $pos = currentDoc.resolve(currentPos);
+  const suggestionNode = $pos.node();
+
+  const nodeTypeAfterIndex = typeaheadSelectionSequence.indexOf(
+    suggestionNode.type
+  );
+
+  if (nodeTypeAfterIndex === -1) {
+    console.warn(
+      `Attempted to find a selection, but the position ${currentPos} w/in node ${suggestionNode.type.name} is not one of ${typeaheadSelectionSequence.map((_) => _.name).join(",")}`
+    );
+    return;
+  }
+
+  const nodeTypeToSelect = typeaheadSelectionSequence[nodeTypeAfterIndex + 1];
+
+  if (!nodeTypeToSelect) {
+    console.warn(
+      `Attempted to find a selection, but the position ${currentPos} w/in node ${suggestionNode.type.name} does not have anything to follow a node of type ${nodeTypeAfterIndex}`
+    );
+    return;
+  }
+
+  let insertPos: number | undefined;
+  currentDoc.nodesBetween(currentPos, currentDoc.nodeSize - 2, (node, pos) => {
+    if (insertPos !== undefined) {
+      return false;
+    }
+
+    if (node.type === nodeTypeToSelect) {
+      insertPos = pos + 1;
+    }
+  });
+
+  if (insertPos === undefined) {
+    console.warn(
+      `Attempted to find a selection after node ${suggestionNode.type.name} at ${$pos.pos}, but could not find a node of type ${nodeTypeToSelect.allowsMarkType.name}`
+    );
+    return;
+  }
+
+  return insertPos;
+};
+
 /**
  * Apply a delete intent to the node at the given range:
  *  - mark the node for deletion, or
