@@ -24,7 +24,6 @@ template.innerHTML = `
     }
 
     chip-wrapper {
-      display: inline-flex;
       background-color: rgba(255,255,255,0.2);
       margin: 0 5px;
       border-radius: ${baseBorderRadius}px;
