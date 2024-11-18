@@ -196,3 +196,13 @@ Perhaps an API that accepts a language service that is optionally asynchronous?
 This will necessitate a rethink in how we handle suggestions, as at the moment they're included in the LS response. Suggestions are necessarily async (value lookups may go across the wire).
 - Factor them out into a separate, async call. This would mean a rethink of the suggestions API.
 - Make suggestions event-driven, to ensure we make a single call.
+
+### Pluses and minuses of pluses and minuses
+
+Do we need a `+` for discovery? Or can we get away without?
+
++ Always display all indexed fields after a '+' — how do you discover what's available w/o this mechanism
++ Being able to start with an exclusion ('-')
++ Reverse polarity
+- Extra char
+- Users must discover what '+' does (and may never discover what '-' is)
