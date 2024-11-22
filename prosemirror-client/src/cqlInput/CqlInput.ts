@@ -24,6 +24,7 @@ template.innerHTML = `
     }
 
     chip-wrapper {
+      display: inline-flex;
       background-color: rgba(255,255,255,0.2);
       margin: 0 5px;
       border-radius: ${baseBorderRadius}px;
@@ -35,17 +36,11 @@ template.innerHTML = `
     }
 
     chip-key {
-      display: inline-flex;
       padding: 0 5px;
     }
 
     chip-value {
       padding-right: 5px;
-    }
-
-
-    chip-key:after {
-      content: ':'
     }
 
     .CqlToken__STRING {

@@ -24,7 +24,7 @@ export const schema = new Schema({
         [DELETE_CHIP_INTENT]: {
           default: false,
         },
-      }
+      },
     },
     chipKey: {
       content: "inline*",

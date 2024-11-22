@@ -22,7 +22,7 @@ import {
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "../TypeaheadPopover";
-import { chip, DELETE_CHIP_INTENT, doc, schema } from "./schema";
+import { chip, chipKey, DELETE_CHIP_INTENT, doc, schema } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { QueryChangeEventDetail } from "../../types/dom";
 import { ErrorPopover } from "../ErrorPopover";
@@ -303,6 +303,21 @@ export const createCqlPlugin = ({
               }
               return true;
             },
+          };
+        },
+        [chipKey.name]() {
+          const dom = document.createElement("chip-key");
+          const separator = document.createElement("Cql__chipKeySeparator");
+          separator.setAttribute("contentEditable", "false");
+          separator.innerText = ":";
+
+          const contentDOM = document.createElement("span");
+          contentDOM.classList.add("Cql__ChipWrapperContent");
+          dom.appendChild(contentDOM);
+          dom.appendChild(separator);
+          return {
+            dom,
+            contentDOM,
           };
         },
       },
