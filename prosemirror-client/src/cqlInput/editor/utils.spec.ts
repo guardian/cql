@@ -69,6 +69,17 @@ describe("utils", () => {
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
+    test("should insert a searchText node if the query starts with a KV pair", async () => {
+      const tokens = await queryToProseMirrorTokens(":value");
+      const node = tokensToDoc(tokens);
+
+      const expected = doc(
+        searchText(":value")
+      );
+
+      expect(node.toJSON()).toEqual(expected.toJSON());
+    });
+
     test("should preserve whitespace at the start of the document", async () => {
       const tokens = await queryToProseMirrorTokens(" this AND  +key");
       const node = tokensToDoc(tokens);

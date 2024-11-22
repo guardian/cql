@@ -189,8 +189,6 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             ])
           );
         }
-        case "CHIP_VALUE":
-          return acc;
         case "EOF": {
           const previousToken = tokens[index - 1];
           const previousNode = acc[acc.length - 1];
@@ -220,6 +218,17 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
         }
         // All other tokens become searchText
         default: {
+          // Ignore chip values if they are preceded by keys - they will be
+          // taken care of in the "CHIP_KEY" case above. If not, interpret them
+          // as searchText, so we can display them as text in the input.
+          const previousToken = tokens[index - 1];
+          if (
+            token.tokenType === "CHIP_VALUE" &&
+            previousToken?.tokenType === "CHIP_KEY"
+          ) {
+            return acc;
+          }
+
           // If the next token is further ahead of this token by more than one
           // position, it is separated by whitespace – append the whitespace to
           // this node
