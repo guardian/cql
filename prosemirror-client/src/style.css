@@ -78,6 +78,22 @@ h6 {
   isolation: isolate;
 }
 
+.Page__header {
+  display: flex;
+  align-items: center;
+}
+
+.Page__repo-link {
+  display: flex;
+  align-items: center;
+  font-weight: bold;
+  margin-left: auto;
+}
+
+.Page__repo-link:visited {
+  color: #ccc;
+}
+
 .CqlSandbox__debug-container {
   margin-top: 10px;
   white-space: pre;
@@ -327,4 +343,16 @@ input {
   .tree>li>code:before,
   .tree>li>.span:before {
     outline: none;
+  }
+
+  .CqlToken__STRING {
+    color: lightblue;
+  }
+
+  .CqlToken__AND, .CqlToken__OR {
+    color: magenta;
+  }
+
+  .CqlToken__RIGHT_BRACKET, .CqlToken__LEFT_BRACKET {
+    color: lightpink;
   }
