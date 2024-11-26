@@ -2,6 +2,7 @@ import { Mapping, StepMap } from "prosemirror-transform";
 import { Decoration, EditorView } from "prosemirror-view";
 import {
   DELETE_CHIP_INTENT,
+  IS_READ_ONLY,
   chip,
   chipKey,
   chipValue,
@@ -10,8 +11,8 @@ import {
   searchText,
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
-import { Selection, TextSelection } from "prosemirror-state";
-import { ERROR_CLASS } from "./plugin";
+import { Selection, TextSelection, Transaction } from "prosemirror-state";
+import { CLASS_ERROR } from "./plugin";
 import { Token } from "../../lang/token";
 import {
   MappedTypeaheadSuggestion,
@@ -515,7 +516,7 @@ export const applyDeleteIntent = (
 export const errorToDecoration = (position: number): Decoration => {
   const toDOM = () => {
     const el = document.createElement("span");
-    el.classList.add(ERROR_CLASS);
+    el.classList.add(CLASS_ERROR);
     return el;
   };
 
@@ -551,4 +552,21 @@ export const getNodeTypeAtSelection = (view: EditorView) => {
   }
 
   return doc.resolve(from).node().type;
+};
+
+export const applyReadOnlyChipKeys = (tr: Transaction) => {
+  tr.doc.descendants((node, pos) => {
+    const isChipKey = node.type === chipKey;
+
+    const contentStart = pos;
+    const contentEnd = contentStart + node.nodeSize;
+    const selectionCoversChipKey =
+      tr.selection.from >= contentStart && tr.selection.to <= contentEnd;
+
+    if (isChipKey && !selectionCoversChipKey) {
+      tr.setNodeAttribute(pos, IS_READ_ONLY, true);
+    }
+  });
+
+  return true;
 };

@@ -1,7 +1,7 @@
 import { EditorView } from "prosemirror-view";
 import { CqlError } from "../services/CqlService";
 import { Popover } from "./Popover";
-import { ERROR_CLASS, VISIBLE_CLASS } from "./editor/plugin";
+import { CLASS_ERROR, CLASS_VISIBLE } from "./editor/plugin";
 
 export class ErrorPopover extends Popover {
   private debugContainer: HTMLElement | undefined;
@@ -53,22 +53,22 @@ export class ErrorPopover extends Popover {
 
     this.contentEl.innerHTML = "";
     this.errorMsgEl.innerHTML = "";
-    this.errorMsgEl.classList.remove(VISIBLE_CLASS);
-    this.popoverEl.classList.remove(VISIBLE_CLASS);
+    this.errorMsgEl.classList.remove(CLASS_VISIBLE);
+    this.popoverEl.classList.remove(CLASS_VISIBLE);
     this.popoverEl.hidePopover?.();
   };
 
   private debouncedShowErrorMessages = (error: CqlError) => {
     this.visibilityTimeout = setTimeout(() => {
       this.errorMsgEl.innerHTML = error.message;
-      this.errorMsgEl.classList.add(VISIBLE_CLASS);
+      this.errorMsgEl.classList.add(CLASS_VISIBLE);
 
       if (error.position !== undefined) {
         this.popoverEl.showPopover?.();
-        this.popoverEl.classList.add(VISIBLE_CLASS);
+        this.popoverEl.classList.add(CLASS_VISIBLE);
 
         const referenceEl =
-          this.view.dom.getElementsByClassName(ERROR_CLASS)?.[0];
+          this.view.dom.getElementsByClassName(CLASS_ERROR)?.[0];
         if (!referenceEl) {
           console.warn(
             `Attempt to render element popover at position ${error.position}, but no position widget found in document`

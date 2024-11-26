@@ -1,6 +1,10 @@
 import { describe, it, beforeEach, expect } from "bun:test";
 import { errorMsgTestId, errorTestId, typeaheadTestId } from "../CqlInput";
-import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
+import {
+  findByTestId,
+  findByText,
+  fireEvent,
+} from "@testing-library/dom";
 import { CqlClientService } from "../../services/CqlService";
 import { TestTypeaheadHelpers } from "../../lang/typeaheadHelpersTest";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
@@ -288,6 +292,15 @@ describe("plugin", () => {
       await editor.backspace();
 
       await waitFor("+tag:a +tag:c ");
+    });
+
+    it("should make chip keys read only when the selection does not fall within their content", async () => {
+      const queryStr = "a +tag:b c";
+      const { container } = createCqlEditor(queryStr);
+
+      const chipKey = await findByText(container, "tag");
+
+      expect(chipKey.isContentEditable).toBe(false);
     });
   });
 

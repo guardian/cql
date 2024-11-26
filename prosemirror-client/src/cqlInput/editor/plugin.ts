@@ -19,10 +19,18 @@ import {
   queryHasChanged,
   toMappedSuggestions,
   getNextPositionAfterTypeaheadSelection,
+  applyReadOnlyChipKeys,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "../TypeaheadPopover";
-import { chip, chipKey, DELETE_CHIP_INTENT, doc, schema } from "./schema";
+import {
+  chip,
+  chipKey,
+  DELETE_CHIP_INTENT,
+  doc,
+  IS_READ_ONLY,
+  schema,
+} from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { QueryChangeEventDetail } from "../../types/dom";
 import { ErrorPopover } from "../ErrorPopover";
@@ -48,8 +56,9 @@ type PluginState = {
 const ACTION_NEW_STATE = "NEW_STATE";
 const ACTION_SERVER_ERROR = "SERVER_ERROR";
 
-export const ERROR_CLASS = "Cql__ErrorWidget";
-export const VISIBLE_CLASS = "Cql--isVisible";
+export const CLASS_ERROR = "Cql__ErrorWidget";
+export const CLASS_VISIBLE = "Cql--isVisible";
+export const CLASS_CHIP_KEY_READONLY = "Cql__ChipKey--readonly";
 
 /**
  * The CQL plugin handles most aspects of the editor behaviour, including
@@ -168,6 +177,8 @@ export const createCqlPlugin = ({
       mapping,
       queryStr: queryAfterParse,
     });
+
+    applyReadOnlyChipKeys(tr);
 
     return { queryResult, tr };
   };
@@ -305,7 +316,7 @@ export const createCqlPlugin = ({
             },
           };
         },
-        [chipKey.name]() {
+        [chipKey.name](node) {
           const dom = document.createElement("chip-key");
           const separator = document.createElement("Cql__chipKeySeparator");
           separator.setAttribute("contentEditable", "false");
@@ -315,9 +326,29 @@ export const createCqlPlugin = ({
           contentDOM.classList.add("Cql__ChipWrapperContent");
           dom.appendChild(contentDOM);
           dom.appendChild(separator);
+          if (node.attrs[IS_READ_ONLY]) {
+            dom.classList.add(CLASS_CHIP_KEY_READONLY);
+            dom.setAttribute("contenteditable", "false");
+          }
+
           return {
             dom,
             contentDOM,
+            update(node) {
+              if (node.type !== chipKey) {
+                return false;
+              }
+
+              if (node.attrs[IS_READ_ONLY]) {
+                dom.classList.add(CLASS_CHIP_KEY_READONLY);
+                dom.setAttribute("contenteditable", "false");
+              } else {
+                dom.classList.remove(CLASS_CHIP_KEY_READONLY);
+                dom.setAttribute("contenteditable", "true");
+              }
+
+              return true;
+            },
           };
         },
       },
@@ -469,6 +500,7 @@ export const createCqlPlugin = ({
       // Set up initial document with parsed query
 
       const { tr, queryResult } = applyQueryToTr(view.state.tr, cqlService);
+
       view.dispatch(tr);
       onChange({
         cqlQuery: docToQueryStr(tr.doc),

@@ -1,6 +1,7 @@
 import { Schema } from "prosemirror-model";
 
 export const DELETE_CHIP_INTENT = "DELETE_CHIP_INTENT";
+export const IS_READ_ONLY = "IS_READ_ONLY";
 
 export const schema = new Schema({
   nodes: {
@@ -30,6 +31,11 @@ export const schema = new Schema({
       content: "inline*",
       group: "block",
       toDOM: () => ["chip-key", 0],
+      attrs: {
+        [IS_READ_ONLY]: {
+          default: false,
+        },
+      },
     },
     chipValue: {
       content: "inline*",

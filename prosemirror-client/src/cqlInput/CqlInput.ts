@@ -2,7 +2,7 @@ import { EditorView } from "prosemirror-view";
 import { CqlServiceInterface } from "../services/CqlService";
 import { QueryChangeEventDetail } from "../types/dom";
 import { createEditorView } from "./editor/editor";
-import { createCqlPlugin, VISIBLE_CLASS } from "./editor/plugin";
+import { createCqlPlugin, CLASS_VISIBLE } from "./editor/plugin";
 
 const baseFontSize = 28;
 const baseBorderRadius = 5;
@@ -88,6 +88,10 @@ template.innerHTML = `
       font-size: ${baseFontSize * 0.8}px;
     }
 
+    .Cql__ChipKey--readonly {
+      color: #bbb;
+    }
+
     .Cql__ChipWrapperContent {
       display: inline-flex;
     }
@@ -132,7 +136,7 @@ template.innerHTML = `
       display: none;
     }
 
-    .${VISIBLE_CLASS} {
+    .${CLASS_VISIBLE} {
       display: block;
     }
   </style>
