@@ -4,7 +4,7 @@ An experiment to see if a query DSL, coupled with first-class typeahead and synt
 
 ![intro](https://github.com/guardian/cql/assets/7767575/22d3dba7-ace6-4c3a-8dcf-9755728fa98b)
 
-Sandbox available at https://cql-sandbox.gutools.co.uk/. A language server is currently available via API Gateway in the developer playground account – add the url to get started, or ping me and I'll send it!
+Play in the sandbox at https://cql-sandbox.gutools.co.uk/.
 
 ## Why?
 
