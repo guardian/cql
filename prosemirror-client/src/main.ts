@@ -82,7 +82,7 @@ const CqlInputCapi = createCqlInput(cqlServiceCapi, { debugEl, syntaxHighlightin
 const guToolsFieldResolvers: TypeaheadField[] = [
   new TypeaheadField(
       "team",
-      "team",
+      "Team",
       "Search by team, e.g. capi",
       toolsSuggestionOptionResolvers
   ),
