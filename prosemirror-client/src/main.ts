@@ -16,7 +16,16 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
       </svg>
     </a>
   </div>
-  <cql-input initial-value="" id="cql-input" popover-container-id="popover-container"></cql-input>
+  <div>  
+    <label for="data-source">Search:</label>  
+    <select id="data-source">
+      <option value="content-api">Content API</option>
+      <option value="tools-index">Tools Index</option>
+    </select>
+  </div>
+  <div id="cql-input-container">
+    <cql-input initial-value="" id="cql-input" popover-container-id="popover-container"></cql-input>
+  </div>
   <p>Press <tt>+</tt> to select a specific field to search.</p>
   <p>Join search terms with <tt class="CqlToken__AND">OR</tt> and <tt class="CqlToken__AND">AND</tt>. Consecutive search terms, e.g. <tt class="CqlToken__STRING">this that</tt>, are implicitly joined with <tt class="CqlToken__OR">OR</tt>.</p>
   <p>Group expressions with parenthesis, e.g. <tt class="CqlToken__STRING">one <tt class="CqlToken__LEFT_BRACKET">(</tt>two <tt class="CqlToken__AND">AND</tt> three<tt class="CqlToken__RIGHT_BRACKET">)</tt></tt>
@@ -41,9 +50,20 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
 
 document.getElementById("cql-sandbox")!.appendChild(debugEl);
 
+const dataSourceMap: Record<string, string> = {
+  "content-api": "cql-input",
+  "tools-index": "cql-input-gutools"
+}
+
+const dataSourceSelect = document.getElementById("data-source")!;
+const cqlInputContainer = document.getElementById("cql-input-container")!;
 const cqlInput = document.getElementById("cql-input")!;
 const cqlEl = document.getElementById("cql")!;
 const queryEl = document.getElementById("query")!;
+dataSourceSelect.addEventListener("change", ((e: Event) => {
+  const inputHtmlTagValue = dataSourceMap[(e.target as HTMLSelectElement).value];
+  cqlInputContainer.innerHTML = `<${inputHtmlTagValue} initial-value="" id="cql-input" popover-container-id="popover-container"></${inputHtmlTagValue}>`;
+}))
 cqlInput?.addEventListener("queryChange", ((e: CustomEvent) => {
   queryEl.innerHTML = e.detail.query;
   cqlEl.innerHTML = e.detail.cqlQuery.replaceAll(" ", "·");
@@ -57,6 +77,11 @@ const typeaheadHelpers = new TypeaheadHelpersCapi(initialEndpoint, "test");
 const cqlService = new CqlClientService(typeaheadHelpers.fieldResolvers);
 const CqlInput = createCqlInput(cqlService, { debugEl, syntaxHighlighting: true });
 
+const typeaheadHelpersGuTools = new TypeaheadHelpersCapi("https://tools.gutools.co.uk", "test");
+const cqlServiceGuTools = new CqlClientService(typeaheadHelpersGuTools.fieldResolvers);
+const CqlInputGuTools = createCqlInput(cqlServiceGuTools, { debugEl, syntaxHighlighting: true });
+
+customElements.define("cql-input-gutools", CqlInputGuTools);
 customElements.define("cql-input", CqlInput);
 
 if (window.CQL_VIEW) {
