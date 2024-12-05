@@ -74,10 +74,10 @@ cqlInput?.addEventListener("queryChange", ((e: CustomEvent) => {
 const params = new URLSearchParams(window.location.search);
 const endpoint = params.get("endpoint");
 
-const initialEndpoint = endpoint || "https://content.guardianapis.com";
-const typeaheadHelpers = new TypeaheadHelpersCapi(initialEndpoint, "test");
-const cqlService = new CqlClientService(typeaheadHelpers.fieldResolvers);
-const CqlInput = createCqlInput(cqlService, { debugEl, syntaxHighlighting: true });
+const initialEndpointCapi = endpoint || "https://content.guardianapis.com";
+const typeaheadHelpersCapi = new TypeaheadHelpersCapi(initialEndpointCapi, "test");
+const cqlServiceCapi = new CqlClientService(typeaheadHelpersCapi.fieldResolvers);
+const CqlInputCapi = createCqlInput(cqlServiceCapi, { debugEl, syntaxHighlighting: true });
 
 const guToolsFieldResolvers: TypeaheadField[] = [
   new TypeaheadField(
@@ -91,7 +91,7 @@ const cqlServiceGuTools = new CqlClientService(guToolsFieldResolvers);
 const CqlInputGuTools = createCqlInput(cqlServiceGuTools, { debugEl, syntaxHighlighting: true });
 
 customElements.define("cql-input-gutools", CqlInputGuTools);
-customElements.define("cql-input-capi", CqlInput);
+customElements.define("cql-input-capi", CqlInputCapi);
 
 if (window.CQL_VIEW) {
   applyDevTools(window.CQL_VIEW);
@@ -101,9 +101,9 @@ const endpointInput = document.getElementById("endpoint") as HTMLInputElement;
 endpointInput?.addEventListener("input", (event) => {
   const endpoint = (event.target as HTMLInputElement).value;
   setUrlParam("endpoint", endpoint);
-  typeaheadHelpers.setBaseUrl(endpoint);
+  typeaheadHelpersCapi.setBaseUrl(endpoint);
 });
-endpointInput.value = initialEndpoint;
+endpointInput.value = initialEndpointCapi;
 
 const setUrlParam = (key: string, value: string) => {
   const urlParams = new URLSearchParams(window.location.search);
