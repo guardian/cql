@@ -3,6 +3,8 @@ import applyDevTools from "prosemirror-dev-tools";
 import "./style.css";
 import { CqlClientService } from "./services/CqlService";
 import { TypeaheadHelpersCapi } from "./lang/typeaheadHelpersCapi";
+import {TypeaheadField} from "./lang/typeahead.ts";
+import {toolsSuggestionOptionResolvers} from "./lang/tools-index/config";
 
 const debugEl = document.createElement("div");
 debugEl.className = "CqlSandbox__debug-container";
@@ -77,8 +79,15 @@ const typeaheadHelpers = new TypeaheadHelpersCapi(initialEndpoint, "test");
 const cqlService = new CqlClientService(typeaheadHelpers.fieldResolvers);
 const CqlInput = createCqlInput(cqlService, { debugEl, syntaxHighlighting: true });
 
-const typeaheadHelpersGuTools = new TypeaheadHelpersCapi("https://tools.gutools.co.uk", "test");
-const cqlServiceGuTools = new CqlClientService(typeaheadHelpersGuTools.fieldResolvers);
+const guToolsFieldResolvers: TypeaheadField[] = [
+  new TypeaheadField(
+      "team",
+      "team",
+      "Search by team, e.g. capi",
+      toolsSuggestionOptionResolvers
+  ),
+];
+const cqlServiceGuTools = new CqlClientService(guToolsFieldResolvers);
 const CqlInputGuTools = createCqlInput(cqlServiceGuTools, { debugEl, syntaxHighlighting: true });
 
 customElements.define("cql-input-gutools", CqlInputGuTools);
