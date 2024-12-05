@@ -122,11 +122,12 @@ template.innerHTML = `
       font-size: ${baseFontSize}px;
       border-radius: ${baseBorderRadius}px;
       overflow-y: scroll;
+      color: #eee;
     }
-    
+
     .Cql__TypeaheadPopover {
       background-color: #242424;
-      border-color: #373737;
+      border: 2px solid grey;
     }
 
     .Cql__ErrorPopover {
