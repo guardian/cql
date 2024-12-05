@@ -24,7 +24,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
     </select>
   </div>
   <div id="cql-input-container">
-    <cql-input initial-value="" id="cql-input" popover-container-id="popover-container"></cql-input>
+    <cql-input-capi initial-value="" id="cql-input-capi" popover-container-id="popover-container"></cql-input-capi>
   </div>
   <p>Press <tt>+</tt> to select a specific field to search.</p>
   <p>Join search terms with <tt class="CqlToken__AND">OR</tt> and <tt class="CqlToken__AND">AND</tt>. Consecutive search terms, e.g. <tt class="CqlToken__STRING">this that</tt>, are implicitly joined with <tt class="CqlToken__OR">OR</tt>.</p>
@@ -51,7 +51,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
 document.getElementById("cql-sandbox")!.appendChild(debugEl);
 
 const dataSourceMap: Record<string, string> = {
-  "content-api": "cql-input",
+  "content-api": "cql-input-capi",
   "tools-index": "cql-input-gutools"
 }
 
@@ -82,7 +82,7 @@ const cqlServiceGuTools = new CqlClientService(typeaheadHelpersGuTools.fieldReso
 const CqlInputGuTools = createCqlInput(cqlServiceGuTools, { debugEl, syntaxHighlighting: true });
 
 customElements.define("cql-input-gutools", CqlInputGuTools);
-customElements.define("cql-input", CqlInput);
+customElements.define("cql-input-capi", CqlInput);
 
 if (window.CQL_VIEW) {
   applyDevTools(window.CQL_VIEW);
