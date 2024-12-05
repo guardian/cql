@@ -76,11 +76,11 @@ template.innerHTML = `
     }
 
     .Cql__Option--is-selected {
-      background-color: rgba(0,0,0,0.1);
+      background-color: rgba(255,255,255,0.1);
     }
 
     .Cql__Option:hover {
-      background-color: rgba(0,0,0,0.2);
+      background-color: rgba(255,255,255,0.2);
       cursor: pointer;
     }
 
@@ -122,6 +122,11 @@ template.innerHTML = `
       font-size: ${baseFontSize}px;
       border-radius: ${baseBorderRadius}px;
       overflow-y: scroll;
+    }
+    
+    .Cql__TypeaheadPopover {
+      background-color: #242424;
+      border-color: #373737;
     }
 
     .Cql__ErrorPopover {

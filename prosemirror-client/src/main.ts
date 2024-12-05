@@ -3,6 +3,8 @@ import applyDevTools from "prosemirror-dev-tools";
 import "./style.css";
 import { CqlClientService } from "./services/CqlService";
 import { TypeaheadHelpersCapi } from "./lang/typeaheadHelpersCapi";
+import {TypeaheadField} from "./lang/typeahead.ts";
+import {toolsSuggestionOptionResolvers} from "./lang/tools-index/config";
 
 const debugEl = document.createElement("div");
 debugEl.className = "CqlSandbox__debug-container";
@@ -16,7 +18,16 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
       </svg>
     </a>
   </div>
-  <cql-input initial-value="" id="cql-input" popover-container-id="popover-container"></cql-input>
+  <div>  
+    <label for="data-source">Search:</label>  
+    <select id="data-source">
+      <option value="content-api">Content API</option>
+      <option value="tools-index">Tools Index</option>
+    </select>
+  </div>
+  <div id="cql-input-container">
+    <cql-input-capi initial-value="" id="cql-input" popover-container-id="popover-container"></cql-input-capi>
+  </div>
   <p>Press <tt>+</tt> to select a specific field to search.</p>
   <p>Join search terms with <tt class="CqlToken__AND">OR</tt> and <tt class="CqlToken__AND">AND</tt>. Consecutive search terms, e.g. <tt class="CqlToken__STRING">this that</tt>, are implicitly joined with <tt class="CqlToken__OR">OR</tt>.</p>
   <p>Group expressions with parenthesis, e.g. <tt class="CqlToken__STRING">one <tt class="CqlToken__LEFT_BRACKET">(</tt>two <tt class="CqlToken__AND">AND</tt> three<tt class="CqlToken__RIGHT_BRACKET">)</tt></tt>
@@ -41,9 +52,20 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
 
 document.getElementById("cql-sandbox")!.appendChild(debugEl);
 
+const dataSourceMap: Record<string, string> = {
+  "content-api": "cql-input-capi",
+  "tools-index": "cql-input-gutools"
+}
+
+const dataSourceSelect = document.getElementById("data-source")!;
+const cqlInputContainer = document.getElementById("cql-input-container")!;
 const cqlInput = document.getElementById("cql-input")!;
 const cqlEl = document.getElementById("cql")!;
 const queryEl = document.getElementById("query")!;
+dataSourceSelect.addEventListener("change", ((e: Event) => {
+  const inputHtmlTagValue = dataSourceMap[(e.target as HTMLSelectElement).value];
+  cqlInputContainer.innerHTML = `<${inputHtmlTagValue} initial-value="" id="cql-input" popover-container-id="popover-container"></${inputHtmlTagValue}>`;
+}))
 cqlInput?.addEventListener("queryChange", ((e: CustomEvent) => {
   queryEl.innerHTML = e.detail.query;
   cqlEl.innerHTML = e.detail.cqlQuery.replaceAll(" ", "·");
@@ -52,12 +74,24 @@ cqlInput?.addEventListener("queryChange", ((e: CustomEvent) => {
 const params = new URLSearchParams(window.location.search);
 const endpoint = params.get("endpoint");
 
-const initialEndpoint = endpoint || "https://content.guardianapis.com";
-const typeaheadHelpers = new TypeaheadHelpersCapi(initialEndpoint, "test");
-const cqlService = new CqlClientService(typeaheadHelpers.fieldResolvers);
-const CqlInput = createCqlInput(cqlService, { debugEl, syntaxHighlighting: true });
+const initialEndpointCapi = endpoint || "https://content.guardianapis.com";
+const typeaheadHelpersCapi = new TypeaheadHelpersCapi(initialEndpointCapi, "test");
+const cqlServiceCapi = new CqlClientService(typeaheadHelpersCapi.fieldResolvers);
+const CqlInputCapi = createCqlInput(cqlServiceCapi, { debugEl, syntaxHighlighting: true });
 
-customElements.define("cql-input", CqlInput);
+const guToolsFieldResolvers: TypeaheadField[] = [
+  new TypeaheadField(
+      "team",
+      "Team",
+      "Search by team, e.g. capi",
+      toolsSuggestionOptionResolvers
+  ),
+];
+const cqlServiceGuTools = new CqlClientService(guToolsFieldResolvers);
+const CqlInputGuTools = createCqlInput(cqlServiceGuTools, { debugEl, syntaxHighlighting: true });
+
+customElements.define("cql-input-gutools", CqlInputGuTools);
+customElements.define("cql-input-capi", CqlInputCapi);
 
 if (window.CQL_VIEW) {
   applyDevTools(window.CQL_VIEW);
@@ -67,9 +101,9 @@ const endpointInput = document.getElementById("endpoint") as HTMLInputElement;
 endpointInput?.addEventListener("input", (event) => {
   const endpoint = (event.target as HTMLInputElement).value;
   setUrlParam("endpoint", endpoint);
-  typeaheadHelpers.setBaseUrl(endpoint);
+  typeaheadHelpersCapi.setBaseUrl(endpoint);
 });
-endpointInput.value = initialEndpoint;
+endpointInput.value = initialEndpointCapi;
 
 const setUrlParam = (key: string, value: string) => {
   const urlParams = new URLSearchParams(window.location.search);
