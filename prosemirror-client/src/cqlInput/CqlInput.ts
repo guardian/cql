@@ -123,6 +123,11 @@ template.innerHTML = `
       border-radius: ${baseBorderRadius}px;
       overflow-y: scroll;
     }
+    
+    .Cql__TypeaheadPopover {
+      background-color: white;
+      color: black;
+    }
 
     .Cql__ErrorPopover {
       display: none;
