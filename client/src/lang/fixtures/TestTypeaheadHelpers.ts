@@ -1,5 +1,5 @@
-import { TypeaheadField } from "./typeahead";
-import { TextSuggestionOption } from "./types";
+import { TypeaheadField } from "../typeahead";
+import { TextSuggestionOption } from "../types";
 
 export class TestTypeaheadHelpers {
   public fieldResolvers = [

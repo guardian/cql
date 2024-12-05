@@ -1,12 +1,7 @@
 import { describe, it, beforeEach, expect } from "bun:test";
 import { errorMsgTestId, errorTestId, typeaheadTestId } from "../CqlInput";
-import {
-  findByTestId,
-  findByText,
-  fireEvent,
-} from "@testing-library/dom";
+import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
 import { CqlClientService } from "../../services/CqlService";
-import { TestTypeaheadHelpers } from "../../lang/typeaheadHelpersTest";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
 import { createCqlPlugin } from "./plugin";
 import { redo, undo } from "prosemirror-history";
@@ -21,6 +16,7 @@ import {
   toProseMirrorTokens,
 } from "./utils";
 import { TextSelection } from "prosemirror-state";
+import { TestTypeaheadHelpers } from "../../lang/fixtures/TestTypeaheadHelpers";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new CqlClientService(typeheadHelpers.fieldResolvers);

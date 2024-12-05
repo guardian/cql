@@ -9,8 +9,8 @@ import {
 import { schema } from "./schema";
 import { builders } from "prosemirror-test-builder";
 import { Typeahead } from "../../lang/typeahead";
-import { TestTypeaheadHelpers } from "../../lang/typeaheadHelpersTest";
 import { Cql } from "../../lang/Cql";
+import { TestTypeaheadHelpers } from "../../lang/fixtures/TestTypeaheadHelpers";
 
 describe("utils", () => {
   const { chip, chipKey, chipValue, doc, searchText } = builders(schema);
@@ -73,9 +73,7 @@ describe("utils", () => {
       const tokens = await queryToProseMirrorTokens(":value");
       const node = tokensToDoc(tokens);
 
-      const expected = doc(
-        searchText(":value")
-      );
+      const expected = doc(searchText(":value"));
 
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
@@ -241,7 +239,6 @@ describe("utils", () => {
   });
 
   describe("docToQueryStr", () => {
-
     test("should convert a doc to a query string", () => {
       const queryDoc = doc(
         searchText("example"),
@@ -278,5 +275,5 @@ describe("utils", () => {
 
       expect(docToQueryStr(queryDoc)).toBe(queryStr);
     });
-  })
+  });
 });

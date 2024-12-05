@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
-import { TestTypeaheadHelpers } from "./typeaheadHelpersTest";
 import { Typeahead } from "./typeahead";
 import { Cql } from "./Cql";
+import { TestTypeaheadHelpers } from "./fixtures/TestTypeaheadHelpers";
 
 describe("a query", () => {
   const typeaheadHelpers = new TestTypeaheadHelpers();
@@ -57,9 +57,7 @@ describe("a query", () => {
   });
 
   it("should provide an error when keys are missing values", async () => {
-    const cqlResult = await cql.parse(
-      "+tag"
-    );
+    const cqlResult = await cql.parse("+tag");
     expect(cqlResult.error?.message).toBe(
       "The field 'tag' needs a value after it (e.g. 'tag:tone/news')"
     );

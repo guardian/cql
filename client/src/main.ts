@@ -2,9 +2,9 @@ import { createCqlInput } from "./cqlInput/CqlInput";
 import applyDevTools from "prosemirror-dev-tools";
 import "./style.css";
 import { CqlClientService } from "./services/CqlService";
-import { TypeaheadHelpersCapi } from "./lang/typeaheadHelpersCapi";
-import {TypeaheadField} from "./lang/typeahead.ts";
-import {toolsSuggestionOptionResolvers} from "./lang/tools-index/config";
+import { TypeaheadHelpersCapi } from "./typeahead/typeaheadHelpersCapi";
+import { TypeaheadField } from "./lang/typeahead.ts";
+import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
 
 const debugEl = document.createElement("div");
 debugEl.className = "CqlSandbox__debug-container";
@@ -18,8 +18,8 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
       </svg>
     </a>
   </div>
-  <div>  
-    <label for="data-source">Search:</label>  
+  <div>
+    <label for="data-source">Search:</label>
     <select id="data-source">
       <option value="content-api">Content API</option>
       <option value="tools-index">Tools Index</option>
@@ -54,18 +54,19 @@ document.getElementById("cql-sandbox")!.appendChild(debugEl);
 
 const dataSourceMap: Record<string, string> = {
   "content-api": "cql-input-capi",
-  "tools-index": "cql-input-gutools"
-}
+  "tools-index": "cql-input-gutools",
+};
 
 const dataSourceSelect = document.getElementById("data-source")!;
 const cqlInputContainer = document.getElementById("cql-input-container")!;
 const cqlInput = document.getElementById("cql-input")!;
 const cqlEl = document.getElementById("cql")!;
 const queryEl = document.getElementById("query")!;
-dataSourceSelect.addEventListener("change", ((e: Event) => {
-  const inputHtmlTagValue = dataSourceMap[(e.target as HTMLSelectElement).value];
+dataSourceSelect.addEventListener("change", (e: Event) => {
+  const inputHtmlTagValue =
+    dataSourceMap[(e.target as HTMLSelectElement).value];
   cqlInputContainer.innerHTML = `<${inputHtmlTagValue} initial-value="" id="cql-input" popover-container-id="popover-container"></${inputHtmlTagValue}>`;
-}))
+});
 cqlInput?.addEventListener("queryChange", ((e: CustomEvent) => {
   queryEl.innerHTML = e.detail.query;
   cqlEl.innerHTML = e.detail.cqlQuery.replaceAll(" ", "·");
@@ -75,20 +76,31 @@ const params = new URLSearchParams(window.location.search);
 const endpoint = params.get("endpoint");
 
 const initialEndpointCapi = endpoint || "https://content.guardianapis.com";
-const typeaheadHelpersCapi = new TypeaheadHelpersCapi(initialEndpointCapi, "test");
-const cqlServiceCapi = new CqlClientService(typeaheadHelpersCapi.fieldResolvers);
-const CqlInputCapi = createCqlInput(cqlServiceCapi, { debugEl, syntaxHighlighting: true });
+const typeaheadHelpersCapi = new TypeaheadHelpersCapi(
+  initialEndpointCapi,
+  "test"
+);
+const cqlServiceCapi = new CqlClientService(
+  typeaheadHelpersCapi.fieldResolvers
+);
+const CqlInputCapi = createCqlInput(cqlServiceCapi, {
+  debugEl,
+  syntaxHighlighting: true,
+});
 
 const guToolsFieldResolvers: TypeaheadField[] = [
   new TypeaheadField(
-      "team",
-      "Team",
-      "Search by team, e.g. capi",
-      toolsSuggestionOptionResolvers
+    "team",
+    "Team",
+    "Search by team, e.g. capi",
+    toolsSuggestionOptionResolvers
   ),
 ];
 const cqlServiceGuTools = new CqlClientService(guToolsFieldResolvers);
-const CqlInputGuTools = createCqlInput(cqlServiceGuTools, { debugEl, syntaxHighlighting: true });
+const CqlInputGuTools = createCqlInput(cqlServiceGuTools, {
+  debugEl,
+  syntaxHighlighting: true,
+});
 
 customElements.define("cql-input-gutools", CqlInputGuTools);
 customElements.define("cql-input-capi", CqlInputCapi);

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import { Typeahead } from "./typeahead";
-import { TestTypeaheadHelpers } from "./typeaheadHelpersTest";
 import { TextSuggestionOption, TypeaheadSuggestion } from "./types";
 import { Cql } from "./Cql";
+import { TestTypeaheadHelpers } from "./fixtures/TestTypeaheadHelpers";
 
 describe("typeahead", () => {
   const typeaheadQueryClient = new TestTypeaheadHelpers();
