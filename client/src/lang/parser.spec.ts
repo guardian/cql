@@ -49,15 +49,34 @@ describe("parser", () => {
   });
 
   describe("QueryGroup", () => {
-    it("should handle unmatched parenthesis", () => {
+    it("should handle unmatched parenthesis - lhs", () => {
       const tokens = [leftParenToken(), eofToken(2)];
       const result = new Parser(tokens).parse();
       assertFailure(result, "Groups can't be empty");
     });
 
+    it("should handle unmatched parenthesis - rhs, first token", () => {
+      const tokens = [rightParenToken(), eofToken(2)];
+      const result = new Parser(tokens).parse();
+      assertFailure(
+        result,
+        "I didn't expect to find a ')' here."
+      );
+    });
+
+    it("should handle unmatched parenthesis - rhs, subsequent tokens", () => {
+      const tokens = [unquotedStringToken("a"), rightParenToken(1), eofToken(2)];
+      const result = new Parser(tokens).parse();
+      assertFailure(
+        result,
+        "I didn't expect to find a ')' after 'a'"
+      );
+    });
+
     it("should handle empty groups", () => {
       const tokens = [leftParenToken(), rightParenToken(1)];
       const result = new Parser(tokens).parse();
+      console.log('wut')
       assertFailure(result, "Groups can't be empty");
     });
 
@@ -114,7 +133,7 @@ describe("parser", () => {
         eofToken(10),
       ];
       const result = new Parser(tokens).parse();
-      assertFailure(result, "I didn't expect what I found after 'AND'");
+      assertFailure(result, "I didn't expect to find a ')' after 'AND'");
     });
 
     it("should handle a solo boolean operator", () => {

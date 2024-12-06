@@ -249,7 +249,7 @@ describe("plugin", () => {
         await waitFor("example +tag: ");
       });
 
-      it.only("applies the given key when a popover option is selected with a click", async () => {
+      it("applies the given key when a popover option is selected with a click", async () => {
         const { editor, container, waitFor } = createCqlEditor();
         await editor.insertText("example +");
 

@@ -45,6 +45,10 @@ export class Parser {
     const content =
       this.peek().tokenType === TokenType.EOF ? undefined : this.queryBinary();
 
+    if (this.peek().tokenType !== TokenType.EOF) {
+      throw this.unexpectedTokenError();
+    }
+
     return createQuery(content);
   }
 
@@ -107,12 +111,15 @@ export class Parser {
           throw this.error(
             `An ${tokenType.toString()} keyword must have a search term before and after it, e.g. this ${tokenType.toString()} that.`
           );
-        } else if (this.peek().tokenType === TokenType.CHIP_KEY) {
-          return createQueryContent(this.queryField());
-        } else {
-          throw this.error(
-            `I didn't expect what I found after '${this.previous()?.lexeme}'`
-          );
+        }
+
+        switch (this.peek().tokenType) {
+          case TokenType.CHIP_KEY: {
+            return createQueryContent(this.queryField());
+          }
+          default: {
+            throw this.unexpectedTokenError();
+          }
         }
       }
     }
@@ -191,7 +198,7 @@ export class Parser {
     }
   };
 
-  private isAtEnd = () => this.peek().tokenType == TokenType.EOF;
+  private isAtEnd = () => this.peek()?.tokenType === TokenType.EOF;
 
   private peek = () => this.tokens[this.current];
 
@@ -231,4 +238,10 @@ export class Parser {
 
   private error = (message: string) =>
     new ParseError(this.peek().start, message);
+
+  private unexpectedTokenError = () => {
+    throw this.error(
+      `I didn't expect to find a '${this.peek().lexeme}' ${!this.previous() ? "here." : `after '${this.previous()?.lexeme}'`}`
+    );
+  };
 }

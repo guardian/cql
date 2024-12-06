@@ -494,6 +494,7 @@ export const createCqlPlugin = ({
         typeaheadEl,
         applySuggestion
       );
+
       errorPopover = new ErrorPopover(
         view,
         errorEl,
