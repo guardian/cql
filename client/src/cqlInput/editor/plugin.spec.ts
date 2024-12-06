@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, expect } from "bun:test";
 import { errorMsgTestId, errorTestId, typeaheadTestId } from "../CqlInput";
-import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
+import { findByTestId, findByText, fireEvent, screen } from "@testing-library/dom";
 import { CqlClientService } from "../../services/CqlService";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
 import { createCqlPlugin } from "./plugin";
@@ -17,6 +17,7 @@ import {
 } from "./utils";
 import { TextSelection } from "prosemirror-state";
 import { TestTypeaheadHelpers } from "../../lang/fixtures/TestTypeaheadHelpers";
+import { isVisibleDataAttr } from "../Popover";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new CqlClientService(typeheadHelpers.fieldResolvers);
@@ -178,6 +179,34 @@ describe("plugin", () => {
 
         await findByText(popoverContainer, "Tag");
         await findByText(popoverContainer, "Section");
+      });
+
+      it("dismisses the popover when the escape key is pressed", async () => {
+        const { editor, container } = createCqlEditor();
+        const popoverContainer = await findByTestId(container, typeaheadTestId);
+
+        await editor.insertText("+");
+        await findByText(popoverContainer, "Tag");
+
+        expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("true");
+
+        await editor.press("Escape");
+
+        expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("false");
+      });
+
+      it("dismisses the popover when the editor loses focus", async () => {
+        const { editor, container } = createCqlEditor();
+        const popoverContainer = await findByTestId(container, typeaheadTestId);
+
+        await editor.insertText("+");
+        await findByText(popoverContainer, "Tag");
+
+        expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("true");
+
+        await fireEvent.blur(editor.view.dom);
+
+        expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("false");
       });
 
       it("displays a popover after another chip", async () => {

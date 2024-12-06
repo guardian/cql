@@ -403,6 +403,10 @@ export const createCqlPlugin = ({
             }
             return true;
           }
+          case "Escape": {
+            typeaheadPopover?.hide();
+            return true;
+          }
           case "Delete": {
             // Look forward for node
             const { anchor } = view.state.selection;

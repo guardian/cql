@@ -19,7 +19,7 @@ export class TypeaheadPopover extends Popover {
   public constructor(
     public view: EditorView,
     public popoverEl: HTMLElement,
-    public applySuggestion: (from: number, to: number, value: string) => void,
+    public applySuggestion: (from: number, to: number, value: string) => void
   ) {
     super(popoverEl);
     popoverEl.addEventListener("click", (e: MouseEvent) => {
@@ -31,6 +31,8 @@ export class TypeaheadPopover extends Popover {
         this.applyOption();
       }
     });
+
+    view.dom.addEventListener("blur", this.hide);
   }
 
   public isRenderingNavigableMenu = () => !!this.currentSuggestion?.suggestions;
@@ -44,8 +46,7 @@ export class TypeaheadPopover extends Popover {
     ) {
       this.currentSuggestion = undefined;
       this.currentOptionIndex = 0;
-      this.popoverEl.hidePopover?.();
-      this.popoverEl.innerHTML = "";
+      this.hide();
       return;
     }
 
@@ -60,7 +61,7 @@ export class TypeaheadPopover extends Popover {
 
     if (!suggestionThatCoversSelection) {
       this.currentSuggestion = undefined;
-      this.popoverEl.hidePopover?.();
+      this.hide();
       return;
     }
 
@@ -71,7 +72,7 @@ export class TypeaheadPopover extends Popover {
     }
     const { node } = this.view.domAtPos(from);
 
-    this.renderPopover(node as HTMLElement);
+    this.render(node as HTMLElement);
 
     if (type === "TEXT") {
       this.renderTextSuggestion(suggestions as MenuItem[]);
@@ -83,7 +84,7 @@ export class TypeaheadPopover extends Popover {
       this.renderDateSuggestion(value);
     }
 
-    this.popoverEl.showPopover?.();
+    this.show();
   };
 
   public moveSelectionUp = () => this.moveSelection(-1);

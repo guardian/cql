@@ -13,12 +13,32 @@ export type VirtualElement = {
   };
 };
 
-export abstract class Popover {
-  public constructor(
-    protected popoverEl: HTMLElement
-  ) {}
+// Used to provide a testing hook for visibility.
+export const isVisibleDataAttr = "isvisible";
 
-  protected async renderPopover(
+export abstract class Popover {
+  public constructor(protected popoverEl: HTMLElement) {}
+
+  /**
+   * Hide the popover. Use the hide/show methods, rather than hiding and showing
+   * the element directly in inheriting classes, to ensure that testing attributes
+   * are set, and the element is cleared.
+   */
+  public hide = () => {
+    this.popoverEl.hidePopover?.();
+    this.popoverEl.dataset[isVisibleDataAttr] = "false";
+    this.popoverEl.innerHTML = "";
+  }
+
+  /**
+   * Show the popover.
+   */
+  protected show = () => {
+    this.popoverEl.showPopover?.();
+    this.popoverEl.dataset[isVisibleDataAttr] = "true";
+  }
+
+  protected async render(
     referenceElement: VirtualElement,
     xOffset: number = 0,
     yOffset: number = 0

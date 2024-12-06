@@ -25,7 +25,7 @@ export class ErrorPopover extends Popover {
       debugEl.appendChild(this.debugContainer);
     }
 
-    popoverEl.hidePopover?.();
+    this.hide();
   }
 
   public updateErrorMessage = async (error: CqlError | undefined) => {
@@ -55,7 +55,7 @@ export class ErrorPopover extends Popover {
     this.errorMsgEl.innerHTML = "";
     this.errorMsgEl.classList.remove(CLASS_VISIBLE);
     this.popoverEl.classList.remove(CLASS_VISIBLE);
-    this.popoverEl.hidePopover?.();
+    this.hide();
   };
 
   private debouncedShowErrorMessages = (error: CqlError) => {
@@ -64,7 +64,7 @@ export class ErrorPopover extends Popover {
       this.errorMsgEl.classList.add(CLASS_VISIBLE);
 
       if (error.position !== undefined) {
-        this.popoverEl.showPopover?.();
+        this.show();
         this.popoverEl.classList.add(CLASS_VISIBLE);
 
         const referenceEl =
@@ -78,7 +78,7 @@ export class ErrorPopover extends Popover {
 
         const xOffset = 0;
         const yOffset = -25;
-        this.renderPopover(referenceEl, xOffset, yOffset);
+        this.render(referenceEl, xOffset, yOffset);
       }
     }, this.debounceTime);
   };
