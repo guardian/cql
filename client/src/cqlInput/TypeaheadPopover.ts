@@ -22,18 +22,29 @@ export class TypeaheadPopover extends Popover {
     public applySuggestion: (from: number, to: number, value: string) => void
   ) {
     super(popoverEl);
-    popoverEl.addEventListener("click", (e: MouseEvent) => {
-      if (
-        e.target instanceof HTMLElement &&
-        e.target.dataset.index !== undefined
-      ) {
-        this.currentOptionIndex = parseInt(e.target.dataset.index ?? "0");
-        this.applyOption();
-      }
-    });
+
+    // Mousedown is fired before blur events are triggered. The blur event will
+    // close the popover, so we use mousedown rather than click here.
+    popoverEl.addEventListener("mousedown", this.handleClickOrTouchSelection);
+    popoverEl.addEventListener("touchstart", this.handleClickOrTouchSelection);
 
     view.dom.addEventListener("blur", this.hide);
   }
+
+  private handleClickOrTouchSelection = (e: Event) => {
+    if (!(e.target instanceof HTMLElement)) {
+      return;
+    }
+
+    const optionEl = e.target.closest("[data-index]");
+    if (
+      optionEl instanceof HTMLElement &&
+      optionEl.dataset.index !== undefined
+    ) {
+      this.currentOptionIndex = parseInt(optionEl.dataset.index ?? "0");
+      this.applyOption();
+    }
+  };
 
   public isRenderingNavigableMenu = () => !!this.currentSuggestion?.suggestions;
 

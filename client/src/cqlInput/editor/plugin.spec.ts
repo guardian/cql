@@ -1,6 +1,6 @@
 import { describe, it, beforeEach, expect } from "bun:test";
 import { errorMsgTestId, errorTestId, typeaheadTestId } from "../CqlInput";
-import { findByTestId, findByText, fireEvent, screen } from "@testing-library/dom";
+import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
 import { CqlClientService } from "../../services/CqlService";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
 import { createCqlPlugin } from "./plugin";
@@ -122,12 +122,27 @@ const createCqlEditor = (initialQuery: string = "") => {
 };
 
 const selectPopoverOption = async (
-  editor: ProsemirrorTestChain,
   container: HTMLElement,
   optionLabel: string
 ) => {
   const popoverContainer = await findByTestId(container, typeaheadTestId);
-  await findByText(popoverContainer, optionLabel);
+  return await findByText(popoverContainer, optionLabel);
+};
+
+const selectPopoverOptionWithClick = async (
+  container: HTMLElement,
+  optionLabel: string
+) => {
+  const option = await selectPopoverOption(container, optionLabel);
+  await fireEvent.mouseDown(option);
+};
+
+const selectPopoverOptionWithEnter = async (
+  editor: ProsemirrorTestChain,
+  container: HTMLElement,
+  optionLabel: string
+) => {
+  await selectPopoverOption(container, optionLabel);
   await editor.press("Enter");
 };
 
@@ -223,22 +238,33 @@ describe("plugin", () => {
         await findByText(popoverContainer, "Section");
       });
 
-      it("applies the given key when a popover option is selected", async () => {
+      it("applies the given key when a popover option is selected with the Enter key", async () => {
         const { editor, container, waitFor } = createCqlEditor();
         await editor.insertText("example +");
 
-        await selectPopoverOption(editor, container, "Tag");
+        await selectPopoverOptionWithEnter(editor, container, "Tag");
         const nodeAtCaret = getNodeTypeAtSelection(editor.view);
         expect(nodeAtCaret.name).toBe("chipValue");
 
         await waitFor("example +tag: ");
       });
 
+      it.only("applies the given key when a popover option is selected with a click", async () => {
+        const { editor, container, waitFor } = createCqlEditor();
+        await editor.insertText("example +");
+
+        await selectPopoverOptionWithClick(container, "Section");
+        const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+        expect(nodeAtCaret.name).toBe("chipValue");
+
+        await waitFor("example +section: ");
+      });
+
       it("applies the given key when a popover option is selected at the start of the query", async () => {
         const { editor, container, waitFor } = createCqlEditor();
         await editor.insertText("+");
 
-        await selectPopoverOption(editor, container, "Tag");
+        await selectPopoverOptionWithEnter(editor, container, "Tag");
 
         await waitFor("+tag: ");
       });
@@ -255,7 +281,7 @@ describe("plugin", () => {
 
         await findByText(popoverContainer, "Tag");
         await findByText(popoverContainer, "Section");
-        await selectPopoverOption(editor, container, "Tag");
+        await selectPopoverOptionWithEnter(editor, container, "Tag");
 
         await waitFor("+tag:a +tag: ");
       });
@@ -282,7 +308,7 @@ describe("plugin", () => {
 
         await moveCaretToQueryPos(queryStr.length);
         await editor.insertText("t");
-        await selectPopoverOption(editor, container, "Tags are magic");
+        await selectPopoverOptionWithEnter(editor, container, "Tags are magic");
 
         await waitFor("example +tag:tags-are-magic ");
       });

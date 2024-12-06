@@ -138,6 +138,10 @@ template.innerHTML = `
       color: red;
     }
 
+    .Cql__ErrorPopover:after {
+      content: '~'
+    }
+
     .Cql__ErrorMessageContainer {
       display: none;
     }
@@ -179,7 +183,7 @@ export const createCqlInput = (
       shadow.innerHTML = `
         <div id="${cqlInputId}" spellcheck="false"></div>
         <div id="${cqlTypeaheadId}" class="Cql__TypeaheadPopover" data-testid="${typeaheadTestId}" popover></div>
-        <div id="${cqlErrorId}" class="Cql__ErrorPopover" data-testid="${errorTestId}" popover>~</div>
+        <div id="${cqlErrorId}" class="Cql__ErrorPopover" data-testid="${errorTestId}" popover></div>
         <div id="${cqlErrorMsgId}" class="Cql__ErrorMessageContainer" data-testid="${errorMsgTestId}"></div>
       `;
       shadow.appendChild(template.content.cloneNode(true));
