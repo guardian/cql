@@ -2,6 +2,7 @@ export class TypeaheadSuggestion<T extends TypeaheadType = TypeaheadType> {
   constructor(
     public readonly from: number,
     public readonly to: number,
+    public readonly position: "searchText" | "chipKey" | "chipValue",
     public readonly suggestions: SuggestionTypeMap[T][],
     public readonly type: T,
     // The suffix to apply if this suggestion is accepted at the trailing edge of the query.
@@ -11,7 +12,7 @@ export class TypeaheadSuggestion<T extends TypeaheadType = TypeaheadType> {
   ) {}
 }
 
-export type MappedTypeaheadSuggestion = TypeaheadSuggestion
+export type MappedTypeaheadSuggestion = TypeaheadSuggestion;
 
 type SuggestionTypeMap = {
   TEXT: TextSuggestionOption;
@@ -24,7 +25,8 @@ export class TextSuggestionOption {
   public constructor(
     public readonly label: string,
     public readonly value: string,
-    public readonly description?: string
+    public readonly description?: string,
+    public readonly count?: number
   ) {}
 }
 

@@ -10,11 +10,13 @@ type MenuItem = {
   label: string;
   value: string;
   description: string;
+  count?: number;
 };
 
 export class TypeaheadPopover extends Popover {
   private currentSuggestion: TypeaheadSuggestion | undefined;
   private currentOptionIndex = 0;
+  private numberFormat = new Intl.NumberFormat();
 
   public constructor(
     public view: EditorView,
@@ -137,12 +139,15 @@ export class TypeaheadPopover extends Popover {
   };
 
   private renderTextSuggestion(items: MenuItem[]) {
+    const showCount = this.currentSuggestion?.position === "chipValue";
+    const showValue = this.currentSuggestion?.position === "chipValue";
+    const showDescription = this.currentSuggestion?.position === "chipKey";
     this.popoverEl.innerHTML = items
-      .map(({ label, description }, index) => {
+      .map(({ label, description, value, count }, index) => {
         return `<div class="Cql__Option ${
           index === this.currentOptionIndex ? "Cql__Option--is-selected" : ""
-        }" data-index="${index}"><div class="Cql__OptionLabel">${label}</div>${
-          description
+        }" data-index="${index}"><div class="Cql__OptionLabel">${label}${showCount && count !== undefined ? `<div class="Cql__OptionCount">${this.numberFormat.format(count)}</div>` : ""}</div>${showValue ? `<div class="Cql__OptionValue">${value}</div>` : ""}${
+          showDescription && description
             ? `<div class="Cql__OptionDescription">${description}</div>`
             : ""
         }</div>`;

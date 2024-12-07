@@ -77,6 +77,7 @@ export class Typeahead {
       new TypeaheadSuggestion(
         keyToken.start,
         keyToken.end,
+        "chipKey",
         suggestions,
         "TEXT",
         ":"
@@ -112,6 +113,7 @@ export class Typeahead {
       new TypeaheadSuggestion(
         value.start,
         value.end,
+        "chipValue",
         suggestions,
         suggestionType,
         " "

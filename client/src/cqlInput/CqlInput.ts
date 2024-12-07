@@ -75,6 +75,15 @@ template.innerHTML = `
       padding: 5px;
     }
 
+    .Cql__OptionLabel {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .Cql__OptionValue {
+      font-size: 0.7em;
+    }
+
     .Cql__Option--is-selected {
       background-color: rgba(255,255,255,0.1);
     }

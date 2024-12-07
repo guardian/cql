@@ -1,40 +1,91 @@
 import type { TagsResponse } from "@guardian/content-api-models/v1/tagsResponse";
 import type { SectionsResponse } from "@guardian/content-api-models/v1/sectionsResponse";
+import type { SearchResponse } from "@guardian/content-api-models/v1/searchResponse";
 import { TypeaheadField } from "../lang/typeahead";
 import { TextSuggestionOption } from "../lang/types";
+import { stableSort } from "../utils/sort";
 
 export class TypeaheadHelpersCapi {
-  public constructor(private baseUrl: string, private apiKey: string) {}
+  public constructor(
+    private baseUrl: string,
+    private apiKey: string
+  ) {}
 
   public setBaseUrl(baseUrl: string) {
     this.baseUrl = baseUrl;
   }
 
-  private getTags = (
+  private getTags = async (
     str: string,
     signal?: AbortSignal
-  ): Promise<TextSuggestionOption[]> =>
-    this.getJson<{ response: TagsResponse }>("tags", str, signal).then((body) =>
-      body.response.results.map(
-        (tag) => new TextSuggestionOption(tag.webTitle, tag.id, tag.description)
-      )
-    );
+  ): Promise<TextSuggestionOption[]> => {
+    const tags = await this.getJson<{ response: TagsResponse }>(
+      "tags",
+      { q: str },
+      signal
+    ).then((body) => body.response.results);
 
-  private getSections = (
+    const eventuallyAggregationCounts = tags.map(async (tag) => {
+      const searchResponse = await this.getJson<{ response: SearchResponse }>(
+        "search",
+        { tag: tag.id },
+        signal
+      );
+
+      return new TextSuggestionOption(
+        tag.webTitle,
+        tag.id,
+        tag.description,
+        searchResponse.response.total
+      );
+    });
+
+    const aggregationCounts = await Promise.all(eventuallyAggregationCounts);
+
+    return this.sortResultsByCount(aggregationCounts);
+  };
+
+  private getSections = async (
     str: string,
     signal?: AbortSignal
-  ): Promise<TextSuggestionOption[]> =>
-    this.getJson<{ response: SectionsResponse }>("tags", str, signal).then(
-      (body) =>
-        body.response.results.map(
-          (section) =>
-            new TextSuggestionOption(
-              section.webTitle,
-              section.id,
-              section.webTitle
-            )
-        )
-    );
+  ): Promise<TextSuggestionOption[]> => {
+    const sections = await this.getJson<{ response: SectionsResponse }>(
+      "sections",
+      { q: str },
+      signal
+    ).then((body) => body.response.results);
+
+    const eventuallyAggregationCounts = sections.map(async (section) => {
+      const searchResponse = await this.getJson<{ response: SearchResponse }>(
+        "search",
+        { section: section.id },
+        signal
+      );
+
+      return new TextSuggestionOption(
+        section.webTitle,
+        section.id,
+        section.webTitle,
+        searchResponse.response.total
+      );
+    });
+
+    const aggregationCounts = await Promise.all(eventuallyAggregationCounts);
+
+    return this.sortResultsByCount(aggregationCounts);
+  };
+
+  private sortResultsByCount = <T extends { count?: number }>(
+    results: T[],
+    quantiseTo = 1000
+  ): T[] => {
+    return stableSort(results, (a, b) => {
+      const aCount = Math.ceil((a.count ?? 1) / quantiseTo);
+      const bCount = Math.ceil((b.count ?? 1) / quantiseTo);
+
+      return bCount - aCount;
+    });
+  };
 
   public fieldResolvers = [
     new TypeaheadField(
@@ -206,11 +257,11 @@ export class TypeaheadHelpersCapi {
 
   private async getJson<T>(
     path: string,
-    query: string,
+    _params: Record<string, string>,
     signal?: AbortSignal
   ): Promise<T> {
     const params = new URLSearchParams({
-      q: query,
+      ..._params,
       "api-key": this.apiKey,
     });
     return (await (

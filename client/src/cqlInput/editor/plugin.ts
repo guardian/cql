@@ -511,6 +511,7 @@ export const createCqlPlugin = ({
         cqlQuery: docToQueryStr(tr.doc),
         query: queryResult ?? "",
       });
+
       return {
         async update(view) {
           const { error, query, mapping } = cqlPluginKey.getState(view.state)!;

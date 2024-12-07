@@ -19,6 +19,7 @@ describe("typeahead", () => {
       new TypeaheadSuggestion(
         0,
         0,
+        "chipKey",
         [
           new TextSuggestionOption(
             "Tag",
@@ -53,6 +54,7 @@ describe("typeahead", () => {
       new TypeaheadSuggestion(
         0,
         2,
+        "chipKey",
         [
           new TextSuggestionOption(
             "Tag",
@@ -73,6 +75,7 @@ describe("typeahead", () => {
       new TypeaheadSuggestion(
         0,
         3,
+        "chipKey",
         [
           new TextSuggestionOption(
             "Tag",
@@ -86,6 +89,7 @@ describe("typeahead", () => {
       new TypeaheadSuggestion(
         4,
         18,
+        "chipValue",
         [
           new TextSuggestionOption(
             "Tags are magic",
@@ -105,6 +109,7 @@ describe("typeahead", () => {
       new TypeaheadSuggestion(
         0,
         3,
+        "chipKey",
         [
           new TextSuggestionOption(
             "Tag",
@@ -118,6 +123,7 @@ describe("typeahead", () => {
       new TypeaheadSuggestion(
         4,
         4,
+        "chipValue",
         [
           new TextSuggestionOption(
             "Tags are magic",
@@ -138,6 +144,7 @@ describe("typeahead", () => {
       new TypeaheadSuggestion(
         0,
         9,
+        "chipKey",
         [
           new TextSuggestionOption(
             "From date",
@@ -148,7 +155,7 @@ describe("typeahead", () => {
         "TEXT",
         ":"
       ),
-      new TypeaheadSuggestion(10, 10, [], "TEXT", " "),
+      new TypeaheadSuggestion(10, 10, "chipValue", [], "TEXT", " "),
     ]);
   });
 
@@ -159,6 +166,7 @@ describe("typeahead", () => {
       new TypeaheadSuggestion(
         0,
         3,
+        "chipKey",
         [
           new TextSuggestionOption(
             "Tag",
@@ -172,6 +180,7 @@ describe("typeahead", () => {
       new TypeaheadSuggestion(
         4,
         5,
+        "chipValue",
         [
           new TextSuggestionOption(
             "Tags are magic",
@@ -185,6 +194,7 @@ describe("typeahead", () => {
       new TypeaheadSuggestion(
         7,
         7,
+        "chipKey",
         [
           new TextSuggestionOption(
             "Tag",
