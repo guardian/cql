@@ -1,6 +1,6 @@
 import { err, ok, Result } from "../utils/result";
-import { Query, QueryBinary, QueryContent } from "./ast";
-import { getQueryFieldsFromQueryBinary } from "./utils";
+import { CqlQuery, CqlBinary, QueryContent } from "./ast";
+import { getQueryFieldsFromCqlBinary } from "./utils";
 
 class CapiQueryStringError extends Error {
   public constructor(message: string) {
@@ -8,7 +8,9 @@ class CapiQueryStringError extends Error {
   }
 }
 
-export const queryStrFromQueryList = (query: Query): Result<Error, string> => {
+export const queryStrFromQueryList = (
+  query: CqlQuery
+): Result<Error, string> => {
   const { content } = query;
   if (!content) {
     return ok("");
@@ -17,7 +19,7 @@ export const queryStrFromQueryList = (query: Query): Result<Error, string> => {
   const searchStrs = strFromBinary(content);
 
   try {
-    const otherQueries = getQueryFieldsFromQueryBinary(content).flatMap(
+    const otherQueries = getQueryFieldsFromCqlBinary(content).flatMap(
       (expr) => {
         switch (expr.type) {
           case "QueryField": {
@@ -53,7 +55,7 @@ const strFromContent = (queryContent: QueryContent): string | undefined => {
       return content.searchExpr;
     case "QueryGroup":
       return `(${strFromBinary(content.content).trim()})`;
-    case "QueryBinary":
+    case "CqlBinary":
       return strFromBinary(content);
     default:
       // Ignore fields
@@ -61,11 +63,11 @@ const strFromContent = (queryContent: QueryContent): string | undefined => {
   }
 };
 
-const strFromBinary = (queryBinary: QueryBinary): string => {
+const strFromBinary = (queryBinary: CqlBinary): string => {
   const leftStr = strFromContent(queryBinary.left);
 
   const rightStr = queryBinary.right
-    ? `${queryBinary.right[0].lexeme} ${strFromBinary(queryBinary.right[1])}`
+    ? `${queryBinary.right.operator} ${strFromBinary(queryBinary.right.binary)}`
     : "";
 
   return (leftStr ?? "") + (rightStr ? ` ${rightStr.trim()} ` : "");

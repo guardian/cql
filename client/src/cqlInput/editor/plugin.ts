@@ -41,14 +41,14 @@ import {
   getDebugTokenHTML,
   getOriginalQueryHTML,
 } from "./debug";
-import { Query } from "../../lang/ast";
+import { CqlQuery } from "../../lang/ast";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
 type PluginState = {
   tokens: ProseMirrorToken[];
   queryStr: string;
-  query: Query | undefined;
+  query: CqlQuery | undefined;
   error: CqlError | undefined;
   mapping: Mapping;
 };

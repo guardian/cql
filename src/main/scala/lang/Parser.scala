@@ -16,7 +16,7 @@ class Parser(tokens: List[Token]):
 
   // program    -> statement* EOF
   private def queryList =
-    var queries = List.empty[QueryBinary | QueryField | QueryOutputModifier]
+    var queries = List.empty[CqlBinary | QueryField | QueryOutputModifier]
     while (peek().tokenType != EOF) {
       queries = queries :+ query
     }
@@ -28,7 +28,7 @@ class Parser(tokens: List[Token]):
   val startOfQueryValue =
     List(TokenType.CHIP_VALUE, TokenType.COLON)
 
-  private def query: QueryBinary | QueryField | QueryOutputModifier =
+  private def query: CqlBinary | QueryField | QueryOutputModifier =
     if (startOfQueryField.contains(peek().tokenType)) queryField
     else if (startOfQueryOutputModifier.contains(peek().tokenType))
       queryOutputModifier
@@ -39,7 +39,7 @@ class Parser(tokens: List[Token]):
       )
     else queryBinary
 
-  private def queryBinary: QueryBinary =
+  private def queryBinary: CqlBinary =
     val left = queryContent
 
     peek().tokenType match {
@@ -51,7 +51,7 @@ class Parser(tokens: List[Token]):
             "There must be a query following 'AND', e.g. this AND that."
           )
         }
-        QueryBinary(left, Some((andToken), queryBinary))
+        CqlBinary(left, Some((andToken), queryBinary))
       case TokenType.OR =>
         val orToken = consume(TokenType.OR)
         guardAgainstQueryField("after 'OR'.")
@@ -60,12 +60,12 @@ class Parser(tokens: List[Token]):
             "There must be a query following 'OR', e.g. this OR that."
           )
         }
-        QueryBinary(left, Some((orToken, queryBinary)))
-      case _ => QueryBinary(left)
+        CqlBinary(left, Some((orToken, queryBinary)))
+      case _ => CqlBinary(left)
     }
 
   private def queryContent: QueryContent =
-    val content: QueryGroup | QueryStr | QueryBinary = peek().tokenType match
+    val content: QueryGroup | QueryStr | CqlBinary = peek().tokenType match
       case TokenType.LEFT_BRACKET => queryGroup
       case TokenType.STRING       => queryStr
       case token if List(TokenType.AND, TokenType.OR).contains(token) =>

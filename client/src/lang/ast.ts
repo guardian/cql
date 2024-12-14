@@ -1,33 +1,36 @@
 import { Token } from "./token";
 
-export type Query = {
-  type: "Query";
-  content?: QueryBinary;
+export type CqlQuery = {
+  type: "CqlQuery";
+  content?: CqlBinary;
 };
 
-export const createQuery = (content?: QueryBinary): Query => ({
-  type: "Query",
+export const createQuery = (content?: CqlBinary): CqlQuery => ({
+  type: "CqlQuery",
   content,
 });
 
-export type QueryBinary = {
-  type: "QueryBinary";
+export type CqlBinary = {
+  type: "CqlBinary";
   left: QueryContent;
-  right?: [Token, QueryBinary];
+  right?: {
+    operator: "OR" | "AND"
+    binary: CqlBinary
+  };
 };
 
-export const createQueryBinary = (
-  left: QueryBinary["left"],
-  right?: QueryBinary["right"]
-): QueryBinary => ({
-  type: "QueryBinary",
+export const createCqlBinary = (
+  left: CqlBinary["left"],
+  right?: CqlBinary["right"]
+): CqlBinary => ({
+  type: "CqlBinary",
   left,
   right,
 });
 
 export type QueryContent = {
   type: "QueryContent";
-  content: QueryStr | QueryBinary | QueryGroup | QueryField;
+  content: QueryStr | CqlBinary | QueryGroup | QueryField;
 };
 
 export const createQueryContent = (
@@ -37,7 +40,7 @@ export const createQueryContent = (
   content,
 });
 
-export type QueryGroup = { type: "QueryGroup"; content: QueryBinary };
+export type QueryGroup = { type: "QueryGroup"; content: CqlBinary };
 
 export const createQueryGroup = (
   content: QueryGroup["content"]

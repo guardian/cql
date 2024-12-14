@@ -9,7 +9,7 @@ trait Query
 object QueryList {
   implicit val encoder: Encoder[QueryList] = Encoder.instance { list =>
     val arr = list.exprs.map {
-      case q: QueryBinary         => q.asJson
+      case q: CqlBinary         => q.asJson
       case q: QueryField          => q.asJson
       case q: QueryOutputModifier => q.asJson
     }
@@ -17,21 +17,21 @@ object QueryList {
   }
 }
 case class QueryList(
-    exprs: List[QueryBinary | QueryField | QueryOutputModifier]
+    exprs: List[CqlBinary | QueryField | QueryOutputModifier]
 ) extends Query
 
-object QueryBinary {
-  implicit val encoder: Encoder[QueryBinary] = Encoder.instance { queryBinary =>
+object CqlBinary {
+  implicit val encoder: Encoder[CqlBinary] = Encoder.instance { queryBinary =>
     Json.obj(
-      "type" -> "QueryBinary".asJson,
+      "type" -> "CqlBinary".asJson,
       ("left", queryBinary.left.asJson),
       ("right", queryBinary.right.asJson)
     )
   }
 }
-case class QueryBinary(
+case class CqlBinary(
     left: QueryContent,
-    right: Option[(Token, QueryBinary)] = None
+    right: Option[(Token, CqlBinary)] = None
 )
 
 object QueryContent {
@@ -39,7 +39,7 @@ object QueryContent {
     queryContent =>
       val content = queryContent.content match {
         case q: QueryStr    => q.asJson
-        case q: QueryBinary => q.asJson
+        case q: CqlBinary => q.asJson
         case q: QueryGroup  => q.asJson
       }
 
@@ -47,7 +47,7 @@ object QueryContent {
   }
 }
 
-case class QueryContent(content: QueryStr | QueryBinary | QueryGroup)
+case class QueryContent(content: QueryStr | CqlBinary | QueryGroup)
 
 object QueryGroup {
   implicit val encoder: Encoder[QueryGroup] = Encoder.instance { group =>
@@ -55,7 +55,7 @@ object QueryGroup {
   }
 }
 
-case class QueryGroup(content: QueryBinary)
+case class QueryGroup(content: CqlBinary)
 
 object QueryStr {
   implicit val encoder: Encoder[QueryStr] = Encoder.instance { queryStr =>

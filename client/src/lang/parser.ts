@@ -1,13 +1,13 @@
 import { Token } from "./token";
 import {
   createQuery,
-  createQueryBinary,
+  createCqlBinary,
   createQueryContent,
   createQueryField,
   createQueryGroup,
   createQueryStr,
-  Query,
-  QueryBinary,
+  CqlQuery,
+  CqlBinary,
   QueryContent,
   QueryField,
   QueryGroup,
@@ -30,7 +30,7 @@ export class Parser {
 
   constructor(private tokens: Token[]) {}
 
-  public parse(): Result<ParseError, Query> {
+  public parse(): Result<ParseError, CqlQuery> {
     try {
       return ok(this.query());
     } catch (e) {
@@ -41,7 +41,7 @@ export class Parser {
     }
   }
 
-  private query(): Query {
+  private query(): CqlQuery {
     const content =
       this.peek().tokenType === TokenType.EOF ? undefined : this.queryBinary();
 
@@ -52,7 +52,7 @@ export class Parser {
     return createQuery(content);
   }
 
-  private queryBinary(isNested: boolean = false): QueryBinary {
+  private queryBinary(isNested: boolean = false): CqlBinary {
     if (this.peek().tokenType === TokenType.CHIP_VALUE)
       throw new ParseError(
         this.peek().start,
@@ -67,34 +67,40 @@ export class Parser {
 
     switch (this.peek().tokenType) {
       case TokenType.AND: {
-        const andToken = this.consume(TokenType.AND);
+        this.consume(TokenType.AND);
         this.guardAgainstQueryField("after 'AND'.");
         if (this.isAtEnd()) {
           throw this.error(
             "There must be a query following 'AND', e.g. this AND that."
           );
         }
-        return createQueryBinary(left, [andToken, this.queryBinary(isNested)]);
+        return createCqlBinary(left, {
+          operator: TokenType.AND,
+          binary: this.queryBinary(isNested),
+        });
       }
       case TokenType.OR: {
-        const orToken = this.consume(TokenType.OR);
+        this.consume(TokenType.OR);
         this.guardAgainstQueryField("after 'OR'.");
         if (this.isAtEnd()) {
           throw this.error(
             "There must be a query following 'OR', e.g. this OR that."
           );
         }
-        return createQueryBinary(left, [orToken, this.queryBinary(isNested)]);
+        return createCqlBinary(left, {
+          operator: TokenType.OR,
+          binary: this.queryBinary(isNested),
+        });
       }
       case TokenType.RIGHT_BRACKET:
       case TokenType.EOF: {
-        return createQueryBinary(left);
+        return createCqlBinary(left);
       }
       default: {
-        return createQueryBinary(left, [
-          new Token(TokenType.OR, "", undefined, 0, 0),
-          this.queryBinary(isNested),
-        ]);
+        return createCqlBinary(left, {
+          operator: TokenType.OR,
+          binary: this.queryBinary(isNested),
+        });
       }
     }
   }

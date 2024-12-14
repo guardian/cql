@@ -1,13 +1,13 @@
 import { describe, expect, it } from "bun:test";
 import { ok, Result, ResultKind } from "../utils/result";
 import {
-  createQueryBinary,
+  createCqlBinary,
   createQueryContent,
   createQueryField,
   createQueryStr,
   createQueryGroup,
   createQuery,
-  Query,
+  CqlQuery,
 } from "./ast";
 import {
   andToken,
@@ -26,7 +26,7 @@ import { Token, TokenType } from "./token";
 
 describe("parser", () => {
   const assertFailure = (
-    queryBinary: Result<Error, Query>,
+    queryBinary: Result<Error, CqlQuery>,
     strContains: string
   ) => {
     switch (queryBinary.kind) {
@@ -58,25 +58,23 @@ describe("parser", () => {
     it("should handle unmatched parenthesis - rhs, first token", () => {
       const tokens = [rightParenToken(), eofToken(2)];
       const result = new Parser(tokens).parse();
-      assertFailure(
-        result,
-        "I didn't expect to find a ')' here."
-      );
+      assertFailure(result, "I didn't expect to find a ')' here.");
     });
 
     it("should handle unmatched parenthesis - rhs, subsequent tokens", () => {
-      const tokens = [unquotedStringToken("a"), rightParenToken(1), eofToken(2)];
+      const tokens = [
+        unquotedStringToken("a"),
+        rightParenToken(1),
+        eofToken(2),
+      ];
       const result = new Parser(tokens).parse();
-      assertFailure(
-        result,
-        "I didn't expect to find a ')' after 'a'"
-      );
+      assertFailure(result, "I didn't expect to find a ')' after 'a'");
     });
 
     it("should handle empty groups", () => {
       const tokens = [leftParenToken(), rightParenToken(1)];
       const result = new Parser(tokens).parse();
-      console.log('wut')
+      console.log("wut");
       assertFailure(result, "Groups can't be empty");
     });
 
@@ -92,21 +90,21 @@ describe("parser", () => {
       expect(result).toEqual(
         ok(
           createQuery(
-            createQueryBinary(
+            createCqlBinary(
               createQueryContent(
                 createQueryGroup(
-                  createQueryBinary(
+                  createCqlBinary(
                     createQueryContent(
                       createQueryStr(unquotedStringToken("a", 1))
                     ),
-                    [
-                      new Token(TokenType.OR, "", undefined, 0, 0),
-                      createQueryBinary(
+                    {
+                      operator: TokenType.OR,
+                      binary: createCqlBinary(
                         createQueryContent(
                           createQueryStr(unquotedStringToken("b", 2))
                         )
                       ),
-                    ]
+                    }
                   )
                 )
               )
@@ -156,9 +154,7 @@ describe("parser", () => {
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
         ok(
-          createQuery(
-            createQueryBinary(createQueryContent(queryField("ta", "")))
-          )
+          createQuery(createCqlBinary(createQueryContent(queryField("ta", ""))))
         )
       );
     });
@@ -198,17 +194,17 @@ describe("parser", () => {
       expect(result).toEqual(
         ok(
           createQuery(
-            createQueryBinary(
+            createCqlBinary(
               createQueryContent(createQueryStr(quotedStringToken("a"))),
-              [
-                new Token(TokenType.OR, "", undefined, 0, 0),
-                createQueryBinary(
+              {
+                operator: TokenType.OR,
+                binary: createCqlBinary(
                   createQueryContent(
                     createQueryField(queryFieldKeyToken("", 2), undefined)
                   ),
                   undefined
                 ),
-              ]
+              }
             )
           )
         )

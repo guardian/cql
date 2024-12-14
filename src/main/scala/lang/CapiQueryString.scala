@@ -15,7 +15,7 @@ object CapiQueryString {
       program: QueryList
   ): String =
     val (searchStrs, otherQueries) = program.exprs.partitionMap {
-      case q: QueryBinary => Left(strFromBinary(q))
+      case q: CqlBinary => Left(strFromBinary(q))
       case QueryField(key, Some(value)) =>
         Right(s"${key.literal.getOrElse("")}=${value.literal.getOrElse("")}")
       case QueryField(key, None) =>
@@ -44,10 +44,10 @@ object CapiQueryString {
     queryContent.content match {
       case QueryStr(str)       => str
       case QueryGroup(content) => s"(${strFromBinary(content)})"
-      case q: QueryBinary      => strFromBinary(q)
+      case q: CqlBinary      => strFromBinary(q)
     }
 
-  private def strFromBinary(queryBinary: QueryBinary): String =
+  private def strFromBinary(queryBinary: CqlBinary): String =
     val leftStr = strFromContent(queryBinary.left)
     val rightStr = queryBinary.right
       .map { case (op, content) =>

@@ -1,5 +1,5 @@
 import { either, Result } from "../utils/result";
-import { Query } from "./ast";
+import { CqlQuery } from "./ast";
 import { queryStrFromQueryList } from "./capiQueryString";
 import { Parser } from "./parser";
 import { Scanner } from "./scanner";
@@ -9,7 +9,7 @@ import { TypeaheadSuggestion } from "./types";
 
 export interface CqlResult {
   tokens: Token[];
-  query?: Query;
+  query?: CqlQuery;
   queryResult?: string;
   error?: Error;
 }
@@ -17,7 +17,7 @@ export interface CqlResult {
 export class CqlResultEnvelope implements CqlResult {
   constructor(
     public tokens: Token[],
-    public query?: Query,
+    public query?: CqlQuery,
     public queryResult?: string,
     public error?: Error
   ) {}
@@ -48,7 +48,7 @@ export class Cql {
   };
 
   public getSuggestions(
-    query: Query,
+    query: CqlQuery,
     signal?: AbortSignal
   ): Promise<TypeaheadSuggestion[]> {
     return this.typeahead.getSuggestions(query, signal);

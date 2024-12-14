@@ -2,8 +2,8 @@ import { Node } from "prosemirror-model";
 import { Mapping } from "prosemirror-transform";
 import { Token } from "../../lang/token";
 import {
-  Query,
-  QueryBinary,
+  CqlQuery,
+  CqlBinary,
   QueryContent,
   QueryField,
   QueryGroup,
@@ -187,7 +187,7 @@ export const getDebugMappingHTML = (
   //  return `<div class="CqlDebug__mapping">${queryDiagram}${nodeDiagram}</div>`;
 };
 
-export const getDebugASTHTML = (query: Query) => {
+export const getDebugASTHTML = (query: CqlQuery) => {
   return `<div class="tree--container">
     <ul class="tree">
       <li>
@@ -201,7 +201,7 @@ export const getDebugASTHTML = (query: Query) => {
 const getContentHTML = (query: QueryContent) => {
   const html = (() => {
     switch (query.content.type) {
-      case "QueryBinary":
+      case "CqlBinary":
         return getBinaryHTML(query.content);
       case "QueryField":
         return getFieldHTML(query.content);
@@ -221,14 +221,14 @@ const getContentHTML = (query: QueryContent) => {
     </ul>`;
 };
 
-const getBinaryHTML = (query: QueryBinary): string => {
-  const maybeRight = query.right?.[1];
+const getBinaryHTML = (query: CqlBinary): string => {
+  const maybeBinary = query.right?.binary;
 
-  const binaryContent = maybeRight
+  const binaryContent = maybeBinary
     ? `
      <ul>
         <li>${getContentHTML(query.left)}</li>
-        <li>${getBinaryHTML(maybeRight)}</li>
+        <li>${getBinaryHTML(maybeBinary)}</li>
       </ul>`
     : getContentHTML(query.left);
 
