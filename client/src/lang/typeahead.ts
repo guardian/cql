@@ -1,4 +1,4 @@
-import { CqlQuery, QueryField } from "./ast";
+import { CqlQuery, CqlField } from "./ast";
 import { Token } from "./token";
 import {
   DateSuggestion,
@@ -7,7 +7,7 @@ import {
   TypeaheadSuggestion,
   TypeaheadType,
 } from "./types";
-import { getQueryFieldsFromCqlBinary } from "./utils";
+import { getCqlFieldsFromCqlBinary } from "./utils";
 
 export type TypeaheadResolver =
   | ((str: string, signal?: AbortSignal) => Promise<TextSuggestionOption[]>)
@@ -57,9 +57,9 @@ export class Typeahead {
       return [];
     }
 
-    const eventuallySuggestions = getQueryFieldsFromCqlBinary(
+    const eventuallySuggestions = getCqlFieldsFromCqlBinary(
       program.content
-    ).flatMap((queryField) => this.suggestQueryField(queryField, signal));
+    ).flatMap((queryField) => this.suggestCqlField(queryField, signal));
 
     const suggestions = await Promise.all(eventuallySuggestions);
 
@@ -85,8 +85,8 @@ export class Typeahead {
     ];
   }
 
-  private async suggestQueryField(
-    q: QueryField,
+  private async suggestCqlField(
+    q: CqlField,
     signal?: AbortSignal
   ): Promise<TypeaheadSuggestion[]> {
     const { key, value } = q;

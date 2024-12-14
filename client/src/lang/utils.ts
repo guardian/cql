@@ -1,4 +1,4 @@
-import { CqlBinary, QueryContent, QueryField } from "./ast";
+import { CqlBinary, CqlExpr, CqlField } from "./ast";
 
 const whitespaceR = /\s/;
 export const isWhitespace = (str: string) => whitespaceR.test(str);
@@ -35,20 +35,20 @@ export function* getPermutations<T>(
   return permutation.slice();
 }
 
-export const getQueryFieldsFromCqlBinary = (
+export const getCqlFieldsFromCqlBinary = (
   queryBinary: CqlBinary
-): QueryField[] =>
-  getQueryFieldsFromQueryContent(queryBinary.left).concat(
+): CqlField[] =>
+  getCqlFieldsFromQueryExpr(queryBinary.left).concat(
     queryBinary.right
-      ? getQueryFieldsFromCqlBinary(queryBinary.right.binary)
+      ? getCqlFieldsFromCqlBinary(queryBinary.right.binary)
       : []
   );
 
-export const getQueryFieldsFromQueryContent = (
-  queryContent: QueryContent
-): QueryField[] => {
+export const getCqlFieldsFromQueryExpr = (
+  queryContent: CqlExpr
+): CqlField[] => {
   switch (queryContent.content.type) {
-    case "QueryField":
+    case "CqlField":
       return [queryContent.content];
     default:
       return [];

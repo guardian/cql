@@ -38,12 +38,12 @@ class Cql(typeahead: Typeahead):
     parser.parse() match
       case Success(expr) =>
         typeahead.getSuggestions(expr).map { suggestions =>
-          Try { CapiQueryString.build(expr) } match
-            case Success(capiQueryStr) =>
+          Try { CapiCqlString.build(expr) } match
+            case Success(capiCqlStr) =>
               CqlResult(
                 tokens,
                 Some(expr),
-                Some(capiQueryStr),
+                Some(capiCqlStr),
                 suggestions,
                 None
               )

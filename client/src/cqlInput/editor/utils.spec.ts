@@ -1,6 +1,6 @@
 import { describe, expect, test } from "bun:test";
 import {
-  docToQueryStr,
+  docToCqlStr,
   getNextPositionAfterTypeaheadSelection,
   mapResult,
   mapTokens,
@@ -238,7 +238,7 @@ describe("utils", () => {
     });
   });
 
-  describe("docToQueryStr", () => {
+  describe("docToCqlStr", () => {
     test("should convert a doc to a query string", () => {
       const queryDoc = doc(
         searchText("example"),
@@ -248,7 +248,7 @@ describe("utils", () => {
 
       const queryStr = "example +tag:tags-are-magic ";
 
-      expect(docToQueryStr(queryDoc)).toBe(queryStr);
+      expect(docToCqlStr(queryDoc)).toBe(queryStr);
     });
 
     test("should not prepend whitespace when the doc starts with a chip", () => {
@@ -260,7 +260,7 @@ describe("utils", () => {
 
       const queryStr = "+tag:tags-are-magic ";
 
-      expect(docToQueryStr(queryDoc)).toBe(queryStr);
+      expect(docToCqlStr(queryDoc)).toBe(queryStr);
     });
 
     test("should join chips with a single whitespace", () => {
@@ -273,7 +273,7 @@ describe("utils", () => {
 
       const queryStr = "+tag:tags-are-magic +tag:tags-are-magic ";
 
-      expect(docToQueryStr(queryDoc)).toBe(queryStr);
+      expect(docToCqlStr(queryDoc)).toBe(queryStr);
     });
   });
 });

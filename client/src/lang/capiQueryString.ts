@@ -1,8 +1,8 @@
 import { err, ok, Result } from "../utils/result";
-import { CqlQuery, CqlBinary, QueryContent } from "./ast";
-import { getQueryFieldsFromCqlBinary } from "./utils";
+import { CqlQuery, CqlBinary, CqlExpr } from "./ast";
+import { getCqlFieldsFromCqlBinary } from "./utils";
 
-class CapiQueryStringError extends Error {
+class CapiCqlStringError extends Error {
   public constructor(message: string) {
     super(message);
   }
@@ -19,14 +19,14 @@ export const queryStrFromQueryList = (
   const searchStrs = strFromBinary(content);
 
   try {
-    const otherQueries = getQueryFieldsFromCqlBinary(content).flatMap(
+    const otherQueries = getCqlFieldsFromCqlBinary(content).flatMap(
       (expr) => {
         switch (expr.type) {
-          case "QueryField": {
+          case "CqlField": {
             if (expr.value) {
               return [`${expr.key.literal ?? ""}=${expr.value.literal ?? ""}`];
             } else {
-              throw new CapiQueryStringError(
+              throw new CapiCqlStringError(
                 `The field '${expr.key.literal}' needs a value after it (e.g. '${expr.key.literal}:tone/news')`
               );
             }
@@ -48,12 +48,12 @@ export const queryStrFromQueryList = (
   }
 };
 
-const strFromContent = (queryContent: QueryContent): string | undefined => {
+const strFromContent = (queryContent: CqlExpr): string | undefined => {
   const { content } = queryContent;
   switch (content.type) {
-    case "QueryStr":
+    case "CqlStr":
       return content.searchExpr;
-    case "QueryGroup":
+    case "CqlGroup":
       return `(${strFromBinary(content.content).trim()})`;
     case "CqlBinary":
       return strFromBinary(content);

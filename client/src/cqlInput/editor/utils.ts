@@ -46,7 +46,7 @@ const joinSearchTextTokens = (tokens: ProseMirrorToken[]) =>
     });
   }, [] as ProseMirrorToken[]);
 
-const getQueryFieldKeyRange = (from: number): [number, number, number] =>
+const getCqlFieldKeyRange = (from: number): [number, number, number] =>
   // leading char ('+') (+1)
   // chipKey begin (-1)
   // chip begin (-1)
@@ -129,7 +129,7 @@ export const createProseMirrorTokenToDocumentMap = (
             ...(shouldAddSearchTextMapping
               ? getSearchTextRanges(previousToken?.to, previousToken?.to)
               : []),
-            getQueryFieldKeyRange(from)
+            getCqlFieldKeyRange(from)
           );
         }
         case "CHIP_VALUE": {
@@ -296,7 +296,7 @@ export const tokensToDecorations = (
     );
 };
 
-export const docToQueryStr = (doc: Node) => {
+export const docToCqlStr = (doc: Node) => {
   let str: string = "";
 
   doc.descendants((node) => {
@@ -534,8 +534,8 @@ export const queryHasChanged = (
     return;
   }
 
-  const prevQuery = docToQueryStr(oldDoc);
-  const currentQuery = docToQueryStr(newDoc);
+  const prevQuery = docToCqlStr(oldDoc);
+  const currentQuery = docToCqlStr(newDoc);
 
   return prevQuery !== currentQuery ? { prevQuery, currentQuery } : undefined;
 };

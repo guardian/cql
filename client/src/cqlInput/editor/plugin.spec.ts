@@ -9,7 +9,7 @@ import { bottomOfLine, topOfLine } from "./commands";
 import { keymap } from "prosemirror-keymap";
 import {
   createProseMirrorTokenToDocumentMap,
-  docToQueryStr,
+  docToCqlStr,
   getNodeTypeAtSelection,
   mapResult,
   tokensToDoc,
@@ -52,14 +52,14 @@ const createCqlEditor = (initialQuery: string = "") => {
   });
 
   const queryToProseMirrorTokens = (query: string) => {
-    const result = testCqlService.parseCqlQueryStr(query);
+    const result = testCqlService.parseCqlCqlStr(query);
     const { tokens } = mapResult(result);
     return tokensToDoc(tokens);
   };
 
   const moveCaretToQueryPos = (pos: number, offset: number = 0) => {
-    const query = docToQueryStr(editor.view.state.doc);
-    const result = testCqlService.parseCqlQueryStr(query);
+    const query = docToCqlStr(editor.view.state.doc);
+    const result = testCqlService.parseCqlCqlStr(query);
     const tokens = toProseMirrorTokens(result.tokens);
     const mapping = createProseMirrorTokenToDocumentMap(tokens);
     return editor.command((state, dispatch) => {

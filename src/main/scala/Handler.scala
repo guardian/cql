@@ -39,12 +39,12 @@ class Handler
   ): APIGatewayProxyResponseEvent = {
     logger.info(
       "Received request with params: " + event
-        .getQueryStringParameters()
+        .getCqlStringParameters()
         .toString()
     )
 
     val eventualResult = event
-      .getQueryStringParameters()
+      .getCqlStringParameters()
       .asScala
       .get("query")
       .map(query =>

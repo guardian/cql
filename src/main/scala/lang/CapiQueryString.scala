@@ -8,24 +8,24 @@ import java.nio.charset.Charset
 import scala.collection.mutable.Map
 import scala.collection.mutable.ListBuffer
 
-case class CapiQueryStringError(message: String) extends Error(message)
+case class CapiCqlStringError(message: String) extends Error(message)
 
-object CapiQueryString {
+object CapiCqlString {
   def build(
       program: QueryList
   ): String =
     val (searchStrs, otherQueries) = program.exprs.partitionMap {
       case q: CqlBinary => Left(strFromBinary(q))
-      case QueryField(key, Some(value)) =>
+      case CqlField(key, Some(value)) =>
         Right(s"${key.literal.getOrElse("")}=${value.literal.getOrElse("")}")
-      case QueryField(key, None) =>
-        throw new CapiQueryStringError(
+      case CqlField(key, None) =>
+        throw new CapiCqlStringError(
           s"The field '+$key' needs a value after it (e.g. +$key:tone/news)"
         )
       case QueryOutputModifier(key, Some(value)) =>
         Right(s"${key.literal.getOrElse("")}=${value.literal.getOrElse("")}")
       case QueryOutputModifier(key, None) =>
-        throw new CapiQueryStringError(
+        throw new CapiCqlStringError(
           s"The output modifier '@$key' needs a value after it (e.g. +$key:all)"
         )
     }
@@ -40,10 +40,10 @@ object CapiQueryString {
 
     List(maybeSearchStr, otherQueries).flatten.mkString("&")
 
-  private def strFromContent(queryContent: QueryContent): String =
+  private def strFromContent(queryContent: QueryExpr): String =
     queryContent.content match {
-      case QueryStr(str)       => str
-      case QueryGroup(content) => s"(${strFromBinary(content)})"
+      case CqlStr(str)       => str
+      case CqlGroup(content) => s"(${strFromBinary(content)})"
       case q: CqlBinary      => strFromBinary(q)
     }
 

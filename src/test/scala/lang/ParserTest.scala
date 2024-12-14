@@ -67,8 +67,8 @@ class ParserTest extends BaseTest with Matchers {
     result shouldBe Success(
       QueryList(
         List(
-          CqlBinary(QueryContent(QueryStr("a")), None),
-          QueryField(
+          CqlBinary(QueryExpr(CqlStr("a")), None),
+          CqlField(
             queryFieldKeyToken("", 2),
             None
           )

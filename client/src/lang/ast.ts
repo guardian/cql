@@ -12,7 +12,7 @@ export const createQuery = (content?: CqlBinary): CqlQuery => ({
 
 export type CqlBinary = {
   type: "CqlBinary";
-  left: QueryContent;
+  left: CqlExpr;
   right?: {
     operator: "OR" | "AND"
     binary: CqlBinary
@@ -28,42 +28,42 @@ export const createCqlBinary = (
   right,
 });
 
-export type QueryContent = {
-  type: "QueryContent";
-  content: QueryStr | CqlBinary | QueryGroup | QueryField;
+export type CqlExpr = {
+  type: "QueryExpr";
+  content: CqlStr | CqlBinary | CqlGroup | CqlField;
 };
 
-export const createQueryContent = (
-  content: QueryContent["content"]
-): QueryContent => ({
-  type: "QueryContent",
+export const createCqlExpr = (
+  content: CqlExpr["content"]
+): CqlExpr => ({
+  type: "QueryExpr",
   content,
 });
 
-export type QueryGroup = { type: "QueryGroup"; content: CqlBinary };
+export type CqlGroup = { type: "CqlGroup"; content: CqlBinary };
 
-export const createQueryGroup = (
-  content: QueryGroup["content"]
-): QueryGroup => ({
-  type: "QueryGroup",
+export const createCqlGroup = (
+  content: CqlGroup["content"]
+): CqlGroup => ({
+  type: "CqlGroup",
   content,
 });
 
-export type QueryStr = { type: "QueryStr"; searchExpr: string; token: Token };
+export type CqlStr = { type: "CqlStr"; searchExpr: string; token: Token };
 
-export const createQueryStr = (token: Token): QueryStr => ({
-  type: "QueryStr",
+export const createCqlStr = (token: Token): CqlStr => ({
+  type: "CqlStr",
   searchExpr: token.literal ?? "",
   token,
 });
 
-export type QueryField = { type: "QueryField"; key: Token; value?: Token };
+export type CqlField = { type: "CqlField"; key: Token; value?: Token };
 
-export const createQueryField = (
-  key: QueryField["key"],
-  value: QueryField["value"]
-): QueryField => ({
-  type: "QueryField",
+export const createCqlField = (
+  key: CqlField["key"],
+  value: CqlField["value"]
+): CqlField => ({
+  type: "CqlField",
   key,
   value,
 });

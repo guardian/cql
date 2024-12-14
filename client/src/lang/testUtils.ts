@@ -1,4 +1,4 @@
-import { createQueryField, QueryField } from "./ast";
+import { createCqlField, CqlField } from "./ast";
 import { Token, TokenType } from "./token";
 
 export const leftParenToken = (start: number = 0) =>
@@ -29,8 +29,8 @@ export const queryField = (
   key: string,
   value?: string,
   start: number = 0
-): QueryField =>
-  createQueryField(
+): CqlField =>
+  createCqlField(
     queryFieldKeyToken(key, start),
     value !== undefined
       ? queryValueToken(value, start + key.length + 1)

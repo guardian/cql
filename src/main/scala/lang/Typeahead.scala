@@ -89,8 +89,8 @@ class Typeahead(
   ): Future[List[TypeaheadSuggestion]] =
     Future
       .traverse(program.exprs) {
-        case q: QueryField =>
-          suggestQueryField(q)
+        case q: CqlField =>
+          suggestCqlField(q)
         case q: QueryOutputModifier =>
           suggestQueryOutputModifier(q)
         case _ => Future.successful(List.empty)
@@ -108,13 +108,13 @@ class Typeahead(
         )
     }.toList)
 
-  private def suggestQueryField(
-      q: QueryField
+  private def suggestCqlField(
+      q: CqlField
   ): Future[List[TypeaheadSuggestion]] =
     q match {
-      case QueryField(keyToken, None) =>
+      case CqlField(keyToken, None) =>
         getSuggestionsForKeyToken(keyToken)
-      case QueryField(keyToken, Some(valueToken)) =>
+      case CqlField(keyToken, Some(valueToken)) =>
         val keySuggestions = getSuggestionsForKeyToken(keyToken)
         val valueSuggestions =
           suggestFieldValue(

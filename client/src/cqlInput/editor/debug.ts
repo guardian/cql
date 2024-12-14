@@ -4,10 +4,10 @@ import { Token } from "../../lang/token";
 import {
   CqlQuery,
   CqlBinary,
-  QueryContent,
-  QueryField,
-  QueryGroup,
-  QueryStr,
+  CqlExpr,
+  CqlField,
+  CqlGroup,
+  CqlStr,
 } from "../../lang/ast";
 
 // Debugging and visualisation utilities.
@@ -198,16 +198,16 @@ export const getDebugASTHTML = (query: CqlQuery) => {
   </div>`;
 };
 
-const getContentHTML = (query: QueryContent) => {
+const getContentHTML = (query: CqlExpr) => {
   const html = (() => {
     switch (query.content.type) {
       case "CqlBinary":
         return getBinaryHTML(query.content);
-      case "QueryField":
+      case "CqlField":
         return getFieldHTML(query.content);
-      case "QueryGroup":
+      case "CqlGroup":
         return getGroupHTML(query.content);
-      case "QueryStr":
+      case "CqlStr":
         return getStrHTML(query.content);
     }
   })();
@@ -242,7 +242,7 @@ const getBinaryHTML = (query: CqlBinary): string => {
   `;
 };
 
-const getFieldHTML = (field: QueryField) => {
+const getFieldHTML = (field: CqlField) => {
   return `
     <ul>
       <li>
@@ -264,7 +264,7 @@ const getTokenHTML = (token: Token) => {
   `;
 };
 
-const getGroupHTML = (group: QueryGroup) => {
+const getGroupHTML = (group: CqlGroup) => {
   return `
     <ul>
       <li>
@@ -275,7 +275,7 @@ const getGroupHTML = (group: QueryGroup) => {
   `;
 };
 
-const getStrHTML = (str: QueryStr) => {
+const getStrHTML = (str: CqlStr) => {
   return `
     <ul>
       <li>

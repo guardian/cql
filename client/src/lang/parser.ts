@@ -2,16 +2,16 @@ import { Token } from "./token";
 import {
   createQuery,
   createCqlBinary,
-  createQueryContent,
-  createQueryField,
-  createQueryGroup,
-  createQueryStr,
+  createCqlExpr,
+  createCqlField,
+  createCqlGroup,
+  createCqlStr,
   CqlQuery,
   CqlBinary,
-  QueryContent,
-  QueryField,
-  QueryGroup,
-  QueryStr,
+  CqlExpr,
+  CqlField,
+  CqlGroup,
+  CqlStr,
 } from "./ast";
 import { TokenType } from "./token";
 import { either, err, ok, Result } from "../utils/result";
@@ -62,13 +62,13 @@ export class Parser {
     const left = this.queryContent();
 
     if (isNested) {
-      this.guardAgainstQueryField("within a group");
+      this.guardAgainstCqlField("within a group");
     }
 
     switch (this.peek().tokenType) {
       case TokenType.AND: {
         this.consume(TokenType.AND);
-        this.guardAgainstQueryField("after 'AND'.");
+        this.guardAgainstCqlField("after 'AND'.");
         if (this.isAtEnd()) {
           throw this.error(
             "There must be a query following 'AND', e.g. this AND that."
@@ -81,7 +81,7 @@ export class Parser {
       }
       case TokenType.OR: {
         this.consume(TokenType.OR);
-        this.guardAgainstQueryField("after 'OR'.");
+        this.guardAgainstCqlField("after 'OR'.");
         if (this.isAtEnd()) {
           throw this.error(
             "There must be a query following 'OR', e.g. this OR that."
@@ -105,12 +105,12 @@ export class Parser {
     }
   }
 
-  private queryContent(): QueryContent {
+  private queryContent(): CqlExpr {
     switch (this.peek().tokenType) {
       case TokenType.LEFT_BRACKET:
-        return createQueryContent(this.queryGroup());
+        return createCqlExpr(this.queryGroup());
       case TokenType.STRING:
-        return createQueryContent(this.queryStr());
+        return createCqlExpr(this.queryStr());
       default: {
         const { tokenType } = this.peek();
         if ([TokenType.AND, TokenType.OR].some((i) => i === tokenType)) {
@@ -121,7 +121,7 @@ export class Parser {
 
         switch (this.peek().tokenType) {
           case TokenType.CHIP_KEY: {
-            return createQueryContent(this.queryField());
+            return createCqlExpr(this.queryField());
           }
           default: {
             throw this.unexpectedTokenError();
@@ -131,7 +131,7 @@ export class Parser {
     }
   }
 
-  private queryGroup(): QueryGroup {
+  private queryGroup(): CqlGroup {
     this.consume(
       TokenType.LEFT_BRACKET,
       "Groups should start with a left bracket"
@@ -143,7 +143,7 @@ export class Parser {
       );
     }
 
-    this.guardAgainstQueryField(
+    this.guardAgainstCqlField(
       "within a group. Try putting this search term outside of the brackets!"
     );
 
@@ -153,16 +153,16 @@ export class Parser {
       "Groups must end with a right bracket."
     );
 
-    return createQueryGroup(binary);
+    return createCqlGroup(binary);
   }
 
-  private queryStr(): QueryStr {
+  private queryStr(): CqlStr {
     const token = this.consume(TokenType.STRING, "Expected a string");
 
-    return createQueryStr(token);
+    return createCqlStr(token);
   }
 
-  private queryField(): QueryField {
+  private queryField(): CqlField {
     const key = this.consume(
       TokenType.CHIP_KEY,
       "Expected a search key, e.g. +tag"
@@ -174,8 +174,8 @@ export class Parser {
     );
 
     return either(maybeValue)(
-      () => createQueryField(key, undefined),
-      (value: Token) => createQueryField(key, value)
+      () => createCqlField(key, undefined),
+      (value: Token) => createCqlField(key, value)
     );
   }
 
@@ -183,7 +183,7 @@ export class Parser {
    * Throw a sensible parse error when a query field or output modifier is
    * found in the wrong place.
    */
-  private guardAgainstQueryField = (errorLocation: string) => {
+  private guardAgainstCqlField = (errorLocation: string) => {
     switch (this.peek().tokenType) {
       case TokenType.CHIP_KEY: {
         const queryFieldNode = this.queryField();

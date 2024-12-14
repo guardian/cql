@@ -10,14 +10,14 @@ object QueryList {
   implicit val encoder: Encoder[QueryList] = Encoder.instance { list =>
     val arr = list.exprs.map {
       case q: CqlBinary         => q.asJson
-      case q: QueryField          => q.asJson
+      case q: CqlField          => q.asJson
       case q: QueryOutputModifier => q.asJson
     }
     Json.obj("type" -> "QueryList".asJson, "content" -> Json.arr(arr*))
   }
 }
 case class QueryList(
-    exprs: List[CqlBinary | QueryField | QueryOutputModifier]
+    exprs: List[CqlBinary | CqlField | QueryOutputModifier]
 ) extends Query
 
 object CqlBinary {
@@ -30,54 +30,54 @@ object CqlBinary {
   }
 }
 case class CqlBinary(
-    left: QueryContent,
+    left: QueryExpr,
     right: Option[(Token, CqlBinary)] = None
 )
 
-object QueryContent {
-  implicit val encoder: Encoder[QueryContent] = Encoder.instance {
+object QueryExpr {
+  implicit val encoder: Encoder[QueryExpr] = Encoder.instance {
     queryContent =>
       val content = queryContent.content match {
-        case q: QueryStr    => q.asJson
+        case q: CqlStr    => q.asJson
         case q: CqlBinary => q.asJson
-        case q: QueryGroup  => q.asJson
+        case q: CqlGroup  => q.asJson
       }
 
-      content.deepMerge(Json.obj("type" -> "QueryContent".asJson))
+      content.deepMerge(Json.obj("type" -> "QueryExpr".asJson))
   }
 }
 
-case class QueryContent(content: QueryStr | CqlBinary | QueryGroup)
+case class QueryExpr(content: CqlStr | CqlBinary | CqlGroup)
 
-object QueryGroup {
-  implicit val encoder: Encoder[QueryGroup] = Encoder.instance { group =>
-    group.content.asJson.deepMerge(Json.obj("type" -> "QueryGroup".asJson))
+object CqlGroup {
+  implicit val encoder: Encoder[CqlGroup] = Encoder.instance { group =>
+    group.content.asJson.deepMerge(Json.obj("type" -> "CqlGroup".asJson))
   }
 }
 
-case class QueryGroup(content: CqlBinary)
+case class CqlGroup(content: CqlBinary)
 
-object QueryStr {
-  implicit val encoder: Encoder[QueryStr] = Encoder.instance { queryStr =>
+object CqlStr {
+  implicit val encoder: Encoder[CqlStr] = Encoder.instance { queryStr =>
     Json.obj(
-      "type" -> "QueryStr".asJson,
+      "type" -> "CqlStr".asJson,
       "searchExpr" -> queryStr.searchExpr.asJson
     )
   }
 }
 
-case class QueryStr(searchExpr: String) extends Query
-object QueryField {
-  implicit val encoder: Encoder[QueryField] = Encoder.instance { queryField =>
+case class CqlStr(searchExpr: String) extends Query
+object CqlField {
+  implicit val encoder: Encoder[CqlField] = Encoder.instance { queryField =>
     Json.obj(
-      "type" -> "QueryField".asJson,
+      "type" -> "CqlField".asJson,
       "key" -> queryField.key.asJson,
       "value" -> queryField.value.asJson
     )
   }
 }
 
-case class QueryField(key: Token, value: Option[Token]) extends Query
+case class CqlField(key: Token, value: Option[Token]) extends Query
 
 object QueryOutputModifier {
   implicit val encoder: Encoder[QueryOutputModifier] =

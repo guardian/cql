@@ -2,10 +2,10 @@ import { describe, expect, it } from "bun:test";
 import { ok, Result, ResultKind } from "../utils/result";
 import {
   createCqlBinary,
-  createQueryContent,
-  createQueryField,
-  createQueryStr,
-  createQueryGroup,
+  createCqlExpr,
+  createCqlField,
+  createCqlStr,
+  createCqlGroup,
   createQuery,
   CqlQuery,
 } from "./ast";
@@ -48,7 +48,7 @@ describe("parser", () => {
     });
   });
 
-  describe("QueryGroup", () => {
+  describe("CqlGroup", () => {
     it("should handle unmatched parenthesis - lhs", () => {
       const tokens = [leftParenToken(), eofToken(2)];
       const result = new Parser(tokens).parse();
@@ -91,17 +91,17 @@ describe("parser", () => {
         ok(
           createQuery(
             createCqlBinary(
-              createQueryContent(
-                createQueryGroup(
+              createCqlExpr(
+                createCqlGroup(
                   createCqlBinary(
-                    createQueryContent(
-                      createQueryStr(unquotedStringToken("a", 1))
+                    createCqlExpr(
+                      createCqlStr(unquotedStringToken("a", 1))
                     ),
                     {
                       operator: TokenType.OR,
                       binary: createCqlBinary(
-                        createQueryContent(
-                          createQueryStr(unquotedStringToken("b", 2))
+                        createCqlExpr(
+                          createCqlStr(unquotedStringToken("b", 2))
                         )
                       ),
                     }
@@ -144,7 +144,7 @@ describe("parser", () => {
     });
   });
 
-  describe("QueryField", () => {
+  describe("CqlField", () => {
     it("should handle a query field", () => {
       const tokens = [
         queryFieldKeyToken("ta"),
@@ -154,7 +154,7 @@ describe("parser", () => {
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
         ok(
-          createQuery(createCqlBinary(createQueryContent(queryField("ta", ""))))
+          createQuery(createCqlBinary(createCqlExpr(queryField("ta", ""))))
         )
       );
     });
@@ -195,12 +195,12 @@ describe("parser", () => {
         ok(
           createQuery(
             createCqlBinary(
-              createQueryContent(createQueryStr(quotedStringToken("a"))),
+              createCqlExpr(createCqlStr(quotedStringToken("a"))),
               {
                 operator: TokenType.OR,
                 binary: createCqlBinary(
-                  createQueryContent(
-                    createQueryField(queryFieldKeyToken("", 2), undefined)
+                  createCqlExpr(
+                    createCqlField(queryFieldKeyToken("", 2), undefined)
                   ),
                   undefined
                 ),

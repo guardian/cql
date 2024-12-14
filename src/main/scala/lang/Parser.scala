@@ -16,20 +16,20 @@ class Parser(tokens: List[Token]):
 
   // program    -> statement* EOF
   private def queryList =
-    var queries = List.empty[CqlBinary | QueryField | QueryOutputModifier]
+    var queries = List.empty[CqlBinary | CqlField | QueryOutputModifier]
     while (peek().tokenType != EOF) {
       queries = queries :+ query
     }
     QueryList(queries)
 
-  val startOfQueryField = List(TokenType.CHIP_KEY, TokenType.PLUS)
+  val startOfCqlField = List(TokenType.CHIP_KEY, TokenType.PLUS)
   val startOfQueryOutputModifier =
     List(TokenType.QUERY_OUTPUT_MODIFIER_KEY, TokenType.AT)
   val startOfQueryValue =
     List(TokenType.CHIP_VALUE, TokenType.COLON)
 
-  private def query: CqlBinary | QueryField | QueryOutputModifier =
-    if (startOfQueryField.contains(peek().tokenType)) queryField
+  private def query: CqlBinary | CqlField | QueryOutputModifier =
+    if (startOfCqlField.contains(peek().tokenType)) queryField
     else if (startOfQueryOutputModifier.contains(peek().tokenType))
       queryOutputModifier
     else if (startOfQueryValue.contains(peek().tokenType))
@@ -45,7 +45,7 @@ class Parser(tokens: List[Token]):
     peek().tokenType match {
       case TokenType.AND =>
         val andToken = consume(TokenType.AND)
-        guardAgainstQueryField("after 'AND'.")
+        guardAgainstCqlField("after 'AND'.")
         if (isAtEnd) {
           throw error(
             "There must be a query following 'AND', e.g. this AND that."
@@ -54,7 +54,7 @@ class Parser(tokens: List[Token]):
         CqlBinary(left, Some((andToken), queryBinary))
       case TokenType.OR =>
         val orToken = consume(TokenType.OR)
-        guardAgainstQueryField("after 'OR'.")
+        guardAgainstCqlField("after 'OR'.")
         if (isAtEnd) {
           error(
             "There must be a query following 'OR', e.g. this OR that."
@@ -64,8 +64,8 @@ class Parser(tokens: List[Token]):
       case _ => CqlBinary(left)
     }
 
-  private def queryContent: QueryContent =
-    val content: QueryGroup | QueryStr | CqlBinary = peek().tokenType match
+  private def queryContent: QueryExpr =
+    val content: CqlGroup | CqlStr | CqlBinary = peek().tokenType match
       case TokenType.LEFT_BRACKET => queryGroup
       case TokenType.STRING       => queryStr
       case token if List(TokenType.AND, TokenType.OR).contains(token) =>
@@ -75,9 +75,9 @@ class Parser(tokens: List[Token]):
       case _ =>
         throw error(s"I didn't expect what I found after '${previous().lexeme}'")
 
-    QueryContent(content)
+    QueryExpr(content)
 
-  private def queryGroup: QueryGroup =
+  private def queryGroup: CqlGroup =
     consume(TokenType.LEFT_BRACKET, "Groups should start with a left bracket")
 
     if (isAtEnd || peek().tokenType == TokenType.RIGHT_BRACKET) {
@@ -86,20 +86,20 @@ class Parser(tokens: List[Token]):
       )
     }
 
-    guardAgainstQueryField(
+    guardAgainstCqlField(
       "within a group. Try putting this query outside of the brackets!"
     )
 
     val binary = queryBinary
     consume(TokenType.RIGHT_BRACKET, "Groups must end with a right bracket.")
 
-    QueryGroup(binary)
+    CqlGroup(binary)
 
-  private def queryStr: QueryStr =
+  private def queryStr: CqlStr =
     val token = consume(TokenType.STRING, "Expected a string")
-    QueryStr(token.literal.getOrElse(""))
+    CqlStr(token.literal.getOrElse(""))
 
-  private def queryField: QueryField =
+  private def queryField: CqlField =
     val key = Try {
       consume(TokenType.CHIP_KEY, "Expected a search key, e.g. +tag")
     }.recover { _ =>
@@ -114,7 +114,7 @@ class Parser(tokens: List[Token]):
       }
     }.toOption
 
-    QueryField(key, value)
+    CqlField(key, value)
 
   private def queryOutputModifier: QueryOutputModifier =
     val key = Try {
@@ -150,7 +150,7 @@ class Parser(tokens: List[Token]):
   /** Throw a sensible parse error when a query field or output modifier is
     * found in the wrong place.
     */
-  private def guardAgainstQueryField(errorLocation: String) =
+  private def guardAgainstCqlField(errorLocation: String) =
     peek().tokenType match {
       case TokenType.AT =>
         throw error(

@@ -9,7 +9,7 @@ import {
 } from "prosemirror-state";
 import {
   maybeMoveSelectionIntoChipKey,
-  docToQueryStr,
+  docToCqlStr,
   tokensToDecorations,
   tokensToDoc,
   ProseMirrorToken,
@@ -112,9 +112,9 @@ export const createCqlPlugin = ({
    * Side-effects: mutates the given transaction, and re-applies debug UI if provided.
    */
   const applyQueryToTr = (tr: Transaction, cqlService: CqlServiceInterface) => {
-    const queryBeforeParse = docToQueryStr(tr.doc);
+    const queryBeforeParse = docToCqlStr(tr.doc);
 
-    const result = cqlService.parseCqlQueryStr(queryBeforeParse);
+    const result = cqlService.parseCqlCqlStr(queryBeforeParse);
     const {
       tokens,
       query: ast,
@@ -124,7 +124,7 @@ export const createCqlPlugin = ({
     } = mapResult(result);
 
     const newDoc = tokensToDoc(tokens);
-    const queryAfterParse = docToQueryStr(newDoc); // The document may have changed as a result of the parse.
+    const queryAfterParse = docToCqlStr(newDoc); // The document may have changed as a result of the parse.
 
     if (debugASTContainer) {
       debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
@@ -187,13 +187,13 @@ export const createCqlPlugin = ({
     key: cqlPluginKey,
     state: {
       init(_, state) {
-        const queryStr = docToQueryStr(state.doc);
+        const queryStr = docToCqlStr(state.doc);
         return {
           tokens: [],
           suggestions: [],
           mapping: new Mapping(),
           queryStr,
-          query: cqlService.parseCqlQueryStr(queryStr).query,
+          query: cqlService.parseCqlCqlStr(queryStr).query,
           error: undefined,
         };
       },
@@ -238,7 +238,7 @@ export const createCqlPlugin = ({
 
         // @todo: this does not really belong here! Possibly in view? (Side effect)
         onChange({
-          cqlQuery: docToQueryStr(tr.doc),
+          cqlQuery: docToCqlStr(tr.doc),
           query: queryResult ?? "",
         });
       }
@@ -460,13 +460,13 @@ export const createCqlPlugin = ({
       // Serialise outgoing content to a CQL string for portability in both plain text and html
       clipboardTextSerializer(content) {
         const node = doc.create(undefined, content.content);
-        const queryStr = docToQueryStr(node);
+        const queryStr = docToCqlStr(node);
         return queryStr;
       },
       clipboardSerializer: {
         serializeFragment: (fragment: Fragment) => {
           const node = doc.create(undefined, fragment);
-          const queryStr = docToQueryStr(node);
+          const queryStr = docToCqlStr(node);
           const plainTextNode = DOMSerializer.fromSchema(schema).serializeNode(
             schema.text(queryStr)
           );
@@ -508,7 +508,7 @@ export const createCqlPlugin = ({
 
       view.dispatch(tr);
       onChange({
-        cqlQuery: docToQueryStr(tr.doc),
+        cqlQuery: docToCqlStr(tr.doc),
         query: queryResult ?? "",
       });
 

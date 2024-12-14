@@ -11,7 +11,7 @@ class HandlerTest extends AnyFunSpec with should.Matchers {
 
   def assertIO(input: String, status: Int, output: String) =
     val request = new APIGatewayProxyRequestEvent()
-      .withQueryStringParameters(Map("query" -> input).asJava)
+      .withCqlStringParameters(Map("query" -> input).asJava)
 
     val response = handler.handleRequest(request, null)
 
