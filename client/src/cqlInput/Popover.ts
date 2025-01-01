@@ -22,12 +22,11 @@ export abstract class Popover {
   /**
    * Hide the popover. Use the hide/show methods, rather than hiding and showing
    * the element directly in inheriting classes, to ensure that testing attributes
-   * are set, and the element is cleared.
+   * are set.
    */
   public hide = () => {
     this.popoverEl.hidePopover?.();
     this.popoverEl.dataset[isVisibleDataAttr] = "false";
-    this.popoverEl.innerHTML = "";
   };
 
   /**

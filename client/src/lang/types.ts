@@ -1,25 +1,32 @@
-export class TypeaheadSuggestion<T extends TypeaheadType = TypeaheadType> {
-  constructor(
-    public readonly from: number,
-    public readonly to: number,
-    public readonly position: "searchText" | "chipKey" | "chipValue",
-    public readonly suggestions: SuggestionTypeMap[T][],
-    public readonly type: T,
-    // The suffix to apply if this suggestion is accepted at the trailing edge of the query.
-    // E.g. when we have typed '+ta' accept the key suggestion 'tag', we'll want to apply '+tag:'
-    // to trigger typeahead for the value.
-    public readonly suffix?: string
-  ) {}
-}
+type BaseSuggestion = {
+  readonly from: number;
+  readonly to: number;
+  readonly position: "searchText" | "chipKey" | "chipValue";
 
+  // The suffix to apply if this suggestion is accepted at the trailing edge of the query.
+  // E.g. when we have typed '+ta' accept the key suggestion 'tag', we'll want to apply '+tag:'
+  // to trigger typeahead for the value.
+  readonly suffix?: string;
+};
+
+export type TextSuggestion = BaseSuggestion & {
+  readonly suggestions: TextSuggestionOption[];
+  readonly type: "TEXT";
+};
+
+export type DateSuggestion = BaseSuggestion & {
+  readonly type: "DATE";
+};
+
+export type TypeaheadSuggestion = TextSuggestion | DateSuggestion;
 export type MappedTypeaheadSuggestion = TypeaheadSuggestion;
 
 type SuggestionTypeMap = {
   TEXT: TextSuggestionOption;
-  DATE: DateSuggestion;
+  DATE: DateSuggestionOption;
 };
 
-export type Suggestion = TextSuggestionOption | DateSuggestion;
+export type Suggestion = TextSuggestionOption | DateSuggestionOption;
 
 export class TextSuggestionOption {
   public constructor(
@@ -30,7 +37,7 @@ export class TextSuggestionOption {
   ) {}
 }
 
-export class DateSuggestion {
+export class DateSuggestionOption {
   constructor(
     public readonly validFrom?: string,
     public readonly validTo?: string

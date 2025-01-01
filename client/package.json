@@ -37,6 +37,7 @@
     "happy-dom": "^15.11.7",
     "install": "^0.13.0",
     "npm": "^10.9.0",
+    "preact": "^10.25.4",
     "prosemirror-commands": "^1.6.0",
     "prosemirror-history": "^1.4.1",
     "prosemirror-keymap": "^1.2.2",

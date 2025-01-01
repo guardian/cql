@@ -1,7 +1,7 @@
 import { CqlQuery, CqlField } from "./ast";
 import { Token } from "./token";
 import {
-  DateSuggestion,
+  DateSuggestionOption,
   Suggestion,
   TextSuggestionOption,
   TypeaheadSuggestion,
@@ -74,14 +74,14 @@ export class Typeahead {
     }
 
     return [
-      new TypeaheadSuggestion(
-        keyToken.start,
-        keyToken.end,
-        "chipKey",
+      {
+        from: keyToken.start,
+        to: keyToken.end,
+        position: "chipKey",
         suggestions,
-        "TEXT",
-        ":"
-      ),
+        type: "TEXT",
+        suffix: ":",
+      },
     ];
   }
 
@@ -110,14 +110,14 @@ export class Typeahead {
 
     return eventuallySuggestions.then((suggestions) => [
       ...keySuggestions,
-      new TypeaheadSuggestion(
-        value.start,
-        value.end,
-        "chipValue",
+      {
+        from: value.start,
+        to: value.end,
+        position: "chipValue",
         suggestions,
-        suggestionType,
-        " "
-      ),
+        type: suggestionType,
+        suffix: " ",
+      },
     ]);
   }
 
@@ -149,7 +149,7 @@ export class Typeahead {
     }
 
     if (resolver.suggestionType === "DATE") {
-      return ["DATE", Promise.resolve([new DateSuggestion()])];
+      return ["DATE", Promise.resolve([new DateSuggestionOption()])];
     } else {
       return ["TEXT", resolver.resolveSuggestions(str, signal)];
     }
