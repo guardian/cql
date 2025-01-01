@@ -543,14 +543,8 @@ export const queryHasChanged = (
 export const getNodeTypeAtSelection = (view: EditorView) => {
   const {
     doc,
-    selection: { from, to },
+    selection: { from },
   } = view.state;
-  if (from !== to) {
-    throw new Error(
-      `[getNodeTypeAtPos]: Selection is not collapsed (${from}-${to})`
-    );
-  }
-
   return doc.resolve(from).node().type;
 };
 

@@ -4,8 +4,10 @@ import type { SearchResponse } from "@guardian/content-api-models/v1/searchRespo
 import { TypeaheadField } from "../lang/typeahead";
 import { TextSuggestionOption } from "../lang/types";
 import { stableSort } from "../utils/sort";
+import { LRUCache } from "./LRUCache";
 
 export class TypeaheadHelpersCapi {
+  private cache = new LRUCache(1000);
   public constructor(
     private baseUrl: string,
     private apiKey: string
@@ -264,8 +266,17 @@ export class TypeaheadHelpersCapi {
       ..._params,
       "api-key": this.apiKey,
     });
-    return (await (
-      await fetch(`${this.baseUrl}/${path}?${params.toString()}`, { signal })
+    const url = `${this.baseUrl}/${path}?${params.toString()}`;
+    const maybeCachedResult = this.cache.get(url);
+    if (maybeCachedResult) {
+      return maybeCachedResult as T;
+    }
+
+    const result = (await (
+      await fetch(url, { signal })
     ).json()) as T;
+
+    this.cache.put(url, result);
+    return result;
   }
 }
