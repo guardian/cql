@@ -20,12 +20,14 @@ import {
   toMappedSuggestions,
   getNextPositionAfterTypeaheadSelection,
   applyReadOnlyChipKeys,
+  getNodeTypeAtSelection,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "../TypeaheadPopover";
 import {
   chip,
   chipKey,
+  chipValue,
   DELETE_CHIP_INTENT,
   doc,
   IS_READ_ONLY,
@@ -517,8 +519,13 @@ export const createCqlPlugin = ({
           const { error, query, mapping } = cqlPluginKey.getState(view.state)!;
 
           errorPopover?.updateErrorMessage(error);
-
           if (query) {
+            cqlService.cancelSuggestions();
+            if (
+              [chip, chipKey, chipValue].includes(getNodeTypeAtSelection(view))
+            ) {
+              typeaheadPopover?.setIsPending();
+            }
             const suggestions = await cqlService.fetchSuggestions(query);
             const mappedSuggestions = toMappedSuggestions(suggestions, mapping);
             typeaheadPopover?.updateItemsFromSuggestions(mappedSuggestions);

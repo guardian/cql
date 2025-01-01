@@ -13,10 +13,13 @@ type MenuItem = {
   count?: number;
 };
 
+export const CLASS_PENDING = "Cql__Typeahead--pending";
+
 export class TypeaheadPopover extends Popover {
   private currentSuggestion: TypeaheadSuggestion | undefined;
   private currentOptionIndex = 0;
   private numberFormat = new Intl.NumberFormat();
+  private pendingTimer: Timer | undefined;
 
   public constructor(
     public view: EditorView,
@@ -33,26 +36,12 @@ export class TypeaheadPopover extends Popover {
     view.dom.addEventListener("blur", this.hide);
   }
 
-  private handleClickOrTouchSelection = (e: Event) => {
-    if (!(e.target instanceof HTMLElement)) {
-      return;
-    }
-
-    const optionEl = e.target.closest("[data-index]");
-    if (
-      optionEl instanceof HTMLElement &&
-      optionEl.dataset.index !== undefined
-    ) {
-      this.currentOptionIndex = parseInt(optionEl.dataset.index ?? "0");
-      this.applyOption();
-    }
-  };
-
   public isRenderingNavigableMenu = () => !!this.currentSuggestion?.suggestions;
 
   public updateItemsFromSuggestions = (
     typeaheadSuggestions: MappedTypeaheadSuggestion[]
   ) => {
+    this.cancelPending();
     if (
       !typeaheadSuggestions.length ||
       this.view.state.selection.from !== this.view.state.selection.to
@@ -83,9 +72,6 @@ export class TypeaheadPopover extends Popover {
     if (this.view.isDestroyed) {
       return;
     }
-    const { node } = this.view.domAtPos(from);
-
-    this.render(node as HTMLElement);
 
     if (type === "TEXT") {
       this.renderTextSuggestion(suggestions as MenuItem[]);
@@ -97,7 +83,8 @@ export class TypeaheadPopover extends Popover {
       this.renderDateSuggestion(value);
     }
 
-    this.show();
+    const { node } = this.view.domAtPos(from);
+    this.show(node as HTMLElement);
   };
 
   public moveSelectionUp = () => this.moveSelection(-1);
@@ -120,6 +107,36 @@ export class TypeaheadPopover extends Popover {
     this.applyValueToInput(suggestion.value);
   };
 
+  public setIsPending = () => {
+    this.cancelPending();
+    this.pendingTimer = setTimeout(() => {
+      const { node } = this.view.domAtPos(this.view.state.selection.from);
+      this.show(node as HTMLElement);
+      this.popoverEl.innerHTML = `<div aria-role="status" class="${CLASS_PENDING}">Loading ...</div>`;
+    }, 100);
+  };
+
+  private cancelPending = () => {
+    if (this.pendingTimer) {
+      clearTimeout(this.pendingTimer);
+    }
+  };
+
+  private handleClickOrTouchSelection = (e: Event) => {
+    if (!(e.target instanceof HTMLElement)) {
+      return;
+    }
+
+    const optionEl = e.target.closest("[data-index]");
+    if (
+      optionEl instanceof HTMLElement &&
+      optionEl.dataset.index !== undefined
+    ) {
+      this.currentOptionIndex = parseInt(optionEl.dataset.index ?? "0");
+      this.applyOption();
+    }
+  };
+
   private applyValueToInput = (value: string) => {
     if (!this.currentSuggestion) {
       return;
@@ -127,6 +144,7 @@ export class TypeaheadPopover extends Popover {
 
     const { from, to } = this.currentSuggestion;
 
+    this.hide();
     this.applySuggestion(from, to, value);
   };
 

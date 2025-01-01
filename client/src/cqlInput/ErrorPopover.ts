@@ -64,7 +64,6 @@ export class ErrorPopover extends Popover {
       this.errorMsgEl.classList.add(CLASS_VISIBLE);
 
       if (error.position !== undefined) {
-        this.show();
         this.popoverEl.classList.add(CLASS_VISIBLE);
 
         const referenceEl =
@@ -78,7 +77,7 @@ export class ErrorPopover extends Popover {
 
         const xOffset = 0;
         const yOffset = -25;
-        this.render(referenceEl, xOffset, yOffset);
+        this.show(referenceEl, xOffset, yOffset);
       }
     }, this.debounceTime);
   };

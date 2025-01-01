@@ -28,17 +28,12 @@ export abstract class Popover {
     this.popoverEl.hidePopover?.();
     this.popoverEl.dataset[isVisibleDataAttr] = "false";
     this.popoverEl.innerHTML = "";
-  }
+  };
 
   /**
    * Show the popover.
    */
-  protected show = () => {
-    this.popoverEl.showPopover?.();
-    this.popoverEl.dataset[isVisibleDataAttr] = "true";
-  }
-
-  protected async render(
+  protected async show(
     referenceElement: VirtualElement,
     xOffset: number = 0,
     yOffset: number = 0
@@ -54,5 +49,7 @@ export abstract class Popover {
 
     this.popoverEl.style.left = `${x}px`;
     this.popoverEl.style.top = `${y}px`;
+    this.popoverEl.showPopover?.();
+    this.popoverEl.dataset[isVisibleDataAttr] = "true";
   }
 }

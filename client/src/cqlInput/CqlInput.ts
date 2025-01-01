@@ -3,6 +3,7 @@ import { CqlServiceInterface } from "../services/CqlService";
 import { QueryChangeEventDetail } from "../types/dom";
 import { createEditorView } from "./editor/editor";
 import { createCqlPlugin, CLASS_VISIBLE } from "./editor/plugin";
+import { CLASS_PENDING } from "./TypeaheadPopover";
 
 const baseFontSize = 28;
 const baseBorderRadius = 5;
@@ -153,6 +154,31 @@ template.innerHTML = `
 
     .Cql__ErrorMessageContainer {
       display: none;
+    }
+
+    @keyframes placeHolderShimmer{
+      0%{
+          background-position: -468px 0
+      }
+      100%{
+          background-position: 468px 0
+      }
+    }
+
+    .${CLASS_PENDING} {
+      height: 2em;
+      padding: 5px;
+      position: relative;
+      color: #bbb;
+      animation-duration: 1.25s;
+      animation-fill-mode: forwards;
+      animation-iteration-count: infinite;
+      animation-name: placeHolderShimmer;
+      animation-timing-function: linear;
+      background: darkgray;
+      background: linear-gradient(to right, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0.2) 18%, rgba(255,255,255,0.1) 33%);
+      background-size: 200% 2em;
+
     }
 
     .${CLASS_VISIBLE} {
