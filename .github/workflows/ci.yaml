@@ -61,6 +61,9 @@ jobs:
           java-version: '21'
           cache: 'sbt'
 
+      - name: Setup SBT
+        uses: sbt/setup-sbt@96cf3f09dc501acdad7807fffe97dba9fa0709be # v1.1.5
+
       - name: Run tests and build JAR
         run: sbt test assembly
 
