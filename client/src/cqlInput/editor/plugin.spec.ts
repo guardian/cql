@@ -17,7 +17,7 @@ import {
 } from "./utils";
 import { TextSelection } from "prosemirror-state";
 import { TestTypeaheadHelpers } from "../../lang/fixtures/TestTypeaheadHelpers";
-import { isVisibleDataAttr } from "../Popover";
+import { isVisibleDataAttr } from "../popover/Popover";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new CqlClientService(typeheadHelpers.fieldResolvers);

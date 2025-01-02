@@ -3,7 +3,7 @@ import { CqlServiceInterface } from "../services/CqlService";
 import { QueryChangeEventDetail } from "../types/dom";
 import { createEditorView } from "./editor/editor";
 import { createCqlPlugin, CLASS_VISIBLE } from "./editor/plugin";
-import { CLASS_PENDING } from "./TypeaheadPopover";
+import { CLASS_PENDING } from "./popover/TypeaheadPopover";
 
 const baseFontSize = 28;
 const baseBorderRadius = 5;

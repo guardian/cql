@@ -23,7 +23,7 @@ import {
   getNodeTypeAtSelection,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
-import { TypeaheadPopover } from "../TypeaheadPopover";
+import { TypeaheadPopover } from "../popover/TypeaheadPopover";
 import {
   chip,
   chipKey,
@@ -35,7 +35,7 @@ import {
 } from "./schema";
 import { DOMSerializer, Fragment } from "prosemirror-model";
 import { QueryChangeEventDetail } from "../../types/dom";
-import { ErrorPopover } from "../ErrorPopover";
+import { ErrorPopover } from "../popover/ErrorPopover";
 import { CqlConfig } from "../CqlInput";
 import {
   getDebugASTHTML,
