@@ -20,10 +20,9 @@
     "noFallthroughCasesInSwitch": true,
 
     /* Preact */
-    "jsx":"preserve",
+    "jsx": "react",
     "jsxFactory": "h",
     "jsxFragmentFactory": "Fragment",
-    "jsxImportSource": "preact",
   },
   "include": ["src"]
 }
