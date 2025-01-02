@@ -5,7 +5,10 @@ import {
 } from "../../lang/types";
 import { EditorView } from "prosemirror-view";
 import { h, render } from "preact";
-import { PopoverContainer, PopoverRendererState } from "./components/PopoverContainer";
+import {
+  PopoverContainer,
+  PopoverRendererState,
+} from "./components/PopoverContainer";
 
 export const CLASS_PENDING = "Cql__Typeahead--pending";
 
@@ -35,11 +38,21 @@ export class TypeaheadPopover extends Popover {
       popoverEl
     );
 
-    // Prevent the popover from stealing focus from the input
-    popoverEl.addEventListener("mousedown", (e) => e.preventDefault());
+    // Prevent the popover from stealing focus from the input, unless we are
+    // focusing on another input within the popover
+    popoverEl.addEventListener("mousedown", (e) => {
+      if ((e.target as HTMLElement).tagName !== "INPUT") {
+        e.preventDefault();
+      }
+    });
 
-    // Close the popover when the input loses focus
-    view.dom.addEventListener("blur", this.hide);
+    // Close the popover when the input loses focus, unless we are focusing
+    // on an element within the popover
+    view.dom.addEventListener("blur", (e) => {
+      if (!popoverEl.contains(e.relatedTarget as HTMLElement)) {
+        this.hide();
+      }
+    });
   }
 
   public isRenderingNavigableMenu = () => !!this.currentSuggestion?.suggestions;
@@ -110,14 +123,17 @@ export class TypeaheadPopover extends Popover {
     });
   };
 
-  private applyValueToInput = (value: string) => {
+  private applyValueToInput = (value: string, hide = true) => {
     if (!this.currentSuggestion) {
       return;
     }
 
     const { from, to } = this.currentSuggestion;
 
-    this.hide();
+    if (hide) {
+      this.hide();
+    }
+
     this.applySuggestion(from, to, value);
   };
 

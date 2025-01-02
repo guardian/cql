@@ -72,6 +72,30 @@ template.innerHTML = `
       outline: 2px solid lightblue;
     }
 
+    .Cql__PopoverTabList {
+      display: flex;
+    }
+
+    .Cql__PopoverTabItem {
+      color: #bbb;
+      cursor: pointer;
+      flex-grow: 1;
+      text-align: center;
+      border-bottom: 2px solid #495e65;
+    }
+
+    .Cql__PopoverTabItem:hover,
+    .Cql__PopoverTabItem--active {
+      background-color: rgba(255,255,255,0.1);
+      color: #eee;
+      border-bottom: 2px solid lightblue;
+    }
+
+    .Cql__Input {
+      height: 1.5em;
+      font-size: 1em;
+    }
+
     .Cql__Option {
       padding: 5px;
     }

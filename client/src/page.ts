@@ -26,7 +26,7 @@ document.querySelector<HTMLDivElement>("#app")!.innerHTML = `
     </select>
   </div>
   <div id="cql-input-container">
-    <cql-input-capi initial-value="" id="cql-input" popover-container-id="popover-container"></cql-input-capi>
+    <cql-input-capi initial-value="+from-date:" id="cql-input" popover-container-id="popover-container"></cql-input-capi>
   </div>
   <p>Press <tt>+</tt> to select a specific field to search.</p>
   <p>Join search terms with <tt class="CqlToken__AND">OR</tt> and <tt class="CqlToken__AND">AND</tt>. Consecutive search terms, e.g. <tt class="CqlToken__STRING">this that</tt>, are implicitly joined with <tt class="CqlToken__OR">OR</tt>.</p>
