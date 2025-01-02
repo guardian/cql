@@ -1,5 +1,6 @@
 import { Popover } from "./Popover";
 import {
+  DateSuggestion,
   MappedTypeaheadSuggestion,
   TextSuggestion,
   TypeaheadSuggestion,
@@ -47,7 +48,13 @@ const PopoverComponent: FunctionComponent<PopoverProps> = ({
         ></TextSuggestionComponent>
       );
     case "DATE":
-      return <div>No typeahead for Date yet.</div>;
+      return (
+        <DateSuggestionComponent
+          suggestion={state.suggestion}
+          onSelect={onSelect}
+          currentOptionIndex={state.currentOptionIndex}
+        ></DateSuggestionComponent>
+      );
   }
 };
 
@@ -106,6 +113,39 @@ const TextSuggestionComponent = ({
   );
 };
 
+const DateSuggestionComponent = ({
+  suggestion,
+  onSelect,
+  currentOptionIndex,
+}: {
+  suggestion: DateSuggestion;
+  onSelect: (value: string) => void;
+  currentOptionIndex: number | undefined;
+}) => {
+  const currentItemRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    if (currentOptionIndex !== undefined) {
+      currentItemRef.current?.scrollIntoView({ block: "nearest" });
+    }
+  }, [currentOptionIndex]);
+
+  return suggestion.suggestions.map(({ label, value }, index) => {
+    const isSelected = index === currentOptionIndex;
+    const selectedClass = isSelected ? "Cql__Option--is-selected" : "";
+    return (
+      <div
+        class={`Cql__Option ${selectedClass}`}
+        data-index={index}
+        ref={isSelected ? currentItemRef : null}
+        onClick={() => onSelect(value)}
+      >
+        <div class="Cql__OptionLabel">{label}</div>
+      </div>
+    );
+  });
+};
+
 export class TypeaheadPopover extends Popover {
   private currentSuggestion: TypeaheadSuggestion | undefined;
   private currentOptionIndex = 0;
@@ -139,9 +179,7 @@ export class TypeaheadPopover extends Popover {
     view.dom.addEventListener("blur", this.hide);
   }
 
-  public isRenderingNavigableMenu = () =>
-    this.currentSuggestion?.type === "TEXT" &&
-    !!this.currentSuggestion.suggestions;
+  public isRenderingNavigableMenu = () => !!this.currentSuggestion?.suggestions;
 
   public updateItemsFromSuggestions = (
     typeaheadSuggestions: MappedTypeaheadSuggestion[]
@@ -183,9 +221,6 @@ export class TypeaheadPopover extends Popover {
   public moveSelectionDown = () => this.moveSelection(1);
 
   public applyOption = () => {
-    if (this.currentSuggestion?.type !== "TEXT") {
-      return;
-    }
     const suggestion =
       this.currentSuggestion?.suggestions[this.currentOptionIndex];
 
@@ -224,43 +259,10 @@ export class TypeaheadPopover extends Popover {
   };
 
   private moveSelection = (by: number) => {
-    if (this.currentSuggestion?.type !== "TEXT") {
-      return;
-    }
     const suggestions = this.currentSuggestion?.suggestions ?? [];
     this.currentOptionIndex =
       (this.currentOptionIndex + by + (by < 0 ? suggestions.length! : 0)) %
       suggestions.length!;
     this.updateRenderer();
   };
-
-  // private renderDateSuggestion(value: string) {
-  //   this.popoverEl.innerHTML = "";
-  //   const dateInput = document.createElement("input");
-  //   dateInput.classList.add("Cql__TypeaheadDateInput");
-  //   dateInput.setAttribute("value", value);
-  //   dateInput.setAttribute("type", "date");
-  //   dateInput.addEventListener("keydown", (e) => {
-  //     switch (e.key) {
-  //       case "Enter": {
-  //         const value = (e.target as HTMLInputElement).value;
-  //         this.applyValueToInput(value);
-  //         this.view.dom.focus();
-  //         break;
-  //       }
-  //       case "Escape": {
-  //         this.view.dom.focus();
-  //         break;
-  //       }
-  //     }
-  //   });
-
-  //   this.popoverEl.appendChild(dateInput);
-  //   const maybeValidDate = new Date(value);
-  //   const isDateValid =
-  //     maybeValidDate instanceof Date && isFinite(maybeValidDate.getTime());
-  //   if (!isDateValid) {
-  //     dateInput.focus();
-  //   }
-  // }
 }

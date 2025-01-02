@@ -206,3 +206,17 @@ Do we need a `+` for discovery? Or can we get away without?
 + Reverse polarity
 - Extra char
 - Users must discover what '+' does (and may never discover what '-' is)
+
+### Relative dates
+
+Where do we resolve relative dates?
+1. As they're accepted, within the query. Relative dates are made absolute within the CQL query, e.g. `+from-date:1970-01-01`.
+    - ✅ less work for interpreter
+    - ✅ no problem versioning queries
+    - ❌ not possible to share relative dates
+    - ❌ queries less clear, e.g. is that date exactly 15 days ago?
+2. As they're interpreted. Relative dates are kept within CQL, e.g. `+from-date:-5d`, and it's up to the interpreter to ... interpret them into absolute dates.
+    - ❌ more work for interpreter
+    - ❌ have to consider compatibility if the format changes
+    - ✅ sharing queries preserves relative date
+    - ✅ nice clear relative dates

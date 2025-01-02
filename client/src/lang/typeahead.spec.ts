@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { Typeahead } from "./typeahead";
-import { TextSuggestionOption } from "./types";
+import { DateSuggestionOption, TextSuggestionOption } from "./types";
 import { Cql } from "./Cql";
 import { TestTypeaheadHelpers } from "./fixtures/TestTypeaheadHelpers";
 
@@ -156,11 +156,17 @@ describe("typeahead", () => {
         suffix: ":",
       },
       {
-        from: 0,
+        from: 10,
         to: 10,
         position: "chipValue",
-        suggestions: [],
-        type: "TEXT",
+        suggestions: [
+          new DateSuggestionOption("1 day ago", "-1d"),
+          new DateSuggestionOption("7 days ago", "-7d"),
+          new DateSuggestionOption("14 days ago", "-14d"),
+          new DateSuggestionOption("30 days ago", "-30d"),
+          new DateSuggestionOption("1 year ago", "-1y"),
+        ],
+        type: "DATE",
         suffix: " ",
       },
     ]);

@@ -15,6 +15,7 @@ export type TextSuggestion = BaseSuggestion & {
 };
 
 export type DateSuggestion = BaseSuggestion & {
+  readonly suggestions: DateSuggestionOption[];
   readonly type: "DATE";
 };
 
@@ -39,8 +40,8 @@ export class TextSuggestionOption {
 
 export class DateSuggestionOption {
   constructor(
-    public readonly validFrom?: string,
-    public readonly validTo?: string
+    public readonly label: string,
+    public readonly value: string
   ) {}
 }
 

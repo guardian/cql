@@ -151,7 +151,13 @@ export class Typeahead {
     if (resolver.suggestionType === "DATE") {
       return {
         type: "DATE",
-        suggestions: Promise.resolve([new DateSuggestionOption()]),
+        suggestions: Promise.resolve([
+          new DateSuggestionOption("1 day ago", "-1d"),
+          new DateSuggestionOption("7 days ago", "-7d"),
+          new DateSuggestionOption("14 days ago", "-14d"),
+          new DateSuggestionOption("30 days ago", "-30d"),
+          new DateSuggestionOption("1 year ago", "-1y"),
+        ]),
       };
     } else {
       return {
