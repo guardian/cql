@@ -74,7 +74,6 @@ describe("parser", () => {
     it("should handle empty groups", () => {
       const tokens = [leftParenToken(), rightParenToken(1)];
       const result = new Parser(tokens).parse();
-      console.log("wut");
       assertFailure(result, "Groups can't be empty");
     });
 

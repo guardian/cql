@@ -116,7 +116,7 @@ export const createCqlPlugin = ({
   const applyQueryToTr = (tr: Transaction, cqlService: CqlServiceInterface) => {
     const queryBeforeParse = docToCqlStr(tr.doc);
 
-    const result = cqlService.parseCqlCqlStr(queryBeforeParse);
+    const result = cqlService.parseCqlStr(queryBeforeParse);
     const {
       tokens,
       query: ast,
@@ -195,7 +195,7 @@ export const createCqlPlugin = ({
           suggestions: [],
           mapping: new Mapping(),
           queryStr,
-          query: cqlService.parseCqlCqlStr(queryStr).query,
+          query: cqlService.parseCqlStr(queryStr).query,
           error: undefined,
         };
       },
@@ -447,6 +447,7 @@ export const createCqlPlugin = ({
         if (!typeaheadPopover?.isRenderingNavigableMenu()) {
           return false;
         }
+
         switch (event.code) {
           case "ArrowUp":
             typeaheadPopover.moveSelectionUp();
@@ -519,19 +520,23 @@ export const createCqlPlugin = ({
           const { error, query, mapping } = cqlPluginKey.getState(view.state)!;
 
           errorPopover?.updateErrorMessage(error);
-          if (query) {
-            cqlService.cancelSuggestions();
-            if (
-              [chip, chipKey, chipValue].includes(getNodeTypeAtSelection(view))
-            ) {
-              typeaheadPopover?.setIsPending();
-            }
-            const suggestions = await cqlService.fetchSuggestions(query);
-            const mappedSuggestions = toMappedSuggestions(suggestions, mapping);
-            typeaheadPopover?.updateItemsFromSuggestions(mappedSuggestions);
+          if (!query) {
+            return;
+          }
 
-            if (debugSuggestionsContainer) {
-              debugSuggestionsContainer.innerHTML = `
+          // cqlService.cancelSuggestions();
+          if (
+            [chip, chipKey, chipValue].includes(getNodeTypeAtSelection(view))
+          ) {
+            typeaheadPopover?.setIsPending();
+          }
+
+          const suggestions = await cqlService.fetchSuggestions(query);
+          const mappedSuggestions = toMappedSuggestions(suggestions, mapping);
+          typeaheadPopover?.updateItemsFromSuggestions(mappedSuggestions);
+
+          if (debugSuggestionsContainer) {
+            debugSuggestionsContainer.innerHTML = `
                 <h2>Typeahead</h2>
                     <p>Current selection: ${view.state.selection.from}-${
                       view.state.selection.to
@@ -541,7 +546,6 @@ export const createCqlPlugin = ({
               <div>${mappedSuggestions.map((suggestion) =>
                 JSON.stringify(suggestion, undefined, "  ")
               )}</div>`;
-            }
           }
         },
       };

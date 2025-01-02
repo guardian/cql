@@ -2,10 +2,9 @@ import { CqlQuery, CqlField } from "./ast";
 import { Token } from "./token";
 import {
   DateSuggestionOption,
-  Suggestion,
   TextSuggestionOption,
   TypeaheadSuggestion,
-  TypeaheadType,
+  SuggestionType,
 } from "./types";
 import { getCqlFieldsFromCqlBinary } from "./utils";
 
@@ -19,7 +18,7 @@ export class TypeaheadField {
     public name: string,
     public description: string,
     private resolver: TypeaheadResolver = [],
-    public suggestionType: TypeaheadType = "TEXT"
+    public suggestionType: SuggestionType = "TEXT"
   ) {}
 
   public resolveSuggestions(
@@ -106,18 +105,16 @@ export class Typeahead {
       return Promise.resolve(keySuggestions);
     }
 
-    const [suggestionType, eventuallySuggestions] = maybeValueSuggestions;
-
-    return eventuallySuggestions.then((suggestions) => [
+    return maybeValueSuggestions.suggestions.then((suggestions) => [
       ...keySuggestions,
       {
         from: value.start,
         to: value.end,
         position: "chipValue",
         suggestions,
-        type: suggestionType,
+        type: maybeValueSuggestions.type,
         suffix: " ",
-      },
+      } as TypeaheadSuggestion,
     ]);
   }
 
@@ -141,7 +138,10 @@ export class Typeahead {
     key: string,
     str: string,
     signal?: AbortSignal
-  ): [TypeaheadType, Promise<Suggestion[]>] | undefined {
+  ):
+    | { type: "TEXT"; suggestions: Promise<TextSuggestionOption[]> }
+    | { type: "DATE"; suggestions: Promise<DateSuggestionOption[]> }
+    | undefined {
     const resolver = this.fieldResolvers.find((_) => _.id == key);
 
     if (!resolver) {
@@ -149,9 +149,15 @@ export class Typeahead {
     }
 
     if (resolver.suggestionType === "DATE") {
-      return ["DATE", Promise.resolve([new DateSuggestionOption()])];
+      return {
+        type: "DATE",
+        suggestions: Promise.resolve([new DateSuggestionOption()]),
+      };
     } else {
-      return ["TEXT", resolver.resolveSuggestions(str, signal)];
+      return {
+        type: "TEXT",
+        suggestions: resolver.resolveSuggestions(str, signal),
+      };
     }
   }
 }

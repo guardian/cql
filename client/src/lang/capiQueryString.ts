@@ -19,24 +19,22 @@ export const queryStrFromQueryList = (
   const searchStrs = strFromBinary(content);
 
   try {
-    const otherQueries = getCqlFieldsFromCqlBinary(content).flatMap(
-      (expr) => {
-        switch (expr.type) {
-          case "CqlField": {
-            if (expr.value) {
-              return [`${expr.key.literal ?? ""}=${expr.value.literal ?? ""}`];
-            } else {
-              throw new CapiCqlStringError(
-                `The field '${expr.key.literal}' needs a value after it (e.g. '${expr.key.literal}:tone/news')`
-              );
-            }
-          }
-          default: {
-            return [];
+    const otherQueries = getCqlFieldsFromCqlBinary(content).flatMap((expr) => {
+      switch (expr.type) {
+        case "CqlField": {
+          if (expr.value) {
+            return [`${expr.key.literal ?? ""}=${expr.value.literal ?? ""}`];
+          } else {
+            throw new CapiCqlStringError(
+              `The field '${expr.key.literal}' needs a value after it (e.g. '${expr.key.literal}:tone/news')`
+            );
           }
         }
+        default: {
+          return [];
+        }
       }
-    );
+    });
 
     const queryStr = searchStrs.length
       ? `q=${encodeURI(searchStrs.trim())}`
@@ -66,9 +64,12 @@ const strFromContent = (queryContent: CqlExpr): string | undefined => {
 const strFromBinary = (queryBinary: CqlBinary): string => {
   const leftStr = strFromContent(queryBinary.left);
 
-  const rightStr = queryBinary.right
-    ? `${queryBinary.right.operator} ${strFromBinary(queryBinary.right.binary)}`
-    : "";
+  const rightStr =
+    queryBinary.right &&
+    // Something of a hack — don't include
+    queryBinary.right.binary.left.content.type !== "CqlField"
+      ? `${queryBinary.right.operator} ${strFromBinary(queryBinary.right.binary)}`
+      : "";
 
   return (leftStr ?? "") + (rightStr ? ` ${rightStr.trim()} ` : "");
 };

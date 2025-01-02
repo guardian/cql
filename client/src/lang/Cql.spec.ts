@@ -43,7 +43,7 @@ describe("a query", () => {
     );
 
     expect(cqlResult.queryResult).toBe(
-      "q=marina%20(hyde%20OR%20abramovic)&section=commentisfree"
+      "q=marina%20OR%20(hyde%20OR%20abramovic)&section=commentisfree"
     );
   });
 

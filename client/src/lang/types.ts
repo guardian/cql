@@ -44,4 +44,4 @@ export class DateSuggestionOption {
   ) {}
 }
 
-export type TypeaheadType = keyof SuggestionTypeMap;
+export type SuggestionType = keyof SuggestionTypeMap;

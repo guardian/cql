@@ -52,14 +52,14 @@ const createCqlEditor = (initialQuery: string = "") => {
   });
 
   const queryToProseMirrorTokens = (query: string) => {
-    const result = testCqlService.parseCqlCqlStr(query);
+    const result = testCqlService.parseCqlStr(query);
     const { tokens } = mapResult(result);
     return tokensToDoc(tokens);
   };
 
   const moveCaretToQueryPos = (pos: number, offset: number = 0) => {
     const query = docToCqlStr(editor.view.state.doc);
-    const result = testCqlService.parseCqlCqlStr(query);
+    const result = testCqlService.parseCqlStr(query);
     const tokens = toProseMirrorTokens(result.tokens);
     const mapping = createProseMirrorTokenToDocumentMap(tokens);
     return editor.command((state, dispatch) => {
@@ -134,7 +134,7 @@ const selectPopoverOptionWithClick = async (
   optionLabel: string
 ) => {
   const option = await selectPopoverOption(container, optionLabel);
-  await fireEvent.mouseDown(option);
+  await fireEvent.click(option);
 };
 
 const selectPopoverOptionWithEnter = async (

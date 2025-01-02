@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import { Typeahead } from "./typeahead";
-import { TextSuggestionOption, TypeaheadSuggestion } from "./types";
+import { TextSuggestionOption } from "./types";
 import { Cql } from "./Cql";
 import { TestTypeaheadHelpers } from "./fixtures/TestTypeaheadHelpers";
 
@@ -16,11 +16,11 @@ describe("typeahead", () => {
     expect(await getSuggestions("")).toEqual([]);
 
     expect(await getSuggestions("+")).toEqual([
-      new TypeaheadSuggestion(
-        0,
-        0,
-        "chipKey",
-        [
+      {
+        from: 0,
+        to: 0,
+        position: "chipKey",
+        suggestions: [
           new TextSuggestionOption(
             "Tag",
             "tag",
@@ -42,29 +42,29 @@ describe("typeahead", () => {
             "The date to search to"
           ),
         ],
-        "TEXT",
-        ":"
-      ),
+        type: "TEXT",
+        suffix: ":",
+      },
     ]);
   });
 
   it("should give typeahead suggestions for query meta keys", async () => {
     const suggestions = await getSuggestions("+ta");
     expect(suggestions).toEqual([
-      new TypeaheadSuggestion(
-        0,
-        2,
-        "chipKey",
-        [
+      {
+        from: 0,
+        to: 2,
+        position: "chipKey",
+        suggestions: [
           new TextSuggestionOption(
             "Tag",
             "tag",
             "Search by content tags, e.g. sport/football"
           ),
         ],
-        "TEXT",
-        ":"
-      ),
+        type: "TEXT",
+        suffix: ":",
+      },
     ]);
   });
 
@@ -72,68 +72,68 @@ describe("typeahead", () => {
     const suggestions = await getSuggestions("+tag:tags-are-magic");
 
     expect(suggestions).toEqual([
-      new TypeaheadSuggestion(
-        0,
-        3,
-        "chipKey",
-        [
+      {
+        from: 0,
+        to: 3,
+        position: "chipKey",
+        suggestions: [
           new TextSuggestionOption(
             "Tag",
             "tag",
             "Search by content tags, e.g. sport/football"
           ),
         ],
-        "TEXT",
-        ":"
-      ),
-      new TypeaheadSuggestion(
-        4,
-        18,
-        "chipValue",
-        [
+        type: "TEXT",
+        suffix: ":",
+      },
+      {
+        from: 4,
+        to: 18,
+        position: "chipValue",
+        suggestions: [
           new TextSuggestionOption(
             "Tags are magic",
             "tags-are-magic",
             "A magic tag"
           ),
         ],
-        "TEXT",
-        " "
-      ),
+        type: "TEXT",
+        suffix: " ",
+      },
     ]);
   });
 
   it("should give value suggestions for an empty string", async () => {
     const suggestions = await getSuggestions("+tag:");
     expect(suggestions).toEqual([
-      new TypeaheadSuggestion(
-        0,
-        3,
-        "chipKey",
-        [
+      {
+        from: 0,
+        to: 3,
+        position: "chipKey",
+        suggestions: [
           new TextSuggestionOption(
             "Tag",
             "tag",
             "Search by content tags, e.g. sport/football"
           ),
         ],
-        "TEXT",
-        ":"
-      ),
-      new TypeaheadSuggestion(
-        4,
-        4,
-        "chipValue",
-        [
+        type: "TEXT",
+        suffix: ":",
+      },
+      {
+        from: 4,
+        to: 4,
+        position: "chipValue",
+        suggestions: [
           new TextSuggestionOption(
             "Tags are magic",
             "tags-are-magic",
             "A magic tag"
           ),
         ],
-        "TEXT",
-        " "
-      ),
+        type: "TEXT",
+        suffix: " ",
+      },
     ]);
   });
 
@@ -141,21 +141,28 @@ describe("typeahead", () => {
     const suggestions = await getSuggestions("+from-date:");
 
     expect(suggestions).toEqual([
-      new TypeaheadSuggestion(
-        0,
-        9,
-        "chipKey",
-        [
+      {
+        from: 0,
+        to: 9,
+        position: "chipKey",
+        suggestions: [
           new TextSuggestionOption(
             "From date",
             "from-date",
             "The date to search from"
           ),
         ],
-        "TEXT",
-        ":"
-      ),
-      new TypeaheadSuggestion(10, 10, "chipValue", [], "TEXT", " "),
+        type: "TEXT",
+        suffix: ":",
+      },
+      {
+        from: 0,
+        to: 10,
+        position: "chipValue",
+        suggestions: [],
+        type: "TEXT",
+        suffix: " ",
+      },
     ]);
   });
 
@@ -163,39 +170,39 @@ describe("typeahead", () => {
     const suggestions = await getSuggestions("+tag:a +");
 
     expect(suggestions).toEqual([
-      new TypeaheadSuggestion(
-        0,
-        3,
-        "chipKey",
-        [
+      {
+        from: 0,
+        to: 3,
+        position: "chipKey",
+        suggestions: [
           new TextSuggestionOption(
             "Tag",
             "tag",
             "Search by content tags, e.g. sport/football"
           ),
         ],
-        "TEXT",
-        ":"
-      ),
-      new TypeaheadSuggestion(
-        4,
-        5,
-        "chipValue",
-        [
+        type: "TEXT",
+        suffix: ":",
+      },
+      {
+        from: 4,
+        to: 5,
+        position: "chipValue",
+        suggestions: [
           new TextSuggestionOption(
             "Tags are magic",
             "tags-are-magic",
             "A magic tag"
           ),
         ],
-        "TEXT",
-        " "
-      ),
-      new TypeaheadSuggestion(
-        7,
-        7,
-        "chipKey",
-        [
+        type: "TEXT",
+        suffix: " ",
+      },
+      {
+        from: 7,
+        to: 7,
+        position: "chipKey",
+        suggestions: [
           new TextSuggestionOption(
             "Tag",
             "tag",
@@ -217,9 +224,9 @@ describe("typeahead", () => {
             "The date to search to"
           ),
         ],
-        "TEXT",
-        ":"
-      ),
+        type: "TEXT",
+        suffix: ":",
+      },
     ]);
   });
 });

@@ -9,7 +9,7 @@ export type CqlError = {
 };
 
 export interface CqlServiceInterface {
-  parseCqlCqlStr(queryStr: string): CqlResult;
+  parseCqlStr(queryStr: string): CqlResult;
   fetchSuggestions(query: CqlQuery): Promise<TypeaheadSuggestion[]>;
   cancelSuggestions(): void;
 }
@@ -23,7 +23,7 @@ export class CqlClientService implements CqlServiceInterface {
     this.cql = new Cql(typeahead);
   }
 
-  public parseCqlCqlStr(queryStr: string) {
+  public parseCqlStr(queryStr: string) {
     this.abortController = new AbortController();
 
     return this.cql.parse(queryStr);
