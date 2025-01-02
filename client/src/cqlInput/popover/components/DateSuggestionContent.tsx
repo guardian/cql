@@ -1,18 +1,72 @@
 import { h } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { DateSuggestion } from "../../../lang/types";
+import { ActionSubscriber } from "./PopoverContainer";
+import { wrapSelection } from "./utils";
 
 export const DateSuggestionContent = ({
   suggestion,
   onSelect,
-  currentOptionIndex,
+  subscribeToAction,
 }: {
   suggestion: DateSuggestion;
   onSelect: (value: string) => void;
-  currentOptionIndex: number | undefined;
+  subscribeToAction: ActionSubscriber;
 }) => {
   const currentItemRef = useRef<HTMLDivElement | null>(null);
+  const indexOffset = 1; // The first index is to support an unselected state
   const [tabIndex, setTabIndex] = useState(0);
+
+  const [currentOptionIndex, setCurrentOptionIndex] = useState(0);
+
+  useEffect(() => {
+    subscribeToAction((action) => {
+      switch (action) {
+        case "up":
+          setCurrentOptionIndex(
+            wrapSelection(
+              currentOptionIndex,
+              -1,
+              suggestion.suggestions.length + indexOffset
+            )
+          );
+          return true;
+        case "down": {
+          setCurrentOptionIndex(
+            wrapSelection(
+              currentOptionIndex,
+              1,
+              suggestion.suggestions.length + indexOffset
+            )
+          );
+          return true;
+        }
+        case "left": {
+          if (currentOptionIndex < indexOffset) {
+            return;
+          }
+          setTabIndex(wrapSelection(tabIndex, -1, tabs.length));
+          return true;
+        }
+        case "right": {
+          if (currentOptionIndex < indexOffset) {
+            return;
+          }
+          setTabIndex(wrapSelection(tabIndex, 1, tabs.length));
+          return true;
+        }
+        case "enter": {
+          onSelect(
+            suggestion.suggestions[currentOptionIndex + indexOffset].value
+          );
+          return true;
+        }
+        default: {
+          break;
+        }
+      }
+    });
+  }, [subscribeToAction, currentOptionIndex, tabIndex, suggestion]);
 
   useEffect(() => {
     if (currentOptionIndex !== undefined) {
@@ -24,13 +78,12 @@ export const DateSuggestionContent = ({
     {
       label: "Relative",
       content: suggestion.suggestions.map(({ label, value }, index) => {
-        const isSelected = index === currentOptionIndex;
+        const isSelected = index + indexOffset === currentOptionIndex;
         const selectedClass = isSelected ? "Cql__Option--is-selected" : "";
 
         return (
           <div
             class={`Cql__Option ${selectedClass}`}
-            data-index={index}
             ref={isSelected ? currentItemRef : null}
             onClick={() => onSelect(value)}
           >

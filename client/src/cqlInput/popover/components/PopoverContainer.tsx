@@ -10,21 +10,29 @@ export type PopoverRendererState = {
   isPending: boolean;
 };
 
+type StateSubscriber = (sub: (state: PopoverRendererState) => void) => void;
+
+export type Actions = "left" | "right" | "up" | "down" | "enter";
+export type ActionHandler = (action: Actions) => true | undefined;
+export type ActionSubscriber = (handler: ActionHandler) => void;
+
 type PopoverProps = {
-  subscribe: (sub: (state: PopoverRendererState) => void) => void;
+  subscribeToState: StateSubscriber;
+  subscribeToAction: ActionSubscriber;
   onSelect: (value: string) => void;
 };
 
 export const PopoverContainer: FunctionComponent<PopoverProps> = ({
-  subscribe,
+  subscribeToState,
+  subscribeToAction,
   onSelect,
 }) => {
   const [state, setState] = useState<PopoverRendererState | undefined>();
   useEffect(() => {
-    subscribe((state) => {
+    subscribeToState((state) => {
       setState(state);
     });
-  }, [subscribe]);
+  }, [subscribeToState]);
 
   if (!state?.suggestion) {
     return <div>No results</div>;
@@ -36,7 +44,7 @@ export const PopoverContainer: FunctionComponent<PopoverProps> = ({
         <TextSuggestionContent
           suggestion={state.suggestion}
           onSelect={onSelect}
-          currentOptionIndex={state.currentOptionIndex}
+          subscribeToAction={subscribeToAction}
         ></TextSuggestionContent>
       );
     case "DATE":
@@ -44,7 +52,7 @@ export const PopoverContainer: FunctionComponent<PopoverProps> = ({
         <DateSuggestionContent
           suggestion={state.suggestion}
           onSelect={onSelect}
-          currentOptionIndex={state.currentOptionIndex}
+          subscribeToAction={subscribeToAction}
         ></DateSuggestionContent>
       );
   }

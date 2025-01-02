@@ -450,14 +450,15 @@ export const createCqlPlugin = ({
 
         switch (event.code) {
           case "ArrowUp":
-            typeaheadPopover.moveSelectionUp();
-            return true;
+            return typeaheadPopover.handleAction("up");
           case "ArrowDown":
-            typeaheadPopover.moveSelectionDown();
-            return true;
+            return typeaheadPopover.handleAction("down");
+          case "ArrowLeft":
+            return typeaheadPopover.handleAction("left");
+          case "ArrowRight":
+            return typeaheadPopover.handleAction("right");
           case "Enter":
-            typeaheadPopover.applyOption();
-            return true;
+            return typeaheadPopover.handleAction("enter");
         }
       },
       // Serialise outgoing content to a CQL string for portability in both plain text and html

@@ -6,6 +6,7 @@ import {
 import { EditorView } from "prosemirror-view";
 import { h, render } from "preact";
 import {
+  ActionHandler,
   PopoverContainer,
   PopoverRendererState,
 } from "./components/PopoverContainer";
@@ -13,10 +14,18 @@ import {
 export const CLASS_PENDING = "Cql__Typeahead--pending";
 
 export class TypeaheadPopover extends Popover {
+  public handleAction: ActionHandler = () => {
+    console.warn(
+      "[TypeaheadPopover]: No action handler has been registered by the popover renderer"
+    );
+    return undefined;
+  };
+  private updateRendererState:
+    | ((state: PopoverRendererState) => void)
+    | undefined;
   private currentSuggestion: TypeaheadSuggestion | undefined;
   private currentOptionIndex = 0;
   private isPending = false;
-  private listener: ((state: PopoverRendererState) => void) | undefined;
 
   public constructor(
     public view: EditorView,
@@ -27,11 +36,14 @@ export class TypeaheadPopover extends Popover {
 
     render(
       <PopoverContainer
-        subscribe={(listener) => {
-          this.listener = listener;
+        subscribeToState={(updateRendererState) => {
+          this.updateRendererState = updateRendererState;
 
           // Ensure the initial state of the renderer is in sync with this class's state.
           this.updateRenderer();
+        }}
+        subscribeToAction={(handleAction) => {
+          this.handleAction = handleAction;
         }}
         onSelect={this.applyValueToInput}
       />,
@@ -92,8 +104,6 @@ export class TypeaheadPopover extends Popover {
     this.show(node as HTMLElement);
   };
 
-  public moveSelectionUp = () => this.moveSelection(-1);
-
   public moveSelectionDown = () => this.moveSelection(1);
 
   public applyOption = () => {
@@ -116,7 +126,7 @@ export class TypeaheadPopover extends Popover {
   };
 
   private updateRenderer = () => {
-    this.listener?.({
+    this.updateRendererState?.({
       suggestion: this.currentSuggestion,
       isPending: this.isPending,
       currentOptionIndex: this.currentOptionIndex,
