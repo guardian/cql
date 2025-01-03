@@ -8,31 +8,42 @@ export type PopoverRendererState = {
   suggestion: TypeaheadSuggestion | undefined;
   currentOptionIndex: number;
   isPending: boolean;
+  isVisible: boolean;
 };
 
-type StateSubscriber = (sub: (state: PopoverRendererState) => void) => void;
+type Unsubscriber = () => void;
+type StateSubscriber = (
+  sub: (state: PopoverRendererState) => void
+) => Unsubscriber;
 
 export type Actions = "left" | "right" | "up" | "down" | "enter";
 export type ActionHandler = (action: Actions) => true | undefined;
-export type ActionSubscriber = (handler: ActionHandler) => void;
+export type ActionSubscriber = (handler: ActionHandler) => Unsubscriber;
 
 type PopoverProps = {
   subscribeToState: StateSubscriber;
   subscribeToAction: ActionSubscriber;
   onSelect: (value: string) => void;
+  closePopover: () => void;
 };
 
 export const PopoverContainer: FunctionComponent<PopoverProps> = ({
   subscribeToState,
   subscribeToAction,
   onSelect,
+  closePopover,
 }) => {
   const [state, setState] = useState<PopoverRendererState | undefined>();
+
   useEffect(() => {
     subscribeToState((state) => {
       setState(state);
     });
   }, [subscribeToState]);
+
+  if (!state?.isVisible) {
+    return;
+  }
 
   if (!state?.suggestion) {
     return <div>No results</div>;
@@ -53,6 +64,7 @@ export const PopoverContainer: FunctionComponent<PopoverProps> = ({
           suggestion={state.suggestion}
           onSelect={onSelect}
           subscribeToAction={subscribeToAction}
+          closePopover={closePopover}
         ></DateSuggestionContent>
       );
   }

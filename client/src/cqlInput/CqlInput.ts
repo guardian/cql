@@ -147,6 +147,20 @@ template.innerHTML = `
       border: none;
     }
 
+    .Cql__Button {
+      background-color: transparent;
+      border: 2px solid #aaa;
+      color: #eee;
+      border-radius: 3px;
+      font-size: 1em;
+      padding: 2px 9px;
+    }
+
+    .Cql__AbsoluteDateOption {
+      display: flex;
+      gap: 5px;
+    }
+
     .Cql__TypeaheadPopover, .Cql__ErrorPopover {
       position: absolute;
       width: 500px;

@@ -491,6 +491,7 @@ export const createCqlPlugin = ({
         }
 
         view.dispatch(tr);
+        view.focus();
       };
 
       typeaheadPopover = new TypeaheadPopover(

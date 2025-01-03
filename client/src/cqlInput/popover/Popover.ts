@@ -17,6 +17,9 @@ export type VirtualElement = {
 export const isVisibleDataAttr = "isvisible";
 
 export abstract class Popover {
+  protected isVisible = false;
+  protected updateRenderer = () => {};
+
   public constructor(protected popoverEl: HTMLElement) {}
 
   /**
@@ -24,10 +27,12 @@ export abstract class Popover {
    * the element directly in inheriting classes, to ensure that testing attributes
    * are set.
    */
-  public hide = () => {
+  public hide() {
+    this.isVisible = false;
+    this.updateRenderer();
     this.popoverEl.hidePopover?.();
     this.popoverEl.dataset[isVisibleDataAttr] = "false";
-  };
+  }
 
   /**
    * Show the popover.
@@ -37,6 +42,8 @@ export abstract class Popover {
     xOffset: number = 0,
     yOffset: number = 0
   ) {
+    this.isVisible = true;
+    this.updateRenderer();
     const { x, y } = await computePosition(referenceElement, this.popoverEl, {
       placement: "bottom-start",
       middleware: [

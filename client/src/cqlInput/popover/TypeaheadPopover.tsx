@@ -13,16 +13,25 @@ import {
 
 export const CLASS_PENDING = "Cql__Typeahead--pending";
 
+const noopActionHandler = () => {
+  console.warn(
+    "[TypeaheadPopover]: No action handler has been registered by the popover renderer"
+  );
+  return undefined;
+};
+
+const noopUpdateRendererState = () => {
+  console.warn(
+    "[TypeaheadPopover]: No update state callback has been registered by the popover renderer"
+  );
+  return undefined;
+};
+
 export class TypeaheadPopover extends Popover {
-  public handleAction: ActionHandler = () => {
-    console.warn(
-      "[TypeaheadPopover]: No action handler has been registered by the popover renderer"
-    );
-    return undefined;
-  };
-  private updateRendererState:
-    | ((state: PopoverRendererState) => void)
-    | undefined;
+  public handleAction: ActionHandler = noopActionHandler;
+  private updateRendererState: (state: PopoverRendererState) => void =
+    noopUpdateRendererState;
+
   private currentSuggestion: TypeaheadSuggestion | undefined;
   private currentOptionIndex = 0;
   private isPending = false;
@@ -41,11 +50,18 @@ export class TypeaheadPopover extends Popover {
 
           // Ensure the initial state of the renderer is in sync with this class's state.
           this.updateRenderer();
+
+          return () => {
+            this.updateRendererState = noopUpdateRendererState;
+          };
         }}
         subscribeToAction={(handleAction) => {
           this.handleAction = handleAction;
+
+          return () => (this.handleAction = noopActionHandler);
         }}
         onSelect={this.applyValueToInput}
+        closePopover={this.hide}
       />,
       popoverEl
     );
@@ -80,7 +96,6 @@ export class TypeaheadPopover extends Popover {
     ) {
       this.currentSuggestion = undefined;
       this.currentOptionIndex = 0;
-      this.updateRenderer();
       this.hide();
       return;
     }
@@ -100,36 +115,24 @@ export class TypeaheadPopover extends Popover {
     this.currentSuggestion = suggestionThatCoversSelection;
 
     const { node } = this.view.domAtPos(this.currentSuggestion.from);
-    this.updateRenderer();
     this.show(node as HTMLElement);
-  };
-
-  public moveSelectionDown = () => this.moveSelection(1);
-
-  public applyOption = () => {
-    const suggestion =
-      this.currentSuggestion?.suggestions[this.currentOptionIndex];
-
-    if (!this.currentSuggestion || !suggestion) {
-      console.warn(
-        `No option available with current suggestion at index ${this.currentOptionIndex}`
-      );
-
-      return;
-    }
-
-    this.applyValueToInput(suggestion.value);
   };
 
   public setIsPending = () => {
     this.isPending = true;
   };
 
-  private updateRenderer = () => {
+  public hide = () => {
+    super.hide();
+    this.view.focus();
+  };
+
+  protected updateRenderer = () => {
     this.updateRendererState?.({
       suggestion: this.currentSuggestion,
-      isPending: this.isPending,
       currentOptionIndex: this.currentOptionIndex,
+      isPending: this.isPending,
+      isVisible: this.isVisible,
     });
   };
 
@@ -145,13 +148,5 @@ export class TypeaheadPopover extends Popover {
     }
 
     this.applySuggestion(from, to, value);
-  };
-
-  private moveSelection = (by: number) => {
-    const suggestions = this.currentSuggestion?.suggestions ?? [];
-    this.currentOptionIndex =
-      (this.currentOptionIndex + by + (by < 0 ? suggestions.length! : 0)) %
-      suggestions.length!;
-    this.updateRenderer();
   };
 }

@@ -22,7 +22,7 @@ export const TextSuggestionContent = ({
   const [currentOptionIndex, setCurrentOptionIndex] = useState(0);
 
   useEffect(() => {
-    subscribeToAction((action) => {
+    const unsubscribe = subscribeToAction((action) => {
       switch (action) {
         case "up":
           setCurrentOptionIndex(
@@ -44,6 +44,8 @@ export const TextSuggestionContent = ({
         }
       }
     });
+
+    return unsubscribe;
   }, [subscribeToAction, currentOptionIndex, suggestion]);
 
   useEffect(() => {

@@ -7,20 +7,22 @@ import { wrapSelection } from "./utils";
 export const DateSuggestionContent = ({
   suggestion,
   onSelect,
+  closePopover,
   subscribeToAction,
 }: {
   suggestion: DateSuggestion;
   onSelect: (value: string) => void;
+  closePopover: () => void;
   subscribeToAction: ActionSubscriber;
 }) => {
-  const currentItemRef = useRef<HTMLDivElement | null>(null);
+  const currentItemRef = useRef<HTMLDivElement>(null);
   const indexOffset = 1; // The first index is to support an unselected state
   const [tabIndex, setTabIndex] = useState(0);
-
+  const dateInputRef = useRef<HTMLInputElement>(null);
   const [currentOptionIndex, setCurrentOptionIndex] = useState(0);
 
   useEffect(() => {
-    subscribeToAction((action) => {
+    const unsubscribe = subscribeToAction((action) => {
       switch (action) {
         case "up":
           setCurrentOptionIndex(
@@ -57,7 +59,7 @@ export const DateSuggestionContent = ({
         }
         case "enter": {
           onSelect(
-            suggestion.suggestions[currentOptionIndex + indexOffset].value
+            suggestion.suggestions[currentOptionIndex - indexOffset].value
           );
           return true;
         }
@@ -66,6 +68,8 @@ export const DateSuggestionContent = ({
         }
       }
     });
+
+    return unsubscribe;
   }, [subscribeToAction, currentOptionIndex, tabIndex, suggestion]);
 
   useEffect(() => {
@@ -73,6 +77,12 @@ export const DateSuggestionContent = ({
       currentItemRef.current?.scrollIntoView({ block: "nearest" });
     }
   }, [currentOptionIndex]);
+
+  useEffect(() => {
+    if (tabIndex === tabs.findIndex((tab) => tab.label === "Absolute")) {
+      dateInputRef.current?.focus();
+    }
+  }, [tabIndex, dateInputRef]);
 
   const tabs = [
     {
@@ -95,17 +105,32 @@ export const DateSuggestionContent = ({
     {
       label: "Absolute",
       content: (
-        <div class="Cql__Option">
+        <div class="Cql__Option Cql__AbsoluteDateOption">
           <input
             class="Cql__Input"
-            autoFocus
+            ref={dateInputRef}
             type="date"
             onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                onSelect((e.target as HTMLInputElement).value);
+              switch (e.key) {
+                case "Enter": {
+                  onSelect((e.target as HTMLInputElement).value);
+                  return;
+                }
+                case "Escape": {
+                  closePopover();
+                  return;
+                }
               }
             }}
           />
+          <button
+            class="Cql__Button"
+            onClick={() =>
+              dateInputRef.current && onSelect(dateInputRef.current?.value)
+            }
+          >
+            Apply
+          </button>
         </div>
       ),
     },
