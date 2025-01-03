@@ -5,7 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc && vite build && vite build --config vite.lib.config.ts",
+    "build:page": "tsc && vite build",
+    "build:lib": " && vite build --config vite.lib.config.ts",
     "test:debug": "bun test --inspect-wait=localhost:6499/vscode",
     "preview": "vite preview",
     "lint": "eslint ."
