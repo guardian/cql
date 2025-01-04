@@ -1,12 +1,6 @@
 import { describe, it, beforeEach, expect } from "bun:test";
 import { errorMsgTestId, errorTestId, typeaheadTestId } from "../CqlInput";
-import {
-  findByTestId,
-  findByText,
-  fireEvent,
-  screen,
-} from "@testing-library/dom";
-import userEvent from "@testing-library/user-event";
+import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
 import { CqlClientService } from "../../services/CqlService";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
 import { createCqlPlugin } from "./plugin";
@@ -125,9 +119,7 @@ const createCqlEditor = (initialQuery: string = "") => {
       }, timeoutMs);
     });
 
-  const user = userEvent.setup();
-
-  return { editor, waitFor, container, moveCaretToQueryPos, user };
+  return { editor, waitFor, container, moveCaretToQueryPos };
 };
 
 const selectPopoverOption = async (
@@ -376,9 +368,9 @@ describe("plugin", () => {
         await waitFor("example +from-date:-1d ");
       });
 
-      it.todo("applies absolute dates", async () => {
+      it("applies absolute dates on click", async () => {
         const queryStr = "example +from-date:";
-        const { user, editor, waitFor, container, moveCaretToQueryPos } =
+        const { editor, waitFor, container, moveCaretToQueryPos } =
           createCqlEditor(queryStr);
 
         await moveCaretToQueryPos(queryStr.length - 1);
@@ -388,17 +380,14 @@ describe("plugin", () => {
         await editor.press("ArrowDown");
         await tick();
         await editor.press("ArrowRight");
-        await tick(); // To allow the component state subscription to update
+
         const input = popoverContainer.getElementsByTagName("input")[0];
-        console.log(input.value);
-        input.focus();
-        await user.keyboard("01121987");
-        screen.debug(input)
+        await fireEvent.change(input, { target: { value: "2015-12-10" } });
 
         const button = await findByText(popoverContainer, "Apply");
         await fireEvent.click(button);
 
-        await waitFor("example +from-date:-1d ");
+        await waitFor("example +from-date:2015-12-10 ");
       });
     });
   });
