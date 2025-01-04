@@ -36,11 +36,6 @@ describe("typeahead", () => {
             "from-date",
             "The date to search from"
           ),
-          new TextSuggestionOption(
-            "To date",
-            "to-date",
-            "The date to search to"
-          ),
         ],
         type: "TEXT",
         suffix: ":",
@@ -223,11 +218,6 @@ describe("typeahead", () => {
             "From date",
             "from-date",
             "The date to search from"
-          ),
-          new TextSuggestionOption(
-            "To date",
-            "to-date",
-            "The date to search to"
           ),
         ],
         type: "TEXT",

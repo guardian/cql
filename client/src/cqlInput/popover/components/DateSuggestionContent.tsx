@@ -1,8 +1,10 @@
 import { h } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { DateSuggestion } from "../../../lang/types";
-import { ActionSubscriber } from "./PopoverContainer";
+import { ActionHandler, ActionSubscriber } from "./PopoverContainer";
 import { wrapSelection } from "./utils";
+import { RelativeDateTab } from "./RelativeDateTab";
+import { AbsoluteDateTab } from "./AbsoluteDateTab";
 
 export const DateSuggestionContent = ({
   suggestion,
@@ -18,11 +20,11 @@ export const DateSuggestionContent = ({
   const currentItemRef = useRef<HTMLDivElement>(null);
   const indexOffset = 1; // The first index is to support an unselected state
   const [tabIndex, setTabIndex] = useState(0);
-  const dateInputRef = useRef<HTMLInputElement>(null);
   const [currentOptionIndex, setCurrentOptionIndex] = useState(0);
+  const dateInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    const unsubscribe = subscribeToAction((action) => {
+  const handleAction: ActionHandler = useCallback(
+    (action) => {
       switch (action) {
         case "up":
           setCurrentOptionIndex(
@@ -58,6 +60,9 @@ export const DateSuggestionContent = ({
           return true;
         }
         case "enter": {
+          if (currentOptionIndex === 0) {
+            return;
+          }
           onSelect(
             suggestion.suggestions[currentOptionIndex - indexOffset].value
           );
@@ -67,10 +72,14 @@ export const DateSuggestionContent = ({
           break;
         }
       }
-    });
+    },
+    [currentOptionIndex, tabIndex, suggestion]
+  );
 
-    return unsubscribe;
-  }, [subscribeToAction, currentOptionIndex, tabIndex, suggestion]);
+  useEffect(
+    () => subscribeToAction(handleAction),
+    [subscribeToAction, handleAction]
+  );
 
   useEffect(() => {
     if (currentOptionIndex !== undefined) {
@@ -87,51 +96,24 @@ export const DateSuggestionContent = ({
   const tabs = [
     {
       label: "Relative",
-      content: suggestion.suggestions.map(({ label, value }, index) => {
-        const isSelected = index + indexOffset === currentOptionIndex;
-        const selectedClass = isSelected ? "Cql__Option--is-selected" : "";
-
-        return (
-          <div
-            class={`Cql__Option ${selectedClass}`}
-            ref={isSelected ? currentItemRef : null}
-            onClick={() => onSelect(value)}
-          >
-            <div class="Cql__OptionLabel">{label}</div>
-          </div>
-        );
-      }),
+      content: () => (
+        <RelativeDateTab
+          suggestion={suggestion}
+          indexOffset={indexOffset}
+          currentOptionIndex={currentOptionIndex}
+          currentItemRef={currentItemRef}
+          onSelect={onSelect}
+        />
+      ),
     },
     {
       label: "Absolute",
-      content: (
-        <div class="Cql__Option Cql__AbsoluteDateOption">
-          <input
-            class="Cql__Input"
-            ref={dateInputRef}
-            type="date"
-            onKeyDown={(e) => {
-              switch (e.key) {
-                case "Enter": {
-                  onSelect((e.target as HTMLInputElement).value);
-                  return;
-                }
-                case "Escape": {
-                  closePopover();
-                  return;
-                }
-              }
-            }}
-          />
-          <button
-            class="Cql__Button"
-            onClick={() =>
-              dateInputRef.current && onSelect(dateInputRef.current?.value)
-            }
-          >
-            Apply
-          </button>
-        </div>
+      content: () => (
+        <AbsoluteDateTab
+          onSelect={onSelect}
+          closePopover={closePopover}
+          dateInputRef={dateInputRef}
+        />
       ),
     },
   ];
@@ -148,7 +130,7 @@ export const DateSuggestionContent = ({
           </div>
         ))}
       </div>
-      <div class="Cql__PopoverTabContent">{tabs[tabIndex].content}</div>
+      <div class="Cql__PopoverTabContent">{tabs[tabIndex].content()}</div>
     </div>
   );
 };

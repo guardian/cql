@@ -1,6 +1,12 @@
 import { describe, it, beforeEach, expect } from "bun:test";
 import { errorMsgTestId, errorTestId, typeaheadTestId } from "../CqlInput";
-import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
+import {
+  findByTestId,
+  findByText,
+  fireEvent,
+  screen,
+} from "@testing-library/dom";
+import userEvent from "@testing-library/user-event";
 import { CqlClientService } from "../../services/CqlService";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
 import { createCqlPlugin } from "./plugin";
@@ -18,6 +24,7 @@ import {
 import { TextSelection } from "prosemirror-state";
 import { TestTypeaheadHelpers } from "../../lang/fixtures/TestTypeaheadHelpers";
 import { isVisibleDataAttr } from "../popover/Popover";
+import { tick } from "../../utils/test";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new CqlClientService(typeheadHelpers.fieldResolvers);
@@ -118,7 +125,9 @@ const createCqlEditor = (initialQuery: string = "") => {
       }, timeoutMs);
     });
 
-  return { editor, waitFor, container, moveCaretToQueryPos };
+  const user = userEvent.setup();
+
+  return { editor, waitFor, container, moveCaretToQueryPos, user };
 };
 
 const selectPopoverOption = async (
@@ -288,47 +297,108 @@ describe("plugin", () => {
     });
 
     describe("chip values", () => {
-      it("displays a popover at the start of a value field", async () => {
-        const queryStr = "example +tag";
+      describe("text suggestions", () => {
+        it("displays a popover at the start of a value field", async () => {
+          const queryStr = "example +tag";
+          const { editor, container, moveCaretToQueryPos } =
+            createCqlEditor("example +tag");
+
+          await moveCaretToQueryPos(queryStr.length);
+          await editor.insertText("t");
+
+          const popoverContainer = await findByTestId(
+            container,
+            typeaheadTestId
+          );
+
+          await findByText(popoverContainer, "Tags are magic");
+        });
+
+        it("applies the given key when a popover option is selected", async () => {
+          const queryStr = "example +tag";
+          const { editor, container, waitFor, moveCaretToQueryPos } =
+            createCqlEditor("example +tag");
+
+          await moveCaretToQueryPos(queryStr.length);
+          await editor.insertText("t");
+          await selectPopoverOptionWithEnter(
+            editor,
+            container,
+            "Tags are magic"
+          );
+
+          await waitFor("example +tag:tags-are-magic ");
+        });
+
+        it("inserts a chip before a string", async () => {
+          const { editor, waitFor } = createCqlEditor("a");
+
+          await editor.selectText(1).insertText("+");
+
+          await waitFor("+: a");
+        });
+
+        it("inserts a single whitespace between chips", async () => {
+          const { editor, waitFor } = createCqlEditor("+tag:tags-are-magic ");
+
+          await editor.insertText("+");
+
+          await waitFor("+tag:tags-are-magic +: ");
+        });
+      });
+    });
+
+    describe("date suggestions", () => {
+      it("should do nothing when nothing is selected", async () => {
+        const queryStr = "example +from-date:";
         const { editor, container, moveCaretToQueryPos } =
-          createCqlEditor("example +tag");
+          createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length);
-        await editor.insertText("t");
+        await moveCaretToQueryPos(queryStr.length - 1);
+        await findByText(container, "1 day ago");
 
+        await editor.press("Enter");
+      });
+
+      it("applies relative dates", async () => {
+        const queryStr = "example +from-date:";
+        const { editor, waitFor, container, moveCaretToQueryPos } =
+          createCqlEditor(queryStr);
+
+        await moveCaretToQueryPos(queryStr.length - 1);
         const popoverContainer = await findByTestId(container, typeaheadTestId);
 
-        await findByText(popoverContainer, "Tags are magic");
+        await findByText(popoverContainer, "1 day ago");
+        await editor.press("ArrowDown");
+        await tick(); // To allow the component state subscription to update
+        await editor.press("Enter");
+
+        await waitFor("example +from-date:-1d ");
       });
 
-      it("applies the given key when a popover option is selected", async () => {
-        const queryStr = "example +tag";
-        const { editor, container, waitFor, moveCaretToQueryPos } =
-          createCqlEditor("example +tag");
+      it.todo("applies absolute dates", async () => {
+        const queryStr = "example +from-date:";
+        const { user, editor, waitFor, container, moveCaretToQueryPos } =
+          createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length);
-        await editor.insertText("t");
-        await selectPopoverOptionWithEnter(editor, container, "Tags are magic");
+        await moveCaretToQueryPos(queryStr.length - 1);
+        const popoverContainer = await findByTestId(container, typeaheadTestId);
 
-        await waitFor("example +tag:tags-are-magic ");
-      });
+        await findByText(popoverContainer, "1 day ago");
+        await editor.press("ArrowDown");
+        await tick();
+        await editor.press("ArrowRight");
+        await tick(); // To allow the component state subscription to update
+        const input = popoverContainer.getElementsByTagName("input")[0];
+        console.log(input.value);
+        input.focus();
+        await user.keyboard("01121987");
+        screen.debug(input)
 
-      it("inserts a chip before a string", async () => {
-        const { editor, waitFor } = createCqlEditor("a");
+        const button = await findByText(popoverContainer, "Apply");
+        await fireEvent.click(button);
 
-        await editor.selectText(1).insertText("+");
-
-        await waitFor("+: a");
-      });
-
-      it("inserts a single whitespace between chips", async () => {
-        const { editor, waitFor } = createCqlEditor(
-          "+tag:+tag:tags-are-magic "
-        );
-
-        await editor.insertText("+");
-
-        await waitFor("+tag:+tag:tags-are-magic +: ");
+        await waitFor("example +from-date:-1d ");
       });
     });
   });

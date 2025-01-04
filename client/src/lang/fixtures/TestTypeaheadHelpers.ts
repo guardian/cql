@@ -19,14 +19,7 @@ export class TestTypeaheadHelpers {
       "from-date",
       "From date",
       "The date to search from",
-      [],
-      "DATE"
-    ),
-    new TypeaheadField(
-      "to-date",
-      "To date",
-      "The date to search to",
-      [],
+      undefined,
       "DATE"
     ),
   ];

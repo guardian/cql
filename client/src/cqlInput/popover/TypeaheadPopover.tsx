@@ -123,8 +123,11 @@ export class TypeaheadPopover extends Popover {
   };
 
   public hide = () => {
+    const isAlreadyHidden = !this.isVisible;
     super.hide();
-    this.view.focus();
+    if (!isAlreadyHidden) {
+      this.view.focus();
+    }
   };
 
   protected updateRenderer = () => {
