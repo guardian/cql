@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, setSystemTime, beforeAll } from "bun:test";
 import { Typeahead } from "./typeahead";
 import { Cql } from "./Cql";
 import { TestTypeaheadHelpers } from "./fixtures/TestTypeaheadHelpers";
@@ -6,6 +6,10 @@ import { TestTypeaheadHelpers } from "./fixtures/TestTypeaheadHelpers";
 describe("a query", () => {
   const typeaheadHelpers = new TestTypeaheadHelpers();
   const typeahead = new Typeahead(typeaheadHelpers.fieldResolvers);
+  const systemTime = new Date("2020-01-15T00:00:00.000Z");
+  beforeAll(() => {
+    setSystemTime(systemTime);
+  });
 
   const cql = new Cql(typeahead);
   it("should produce a query string", async () => {
@@ -61,5 +65,32 @@ describe("a query", () => {
     expect(cqlResult.error?.message).toBe(
       "The field 'tag' needs a value after it (e.g. 'tag:tone/news')"
     );
+  });
+
+  describe("dates", () => {
+    const addDaysToSystemTimeAsISODate = (days: number) => {
+      const expectedDate = new Date(systemTime);
+      expectedDate.setDate(systemTime.getDate() + days);
+      return expectedDate.toISOString().substring(0, 10);
+    };
+
+    it("should not change absolute dates", async () => {
+      const cqlResult = await cql.parse("+from-date:1987-12-01");
+      expect(cqlResult.queryResult).toBe("from-date=1987-12-01");
+    });
+
+    it("should parse relative dates into absolute dates — past dates", async () => {
+      const cqlResult = await cql.parse("+from-date:-1d");
+      const expectedDateStr = addDaysToSystemTimeAsISODate(-1);
+
+      expect(cqlResult.queryResult).toBe(`from-date=${expectedDateStr}`);
+    });
+
+    it("should parse relative dates into absolute dates — future dates", async () => {
+      const cqlResult = await cql.parse("+from-date:+1d");
+      const expectedDateStr = addDaysToSystemTimeAsISODate(1);
+
+      expect(cqlResult.queryResult).toBe(`from-date=${expectedDateStr}`);
+    });
   });
 });

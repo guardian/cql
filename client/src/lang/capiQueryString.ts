@@ -9,7 +9,10 @@ class CapiCqlStringError extends Error {
 }
 
 const dateFields = ["from-date", "to-date"];
-const relativeDateRegex = /-(?<quantity>\d+)(?<unit>[dmyw])/;
+const relativeDateRegex = /(?<polarity>[-+])(?<quantity>\d+)(?<unit>[dmyw])/;
+
+const add = (a: number, b: number) => a + b;
+const substract = (a: number, b: number) => a - b;
 
 const parseDateValue = (value: string): string => {
   const result = relativeDateRegex.exec(value);
@@ -17,21 +20,25 @@ const parseDateValue = (value: string): string => {
     return value;
   }
   const now = new Date();
-  const { quantity, unit } = result.groups as {
+  const { polarity, quantity, unit } = result.groups as {
+    polarity: string;
     quantity: string;
     unit: string;
   };
 
-  const year = now.getFullYear() - (unit === "y" ? parseInt(quantity) : 0);
+  const op = polarity === "+" ? add : substract;
+
+  const year = op(now.getFullYear(), unit === "y" ? parseInt(quantity) : 0);
   // Months are zero indexed in Javascript, ha ha ha
-  const month = now.getMonth() - (unit === "m" ? parseInt(quantity) : 0);
-  const day =
-    now.getDate() -
-    (unit === "d"
+  const month = op(now.getMonth(), unit === "m" ? parseInt(quantity) : 0);
+  const day = op(
+    now.getDate(),
+    unit === "d"
       ? parseInt(quantity)
       : unit === "w"
         ? parseInt(quantity) * 7
-        : 0);
+        : 0
+  );
   const date = new Date(year, month, day);
   return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 };
