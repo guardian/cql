@@ -1,9 +1,9 @@
 import { EditorView } from "prosemirror-view";
-import { CqlServiceInterface } from "../services/CqlService";
 import { QueryChangeEventDetail } from "../types/dom";
 import { createEditorView } from "./editor/editor";
 import { createCqlPlugin, CLASS_VISIBLE } from "./editor/plugin";
 import { CLASS_PENDING } from "./popover/TypeaheadPopover";
+import { CqlSuggestionService } from "../services/CqlService";
 
 const baseFontSize = 28;
 const baseBorderRadius = 5;
@@ -98,6 +98,7 @@ template.innerHTML = `
 
     .Cql__Option {
       padding: 5px;
+      transition: color 0.1s background 0.1s;
     }
 
     .Cql__OptionLabel {
@@ -111,6 +112,12 @@ template.innerHTML = `
 
     .Cql__Option--is-selected {
       background-color: rgba(255,255,255,0.1);
+    }
+
+    .Cql__Option--is-disabled {
+      color: #bbb;
+      pointer-events: none;
+      cursor: not-allowed;
     }
 
     .Cql__Option:hover {
@@ -204,8 +211,6 @@ template.innerHTML = `
     }
 
     .${CLASS_PENDING} {
-      height: 2em;
-      padding: 5px;
       position: relative;
       color: #bbb;
       animation-duration: 1.25s;
@@ -236,7 +241,7 @@ export type CqlConfig = {
 };
 
 export const createCqlInput = (
-  cqlService: CqlServiceInterface,
+  cqlSuggestionService: CqlSuggestionService,
   config: CqlConfig = { syntaxHighlighting: true }
 ) => {
   class CqlInput extends HTMLElement {
@@ -275,7 +280,7 @@ export const createCqlInput = (
       };
 
       const plugin = createCqlPlugin({
-        cqlSuggestionsService: cqlService,
+        cqlSuggestionsService: cqlSuggestionService,
         typeaheadEl,
         errorEl,
         errorMsgEl,
@@ -290,7 +295,7 @@ export const createCqlInput = (
       });
 
       editorView.dom.setAttribute("data-testid", contentEditableTestId);
-      editorView.dom.classList.add("Cql__ContentEditable")
+      editorView.dom.classList.add("Cql__ContentEditable");
     }
 
     disconnectedCallback() {

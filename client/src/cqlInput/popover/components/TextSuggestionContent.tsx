@@ -3,15 +3,18 @@ import { useEffect, useRef, useState } from "preact/hooks";
 import { TextSuggestion } from "../../../lang/types";
 import { ActionSubscriber } from "./PopoverContainer";
 import { wrapSelection } from "./utils";
+import { CLASS_PENDING } from "../TypeaheadPopover";
 
 const numberFormat = new Intl.NumberFormat();
 
 export const TextSuggestionContent = ({
   suggestion,
+  isPending,
   onSelect,
   subscribeToAction,
 }: {
   suggestion: TextSuggestion;
+  isPending: boolean;
   onSelect: (value: string) => void;
   subscribeToAction: ActionSubscriber;
 }) => {
@@ -54,7 +57,7 @@ export const TextSuggestionContent = ({
     }
   }, [currentOptionIndex]);
 
-  // Reset the option if the suggestions change
+  // Reset the current option if the suggestions change
   useEffect(() => setCurrentOptionIndex(0), [suggestion]);
 
   if (!suggestion.suggestions.length) {
@@ -65,13 +68,15 @@ export const TextSuggestionContent = ({
     );
   }
 
+  const disabledClass = isPending ? `Cql__Option--is-disabled ${CLASS_PENDING}` : "";
+
   return suggestion.suggestions.map(
     ({ label, description, value, count }, index) => {
       const isSelected = index === currentOptionIndex;
       const selectedClass = isSelected ? "Cql__Option--is-selected" : "";
       return (
         <div
-          class={`Cql__Option ${selectedClass}`}
+          class={`Cql__Option ${selectedClass} ${disabledClass}`}
           data-index={index}
           ref={isSelected ? currentItemRef : null}
           onClick={() => onSelect(value)}

@@ -3,6 +3,7 @@ import { DateSuggestionContent } from "./DateSuggestionContent";
 import { TextSuggestionContent } from "./TextSuggestionContent";
 import { useEffect, useState } from "preact/hooks";
 import { TypeaheadSuggestion } from "../../../lang/types";
+import { CLASS_PENDING } from "../TypeaheadPopover";
 
 export type PopoverRendererState = {
   suggestion: TypeaheadSuggestion | undefined;
@@ -45,7 +46,15 @@ export const PopoverContainer: FunctionComponent<PopoverProps> = ({
     return;
   }
 
-  if (!state?.suggestion) {
+  if (state.isPending && !state.suggestion) {
+    return (
+      <div class={`Cql__Option ${CLASS_PENDING}`}>
+        <div class="Cql__OptionLabel">Loading</div>
+      </div>
+    );
+  }
+
+  if (!state.suggestion) {
     return <div>No results</div>;
   }
 
@@ -54,6 +63,7 @@ export const PopoverContainer: FunctionComponent<PopoverProps> = ({
       return (
         <TextSuggestionContent
           suggestion={state.suggestion}
+          isPending={state.isPending}
           onSelect={onSelect}
           subscribeToAction={subscribeToAction}
         ></TextSuggestionContent>

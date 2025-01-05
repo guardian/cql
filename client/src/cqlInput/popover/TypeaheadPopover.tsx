@@ -120,6 +120,7 @@ export class TypeaheadPopover extends Popover {
 
   public setIsPending = () => {
     this.isPending = true;
+    this.updateRenderer();
   };
 
   public hide = () => {
@@ -139,14 +140,18 @@ export class TypeaheadPopover extends Popover {
     });
   };
 
-  private applyValueToInput = (value: string, hide = true) => {
+  private applyValueToInput = (value: string) => {
     if (!this.currentSuggestion) {
       return;
     }
 
-    const { from, to } = this.currentSuggestion;
+    const { from, to, position } = this.currentSuggestion;
+    // We will get a new position and suggestions after applying the value, but
+    // this state will not be updated until suggestions are returned, so we
+    // clear this state pre-emptively to avoid showing stale suggestions.
+    this.currentSuggestion = undefined;
 
-    if (hide) {
+    if (position === "chipValue") {
       this.hide();
     }
 
