@@ -526,28 +526,33 @@ export const createCqlPlugin = ({
             return;
           }
 
-          // cqlService.cancelSuggestions();
           if (
             [chip, chipKey, chipValue].includes(getNodeTypeAtSelection(view))
           ) {
             typeaheadPopover?.setIsPending();
           }
 
-          const suggestions = await cqlService.fetchSuggestions(query);
-          const mappedSuggestions = toMappedSuggestions(suggestions, mapping);
-          typeaheadPopover?.updateItemsFromSuggestions(mappedSuggestions);
+          try {
+            const suggestions = await cqlService.fetchSuggestions(query);
+            const mappedSuggestions = toMappedSuggestions(suggestions, mapping);
+            typeaheadPopover?.updateItemsFromSuggestions(mappedSuggestions);
 
-          if (debugSuggestionsContainer) {
-            debugSuggestionsContainer.innerHTML = `
-                <h2>Typeahead</h2>
-                    <p>Current selection: ${view.state.selection.from}-${
-                      view.state.selection.to
-                    }
-                    </p>
+            if (debugSuggestionsContainer) {
+              debugSuggestionsContainer.innerHTML = `
+                  <h2>Typeahead</h2>
+                      <p>Current selection: ${view.state.selection.from}-${
+                        view.state.selection.to
+                      }
+                      </p>
 
-              <div>${mappedSuggestions.map((suggestion) =>
-                JSON.stringify(suggestion, undefined, "  ")
-              )}</div>`;
+                <div>${mappedSuggestions.map((suggestion) =>
+                  JSON.stringify(suggestion, undefined, "  ")
+                )}</div>`;
+            }
+          } catch (e) {
+            if (!(e instanceof DOMException && e.name == "AbortError")) {
+              throw e;
+            }
           }
         },
       };

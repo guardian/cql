@@ -11,7 +11,6 @@ export type CqlError = {
 export interface CqlServiceInterface {
   parseCqlStr(queryStr: string): CqlResult;
   fetchSuggestions(query: CqlQuery): Promise<TypeaheadSuggestion[]>;
-  cancelSuggestions(): void;
 }
 
 export class CqlClientService implements CqlServiceInterface {
@@ -24,25 +23,24 @@ export class CqlClientService implements CqlServiceInterface {
   }
 
   public parseCqlStr(queryStr: string) {
-    this.abortController = new AbortController();
-
     return this.cql.parse(queryStr);
   }
 
   public fetchSuggestions(query: CqlQuery): Promise<TypeaheadSuggestion[]> {
-    this.abortController = new AbortController();
-
     return new Promise((resolve, reject) => {
-      if (this.abortController) {
-        this.abortController.signal.addEventListener("abort", () => {
-          reject(new DOMException("Aborted", "AbortError"));
-        });
-      }
-      this.cql.getSuggestions(query).then(resolve);
-    });
-  }
+      // Abort existing fetch, if it exists
+      this.abortController?.abort();
 
-  public cancelSuggestions() {
-    this.abortController?.abort();
+      const abortController = new AbortController();
+      this.abortController = abortController;
+      abortController.signal.addEventListener("abort", () => {
+        reject(new DOMException("Aborted", "AbortError"));
+      });
+
+      this.cql
+        .getSuggestions(query, abortController.signal)
+        .then(resolve)
+        .catch(reject);
+    });
   }
 }
