@@ -54,6 +54,9 @@ export const TextSuggestionContent = ({
     }
   }, [currentOptionIndex]);
 
+  // Reset the option if the suggestions change
+  useEffect(() => setCurrentOptionIndex(0), [suggestion]);
+
   if (!suggestion.suggestions.length) {
     return (
       <div class="Cql__Option">
