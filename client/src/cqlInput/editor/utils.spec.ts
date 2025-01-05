@@ -8,17 +8,13 @@ import {
 } from "./utils";
 import { schema } from "./schema";
 import { builders } from "prosemirror-test-builder";
-import { Typeahead } from "../../lang/typeahead";
-import { Cql } from "../../lang/Cql";
-import { TestTypeaheadHelpers } from "../../lang/fixtures/TestTypeaheadHelpers";
+import { parseCqlStr } from "../../lang/Cql";
 
 describe("utils", () => {
   const { chip, chipKey, chipValue, doc, searchText } = builders(schema);
 
-  const cql = new Cql(new Typeahead(new TestTypeaheadHelpers().fieldResolvers));
-
   const queryToProseMirrorTokens = async (query: string) => {
-    const result = await cql.parse(query);
+    const result = await parseCqlStr(query);
     const { tokens } = mapResult(result);
     return tokens;
   };

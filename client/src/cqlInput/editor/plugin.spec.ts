@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, expect } from "bun:test";
 import { errorMsgTestId, errorTestId, typeaheadTestId } from "../CqlInput";
 import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
-import { CqlClientService } from "../../services/CqlService";
+import { CqlSuggestionService } from "../../services/CqlService";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
 import { createCqlPlugin } from "./plugin";
 import { redo, undo } from "prosemirror-history";
@@ -19,9 +19,10 @@ import { TextSelection } from "prosemirror-state";
 import { TestTypeaheadHelpers } from "../../lang/fixtures/TestTypeaheadHelpers";
 import { isVisibleDataAttr } from "../popover/Popover";
 import { tick } from "../../utils/test";
+import { parseCqlStr } from "../../lang/Cql";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
-const testCqlService = new CqlClientService(typeheadHelpers.fieldResolvers);
+const testCqlService = new CqlSuggestionService(typeheadHelpers.fieldResolvers);
 
 const createCqlEditor = (initialQuery: string = "") => {
   const container = document.createElement("div");
@@ -44,7 +45,7 @@ const createCqlEditor = (initialQuery: string = "") => {
   };
 
   const plugin = createCqlPlugin({
-    cqlService: testCqlService,
+    cqlSuggestionsService: testCqlService,
     typeaheadEl,
     errorEl,
     errorMsgEl,
@@ -53,14 +54,14 @@ const createCqlEditor = (initialQuery: string = "") => {
   });
 
   const queryToProseMirrorTokens = (query: string) => {
-    const result = testCqlService.parseCqlStr(query);
+    const result = parseCqlStr(query);
     const { tokens } = mapResult(result);
     return tokensToDoc(tokens);
   };
 
   const moveCaretToQueryPos = (pos: number, offset: number = 0) => {
     const query = docToCqlStr(editor.view.state.doc);
-    const result = testCqlService.parseCqlStr(query);
+    const result = parseCqlStr(query);
     const tokens = toProseMirrorTokens(result.tokens);
     const mapping = createProseMirrorTokenToDocumentMap(tokens);
     return editor.command((state, dispatch) => {

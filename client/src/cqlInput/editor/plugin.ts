@@ -1,5 +1,5 @@
 import { DecorationSet } from "prosemirror-view";
-import { CqlError, CqlServiceInterface } from "../../services/CqlService";
+import { CqlError, CqlSuggestionService } from "../../services/CqlService";
 import {
   AllSelection,
   Plugin,
@@ -44,6 +44,7 @@ import {
   getOriginalQueryHTML,
 } from "./debug";
 import { CqlQuery } from "../../lang/ast";
+import { parseCqlStr } from "../../lang/Cql";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -72,14 +73,14 @@ export const CLASS_CHIP_KEY_READONLY = "Cql__ChipKey--readonly";
  *  - managing custom keyboard and selection behaviour
  */
 export const createCqlPlugin = ({
-  cqlService,
+  cqlSuggestionsService: cqlService,
   typeaheadEl,
   errorEl,
   errorMsgEl,
   onChange,
   config: { syntaxHighlighting, debugEl },
 }: {
-  cqlService: CqlServiceInterface;
+  cqlSuggestionsService: CqlSuggestionService;
   typeaheadEl: HTMLElement;
   errorEl: HTMLElement;
   errorMsgEl: HTMLElement;
@@ -113,10 +114,10 @@ export const createCqlPlugin = ({
    *
    * Side-effects: mutates the given transaction, and re-applies debug UI if provided.
    */
-  const applyQueryToTr = (tr: Transaction, cqlService: CqlServiceInterface) => {
+  const applyQueryToTr = (tr: Transaction) => {
     const queryBeforeParse = docToCqlStr(tr.doc);
 
-    const result = cqlService.parseCqlStr(queryBeforeParse);
+    const result = parseCqlStr(queryBeforeParse);
     const {
       tokens,
       query: ast,
@@ -195,7 +196,7 @@ export const createCqlPlugin = ({
           suggestions: [],
           mapping: new Mapping(),
           queryStr,
-          query: cqlService.parseCqlStr(queryStr).query,
+          query: parseCqlStr(queryStr).query,
           error: undefined,
         };
       },
@@ -231,10 +232,7 @@ export const createCqlPlugin = ({
       const maybeQueries = queryHasChanged(oldState.doc, newState.doc);
 
       if (maybeQueries) {
-        const { queryResult, tr: newTr } = applyQueryToTr(
-          newState.tr,
-          cqlService
-        );
+        const { queryResult, tr: newTr } = applyQueryToTr(newState.tr);
 
         tr = newTr;
 
@@ -509,7 +507,7 @@ export const createCqlPlugin = ({
 
       // Set up initial document with parsed query
 
-      const { tr, queryResult } = applyQueryToTr(view.state.tr, cqlService);
+      const { tr, queryResult } = applyQueryToTr(view.state.tr);
 
       view.dispatch(tr);
       onChange({

@@ -1,48 +1,41 @@
 import { describe, expect, it, setSystemTime, beforeAll } from "bun:test";
-import { Typeahead } from "./typeahead";
-import { Cql } from "./Cql";
-import { TestTypeaheadHelpers } from "./fixtures/TestTypeaheadHelpers";
+import { parseCqlStr } from "./Cql";
 
 describe("a query", () => {
-  const typeaheadHelpers = new TestTypeaheadHelpers();
-  const typeahead = new Typeahead(typeaheadHelpers.fieldResolvers);
   const systemTime = new Date("2020-01-15T00:00:00.000Z");
   beforeAll(() => {
     setSystemTime(systemTime);
   });
 
-  const cql = new Cql(typeahead);
-  it("should produce a query string", async () => {
-    const cqlResult = await cql.parse("+section:commentisfree");
+  it("should produce a query string", () => {
+    const cqlResult = parseCqlStr("+section:commentisfree");
     expect(cqlResult.queryResult).toBe("section=commentisfree");
   });
 
-  it("should combine bare strings and search params", async () => {
-    const cqlResult = await cql.parse("marina +section:commentisfree");
+  it("should combine bare strings and search params", () => {
+    const cqlResult = parseCqlStr("marina +section:commentisfree");
     expect(cqlResult.queryResult).toBe("q=marina&section=commentisfree");
   });
 
-  it("should combine quoted strings and search params", async () => {
-    const cqlResult = await cql.parse('"marina" +section:commentisfree');
+  it("should combine quoted strings and search params", () => {
+    const cqlResult = parseCqlStr('"marina" +section:commentisfree');
     expect(cqlResult.queryResult).toBe("q=marina&section=commentisfree");
   });
 
-  it("should permit boolean operations", async () => {
-    const cqlResult = await cql.parse(
-      '"marina" AND hyde +section:commentisfree'
-    );
+  it("should permit boolean operations", () => {
+    const cqlResult = parseCqlStr('"marina" AND hyde +section:commentisfree');
     expect(cqlResult.queryResult).toBe(
       "q=marina%20AND%20hyde&section=commentisfree"
     );
   });
 
-  it("should permit field queries", async () => {
-    const cqlResult = await cql.parse("+tag:example");
+  it("should permit field queries", () => {
+    const cqlResult = parseCqlStr("+tag:example");
     expect(cqlResult.queryResult).toBe("tag=example");
   });
 
-  it("should permit groups - 1", async () => {
-    const cqlResult = await cql.parse(
+  it("should permit groups - 1", () => {
+    const cqlResult = parseCqlStr(
       '"marina" (hyde OR abramovic) +section:commentisfree'
     );
 
@@ -51,17 +44,15 @@ describe("a query", () => {
     );
   });
 
-  it("should permit groups - 2", async () => {
-    const cqlResult = await cql.parse(
-      "(hyde OR abramovic) +section:commentisfree"
-    );
+  it("should permit groups - 2", () => {
+    const cqlResult = parseCqlStr("(hyde OR abramovic) +section:commentisfree");
     expect(cqlResult.queryResult).toBe(
       "q=(hyde%20OR%20abramovic)&section=commentisfree"
     );
   });
 
-  it("should provide an error when keys are missing values", async () => {
-    const cqlResult = await cql.parse("+tag");
+  it("should provide an error when keys are missing values", () => {
+    const cqlResult = parseCqlStr("+tag");
     expect(cqlResult.error?.message).toBe(
       "The field 'tag' needs a value after it (e.g. 'tag:tone/news')"
     );
@@ -74,20 +65,20 @@ describe("a query", () => {
       return expectedDate.toISOString().substring(0, 10);
     };
 
-    it("should not change absolute dates", async () => {
-      const cqlResult = await cql.parse("+from-date:1987-12-01");
+    it("should not change absolute dates", () => {
+      const cqlResult = parseCqlStr("+from-date:1987-12-01");
       expect(cqlResult.queryResult).toBe("from-date=1987-12-01");
     });
 
-    it("should parse relative dates into absolute dates — past dates", async () => {
-      const cqlResult = await cql.parse("+from-date:-1d");
+    it("should parse relative dates into absolute dates — past dates", () => {
+      const cqlResult = parseCqlStr("+from-date:-1d");
       const expectedDateStr = addDaysToSystemTimeAsISODate(-1);
 
       expect(cqlResult.queryResult).toBe(`from-date=${expectedDateStr}`);
     });
 
-    it("should parse relative dates into absolute dates — future dates", async () => {
-      const cqlResult = await cql.parse("+from-date:+1d");
+    it("should parse relative dates into absolute dates — future dates", () => {
+      const cqlResult = parseCqlStr("+from-date:+1d");
       const expectedDateStr = addDaysToSystemTimeAsISODate(1);
 
       expect(cqlResult.queryResult).toBe(`from-date=${expectedDateStr}`);

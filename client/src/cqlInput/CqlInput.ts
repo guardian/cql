@@ -275,7 +275,7 @@ export const createCqlInput = (
       };
 
       const plugin = createCqlPlugin({
-        cqlService,
+        cqlSuggestionsService: cqlService,
         typeaheadEl,
         errorEl,
         errorMsgEl,

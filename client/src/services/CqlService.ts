@@ -1,5 +1,4 @@
 import { CqlQuery } from "../lang/ast";
-import { Cql, CqlResult } from "../lang/Cql";
 import { Typeahead, TypeaheadField } from "../lang/typeahead";
 import { TypeaheadSuggestion } from "../lang/types";
 
@@ -8,22 +7,12 @@ export type CqlError = {
   message: string;
 };
 
-export interface CqlServiceInterface {
-  parseCqlStr(queryStr: string): CqlResult;
-  fetchSuggestions(query: CqlQuery): Promise<TypeaheadSuggestion[]>;
-}
-
-export class CqlClientService implements CqlServiceInterface {
+export class CqlSuggestionService {
   private abortController: AbortController | undefined;
-  private cql: Cql;
+  private typeahead: Typeahead;
 
-  constructor(resolvers: TypeaheadField[]) {
-    const typeahead = new Typeahead(resolvers);
-    this.cql = new Cql(typeahead);
-  }
-
-  public parseCqlStr(queryStr: string) {
-    return this.cql.parse(queryStr);
+  constructor(public resolvers: TypeaheadField[]) {
+    this.typeahead = new Typeahead(resolvers);
   }
 
   public fetchSuggestions(query: CqlQuery): Promise<TypeaheadSuggestion[]> {
@@ -37,7 +26,7 @@ export class CqlClientService implements CqlServiceInterface {
         reject(new DOMException("Aborted", "AbortError"));
       });
 
-      this.cql
+      this.typeahead
         .getSuggestions(query, abortController.signal)
         .then(resolve)
         .catch(reject);

@@ -1,16 +1,15 @@
 import { describe, expect, it } from "bun:test";
 import { Typeahead } from "./typeahead";
 import { DateSuggestionOption, TextSuggestionOption } from "./types";
-import { Cql } from "./Cql";
 import { TestTypeaheadHelpers } from "./fixtures/TestTypeaheadHelpers";
+import { parseCqlStr } from "./Cql";
 
 describe("typeahead", () => {
   const typeaheadQueryClient = new TestTypeaheadHelpers();
   const typeahead = new Typeahead(typeaheadQueryClient.fieldResolvers);
-  const cql = new Cql(typeahead);
 
   const getSuggestions = async (query: string) =>
-    await cql.getSuggestions(cql.parse(query).query!);
+    await typeahead.getSuggestions(parseCqlStr(query).query!);
 
   it("should give all options for empty queryFields", async () => {
     expect(await getSuggestions("")).toEqual([]);
