@@ -2,7 +2,7 @@ import { createCqlInput } from "./cqlInput/CqlInput";
 import applyDevTools from "prosemirror-dev-tools";
 import "./style.css";
 import { CqlSuggestionService } from "./services/CqlService";
-import { TypeaheadHelpersCapi } from "./typeahead/typeaheadHelpersCapi";
+import { CapiTypeaheadHelpers } from "./typeahead/CapiTypeaheadHelpers.ts";
 import { TypeaheadField } from "./lang/typeahead.ts";
 import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
 
@@ -76,7 +76,7 @@ const params = new URLSearchParams(window.location.search);
 const endpoint = params.get("endpoint");
 
 const initialEndpointCapi = endpoint || "https://content.guardianapis.com";
-const typeaheadHelpersCapi = new TypeaheadHelpersCapi(
+const typeaheadHelpersCapi = new CapiTypeaheadHelpers(
   initialEndpointCapi,
   "test"
 );

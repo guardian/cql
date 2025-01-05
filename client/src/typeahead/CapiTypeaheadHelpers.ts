@@ -6,7 +6,7 @@ import { TextSuggestionOption } from "../lang/types";
 import { stableSort } from "../utils/sort";
 import { LRUCache } from "./LRUCache";
 
-export class TypeaheadHelpersCapi {
+export class CapiTypeaheadHelpers {
   private cache = new LRUCache(1000);
   public constructor(
     private baseUrl: string,
