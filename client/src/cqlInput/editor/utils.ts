@@ -19,7 +19,7 @@ import {
   TypeaheadSuggestion,
 } from "../../lang/types";
 import { CqlResult } from "../../lang/Cql";
-import { CqlError } from "../../services/CqlService";
+import { CqlError } from "../../services/CqlSuggestionService";
 
 const tokensToPreserve = ["CHIP_KEY", "CHIP_VALUE", "EOF"];
 

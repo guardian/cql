@@ -3,7 +3,7 @@ import { QueryChangeEventDetail } from "../types/dom";
 import { createEditorView } from "./editor/editor";
 import { createCqlPlugin, CLASS_VISIBLE } from "./editor/plugin";
 import { CLASS_PENDING } from "./popover/TypeaheadPopover";
-import { CqlSuggestionService } from "../services/CqlService";
+import { CqlSuggestionService } from "../services/CqlSuggestionService";
 
 const baseFontSize = 28;
 const baseBorderRadius = 5;

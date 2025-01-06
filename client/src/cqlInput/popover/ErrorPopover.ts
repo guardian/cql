@@ -1,5 +1,5 @@
 import { EditorView } from "prosemirror-view";
-import { CqlError } from "../../services/CqlService";
+import { CqlError } from "../../services/CqlSuggestionService";
 import { Popover } from "./Popover";
 import { CLASS_ERROR, CLASS_VISIBLE } from "../editor/plugin";
 

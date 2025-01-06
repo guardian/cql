@@ -1,5 +1,5 @@
 import { DecorationSet } from "prosemirror-view";
-import { CqlError, CqlSuggestionService } from "../../services/CqlService";
+import { CqlError, CqlSuggestionService } from "../../services/CqlSuggestionService";
 import {
   AllSelection,
   Plugin,

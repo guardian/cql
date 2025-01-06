@@ -1,7 +1,7 @@
 import { createCqlInput } from "./cqlInput/CqlInput";
 import applyDevTools from "prosemirror-dev-tools";
 import "./style.css";
-import { CqlSuggestionService } from "./services/CqlService";
+import { CqlSuggestionService } from "./services/CqlSuggestionService.ts";
 import { CapiTypeaheadHelpers } from "./typeahead/CapiTypeaheadHelpers.ts";
 import { TypeaheadField } from "./lang/typeahead.ts";
 import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
@@ -39,10 +39,11 @@ const typeaheadHelpersCapi = new CapiTypeaheadHelpers(
   initialEndpointCapi,
   "test"
 );
-const cqlServiceCapi = new CqlSuggestionService(
+const suggestionServiceCapi = new CqlSuggestionService(
   typeaheadHelpersCapi.fieldResolvers
 );
-const CqlInputCapi = createCqlInput(cqlServiceCapi, {
+
+const CqlInputCapi = createCqlInput(suggestionServiceCapi, {
   debugEl,
   syntaxHighlighting: true,
 });
@@ -55,8 +56,9 @@ const guToolsFieldResolvers: TypeaheadField[] = [
     toolsSuggestionOptionResolvers
   ),
 ];
-const cqlServiceGuTools = new CqlSuggestionService(guToolsFieldResolvers);
-const CqlInputGuTools = createCqlInput(cqlServiceGuTools, {
+
+const suggestionServiceGuTools = new CqlSuggestionService(guToolsFieldResolvers);
+const CqlInputGuTools = createCqlInput(suggestionServiceGuTools, {
   debugEl,
   syntaxHighlighting: true,
 });

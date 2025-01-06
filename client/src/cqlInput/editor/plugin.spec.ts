@@ -1,7 +1,7 @@
 import { describe, it, beforeEach, expect } from "bun:test";
 import { errorMsgTestId, errorTestId, typeaheadTestId } from "../CqlInput";
 import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
-import { CqlSuggestionService } from "../../services/CqlService";
+import { CqlSuggestionService } from "../../services/CqlSuggestionService";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
 import { createCqlPlugin } from "./plugin";
 import { redo, undo } from "prosemirror-history";
