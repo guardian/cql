@@ -1,9 +1,8 @@
 import { h } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { TextSuggestion } from "../../../lang/types";
-import { ActionSubscriber } from "./PopoverContainer";
 import { wrapSelection } from "./utils";
-import { CLASS_PENDING } from "../TypeaheadPopover";
+import { ActionSubscriber, CLASS_PENDING } from "../TypeaheadPopover";
 
 const numberFormat = new Intl.NumberFormat();
 

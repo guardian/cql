@@ -1,10 +1,10 @@
 import { h } from "preact";
 import { useCallback, useEffect, useRef, useState } from "preact/hooks";
 import { DateSuggestion } from "../../../lang/types";
-import { ActionHandler, ActionSubscriber } from "./PopoverContainer";
 import { wrapSelection } from "./utils";
 import { RelativeDateTab } from "./RelativeDateTab";
 import { AbsoluteDateTab } from "./AbsoluteDateTab";
+import { ActionHandler, ActionSubscriber } from "../TypeaheadPopover";
 
 export const DateSuggestionContent = ({
   suggestion,

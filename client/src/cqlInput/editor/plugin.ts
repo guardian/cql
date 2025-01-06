@@ -26,7 +26,7 @@ import {
   skipSuggestion,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
-import { TypeaheadPopover } from "../popover/TypeaheadPopover";
+import { RenderPopoverContent, TypeaheadPopover } from "../popover/TypeaheadPopover";
 import {
   chip,
   chipKey,
@@ -82,6 +82,7 @@ export const createCqlPlugin = ({
   errorMsgEl,
   onChange,
   config: { syntaxHighlighting, debugEl },
+  renderPopoverContent
 }: {
   cqlSuggestionsService: CqlSuggestionService;
   typeaheadEl: HTMLElement;
@@ -89,6 +90,7 @@ export const createCqlPlugin = ({
   errorMsgEl: HTMLElement;
   config: CqlConfig;
   onChange: (detail: QueryChangeEventDetail) => void;
+  renderPopoverContent: RenderPopoverContent
 }) => {
   let typeaheadPopover: TypeaheadPopover | undefined;
   let errorPopover: ErrorPopover | undefined;
@@ -497,7 +499,8 @@ export const createCqlPlugin = ({
         view,
         typeaheadEl,
         applySuggestion(view),
-        skipSuggestion(view)
+        skipSuggestion(view),
+        renderPopoverContent
       );
 
       errorPopover = new ErrorPopover(

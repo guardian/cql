@@ -4,14 +4,41 @@ import {
   TypeaheadSuggestion,
 } from "../../lang/types";
 import { EditorView } from "prosemirror-view";
-import { h, render } from "preact";
-import {
-  ActionHandler,
-  PopoverContainer,
-  PopoverRendererState,
-} from "./components/PopoverContainer";
 
 export const CLASS_PENDING = "Cql__Typeahead--pending";
+
+export type PopoverRendererState = {
+  suggestion: TypeaheadSuggestion | undefined;
+  currentOptionIndex: number;
+  isPending: boolean;
+  isVisible: boolean;
+};
+
+type Unsubscriber = () => void;
+type StateSubscriber = (
+  sub: (state: PopoverRendererState) => void
+) => Unsubscriber;
+
+export type Actions = "left" | "right" | "up" | "down" | "enter";
+export type ActionHandler = (action: Actions) => true | undefined;
+export type ActionSubscriber = (handler: ActionHandler) => Unsubscriber;
+export type PopoverRendererArgs = {
+  // Subscribe to state updates when suggestion state changes
+  subscribeToState: StateSubscriber;
+  // Subscribe to action updates from the input - for example, when users press
+  // arrow keys or "Enter"
+  subscribeToAction: ActionSubscriber;
+  // Apply a suggestion to the input
+  applySuggestion: (value: string) => void;
+  // Skip the current suggestion, moving on to the next available field
+  skipSuggestion: () => void;
+  // Close the popover
+  closePopover: () => void;
+  // The popover element. It's positioned adjacent to the relevant field when
+  // it's visible.
+  popoverEl: HTMLElement;
+};
+export type RenderPopoverContent = (props: PopoverRendererArgs) => void;
 
 const noopActionHandler = () => {
   console.warn(
@@ -44,35 +71,23 @@ export class TypeaheadPopover extends Popover {
     // Apply a suggestion to the input
     applySuggestion: (from: number, to: number, value: string) => void,
     // Skip a suggestion, and move on to the next valid field
-    skipSuggestion: () => void
+    skipSuggestion: () => void,
+    // A callback that receives everything necessary to render popover content
+    // as the input state changes.
+    renderPopoverContent: (args: PopoverRendererArgs) => void
   ) {
     super(popoverEl);
     this._applySuggestion = applySuggestion;
     this._skipSuggestion = skipSuggestion;
 
-    render(
-      <PopoverContainer
-        subscribeToState={(updateRendererState) => {
-          this.updateRendererState = updateRendererState;
-
-          // Ensure the initial state of the renderer is in sync with this class's state.
-          this.updateRenderer();
-
-          return () => {
-            this.updateRendererState = noopUpdateRendererState;
-          };
-        }}
-        subscribeToAction={(handleAction) => {
-          this.handleAction = handleAction;
-
-          return () => (this.handleAction = noopActionHandler);
-        }}
-        applySuggestion={this.applySuggestion}
-        skipSuggestion={this.skipSuggestion}
-        closePopover={this.hide}
-      />,
+    renderPopoverContent({
+      applySuggestion: this.applySuggestion,
+      skipSuggestion: this.skipSuggestion,
+      subscribeToAction: this.actionSubscriber,
+      subscribeToState: this.stateSubscriber,
+      closePopover: this.hide,
       popoverEl
-    );
+    })
 
     // Prevent the popover from stealing focus from the input, unless we are
     // focusing on another input within the popover
@@ -148,6 +163,23 @@ export class TypeaheadPopover extends Popover {
       isVisible: this.isVisible,
     });
   };
+
+  private stateSubscriber: StateSubscriber = (updateRendererState) => {
+    this.updateRendererState = updateRendererState;
+
+    // Ensure the initial state of the renderer is in sync with this class's state.
+    this.updateRenderer();
+
+    return () => {
+      this.updateRendererState = noopUpdateRendererState;
+    };
+  }
+
+  private actionSubscriber: ActionSubscriber = (handleAction) => {
+    this.handleAction = handleAction;
+
+    return () => (this.handleAction = noopActionHandler);
+  }
 
   private applySuggestion = (value: string) => {
     if (!this.currentSuggestion) {

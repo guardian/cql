@@ -4,6 +4,7 @@ import { CqlSuggestionService } from "./services/CqlSuggestionService.ts";
 import { CapiTypeaheadHelpers } from "./typeahead/CapiTypeaheadHelpers.ts";
 import { TypeaheadField } from "./lang/typeahead.ts";
 import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
+import { defaultPopoverRenderer } from "./cqlInput/popover/components/defaultPopoverRenderer.tsx";
 
 const debugEl = document.createElement("div");
 debugEl.className = "CqlSandbox__debug-container";
@@ -42,10 +43,14 @@ const suggestionServiceCapi = new CqlSuggestionService(
   typeaheadHelpersCapi.fieldResolvers
 );
 
-const CqlInputCapi = createCqlInput(suggestionServiceCapi, {
-  debugEl,
-  syntaxHighlighting: true,
-});
+const CqlInputCapi = createCqlInput(
+  suggestionServiceCapi,
+  defaultPopoverRenderer,
+  {
+    debugEl,
+    syntaxHighlighting: true,
+  }
+);
 
 const guToolsFieldResolvers: TypeaheadField[] = [
   new TypeaheadField(
@@ -56,11 +61,17 @@ const guToolsFieldResolvers: TypeaheadField[] = [
   ),
 ];
 
-const suggestionServiceGuTools = new CqlSuggestionService(guToolsFieldResolvers);
-const CqlInputGuTools = createCqlInput(suggestionServiceGuTools, {
-  debugEl,
-  syntaxHighlighting: true,
-});
+const suggestionServiceGuTools = new CqlSuggestionService(
+  guToolsFieldResolvers
+);
+const CqlInputGuTools = createCqlInput(
+  suggestionServiceGuTools,
+  defaultPopoverRenderer,
+  {
+    debugEl,
+    syntaxHighlighting: true,
+  }
+);
 
 customElements.define("cql-input-gutools", CqlInputGuTools);
 customElements.define("cql-input-capi", CqlInputCapi);

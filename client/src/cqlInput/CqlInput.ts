@@ -2,7 +2,7 @@ import { EditorView } from "prosemirror-view";
 import { QueryChangeEventDetail } from "../types/dom";
 import { createEditorView } from "./editor/editor";
 import { createCqlPlugin, CLASS_VISIBLE } from "./editor/plugin";
-import { CLASS_PENDING } from "./popover/TypeaheadPopover";
+import { CLASS_PENDING, RenderPopoverContent } from "./popover/TypeaheadPopover";
 import { CqlSuggestionService } from "../services/CqlSuggestionService";
 
 const baseFontSize = 28;
@@ -266,6 +266,7 @@ export type CqlConfig = {
 
 export const createCqlInput = (
   cqlSuggestionService: CqlSuggestionService,
+  renderPopoverContent: RenderPopoverContent,
   config: CqlConfig = { syntaxHighlighting: true }
 ) => {
   class CqlInput extends HTMLElement {
@@ -310,6 +311,7 @@ export const createCqlInput = (
         errorMsgEl,
         onChange,
         config,
+        renderPopoverContent
       });
 
       const editorView = createEditorView({
