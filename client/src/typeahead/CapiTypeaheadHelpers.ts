@@ -201,21 +201,6 @@ export class CapiTypeaheadHelpers {
       ],
     },
     {
-      id: "news",
-      webTitle: "News",
-      webUrl: "https://www.theguardian.com/news",
-      apiUrl: "https://content.guardianapis.com/news",
-      editions: [
-        {
-          id: "news",
-          webTitle: "News",
-          webUrl: "https://www.theguardian.com/news",
-          apiUrl: "https://content.guardianapis.com/news",
-          code: "default",
-        },
-      ],
-    },
-    {
       id: "artanddesign",
       webTitle: "Art and design",
       webUrl: "https://www.theguardian.com/artanddesign",
