@@ -171,6 +171,7 @@ template.innerHTML = `
     .Cql__TypeaheadPopoverContainer, .Cql__ErrorPopover {
       position: absolute;
       width: 500px;
+      height: 100%;
       max-height: min(80vh, 400px);
       margin: 0;
       padding: 0;
@@ -180,13 +181,18 @@ template.innerHTML = `
 
     .Cql__TypeaheadPopover {
       width: 100%;
-      height: 100%;
+      max-height: 100%;
       font-size: ${baseFontSize}px;
       border-radius: ${baseBorderRadius}px;
-      overflow-y: scroll;
       color: #eee;
       background-color: #242424;
       border: 2px solid grey;
+      overflow-y: scroll;
+    }
+
+    .Cql__TextSuggestionContent {
+      width: 100%;
+      height: 100%;
     }
 
     .Cql__ErrorPopover {
