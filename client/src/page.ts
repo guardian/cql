@@ -1,6 +1,5 @@
 import { createCqlInput } from "./cqlInput/CqlInput";
 import applyDevTools from "prosemirror-dev-tools";
-import "./style.css";
 import { CqlSuggestionService } from "./services/CqlSuggestionService.ts";
 import { CapiTypeaheadHelpers } from "./typeahead/CapiTypeaheadHelpers.ts";
 import { TypeaheadField } from "./lang/typeahead.ts";
