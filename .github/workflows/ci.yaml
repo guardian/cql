@@ -23,7 +23,7 @@ jobs:
       - name: Build static assets
         working-directory: client
         run: |
-          bun install
+          bun install --production --frozen-lockfile
           bun test
           bun run build:page
 
