@@ -72,8 +72,15 @@ template.innerHTML = `
       outline: 2px solid lightblue;
     }
 
-    .Cql__PopoverTabList {
+    .Cql__PopoverTabs {
       display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    .Cql__PopoverTabHeader {
+      display: flex;
+      flex-grow: 0;
     }
 
     .Cql__PopoverTabItem {
@@ -82,6 +89,10 @@ template.innerHTML = `
       flex-grow: 1;
       text-align: center;
       border-bottom: 2px solid #495e65;
+    }
+
+    .Cql__PopoverTabContentContainer {
+      overflow-y: scroll;
     }
 
     .Cql__PopoverTabItem:hover,
@@ -181,18 +192,21 @@ template.innerHTML = `
 
     .Cql__TypeaheadPopover {
       width: 100%;
-      max-height: 100%;
+      max-height: fit-content;
+      height: 100%;
       font-size: ${baseFontSize}px;
       border-radius: ${baseBorderRadius}px;
       color: #eee;
       background-color: #242424;
       border: 2px solid grey;
-      overflow-y: scroll;
+      overflow: hidden;
     }
 
-    .Cql__TextSuggestionContent {
+    .Cql__TextSuggestionContainer {
       width: 100%;
       height: 100%;
+      max-height: fit-content;
+      overflow-y: scroll;
     }
 
     .Cql__ErrorPopover {

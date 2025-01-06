@@ -122,8 +122,8 @@ export const DateSuggestionContent = ({
   ];
 
   return (
-    <div class="Cql__PopoverTab">
-      <div class="Cql__PopoverTabList">
+    <div class="Cql__PopoverTabs">
+      <div class="Cql__PopoverTabHeader">
         {tabs.map(({ label }, index) => (
           <div
             class={`Cql__PopoverTabItem ${index === tabIndex && "Cql__PopoverTabItem--active"}`}
@@ -133,7 +133,9 @@ export const DateSuggestionContent = ({
           </div>
         ))}
       </div>
-      <div class="Cql__PopoverTabContent">{tabs[tabIndex].content()}</div>
+      <div class="Cql__PopoverTabContentContainer">
+        <div class="Cql__PopoverTabContent">{tabs[tabIndex].content()}</div>
+      </div>
     </div>
   );
 };
