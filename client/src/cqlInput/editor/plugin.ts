@@ -1,10 +1,12 @@
 import { DecorationSet } from "prosemirror-view";
-import { CqlError, CqlSuggestionService } from "../../services/CqlSuggestionService";
+import {
+  CqlError,
+  CqlSuggestionService,
+} from "../../services/CqlSuggestionService";
 import {
   AllSelection,
   Plugin,
   PluginKey,
-  TextSelection,
   Transaction,
 } from "prosemirror-state";
 import {
@@ -18,9 +20,10 @@ import {
   mapResult,
   queryHasChanged,
   toMappedSuggestions,
-  getNextPositionAfterTypeaheadSelection,
   applyReadOnlyChipKeys,
   getNodeTypeAtSelection,
+  applySuggestion,
+  skipSuggestion,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "../popover/TypeaheadPopover";
@@ -442,21 +445,34 @@ export const createCqlPlugin = ({
           }
         }
 
+        // Typeahead-specific behaviours
         if (!typeaheadPopover?.isRenderingNavigableMenu()) {
-          return false;
-        }
-
-        switch (event.code) {
-          case "ArrowUp":
-            return typeaheadPopover.handleAction("up");
-          case "ArrowDown":
-            return typeaheadPopover.handleAction("down");
-          case "ArrowLeft":
-            return typeaheadPopover.handleAction("left");
-          case "ArrowRight":
-            return typeaheadPopover.handleAction("right");
-          case "Enter":
-            return typeaheadPopover.handleAction("enter");
+          switch (event.key) {
+            case "Enter": {
+              return skipSuggestion(view)();
+            }
+            default: {
+              return false;
+            }
+          }
+        } else {
+          switch (event.key) {
+            case "ArrowUp": {
+              return typeaheadPopover.handleAction("up");
+            }
+            case "ArrowDown": {
+              return typeaheadPopover.handleAction("down");
+            }
+            case "ArrowLeft": {
+              return typeaheadPopover.handleAction("left");
+            }
+            case "ArrowRight": {
+              return typeaheadPopover.handleAction("right");
+            }
+            case "Enter": {
+              return typeaheadPopover.handleAction("enter");
+            }
+          }
         }
       },
       // Serialise outgoing content to a CQL string for portability in both plain text and html
@@ -477,25 +493,11 @@ export const createCqlPlugin = ({
       } as DOMSerializer, // Cast because docs specify only serializeFragment is needed
     },
     view(view) {
-      const applySuggestion = (from: number, to: number, value: string) => {
-        const tr = view.state.tr;
-
-        tr.replaceRangeWith(from, to, schema.text(value));
-
-        const insertPos = getNextPositionAfterTypeaheadSelection(tr.doc, to);
-
-        if (insertPos) {
-          tr.setSelection(TextSelection.create(tr.doc, insertPos));
-        }
-
-        view.dispatch(tr);
-        view.focus();
-      };
-
       typeaheadPopover = new TypeaheadPopover(
         view,
         typeaheadEl,
-        applySuggestion
+        applySuggestion(view),
+        skipSuggestion(view)
       );
 
       errorPopover = new ErrorPopover(

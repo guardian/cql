@@ -23,9 +23,16 @@ export type ActionHandler = (action: Actions) => true | undefined;
 export type ActionSubscriber = (handler: ActionHandler) => Unsubscriber;
 
 type PopoverProps = {
+  // Subscribe to state updates when suggestion state changes
   subscribeToState: StateSubscriber;
+  // Subscribe to action updates from the input - for example, when users press
+  // arrow keys or "Enter"
   subscribeToAction: ActionSubscriber;
-  onSelect: (value: string) => void;
+  // Apply a suggestion to the input
+  applySuggestion: (value: string) => void;
+  // Skip the current suggestion, moving on to the next available field
+  skipSuggestion: () => void;
+  // Close the popover
   closePopover: () => void;
 };
 
@@ -36,7 +43,8 @@ const loadingDelayMs = 500;
 export const PopoverContainer: FunctionComponent<PopoverProps> = ({
   subscribeToState,
   subscribeToAction,
-  onSelect,
+  applySuggestion,
+  skipSuggestion,
   closePopover,
 }) => {
   const [loadingTimer, setLoadingTimer] = useState<Timer>();
@@ -65,8 +73,11 @@ export const PopoverContainer: FunctionComponent<PopoverProps> = ({
   }, [state]);
 
   if (
+    // Nothing to render
     !state?.isVisible ||
-    (state.isPending && !displayLoading && !state.suggestion)
+    // We have no suggestions to render, we are waiting for suggestions to
+    // arrive, and we are not yet ready to display a loading placeholder
+    (!state.suggestion && state.isPending && !displayLoading)
   ) {
     return;
   }
@@ -92,7 +103,8 @@ export const PopoverContainer: FunctionComponent<PopoverProps> = ({
             component={TextSuggestionContent}
             suggestion={state.suggestion}
             isPending={state.isPending}
-            onSelect={onSelect}
+            onSelect={applySuggestion}
+            onSkip={skipSuggestion}
             subscribeToAction={subscribeToAction}
           />
         );
@@ -100,9 +112,10 @@ export const PopoverContainer: FunctionComponent<PopoverProps> = ({
         return (
           <DateSuggestionContent
             suggestion={state.suggestion}
-            onSelect={onSelect}
-            subscribeToAction={subscribeToAction}
+            onSelect={applySuggestion}
+            onSkip={skipSuggestion}
             closePopover={closePopover}
+            subscribeToAction={subscribeToAction}
           ></DateSuggestionContent>
         );
     }

@@ -32,16 +32,23 @@ export class TypeaheadPopover extends Popover {
   private updateRendererState: (state: PopoverRendererState) => void =
     noopUpdateRendererState;
 
+  private _applySuggestion: (from: number, to: number, value: string) => void;
+  private _skipSuggestion: () => void;
   private currentSuggestion: TypeaheadSuggestion | undefined;
   private currentOptionIndex = 0;
   private isPending = false;
 
   public constructor(
-    public view: EditorView,
-    public popoverEl: HTMLElement,
-    public applySuggestion: (from: number, to: number, value: string) => void
+    private view: EditorView,
+    protected popoverEl: HTMLElement,
+    // Apply a suggestion to the input
+    applySuggestion: (from: number, to: number, value: string) => void,
+    // Skip a suggestion, and move on to the next valid field
+    skipSuggestion: () => void
   ) {
     super(popoverEl);
+    this._applySuggestion = applySuggestion;
+    this._skipSuggestion = skipSuggestion;
 
     render(
       <PopoverContainer
@@ -60,7 +67,8 @@ export class TypeaheadPopover extends Popover {
 
           return () => (this.handleAction = noopActionHandler);
         }}
-        onSelect={this.applyValueToInput}
+        applySuggestion={this.applySuggestion}
+        skipSuggestion={this.skipSuggestion}
         closePopover={this.hide}
       />,
       popoverEl
@@ -83,7 +91,7 @@ export class TypeaheadPopover extends Popover {
     });
   }
 
-  public isRenderingNavigableMenu = () => !!this.currentSuggestion?.suggestions;
+  public isRenderingNavigableMenu = () => this.isVisible;
 
   public updateItemsFromSuggestions = (
     typeaheadSuggestions: MappedTypeaheadSuggestion[]
@@ -108,6 +116,7 @@ export class TypeaheadPopover extends Popover {
 
     if (!suggestionThatCoversSelection) {
       this.currentSuggestion = undefined;
+      this.hide();
       this.updateRenderer();
       return;
     }
@@ -140,7 +149,7 @@ export class TypeaheadPopover extends Popover {
     });
   };
 
-  private applyValueToInput = (value: string) => {
+  private applySuggestion = (value: string) => {
     if (!this.currentSuggestion) {
       return;
     }
@@ -155,6 +164,11 @@ export class TypeaheadPopover extends Popover {
       this.hide();
     }
 
-    this.applySuggestion(from, to, value);
+    this._applySuggestion(from, to, value);
+  };
+
+  private skipSuggestion = () => {
+    this.hide();
+    this._skipSuggestion();
   };
 }

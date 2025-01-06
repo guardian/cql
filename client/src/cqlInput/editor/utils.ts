@@ -564,3 +564,37 @@ export const applyReadOnlyChipKeys = (tr: Transaction) => {
 
   return true;
 };
+
+export const applySuggestion =
+  (view: EditorView) => (from: number, to: number, value: string) => {
+    const tr = view.state.tr;
+
+    tr.replaceRangeWith(from, to, schema.text(value));
+
+    const insertPos = getNextPositionAfterTypeaheadSelection(tr.doc, to);
+
+    if (insertPos) {
+      tr.setSelection(TextSelection.create(tr.doc, insertPos));
+    }
+
+    view.dispatch(tr);
+    view.focus();
+
+    return true;
+  };
+
+export const skipSuggestion = (view: EditorView) => () => {
+  const tr = view.state.tr;
+  const insertPos = getNextPositionAfterTypeaheadSelection(
+    tr.doc,
+    tr.selection.from
+  );
+
+  if (insertPos) {
+    tr.setSelection(TextSelection.create(tr.doc, insertPos));
+  }
+  view.dispatch(tr);
+  view.focus();
+
+  return true;
+};

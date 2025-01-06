@@ -8,12 +8,14 @@ import { AbsoluteDateTab } from "./AbsoluteDateTab";
 
 export const DateSuggestionContent = ({
   suggestion,
+  onSkip,
   onSelect,
   closePopover,
   subscribeToAction,
 }: {
   suggestion: DateSuggestion;
   onSelect: (value: string) => void;
+  onSkip: () => void;
   closePopover: () => void;
   subscribeToAction: ActionSubscriber;
 }) => {
@@ -61,11 +63,12 @@ export const DateSuggestionContent = ({
         }
         case "enter": {
           if (currentOptionIndex === 0) {
-            return;
+            onSkip();
+          } else {
+            onSelect(
+              suggestion.suggestions[currentOptionIndex - indexOffset].value
+            );
           }
-          onSelect(
-            suggestion.suggestions[currentOptionIndex - indexOffset].value
-          );
           return true;
         }
         default: {
