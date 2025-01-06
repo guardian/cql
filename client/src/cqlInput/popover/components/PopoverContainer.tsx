@@ -4,6 +4,7 @@ import { TextSuggestionContent } from "./TextSuggestionContent";
 import { useEffect, useState } from "preact/hooks";
 import { TypeaheadSuggestion } from "../../../lang/types";
 import { CLASS_PENDING } from "../TypeaheadPopover";
+import { Debounce } from "./Debounce";
 
 export type PopoverRendererState = {
   suggestion: TypeaheadSuggestion | undefined;
@@ -28,12 +29,18 @@ type PopoverProps = {
   closePopover: () => void;
 };
 
+// The delay before showing a loading placeholder, to avoid quick
+// flashes of loading for timely fetches.
+const loadingDelayMs = 500;
+
 export const PopoverContainer: FunctionComponent<PopoverProps> = ({
   subscribeToState,
   subscribeToAction,
   onSelect,
   closePopover,
 }) => {
+  const [loadingTimer, setLoadingTimer] = useState<Timer>();
+  const [displayLoading, setDisplayLoading] = useState(false);
   const [state, setState] = useState<PopoverRendererState | undefined>();
 
   useEffect(() => {
@@ -42,40 +49,64 @@ export const PopoverContainer: FunctionComponent<PopoverProps> = ({
     });
   }, [subscribeToState]);
 
-  if (!state?.isVisible) {
+  useEffect(() => {
+    if (!loadingTimer && state?.isPending && !state.suggestion) {
+      setLoadingTimer(
+        setTimeout(() => {
+          setDisplayLoading(true);
+        }, loadingDelayMs)
+      );
+    }
+
+    if (!state?.isPending && loadingTimer) {
+      clearTimeout(loadingTimer);
+      setDisplayLoading(false);
+    }
+  }, [state]);
+
+  if (
+    !state?.isVisible ||
+    (state.isPending && !displayLoading && !state.suggestion)
+  ) {
     return;
   }
 
-  if (state.isPending && !state.suggestion) {
-    return (
-      <div class={`Cql__Option ${CLASS_PENDING}`}>
-        <div class="Cql__OptionLabel">Loading</div>
-      </div>
-    );
-  }
-
-  if (!state.suggestion) {
-    return <div>No results</div>;
-  }
-
-  switch (state.suggestion.type) {
-    case "TEXT":
+  const getPopoverContent = () => {
+    if (displayLoading) {
       return (
-        <TextSuggestionContent
-          suggestion={state.suggestion}
-          isPending={state.isPending}
-          onSelect={onSelect}
-          subscribeToAction={subscribeToAction}
-        ></TextSuggestionContent>
+        <div class={`Cql__Option ${CLASS_PENDING}`}>
+          <div class="Cql__OptionLabel">Loading</div>
+        </div>
       );
-    case "DATE":
-      return (
-        <DateSuggestionContent
-          suggestion={state.suggestion}
-          onSelect={onSelect}
-          subscribeToAction={subscribeToAction}
-          closePopover={closePopover}
-        ></DateSuggestionContent>
-      );
-  }
+    }
+
+    if (!state.suggestion) {
+      return <div>No results</div>;
+    }
+
+    switch (state.suggestion.type) {
+      case "TEXT":
+        return (
+          <Debounce
+            throttleInMs={100}
+            component={TextSuggestionContent}
+            suggestion={state.suggestion}
+            isPending={state.isPending}
+            onSelect={onSelect}
+            subscribeToAction={subscribeToAction}
+          />
+        );
+      case "DATE":
+        return (
+          <DateSuggestionContent
+            suggestion={state.suggestion}
+            onSelect={onSelect}
+            subscribeToAction={subscribeToAction}
+            closePopover={closePopover}
+          ></DateSuggestionContent>
+        );
+    }
+  };
+
+  return <div class="Cql__TypeaheadPopover">{getPopoverContent()}</div>;
 };

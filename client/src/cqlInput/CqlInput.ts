@@ -168,19 +168,23 @@ template.innerHTML = `
       gap: 5px;
     }
 
-    .Cql__TypeaheadPopover, .Cql__ErrorPopover {
+    .Cql__TypeaheadPopoverContainer, .Cql__ErrorPopover {
       position: absolute;
       width: 500px;
       max-height: min(80vh, 400px);
       margin: 0;
       padding: 0;
+      background: none;
+      border: none;
+    }
+
+    .Cql__TypeaheadPopover {
+      width: 100%;
+      height: 100%;
       font-size: ${baseFontSize}px;
       border-radius: ${baseBorderRadius}px;
       overflow-y: scroll;
       color: #eee;
-    }
-
-    .Cql__TypeaheadPopover {
       background-color: #242424;
       border: 2px solid grey;
     }
@@ -260,7 +264,7 @@ export const createCqlInput = (
 
       shadow.innerHTML = `
         <div id="${cqlInputId}" spellcheck="false"></div>
-        <div id="${cqlTypeaheadId}" class="Cql__TypeaheadPopover" data-testid="${typeaheadTestId}" popover></div>
+        <div id="${cqlTypeaheadId}" class="Cql__TypeaheadPopoverContainer" data-testid="${typeaheadTestId}" popover></div>
         <div id="${cqlErrorId}" class="Cql__ErrorPopover" data-testid="${errorTestId}" popover></div>
         <div id="${cqlErrorMsgId}" class="Cql__ErrorMessageContainer" data-testid="${errorMsgTestId}"></div>
       `;
