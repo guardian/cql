@@ -1,11 +1,5 @@
 import { Token } from "./token";
 import {
-  createQuery,
-  createCqlBinary,
-  createCqlExpr,
-  createCqlField,
-  createCqlGroup,
-  createCqlStr,
   CqlQuery,
   CqlBinary,
   CqlExpr,
@@ -43,95 +37,80 @@ export class Parser {
 
   private query(): CqlQuery {
     const content =
-      this.peek().tokenType === TokenType.EOF ? undefined : this.queryBinary();
+      this.peek().tokenType === TokenType.EOF ? undefined : this.binary();
 
     if (this.peek().tokenType !== TokenType.EOF) {
       throw this.unexpectedTokenError();
     }
 
-    return createQuery(content);
+    return new CqlQuery(content);
   }
 
-  private queryBinary(isNested: boolean = false): CqlBinary {
+  private binary(isNested: boolean = false): CqlBinary {
     if (this.peek().tokenType === TokenType.CHIP_VALUE)
       throw new ParseError(
         this.peek().start,
         "I found an unexpected ':'. Did you intend to search for a tag, section or similar, e.g. tag:news? If you would like to add a search phrase containing a ':' character, please surround it in double quotes."
       );
 
-    const left = this.queryContent();
+    const left = this.expr();
 
     if (isNested) {
       this.guardAgainstCqlField("within a group");
     }
+    const tokenType = this.peek().tokenType;
 
-    switch (this.peek().tokenType) {
+    switch (tokenType) {
+      case TokenType.OR:
       case TokenType.AND: {
-        this.consume(TokenType.AND);
-        this.guardAgainstCqlField("after 'AND'.");
+        this.consume(tokenType);
+        this.guardAgainstCqlField(`after '${tokenType}'.`);
         if (this.isAtEnd()) {
           throw this.error(
-            "There must be a query following 'AND', e.g. this AND that."
+            `There must be a query following '${tokenType}', e.g. this ${tokenType} that.`
           );
         }
-        return createCqlBinary(left, {
-          operator: TokenType.AND,
-          binary: this.queryBinary(isNested),
-        });
-      }
-      case TokenType.OR: {
-        this.consume(TokenType.OR);
-        this.guardAgainstCqlField("after 'OR'.");
-        if (this.isAtEnd()) {
-          throw this.error(
-            "There must be a query following 'OR', e.g. this OR that."
-          );
-        }
-        return createCqlBinary(left, {
-          operator: TokenType.OR,
-          binary: this.queryBinary(isNested),
+        return new CqlBinary(left, {
+          operator: tokenType,
+          binary: this.binary(isNested),
         });
       }
       case TokenType.RIGHT_BRACKET:
       case TokenType.EOF: {
-        return createCqlBinary(left);
+        return new CqlBinary(left);
       }
       default: {
-        return createCqlBinary(left, {
+        return new CqlBinary(left, {
           operator: TokenType.OR,
-          binary: this.queryBinary(isNested),
+          binary: this.binary(isNested),
         });
       }
     }
   }
 
-  private queryContent(): CqlExpr {
-    switch (this.peek().tokenType) {
+  private expr(): CqlExpr {
+    const tokenType = this.peek().tokenType;
+    switch (tokenType) {
       case TokenType.LEFT_BRACKET:
-        return createCqlExpr(this.queryGroup());
+        return new CqlExpr(this.group());
       case TokenType.STRING:
-        return createCqlExpr(this.queryStr());
+        return new CqlExpr(this.str());
+      case TokenType.CHIP_KEY: {
+        return new CqlExpr(this.field());
+      }
+      case TokenType.AND:
+      case TokenType.OR: {
+        throw this.error(
+          `An ${tokenType.toString()} keyword must have a search term before and after it, e.g. this ${tokenType.toString()} that.`
+        );
+      }
       default: {
-        const { tokenType } = this.peek();
-        if ([TokenType.AND, TokenType.OR].some((i) => i === tokenType)) {
-          throw this.error(
-            `An ${tokenType.toString()} keyword must have a search term before and after it, e.g. this ${tokenType.toString()} that.`
-          );
-        }
-
-        switch (this.peek().tokenType) {
-          case TokenType.CHIP_KEY: {
-            return createCqlExpr(this.queryField());
-          }
-          default: {
-            throw this.unexpectedTokenError();
-          }
-        }
+        throw this.unexpectedTokenError();
       }
     }
   }
 
-  private queryGroup(): CqlGroup {
+  private group(): CqlGroup {
     this.consume(
       TokenType.LEFT_BRACKET,
       "Groups should start with a left bracket"
@@ -147,22 +126,22 @@ export class Parser {
       "within a group. Try putting this search term outside of the brackets!"
     );
 
-    const binary = this.queryBinary(true);
+    const binary = this.binary(true);
     this.consume(
       TokenType.RIGHT_BRACKET,
       "Groups must end with a right bracket."
     );
 
-    return createCqlGroup(binary);
+    return new CqlGroup(binary);
   }
 
-  private queryStr(): CqlStr {
+  private str(): CqlStr {
     const token = this.consume(TokenType.STRING, "Expected a string");
 
-    return createCqlStr(token);
+    return new CqlStr(token);
   }
 
-  private queryField(): CqlField {
+  private field(): CqlField {
     const key = this.consume(
       TokenType.CHIP_KEY,
       "Expected a search key, e.g. +tag"
@@ -174,8 +153,8 @@ export class Parser {
     );
 
     return either(maybeValue)(
-      () => createCqlField(key, undefined),
-      (value: Token) => createCqlField(key, value)
+      () => new CqlField(key, undefined),
+      (value: Token) => new CqlField(key, value)
     );
   }
 
@@ -186,7 +165,7 @@ export class Parser {
   private guardAgainstCqlField = (errorLocation: string) => {
     switch (this.peek().tokenType) {
       case TokenType.CHIP_KEY: {
-        const queryFieldNode = this.queryField();
+        const queryFieldNode = this.field();
         throw this.error(
           `You cannot query for the field “${queryFieldNode.key.literal}” ${errorLocation}`
         );

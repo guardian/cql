@@ -1,12 +1,11 @@
 import { describe, expect, it } from "bun:test";
 import { ok, Result, ResultKind } from "../utils/result";
 import {
-  createCqlBinary,
-  createCqlExpr,
-  createCqlField,
-  createCqlStr,
-  createCqlGroup,
-  createQuery,
+  CqlBinary,
+  CqlExpr,
+  CqlField,
+  CqlStr,
+  CqlGroup,
   CqlQuery,
 } from "./ast";
 import {
@@ -44,7 +43,7 @@ describe("parser", () => {
     it("should handle an empty token list", () => {
       const tokens = [eofToken(0)];
       const result = new Parser(tokens).parse();
-      expect(result).toEqual(ok(createQuery()));
+      expect(result).toEqual(ok(new CqlQuery()));
     });
   });
 
@@ -88,20 +87,16 @@ describe("parser", () => {
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
         ok(
-          createQuery(
-            createCqlBinary(
-              createCqlExpr(
-                createCqlGroup(
-                  createCqlBinary(
-                    createCqlExpr(
-                      createCqlStr(unquotedStringToken("a", 1))
-                    ),
+          new CqlQuery(
+            new CqlBinary(
+              new CqlExpr(
+                new CqlGroup(
+                  new CqlBinary(
+                    new CqlExpr(new CqlStr(unquotedStringToken("a", 1))),
                     {
                       operator: TokenType.OR,
-                      binary: createCqlBinary(
-                        createCqlExpr(
-                          createCqlStr(unquotedStringToken("b", 2))
-                        )
+                      binary: new CqlBinary(
+                        new CqlExpr(new CqlStr(unquotedStringToken("b", 2)))
                       ),
                     }
                   )
@@ -152,9 +147,7 @@ describe("parser", () => {
       ];
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
-        ok(
-          createQuery(createCqlBinary(createCqlExpr(queryField("ta", ""))))
-        )
+        ok(new CqlQuery(new CqlBinary(new CqlExpr(queryField("ta", "")))))
       );
     });
 
@@ -192,19 +185,14 @@ describe("parser", () => {
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
         ok(
-          createQuery(
-            createCqlBinary(
-              createCqlExpr(createCqlStr(quotedStringToken("a"))),
-              {
-                operator: TokenType.OR,
-                binary: createCqlBinary(
-                  createCqlExpr(
-                    createCqlField(queryFieldKeyToken("", 2), undefined)
-                  ),
-                  undefined
-                ),
-              }
-            )
+          new CqlQuery(
+            new CqlBinary(new CqlExpr(new CqlStr(quotedStringToken("a"))), {
+              operator: TokenType.OR,
+              binary: new CqlBinary(
+                new CqlExpr(new CqlField(queryFieldKeyToken("", 2), undefined)),
+                undefined
+              ),
+            })
           )
         )
       );

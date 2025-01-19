@@ -1,4 +1,4 @@
-import { createCqlField, CqlField } from "./ast";
+import { CqlField } from "./ast";
 import { Token, TokenType } from "./token";
 
 export const leftParenToken = (start: number = 0) =>
@@ -14,13 +14,7 @@ export const unquotedStringToken = (str: string, start: number = 0) =>
 export const quotedStringToken = (str: string, start: number = 0) =>
   new Token(TokenType.STRING, `"${str}"`, str, start, start + str.length + 1);
 export const queryFieldKeyToken = (str: string, start: number = 0) =>
-  new Token(
-    TokenType.CHIP_KEY,
-    `+${str}`,
-    str,
-    start,
-    start + str.length
-  );
+  new Token(TokenType.CHIP_KEY, `+${str}`, str, start, start + str.length);
 
 export const queryValueToken = (str: string, start: number = 0) =>
   new Token(TokenType.CHIP_VALUE, `:${str}`, str, start, start + str.length);
@@ -30,7 +24,7 @@ export const queryField = (
   value?: string,
   start: number = 0
 ): CqlField =>
-  createCqlField(
+  new CqlField(
     queryFieldKeyToken(key, start),
     value !== undefined
       ? queryValueToken(value, start + key.length + 1)
