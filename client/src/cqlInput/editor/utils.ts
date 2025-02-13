@@ -12,14 +12,13 @@ import {
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection, Transaction } from "prosemirror-state";
-import { CLASS_ERROR } from "./plugin";
+import { CLASS_ERROR, CqlError } from "./plugin";
 import { Token } from "../../lang/token";
 import {
   MappedTypeaheadSuggestion,
   TypeaheadSuggestion,
 } from "../../lang/types";
 import { CqlResult } from "../../lang/Cql";
-import { CqlError } from "../../services/CqlSuggestionService";
 
 const tokensToPreserve = ["CHIP_KEY", "CHIP_VALUE", "EOF"];
 
