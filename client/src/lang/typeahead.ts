@@ -41,6 +41,7 @@ export class TypeaheadField {
 
 export class Typeahead {
   private typeaheadFieldEntries: TextSuggestionOption[];
+  private abortController: AbortController | undefined;
 
   constructor(private typeaheadFields: TypeaheadField[]) {
     this.typeaheadFieldEntries = this.typeaheadFields.map((field) =>
@@ -48,21 +49,32 @@ export class Typeahead {
     );
   }
 
-  public async getSuggestions(
+  public getSuggestions(
     program: CqlQuery,
     signal?: AbortSignal
   ): Promise<TypeaheadSuggestion[]> {
-    if (!program.content) {
-      return [];
-    }
+    return new Promise((resolve, reject) => {
+      // Abort existing fetch, if it exists
+      this.abortController?.abort();
 
-    const eventuallySuggestions = getCqlFieldsFromCqlBinary(
-      program.content
-    ).flatMap((queryField) => this.suggestCqlField(queryField, signal));
+      if (!program.content) {
+        return resolve([]);
+      }
 
-    const suggestions = await Promise.all(eventuallySuggestions);
+      const abortController = new AbortController();
+      this.abortController = abortController;
+      abortController.signal.addEventListener("abort", () => {
+        reject(new DOMException("Aborted", "AbortError"));
+      });
 
-    return suggestions.flat();
+      const eventuallySuggestions = getCqlFieldsFromCqlBinary(
+        program.content
+      ).flatMap((queryField) => this.suggestCqlField(queryField, signal));
+
+      return Promise.all(eventuallySuggestions)
+        .then(suggestions => resolve(suggestions.flat()))
+        .catch(reject);
+    });
   }
 
   private getSuggestionsForKeyToken(keyToken: Token): TypeaheadSuggestion[] {

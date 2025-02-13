@@ -1,7 +1,6 @@
 import { describe, it, beforeEach, expect } from "bun:test";
 import { errorMsgTestId, errorTestId, typeaheadTestId } from "../CqlInput";
 import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
-import { CqlSuggestionService } from "../../services/CqlSuggestionService";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
 import { createCqlPlugin } from "./plugin";
 import { redo, undo } from "prosemirror-history";
@@ -21,9 +20,10 @@ import { isVisibleDataAttr } from "../popover/Popover";
 import { tick } from "../../utils/test";
 import { parseCqlStr } from "../../lang/Cql";
 import { defaultPopoverRenderer } from "../popover/components/defaultPopoverRenderer";
+import { Typeahead } from "../../lang/typeahead";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
-const testCqlService = new CqlSuggestionService(typeheadHelpers.typeaheadFields);
+const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
 
 const createCqlEditor = (initialQuery: string = "") => {
   const container = document.createElement("div");
@@ -46,7 +46,7 @@ const createCqlEditor = (initialQuery: string = "") => {
   };
 
   const plugin = createCqlPlugin({
-    cqlSuggestionsService: testCqlService,
+    typeahead: testCqlService,
     typeaheadEl,
     errorEl,
     errorMsgEl,

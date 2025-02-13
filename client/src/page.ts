@@ -1,8 +1,7 @@
 import { createCqlInput } from "./cqlInput/CqlInput";
 import applyDevTools from "prosemirror-dev-tools";
-import { CqlSuggestionService } from "./services/CqlSuggestionService.ts";
 import { CapiTypeaheadProvider } from "./typeahead/CapiTypeaheadHelpers.ts";
-import { TypeaheadField } from "./lang/typeahead.ts";
+import { Typeahead, TypeaheadField } from "./lang/typeahead.ts";
 import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
 import { defaultPopoverRenderer } from "./cqlInput/popover/components/defaultPopoverRenderer.tsx";
 
@@ -39,12 +38,12 @@ const typeaheadHelpersCapi = new CapiTypeaheadProvider(
   initialEndpointCapi,
   "test"
 );
-const suggestionServiceCapi = new CqlSuggestionService(
+const capiTypeahead = new Typeahead(
   typeaheadHelpersCapi.typeaheadFields
 );
 
 const CqlInputCapi = createCqlInput(
-  suggestionServiceCapi,
+  capiTypeahead,
   defaultPopoverRenderer,
   {
     debugEl,
@@ -61,11 +60,11 @@ const guToolsTypeaheadFields: TypeaheadField[] = [
   ),
 ];
 
-const suggestionServiceGuTools = new CqlSuggestionService(
+const typeaheadGuTools = new Typeahead(
   guToolsTypeaheadFields
 );
 const CqlInputGuTools = createCqlInput(
-  suggestionServiceGuTools,
+  typeaheadGuTools,
   defaultPopoverRenderer,
   {
     debugEl,

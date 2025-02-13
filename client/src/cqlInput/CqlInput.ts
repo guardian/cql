@@ -3,7 +3,7 @@ import { QueryChangeEventDetail } from "../types/dom";
 import { createEditorView } from "./editor/editor";
 import { createCqlPlugin, CLASS_VISIBLE } from "./editor/plugin";
 import { CLASS_PENDING, RenderPopoverContent } from "./popover/TypeaheadPopover";
-import { CqlSuggestionService } from "../services/CqlSuggestionService";
+import { Typeahead } from "../lang/typeahead";
 
 const baseFontSize = 28;
 const baseBorderRadius = 5;
@@ -265,7 +265,7 @@ export type CqlConfig = {
 };
 
 export const createCqlInput = (
-  cqlSuggestionService: CqlSuggestionService,
+  typeahead: Typeahead,
   renderPopoverContent: RenderPopoverContent,
   config: CqlConfig = { syntaxHighlighting: true }
 ) => {
@@ -305,7 +305,7 @@ export const createCqlInput = (
       };
 
       const plugin = createCqlPlugin({
-        cqlSuggestionsService: cqlSuggestionService,
+        typeahead,
         typeaheadEl,
         errorEl,
         errorMsgEl,

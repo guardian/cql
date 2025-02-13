@@ -1,9 +1,5 @@
 import { DecorationSet } from "prosemirror-view";
 import {
-  CqlError,
-  CqlSuggestionService,
-} from "../../services/CqlSuggestionService";
-import {
   AllSelection,
   Plugin,
   PluginKey,
@@ -48,8 +44,14 @@ import {
 } from "./debug";
 import { CqlQuery } from "../../lang/ast";
 import { parseCqlStr } from "../../lang/Cql";
+import { Typeahead } from "../../lang/typeahead";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
+
+export type CqlError = {
+  position?: number;
+  message: string;
+};
 
 type PluginState = {
   tokens: ProseMirrorToken[];
@@ -76,7 +78,7 @@ export const CLASS_CHIP_KEY_READONLY = "Cql__ChipKey--readonly";
  *  - managing custom keyboard and selection behaviour
  */
 export const createCqlPlugin = ({
-  cqlSuggestionsService: cqlService,
+  typeahead,
   typeaheadEl,
   errorEl,
   errorMsgEl,
@@ -84,7 +86,7 @@ export const createCqlPlugin = ({
   config: { syntaxHighlighting, debugEl },
   renderPopoverContent
 }: {
-  cqlSuggestionsService: CqlSuggestionService;
+  typeahead: Typeahead;
   typeaheadEl: HTMLElement;
   errorEl: HTMLElement;
   errorMsgEl: HTMLElement;
@@ -536,7 +538,7 @@ export const createCqlPlugin = ({
           }
 
           try {
-            const suggestions = await cqlService.fetchSuggestions(query);
+            const suggestions = await typeahead.getSuggestions(query);
             const mappedSuggestions = toMappedSuggestions(suggestions, mapping);
             typeaheadPopover?.updateItemsFromSuggestions(mappedSuggestions);
 
