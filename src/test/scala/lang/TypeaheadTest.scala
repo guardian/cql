@@ -8,7 +8,7 @@ class TypeaheadTest extends BaseTest {
     val typeaheadQueryClient = new TestTypeaheadHelpers()
     val typeahead =
       new Typeahead(
-        typeaheadQueryClient.fieldResolvers,
+        typeaheadQueryClient.typeaheadFields,
         typeaheadQueryClient.outputModifierResolvers
       )
 

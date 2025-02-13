@@ -6,7 +6,7 @@ import scala.concurrent.ExecutionContext.Implicits.global
 
 class TypeaheadHelpersCapi(client: GuardianContentClient) {
 
-  val fieldResolvers = List(
+  val typeaheadFields = List(
     TypeaheadField(
       "tag",
       "Tag",

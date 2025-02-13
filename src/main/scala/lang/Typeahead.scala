@@ -75,11 +75,11 @@ case class TypeaheadField(
     TextSuggestionOption(name, id, Some(description))
 
 class Typeahead(
-    fieldResolvers: List[TypeaheadField],
+    typeaheadFields: List[TypeaheadField],
     outputModifierResolvers: List[TypeaheadField]
 ) {
   private val typeaheadFieldEntries = TextSuggestion(
-    fieldResolvers.map { case TypeaheadField(id, label, description, _, _) =>
+    typeaheadFields.map { case TypeaheadField(id, label, description, _, _) =>
       TextSuggestionOption(label, id, Some(description))
     }.toList
   )
@@ -195,7 +195,7 @@ class Typeahead(
       key: String,
       str: String
   ): Future[Option[Suggestions]] =
-    fieldResolvers
+    typeaheadFields
       .find(_.id == key)
       .map {
         case typeaheadField if typeaheadField.suggestionType == "DATE" =>

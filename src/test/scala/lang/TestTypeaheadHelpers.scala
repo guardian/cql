@@ -3,7 +3,7 @@ package cql.lang
 import scala.concurrent.Future
 
 class TestTypeaheadHelpers {
-  val fieldResolvers = List(
+  val typeaheadFields = List(
     TypeaheadField(
       "tag",
       "Tag",

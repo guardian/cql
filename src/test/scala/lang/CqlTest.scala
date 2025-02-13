@@ -5,7 +5,7 @@ import concurrent.ExecutionContext.Implicits.global // Todo: sticking plaster
 class CqlTest extends BaseTest {
   describe("a program") {
     val typeaheadHelpers = new TestTypeaheadHelpers()
-    val typeahead = new Typeahead(typeaheadHelpers.fieldResolvers, List.empty)
+    val typeahead = new Typeahead(typeaheadHelpers.typeaheadFields, List.empty)
 
     val cql = new Cql(typeahead)
     it("should produce a query string") {

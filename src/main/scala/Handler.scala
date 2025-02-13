@@ -27,7 +27,7 @@ class Handler
   val guardianContentClient = new GuardianContentClient("test")
   val typeaheadHelpers = new TypeaheadHelpersCapi(guardianContentClient)
   val typeahead = new Typeahead(
-    typeaheadHelpers.fieldResolvers,
+    typeaheadHelpers.typeaheadFields,
     typeaheadHelpers.outputModifierResolvers
   )
 

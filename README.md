@@ -59,7 +59,7 @@ Grammar:
 
 ```
 query                       -> query_binary?
-query_binary                -> query_content (('AND' | 'OR')? query_content)*
+query_binary                -> query_content (('AND' | 'OR')? query_binary)*
 query_content               -> query_group | query_str | query_quoted_str
 query_group                 -> '(' query_binary* ')'
 query_quoted_str            -> '"' string '"'

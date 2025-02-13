@@ -1,7 +1,7 @@
 import { createCqlInput } from "./cqlInput/CqlInput";
 import applyDevTools from "prosemirror-dev-tools";
 import { CqlSuggestionService } from "./services/CqlSuggestionService.ts";
-import { CapiTypeaheadHelpers } from "./typeahead/CapiTypeaheadHelpers.ts";
+import { CapiTypeaheadProvider } from "./typeahead/CapiTypeaheadHelpers.ts";
 import { TypeaheadField } from "./lang/typeahead.ts";
 import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
 import { defaultPopoverRenderer } from "./cqlInput/popover/components/defaultPopoverRenderer.tsx";
@@ -35,12 +35,12 @@ const params = new URLSearchParams(window.location.search);
 const endpoint = params.get("endpoint");
 
 const initialEndpointCapi = endpoint || "https://content.guardianapis.com";
-const typeaheadHelpersCapi = new CapiTypeaheadHelpers(
+const typeaheadHelpersCapi = new CapiTypeaheadProvider(
   initialEndpointCapi,
   "test"
 );
 const suggestionServiceCapi = new CqlSuggestionService(
-  typeaheadHelpersCapi.fieldResolvers
+  typeaheadHelpersCapi.typeaheadFields
 );
 
 const CqlInputCapi = createCqlInput(
@@ -52,7 +52,7 @@ const CqlInputCapi = createCqlInput(
   }
 );
 
-const guToolsFieldResolvers: TypeaheadField[] = [
+const guToolsTypeaheadFields: TypeaheadField[] = [
   new TypeaheadField(
     "team",
     "Team",
@@ -62,7 +62,7 @@ const guToolsFieldResolvers: TypeaheadField[] = [
 ];
 
 const suggestionServiceGuTools = new CqlSuggestionService(
-  guToolsFieldResolvers
+  guToolsTypeaheadFields
 );
 const CqlInputGuTools = createCqlInput(
   suggestionServiceGuTools,

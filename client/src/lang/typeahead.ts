@@ -42,8 +42,8 @@ export class TypeaheadField {
 export class Typeahead {
   private typeaheadFieldEntries: TextSuggestionOption[];
 
-  constructor(private fieldResolvers: TypeaheadField[]) {
-    this.typeaheadFieldEntries = this.fieldResolvers.map((field) =>
+  constructor(private typeaheadFields: TypeaheadField[]) {
+    this.typeaheadFieldEntries = this.typeaheadFields.map((field) =>
       field.toSuggestionOption()
     );
   }
@@ -142,7 +142,7 @@ export class Typeahead {
     | { type: "TEXT"; suggestions: Promise<TextSuggestionOption[]> }
     | { type: "DATE"; suggestions: Promise<DateSuggestionOption[]> }
     | undefined {
-    const resolver = this.fieldResolvers.find((_) => _.id == key);
+    const resolver = this.typeaheadFields.find((_) => _.id == key);
 
     if (!resolver) {
       return undefined;

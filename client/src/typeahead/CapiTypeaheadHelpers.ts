@@ -6,7 +6,7 @@ import { TextSuggestionOption } from "../lang/types";
 import { stableSort } from "../utils/sort";
 import { LRUCache } from "./LRUCache";
 
-export class CapiTypeaheadHelpers {
+export class CapiTypeaheadProvider {
   private cache = new LRUCache(1000);
   public constructor(
     private baseUrl: string,
@@ -822,7 +822,7 @@ export class CapiTypeaheadHelpers {
     });
   };
 
-  public fieldResolvers = [
+  public typeaheadFields = [
     new TypeaheadField(
       "tag",
       "Tag",

@@ -23,7 +23,7 @@ import { parseCqlStr } from "../../lang/Cql";
 import { defaultPopoverRenderer } from "../popover/components/defaultPopoverRenderer";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
-const testCqlService = new CqlSuggestionService(typeheadHelpers.fieldResolvers);
+const testCqlService = new CqlSuggestionService(typeheadHelpers.typeaheadFields);
 
 const createCqlEditor = (initialQuery: string = "") => {
   const container = document.createElement("div");

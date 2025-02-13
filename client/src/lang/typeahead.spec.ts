@@ -6,7 +6,7 @@ import { parseCqlStr } from "./Cql";
 
 describe("typeahead", () => {
   const typeaheadQueryClient = new TestTypeaheadHelpers();
-  const typeahead = new Typeahead(typeaheadQueryClient.fieldResolvers);
+  const typeahead = new Typeahead(typeaheadQueryClient.typeaheadFields);
 
   const getSuggestions = async (query: string) =>
     await typeahead.getSuggestions(parseCqlStr(query).query!);
