@@ -272,7 +272,7 @@ export const createCqlInput = (
   class CqlInput extends HTMLElement {
     static observedAttributes = ["initialValue"];
 
-    private editorView: EditorView | undefined;
+    public editorView: EditorView | undefined;
 
     public value = "";
 
