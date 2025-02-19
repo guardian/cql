@@ -17,21 +17,21 @@ export class TypeaheadField {
     public id: string,
     public name: string,
     public description: string,
-    private resolver: TypeaheadResolver = [],
+    private resolver?: TypeaheadResolver,
     public suggestionType: SuggestionType = "TEXT"
   ) {}
 
   public resolveSuggestions(
     str: string,
     signal?: AbortSignal
-  ): Promise<TextSuggestionOption[]> {
+  ): Promise<TextSuggestionOption[]> | undefined {
     if (Array.isArray(this.resolver)) {
       return Promise.resolve(
         this.resolver.filter((item) => item.label.includes(str))
       );
     }
 
-    return this.resolver(str, signal);
+    return this.resolver?.(str, signal);
   }
 
   public toSuggestionOption(): TextSuggestionOption {
@@ -171,10 +171,13 @@ export class Typeahead {
           new DateSuggestionOption("1 year ago", "-1y"),
         ]),
       };
-    } else {
+    }
+
+    const suggestions = resolver.resolveSuggestions(str, signal);
+    if (suggestions) {
       return {
         type: "TEXT",
-        suggestions: resolver.resolveSuggestions(str, signal),
+        suggestions,
       };
     }
   }

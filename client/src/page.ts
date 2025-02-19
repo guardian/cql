@@ -3,7 +3,6 @@ import applyDevTools from "prosemirror-dev-tools";
 import { CapiTypeaheadProvider } from "./typeahead/CapiTypeaheadHelpers.ts";
 import { Typeahead, TypeaheadField } from "./lang/typeahead.ts";
 import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
-import { defaultPopoverRenderer } from "./cqlInput/popover/components/defaultPopoverRenderer.tsx";
 
 const debugEl = document.createElement("div");
 debugEl.className = "CqlSandbox__debug-container";
@@ -38,18 +37,12 @@ const typeaheadHelpersCapi = new CapiTypeaheadProvider(
   initialEndpointCapi,
   "test"
 );
-const capiTypeahead = new Typeahead(
-  typeaheadHelpersCapi.typeaheadFields
-);
+const capiTypeahead = new Typeahead(typeaheadHelpersCapi.typeaheadFields);
 
-const CqlInputCapi = createCqlInput(
-  capiTypeahead,
-  defaultPopoverRenderer,
-  {
-    debugEl,
-    syntaxHighlighting: true,
-  }
-);
+const CqlInputCapi = createCqlInput(capiTypeahead, {
+  debugEl,
+  syntaxHighlighting: true,
+});
 
 const guToolsTypeaheadFields: TypeaheadField[] = [
   new TypeaheadField(
@@ -60,17 +53,11 @@ const guToolsTypeaheadFields: TypeaheadField[] = [
   ),
 ];
 
-const typeaheadGuTools = new Typeahead(
-  guToolsTypeaheadFields
-);
-const CqlInputGuTools = createCqlInput(
-  typeaheadGuTools,
-  defaultPopoverRenderer,
-  {
-    debugEl,
-    syntaxHighlighting: true,
-  }
-);
+const typeaheadGuTools = new Typeahead(guToolsTypeaheadFields);
+const CqlInputGuTools = createCqlInput(typeaheadGuTools, {
+  debugEl,
+  syntaxHighlighting: true,
+});
 
 customElements.define("cql-input-gutools", CqlInputGuTools);
 customElements.define("cql-input-capi", CqlInputCapi);

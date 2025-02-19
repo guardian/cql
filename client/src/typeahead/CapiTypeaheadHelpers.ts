@@ -184,7 +184,7 @@ export class CapiTypeaheadProvider {
     },
   ];
 
-  mostUsedSections = [
+  private mostUsedSections = [
     {
       id: "news",
       webTitle: "News",

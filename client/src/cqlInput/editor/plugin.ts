@@ -22,7 +22,7 @@ import {
   skipSuggestion,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
-import { RenderPopoverContent, TypeaheadPopover } from "../popover/TypeaheadPopover";
+import { TypeaheadPopover } from "../popover/TypeaheadPopover";
 import {
   chip,
   chipKey,
@@ -45,6 +45,7 @@ import {
 import { CqlQuery } from "../../lang/ast";
 import { parseCqlStr } from "../../lang/Cql";
 import { Typeahead } from "../../lang/typeahead";
+import { defaultPopoverRenderer } from "../popover/components/defaultPopoverRenderer";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -83,8 +84,11 @@ export const createCqlPlugin = ({
   errorEl,
   errorMsgEl,
   onChange,
-  config: { syntaxHighlighting, debugEl },
-  renderPopoverContent
+  config: {
+    syntaxHighlighting,
+    debugEl,
+    renderPopoverContent = defaultPopoverRenderer,
+  },
 }: {
   typeahead: Typeahead;
   typeaheadEl: HTMLElement;
@@ -92,7 +96,6 @@ export const createCqlPlugin = ({
   errorMsgEl: HTMLElement;
   config: CqlConfig;
   onChange: (detail: QueryChangeEventDetail) => void;
-  renderPopoverContent: RenderPopoverContent
 }) => {
   let typeaheadPopover: TypeaheadPopover | undefined;
   let errorPopover: ErrorPopover | undefined;

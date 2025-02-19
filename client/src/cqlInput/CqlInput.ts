@@ -2,7 +2,10 @@ import { EditorView } from "prosemirror-view";
 import { QueryChangeEventDetail } from "../types/dom";
 import { createEditorView } from "./editor/editor";
 import { createCqlPlugin, CLASS_VISIBLE } from "./editor/plugin";
-import { CLASS_PENDING, RenderPopoverContent } from "./popover/TypeaheadPopover";
+import {
+  CLASS_PENDING,
+  RenderPopoverContent,
+} from "./popover/TypeaheadPopover";
 import { Typeahead } from "../lang/typeahead";
 
 const baseFontSize = 28;
@@ -262,12 +265,14 @@ export const errorMsgTestId = "cql-input-error-message";
 export type CqlConfig = {
   syntaxHighlighting?: boolean;
   debugEl?: HTMLElement;
+  renderPopoverContent?: RenderPopoverContent;
 };
 
 export const createCqlInput = (
   typeahead: Typeahead,
-  renderPopoverContent: RenderPopoverContent,
-  config: CqlConfig = { syntaxHighlighting: true }
+  config: CqlConfig = {
+    syntaxHighlighting: true,
+  }
 ) => {
   class CqlInput extends HTMLElement {
     static observedAttributes = ["initialValue"];
@@ -311,7 +316,6 @@ export const createCqlInput = (
         errorMsgEl,
         onChange,
         config,
-        renderPopoverContent
       });
 
       const editorView = createEditorView({

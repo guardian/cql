@@ -27,6 +27,7 @@ export const createEditorView = ({
       plugins: [
         ...plugins,
         keymap({
+          ...baseKeymap,
           "Mod-z": undo,
           "Mod-y": redo,
           "Mod-ArrowLeft": topOfLine,
@@ -36,7 +37,6 @@ export const createEditorView = ({
           "Ctrl-e": bottomOfLine,
           End: bottomOfLine,
         }),
-        keymap(baseKeymap),
         history(),
       ],
     }),

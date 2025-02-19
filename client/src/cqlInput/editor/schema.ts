@@ -12,14 +12,12 @@ export const schema = new Schema({
       group: "inline",
     },
     searchText: {
-      group: "block",
       content: "inline*",
       toDOM: () => ["search-text", 0],
       whitespace: "pre",
     },
     chip: {
       content: "(chipKey chipValue)?",
-      group: "block",
       toDOM: () => ["chip", 0],
       attrs: {
         [DELETE_CHIP_INTENT]: {
@@ -29,7 +27,6 @@ export const schema = new Schema({
     },
     chipKey: {
       content: "inline*",
-      group: "block",
       toDOM: () => ["chip-key", 0],
       attrs: {
         [IS_READ_ONLY]: {
@@ -39,7 +36,6 @@ export const schema = new Schema({
     },
     chipValue: {
       content: "inline*",
-      group: "block",
       whitespace: "pre",
       toDOM: () => ["chip-value", 0],
     },

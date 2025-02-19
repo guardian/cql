@@ -19,7 +19,6 @@ import { TestTypeaheadHelpers } from "../../lang/fixtures/TestTypeaheadHelpers";
 import { isVisibleDataAttr } from "../popover/Popover";
 import { tick } from "../../utils/test";
 import { parseCqlStr } from "../../lang/Cql";
-import { defaultPopoverRenderer } from "../popover/components/defaultPopoverRenderer";
 import { Typeahead } from "../../lang/typeahead";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
@@ -52,7 +51,6 @@ const createCqlEditor = (initialQuery: string = "") => {
     errorMsgEl,
     config: { syntaxHighlighting: true },
     onChange: ({ cqlQuery }) => dispatch(cqlQuery),
-    renderPopoverContent: defaultPopoverRenderer
   });
 
   const queryToProseMirrorTokens = (query: string) => {
