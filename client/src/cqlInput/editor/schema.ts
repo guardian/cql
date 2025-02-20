@@ -6,14 +6,11 @@ export const IS_READ_ONLY = "IS_READ_ONLY";
 export const schema = new Schema({
   nodes: {
     doc: {
-      content: "searchText (chip searchText)*",
+      content: "queryStr (chip queryStr)*",
     },
-    text: {
-      group: "inline",
-    },
-    searchText: {
-      content: "inline*",
-      toDOM: () => ["search-text", 0],
+    queryStr: {
+      content: "text*",
+      toDOM: () => ["query-str", 0],
       whitespace: "pre",
     },
     chip: {
@@ -26,7 +23,7 @@ export const schema = new Schema({
       },
     },
     chipKey: {
-      content: "inline*",
+      content: "text*",
       toDOM: () => ["chip-key", 0],
       attrs: {
         [IS_READ_ONLY]: {
@@ -35,11 +32,12 @@ export const schema = new Schema({
       },
     },
     chipValue: {
-      content: "inline*",
+      content: "text*",
       whitespace: "pre",
       toDOM: () => ["chip-value", 0],
     },
+    text: {},
   },
 });
 
-export const { chip, chipKey, chipValue, searchText, doc } = schema.nodes;
+export const { chip, chipKey, chipValue, queryStr, doc } = schema.nodes;

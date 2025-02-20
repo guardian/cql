@@ -11,7 +11,7 @@ import { builders } from "prosemirror-test-builder";
 import { parseCqlStr } from "../../lang/Cql";
 
 describe("utils", () => {
-  const { chip, chipKey, chipValue, doc, searchText } = builders(schema);
+  const { chip, chipKey, chipValue, doc, queryStr } = builders(schema);
 
   const queryToProseMirrorTokens = async (query: string) => {
     const result = await parseCqlStr(query);
@@ -44,32 +44,32 @@ describe("utils", () => {
       const node = tokensToDoc(tokens);
 
       const expected = doc(
-        searchText("text"),
+        queryStr("text"),
         chip(chipKey("key"), chipValue("value")),
-        searchText("text")
+        queryStr("text")
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
-    test("should insert a searchText node if the query starts with a KV pair", async () => {
+    test("should insert a queryStr node if the query starts with a KV pair", async () => {
       const tokens = await queryToProseMirrorTokens("+key:value");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
-        searchText(),
+        queryStr(),
         chip(chipKey("key"), chipValue("value")),
-        searchText()
+        queryStr()
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
-    test("should insert a searchText node if the query starts with a KV pair", async () => {
+    test("should insert a queryStr node if the query starts with a KV pair", async () => {
       const tokens = await queryToProseMirrorTokens(":value");
       const node = tokensToDoc(tokens);
 
-      const expected = doc(searchText(":value"));
+      const expected = doc(queryStr(":value"));
 
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
@@ -79,9 +79,9 @@ describe("utils", () => {
       const node = tokensToDoc(tokens);
 
       const expected = doc(
-        searchText(" this AND "),
+        queryStr(" this AND "),
         chip(chipKey("key"), chipValue()),
-        searchText()
+        queryStr()
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
@@ -92,9 +92,9 @@ describe("utils", () => {
       const node = tokensToDoc(tokens);
 
       const expected = doc(
-        searchText("this AND "),
+        queryStr("this AND "),
         chip(chipKey("key"), chipValue()),
-        searchText()
+        queryStr()
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
@@ -104,7 +104,7 @@ describe("utils", () => {
       const tokens = await queryToProseMirrorTokens("example   ");
       const node = tokensToDoc(tokens);
 
-      const expected = doc(searchText("example   "));
+      const expected = doc(queryStr("example   "));
 
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
@@ -114,11 +114,11 @@ describe("utils", () => {
       const node = tokensToDoc(tokens);
 
       const expected = doc(
-        searchText(),
+        queryStr(),
         chip(chipKey(), chipValue()),
-        searchText(),
+        queryStr(),
         chip(chipKey("tag"), chipValue()),
-        searchText()
+        queryStr()
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
@@ -205,9 +205,9 @@ describe("utils", () => {
   describe("getNextPositionAfterTypeaheadSelection", () => {
     test("should move to value position from the end of a key", () => {
       const currentDoc = doc(
-        searchText(),
+        queryStr(),
         chip(chipKey("key<fromPos>"), chipValue("<toPos>")),
-        searchText()
+        queryStr()
       );
 
       const insertPos = getNextPositionAfterTypeaheadSelection(
@@ -218,11 +218,11 @@ describe("utils", () => {
       expect(insertPos).toBe(currentDoc.tag.toPos);
     });
 
-    test("should move to searchText position from the end of a value", () => {
+    test("should move to queryStr position from the end of a value", () => {
       const currentDoc = doc(
-        searchText(),
+        queryStr(),
         chip(chipKey("key"), chipValue("<fromPos>")),
-        searchText("<toPos>")
+        queryStr("<toPos>")
       );
 
       const insertPos = getNextPositionAfterTypeaheadSelection(
@@ -237,39 +237,39 @@ describe("utils", () => {
   describe("docToCqlStr", () => {
     test("should convert a doc to a query string", () => {
       const queryDoc = doc(
-        searchText("example"),
+        queryStr("example"),
         chip(chipKey("tag"), chipValue("tags-are-magic")),
-        searchText()
+        queryStr()
       );
 
-      const queryStr = "example +tag:tags-are-magic ";
+      const query = "example +tag:tags-are-magic ";
 
-      expect(docToCqlStr(queryDoc)).toBe(queryStr);
+      expect(docToCqlStr(queryDoc)).toBe(query);
     });
 
     test("should not prepend whitespace when the doc starts with a chip", () => {
       const queryDoc = doc(
-        searchText(""),
+        queryStr(""),
         chip(chipKey("tag"), chipValue("tags-are-magic")),
-        searchText()
+        queryStr()
       );
 
-      const queryStr = "+tag:tags-are-magic ";
+      const query = "+tag:tags-are-magic ";
 
-      expect(docToCqlStr(queryDoc)).toBe(queryStr);
+      expect(docToCqlStr(queryDoc)).toBe(query);
     });
 
     test("should join chips with a single whitespace", () => {
       const queryDoc = doc(
-        searchText(""),
+        queryStr(""),
         chip(chipKey("tag"), chipValue("tags-are-magic")),
         chip(chipKey("tag"), chipValue("tags-are-magic")),
-        searchText()
+        queryStr()
       );
 
-      const queryStr = "+tag:tags-are-magic +tag:tags-are-magic ";
+      const query = "+tag:tags-are-magic +tag:tags-are-magic ";
 
-      expect(docToCqlStr(queryDoc)).toBe(queryStr);
+      expect(docToCqlStr(queryDoc)).toBe(query);
     });
   });
 });

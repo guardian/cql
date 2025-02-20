@@ -21,7 +21,7 @@ template.innerHTML = `
       white-space: pre-wrap;
     }
 
-    search-text {
+    query-str {
       /* Ensure there's always space for input */
       display: inline-block;
       min-width: 5px;

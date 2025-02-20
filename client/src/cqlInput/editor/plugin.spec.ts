@@ -394,7 +394,7 @@ describe("plugin", () => {
   });
 
   describe("chip behaviour", () => {
-    it("should not de-chip text if the searchText between chips is removed", async () => {
+    it("should not de-chip text if the queryStr between chips is removed", async () => {
       const queryStr = "+tag:a b +tag:c";
       const { editor, moveCaretToQueryPos, waitFor } =
         createCqlEditor(queryStr);

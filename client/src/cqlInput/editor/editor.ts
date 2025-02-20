@@ -1,6 +1,6 @@
 import { EditorView } from "prosemirror-view";
 import { EditorState, Plugin } from "prosemirror-state";
-import { doc, schema, searchText } from "./schema";
+import { doc, schema, queryStr } from "./schema";
 import { baseKeymap } from "prosemirror-commands";
 import { undo, redo, history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
@@ -18,7 +18,7 @@ export const createEditorView = ({
   const view = new EditorView(mountEl, {
     state: EditorState.create({
       doc: doc.create(undefined, [
-        searchText.create(
+        queryStr.create(
           undefined,
           [initialValue !== "" ? [schema.text(initialValue)] : []].flat()
         ),

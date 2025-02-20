@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite",
     "build:page": "tsc && vite build",
-    "build:lib": "tsc -p ./tsconfig.lib.json && vite build --config vite.lib.config.ts",
+    "build:lib": "vite build --config vite.lib.config.ts && tsc -p ./tsconfig.lib.json",
     "test:debug": "bun test --inspect-wait=localhost:6499/vscode",
     "preview": "vite preview",
     "lint": "eslint ."
@@ -47,5 +47,6 @@
     "prosemirror-transform": "^1.10.0",
     "prosemirror-view": "^1.34.3"
   },
-  "module": "index.ts"
+  "module": "dist/lib.js",
+  "main": "dist/lib.js"
 }

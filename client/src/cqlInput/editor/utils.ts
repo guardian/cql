@@ -8,7 +8,7 @@ import {
   chipValue,
   doc,
   schema,
-  searchText,
+  queryStr,
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection, Transaction } from "prosemirror-state";
@@ -22,7 +22,7 @@ import { CqlResult } from "../../lang/Cql";
 
 const tokensToPreserve = ["CHIP_KEY", "CHIP_VALUE", "EOF"];
 
-const joinSearchTextTokens = (tokens: ProseMirrorToken[]) =>
+const joinqueryStrTokens = (tokens: ProseMirrorToken[]) =>
   tokens.reduce((acc, token) => {
     if (tokensToPreserve.includes(token.tokenType)) {
       return acc.concat(token);
@@ -64,15 +64,15 @@ const getQueryValueRanges = (
   [to, -1, 0],
 ];
 
-const getSearchTextRanges = (
+const getqueryStrRanges = (
   from: number,
   to: number
 ): [number, number, number][] => [
-  [from, -1, 0], // searchText begin (+1)
-  // If the searchText node has content, it will begin with whitespace in the
+  [from, -1, 0], // queryStr begin (+1)
+  // If the queryStr node has content, it will begin with whitespace in the
   // query, which pushes subsequent content forward one position. This cancels
-  // out searchText end (+1), so only add a mapping for the node end if the
-  // searchText node has content.
+  // out queryStr end (+1), so only add a mapping for the node end if the
+  // queryStr node has content.
   //
   // This is a slightly obscure solution to this problem - we could also use the
   // gaps between the token positions and the token literal length to account
@@ -97,36 +97,36 @@ const getSearchTextRanges = (
  *
  * is represented in ProseMirror as
  *
- *  <doc> <searchText> s t r </searchText> <chipWrapper> <chip> <chipKey> k </chipKey> <chipValue> v </chipValue> </chip> </chipWrapper> </doc>
+ *  <doc> <queryStr> s t r </queryStr> <chipWrapper> <chip> <chipKey> k </chipKey> <chipValue> v </chipValue> </chip> </chipWrapper> </doc>
  * |     |            | | | |             |             |      |         | |          |           | |            |       |              |      |
  * 0     1            2 3 4 5             6             7      8         9 10         11         12 13           14      15             16     17
  *
- * NB: This function will not fill out the searchText at the beginning or end of
+ * NB: This function will not fill out the queryStr at the beginning or end of
  * the document, relying on ProseMirror's schema to autofill missing nodes.
  */
 export const createProseMirrorTokenToDocumentMap = (
   tokens: ProseMirrorToken[]
 ) => {
   // We only distinguish between key/val tokens here – other tokens are universally
-  // represented as searchText. We join the other tokens into single ranges so we
+  // represented as queryStr. We join the other tokens into single ranges so we
   // can provide mappings for their node representation.
-  const compactedTokenRanges = joinSearchTextTokens(tokens);
+  const compactedTokenRanges = joinqueryStrTokens(tokens);
 
   const ranges = compactedTokenRanges.reduce<[number, number, number][]>(
     (accRanges, { tokenType, from, to }, index, tokens) => {
       switch (tokenType) {
         case "CHIP_KEY": {
           // If this field is at the start of the document, or preceded by a
-          // field value, the editor will add a searchText node to conform to
-          // the schema, so we add a searchText mapping to account for the
+          // field value, the editor will add a queryStr node to conform to
+          // the schema, so we add a queryStr mapping to account for the
           // additional node.
           const previousToken = tokens[index - 1];
-          const shouldAddSearchTextMapping =
+          const shouldAddqueryStrMapping =
             previousToken?.tokenType === "CHIP_VALUE" || index === 0;
 
           return accRanges.concat(
-            ...(shouldAddSearchTextMapping
-              ? getSearchTextRanges(previousToken?.to, previousToken?.to)
+            ...(shouldAddqueryStrMapping
+              ? getqueryStrRanges(previousToken?.to, previousToken?.to)
               : []),
             getCqlFieldKeyRange(from)
           );
@@ -135,7 +135,7 @@ export const createProseMirrorTokenToDocumentMap = (
           return accRanges.concat(...getQueryValueRanges(from, to));
         }
         default: {
-          return accRanges.concat(...getSearchTextRanges(from, to));
+          return accRanges.concat(...getqueryStrRanges(from, to));
         }
       }
     },
@@ -162,7 +162,7 @@ export const mapTokens = (tokens: ProseMirrorToken[]): ProseMirrorToken[] => {
  * Create a ProseMirror document from an array of ProseMirrorTokens.
  */
 export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
-  const nodes = joinSearchTextTokens(_tokens).reduce<Node[]>(
+  const nodes = joinqueryStrTokens(_tokens).reduce<Node[]>(
     (acc, token, index, tokens): Node[] => {
       switch (token.tokenType) {
         case "CHIP_KEY": {
@@ -175,7 +175,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             previousToken?.tokenType === "CHIP_VALUE" ||
             previousToken?.tokenType === "CHIP_KEY";
           return acc.concat(
-            ...(isPrecededByChip ? [searchText.create()] : []),
+            ...(isPrecededByChip ? [queryStr.create()] : []),
 
             chip.create(undefined, [
               chipKey.create(
@@ -194,33 +194,33 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           const previousNode = acc[acc.length - 1];
           if (
             previousToken?.to < token.from &&
-            previousNode.type === searchText
+            previousNode.type === queryStr
           ) {
-            // If there is a gap between the previous searchText token and EOF,
+            // If there is a gap between the previous queryStr token and EOF,
             // there is whitespace at the end of the query – preserve at most
             // one char to allow users to continue the query
             return acc
               .slice(0, acc.length - 1)
               .concat(
-                searchText.create(
+                queryStr.create(
                   undefined,
                   schema.text(previousNode.textContent + " ")
                 )
               );
           }
 
-          if (previousNode?.type !== searchText) {
-            // Always end with a searchText node
-            return acc.concat(searchText.create());
+          if (previousNode?.type !== queryStr) {
+            // Always end with a queryStr node
+            return acc.concat(queryStr.create());
           }
 
           return acc;
         }
-        // All other tokens become searchText
+        // All other tokens become queryStr
         default: {
           // Ignore chip values if they are preceded by keys - they will be
           // taken care of in the "CHIP_KEY" case above. If not, interpret them
-          // as searchText, so we can display them as text in the input.
+          // as queryStr, so we can display them as text in the input.
           const previousToken = tokens[index - 1];
           if (
             token.tokenType === "CHIP_VALUE" &&
@@ -245,12 +245,12 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           const leadingWhitespace = " ".repeat(prevToken ? 0 : token.from);
 
           const previousNode = acc[acc.length - 1];
-          if (previousNode?.type === searchText) {
-            // Join consecutive searchText nodes
+          if (previousNode?.type === queryStr) {
+            // Join consecutive queryStr nodes
             return acc
               .slice(0, acc.length - 1)
               .concat(
-                searchText.create(
+                queryStr.create(
                   undefined,
                   schema.text(
                     leadingWhitespace +
@@ -263,7 +263,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           }
 
           return acc.concat(
-            searchText.create(
+            queryStr.create(
               undefined,
               schema.text(leadingWhitespace + token.lexeme + trailingWhitespace)
             )
@@ -271,8 +271,8 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
         }
       }
     },
-    // Our document always starts with an empty searchText node
-    [searchText.create()]
+    // Our document always starts with an empty queryStr node
+    [queryStr.create()]
   );
 
   return doc.create(undefined, nodes);
@@ -300,7 +300,7 @@ export const docToCqlStr = (doc: Node) => {
 
   doc.descendants((node) => {
     switch (node.type.name) {
-      case "searchText": {
+      case "queryStr": {
         str += node.textContent;
         return false;
       }
@@ -429,7 +429,7 @@ export const mapResult = (result: CqlResult) => {
 // The sequences of nodes to move the caret to after a typeahead selection is
 // made, e.g. when a typeahead value is inserted for a chipKey, move the caret
 // to the next chipValue.
-const typeaheadSelectionSequence = [chipKey, chipValue, searchText];
+const typeaheadSelectionSequence = [chipKey, chipValue, queryStr];
 
 export const getNextPositionAfterTypeaheadSelection = (
   currentDoc: Node,
@@ -499,7 +499,7 @@ export const applyDeleteIntent = (
     // The caret belongs before the deleted chip
     const insertAt = Math.max(0, from - 1);
     tr.deleteRange(from, to)
-      // Ensure whitespace separates the two searchText nodes surrounding the
+      // Ensure whitespace separates the two queryStr nodes surrounding the
       // chip, which are now joined
       .insertText(" ", insertAt)
       .setSelection(TextSelection.create(tr.doc, insertAt));

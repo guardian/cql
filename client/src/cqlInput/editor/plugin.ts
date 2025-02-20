@@ -420,8 +420,8 @@ export const createCqlPlugin = ({
           case "Delete": {
             // Look forward for node
             const { anchor } = view.state.selection;
-            const positionAfterSearchText = Math.max(anchor + 1, 0);
-            const $nextPos = view.state.doc.resolve(positionAfterSearchText);
+            const positionAfterqueryStr = Math.max(anchor + 1, 0);
+            const $nextPos = view.state.doc.resolve(positionAfterqueryStr);
             const nextNode = $nextPos.nodeAfter;
 
             if (!nextNode) {
@@ -438,8 +438,8 @@ export const createCqlPlugin = ({
           case "Backspace": {
             // Look backward for node
             const { anchor } = view.state.selection;
-            const positionBeforeSearchText = Math.max(anchor - 1, 0);
-            const $prevPos = view.state.doc.resolve(positionBeforeSearchText);
+            const positionBeforequeryStr = Math.max(anchor - 1, 0);
+            const $prevPos = view.state.doc.resolve(positionBeforequeryStr);
             const prevNode = $prevPos.nodeBefore;
 
             if (!prevNode) {

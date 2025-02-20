@@ -1,7 +1,7 @@
 type BaseSuggestion = {
   readonly from: number;
   readonly to: number;
-  readonly position: "searchText" | "chipKey" | "chipValue";
+  readonly position: "queryStr" | "chipKey" | "chipValue";
 
   // The suffix to apply if this suggestion is accepted at the trailing edge of the query.
   // E.g. when we have typed '+ta' accept the key suggestion 'tag', we'll want to apply '+tag:'
