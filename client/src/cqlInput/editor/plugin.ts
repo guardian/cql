@@ -57,7 +57,7 @@ export type CqlError = {
 type PluginState = {
   tokens: ProseMirrorToken[];
   queryStr: string;
-  query: CqlQuery | undefined;
+  queryAst: CqlQuery | undefined;
   error: CqlError | undefined;
   mapping: Mapping;
 };
@@ -128,20 +128,14 @@ export const createCqlPlugin = ({
     const queryBeforeParse = docToCqlStr(tr.doc);
 
     const result = parseCqlStr(queryBeforeParse);
-    const {
-      tokens,
-      query: ast,
-      error,
-      mapping,
-      queryResult,
-    } = mapResult(result);
+    const { tokens, queryAst, error, mapping, queryStr } = mapResult(result);
 
     const newDoc = tokensToDoc(tokens);
     const queryAfterParse = docToCqlStr(newDoc); // The document may have changed as a result of the parse.
 
     if (debugASTContainer) {
       debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
-        ast,
+        queryAst,
         undefined,
         "  "
       )}</div>`;
@@ -161,9 +155,9 @@ export const createCqlPlugin = ({
             <p>Tokenises to:</p>
             ${getDebugTokenHTML(result.tokens)}
             ${
-              result.query
+              result.queryAst
                 ? `<p>AST: </p>
-            ${getDebugASTHTML(result.query)}`
+            ${getDebugASTHTML(result.queryAst)}`
                 : ""
             }
             <p>Maps to nodes: </p>
@@ -186,14 +180,14 @@ export const createCqlPlugin = ({
     tr.setMeta(ACTION_NEW_STATE, {
       tokens,
       error,
-      query: ast,
+      queryAst,
       mapping,
       queryStr: queryAfterParse,
     });
 
     applyReadOnlyChipKeys(tr);
 
-    return { queryResult, tr };
+    return { queryStr: queryStr ?? "", queryAst, tr };
   };
 
   return new Plugin<PluginState>({
@@ -206,7 +200,7 @@ export const createCqlPlugin = ({
           suggestions: [],
           mapping: new Mapping(),
           queryStr,
-          query: parseCqlStr(queryStr).query,
+          queryAst: parseCqlStr(queryStr).queryAst,
           error: undefined,
         };
       },
@@ -242,15 +236,8 @@ export const createCqlPlugin = ({
       const maybeQueries = queryHasChanged(oldState.doc, newState.doc);
 
       if (maybeQueries) {
-        const { queryResult, tr: newTr } = applyQueryToTr(newState.tr);
-
+        const { tr: newTr } = applyQueryToTr(newState.tr);
         tr = newTr;
-
-        // @todo: this does not really belong here! Possibly in view? (Side effect)
-        onChange({
-          cqlQuery: docToCqlStr(tr.doc),
-          query: queryResult ?? "",
-        });
       }
 
       // If the selection has changed, reset any chips that are pending delete
@@ -420,8 +407,8 @@ export const createCqlPlugin = ({
           case "Delete": {
             // Look forward for node
             const { anchor } = view.state.selection;
-            const positionAfterqueryStr = Math.max(anchor + 1, 0);
-            const $nextPos = view.state.doc.resolve(positionAfterqueryStr);
+            const positionAfterSearchText = Math.max(anchor + 1, 0);
+            const $nextPos = view.state.doc.resolve(positionAfterSearchText);
             const nextNode = $nextPos.nodeAfter;
 
             if (!nextNode) {
@@ -438,8 +425,8 @@ export const createCqlPlugin = ({
           case "Backspace": {
             // Look backward for node
             const { anchor } = view.state.selection;
-            const positionBeforequeryStr = Math.max(anchor - 1, 0);
-            const $prevPos = view.state.doc.resolve(positionBeforequeryStr);
+            const positionBeforeSearchText = Math.max(anchor - 1, 0);
+            const $prevPos = view.state.doc.resolve(positionBeforeSearchText);
             const prevNode = $prevPos.nodeBefore;
 
             if (!prevNode) {
@@ -516,21 +503,28 @@ export const createCqlPlugin = ({
       );
 
       // Set up initial document with parsed query
-
-      const { tr, queryResult } = applyQueryToTr(view.state.tr);
-
+      const { tr, queryStr, queryAst } = applyQueryToTr(view.state.tr);
       view.dispatch(tr);
+
       onChange({
-        cqlQuery: docToCqlStr(tr.doc),
-        query: queryResult ?? "",
+        queryStr,
+        queryAst,
       });
 
       return {
         async update(view) {
-          const { error, query, mapping } = cqlPluginKey.getState(view.state)!;
+          const { error, queryAst, queryStr, mapping } = cqlPluginKey.getState(
+            view.state
+          )!;
 
           errorPopover?.updateErrorMessage(error);
-          if (!query) {
+
+          onChange({
+            queryStr,
+            queryAst,
+          });
+
+          if (!queryAst) {
             return;
           }
 
@@ -541,7 +535,7 @@ export const createCqlPlugin = ({
           }
 
           try {
-            const suggestions = await typeahead.getSuggestions(query);
+            const suggestions = await typeahead.getSuggestions(queryAst);
             const mappedSuggestions = toMappedSuggestions(suggestions, mapping);
             typeaheadPopover?.updateItemsFromSuggestions(mappedSuggestions);
 

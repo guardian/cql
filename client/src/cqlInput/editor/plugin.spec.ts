@@ -50,7 +50,7 @@ const createCqlEditor = (initialQuery: string = "") => {
     errorEl,
     errorMsgEl,
     config: { syntaxHighlighting: true },
-    onChange: ({ cqlQuery }) => dispatch(cqlQuery),
+    onChange: ({ queryStr: cqlQuery }) => dispatch(cqlQuery),
   });
 
   const queryToProseMirrorTokens = (query: string) => {

@@ -301,7 +301,8 @@ export const createCqlInput = (
       const errorMsgEl = shadow.getElementById(cqlErrorMsgId)!;
 
       const onChange = (detail: QueryChangeEventDetail) => {
-        this.value = detail.cqlQuery;
+        console.log(detail)
+        this.value = detail.queryStr;
         this.dispatchEvent(
           new CustomEvent("queryChange", {
             detail,

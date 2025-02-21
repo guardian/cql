@@ -295,7 +295,7 @@ export const tokensToDecorations = (
     );
 };
 
-export const docToCqlStr = (doc: Node) => {
+export const docToCqlStr = (doc: Node): string => {
   let str: string = "";
 
   doc.descendants((node) => {

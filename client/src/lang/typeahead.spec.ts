@@ -9,7 +9,7 @@ describe("typeahead", () => {
   const typeahead = new Typeahead(typeaheadQueryClient.typeaheadFields);
 
   const getSuggestions = async (query: string) =>
-    await typeahead.getSuggestions(parseCqlStr(query).query!);
+    await typeahead.getSuggestions(parseCqlStr(query).queryAst!);
 
   it("should give all options for empty queryFields", async () => {
     expect(await getSuggestions("")).toEqual([]);

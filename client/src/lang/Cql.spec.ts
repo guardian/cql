@@ -9,29 +9,29 @@ describe("a query", () => {
 
   it("should produce a query string", () => {
     const cqlResult = parseCqlStr("+section:commentisfree");
-    expect(cqlResult.queryResult).toBe("section=commentisfree");
+    expect(cqlResult.queryStr).toBe("section=commentisfree");
   });
 
   it("should combine bare strings and search params", () => {
     const cqlResult = parseCqlStr("marina +section:commentisfree");
-    expect(cqlResult.queryResult).toBe("q=marina&section=commentisfree");
+    expect(cqlResult.queryStr).toBe("q=marina&section=commentisfree");
   });
 
   it("should combine quoted strings and search params", () => {
     const cqlResult = parseCqlStr('"marina" +section:commentisfree');
-    expect(cqlResult.queryResult).toBe("q=marina&section=commentisfree");
+    expect(cqlResult.queryStr).toBe("q=marina&section=commentisfree");
   });
 
   it("should permit boolean operations", () => {
     const cqlResult = parseCqlStr('"marina" AND hyde +section:commentisfree');
-    expect(cqlResult.queryResult).toBe(
+    expect(cqlResult.queryStr).toBe(
       "q=marina%20AND%20hyde&section=commentisfree"
     );
   });
 
   it("should permit field queries", () => {
     const cqlResult = parseCqlStr("+tag:example");
-    expect(cqlResult.queryResult).toBe("tag=example");
+    expect(cqlResult.queryStr).toBe("tag=example");
   });
 
   it("should permit groups - 1", () => {
@@ -39,14 +39,14 @@ describe("a query", () => {
       '"marina" (hyde OR abramovic) +section:commentisfree'
     );
 
-    expect(cqlResult.queryResult).toBe(
+    expect(cqlResult.queryStr).toBe(
       "q=marina%20OR%20(hyde%20OR%20abramovic)&section=commentisfree"
     );
   });
 
   it("should permit groups - 2", () => {
     const cqlResult = parseCqlStr("(hyde OR abramovic) +section:commentisfree");
-    expect(cqlResult.queryResult).toBe(
+    expect(cqlResult.queryStr).toBe(
       "q=(hyde%20OR%20abramovic)&section=commentisfree"
     );
   });
@@ -67,21 +67,21 @@ describe("a query", () => {
 
     it("should not change absolute dates", () => {
       const cqlResult = parseCqlStr("+from-date:1987-12-01");
-      expect(cqlResult.queryResult).toBe("from-date=1987-12-01");
+      expect(cqlResult.queryStr).toBe("from-date=1987-12-01");
     });
 
     it("should parse relative dates into absolute dates — past dates", () => {
       const cqlResult = parseCqlStr("+from-date:-1d");
       const expectedDateStr = addDaysToSystemTimeAsISODate(-1);
 
-      expect(cqlResult.queryResult).toBe(`from-date=${expectedDateStr}`);
+      expect(cqlResult.queryStr).toBe(`from-date=${expectedDateStr}`);
     });
 
     it("should parse relative dates into absolute dates — future dates", () => {
       const cqlResult = parseCqlStr("+from-date:+1d");
       const expectedDateStr = addDaysToSystemTimeAsISODate(1);
 
-      expect(cqlResult.queryResult).toBe(`from-date=${expectedDateStr}`);
+      expect(cqlResult.queryStr).toBe(`from-date=${expectedDateStr}`);
     });
   });
 });

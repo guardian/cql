@@ -7,16 +7,16 @@ import { Token } from "./token";
 
 export interface CqlResult {
   tokens: Token[];
-  query?: CqlQuery;
-  queryResult?: string;
+  queryAst?: CqlQuery;
+  queryStr?: string;
   error?: Error;
 }
 
 export class CqlResultEnvelope implements CqlResult {
   constructor(
     public tokens: Token[],
-    public query?: CqlQuery,
-    public queryResult?: string,
+    public queryAst?: CqlQuery,
+    public queryStr?: string,
     public error?: Error
   ) {}
 }

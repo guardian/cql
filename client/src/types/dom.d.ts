@@ -1,12 +1,13 @@
 import { QueryChangeEventDetail } from "../cqlInput/CqlInput";
+import { CqlQuery } from "../lang/ast";
 
 export type QueryChangeEventDetail = {
-  cqlQuery: string;
-  query: string;
+  queryStr: string;
+  queryAst?: CqlQuery;
 };
 
 declare global {
   interface GlobalEventHandlersEventMap {
-    "queryChange": CustomEvent<QueryChangeEventDetail>;
+    queryChange: CustomEvent<QueryChangeEventDetail>;
   }
 }
