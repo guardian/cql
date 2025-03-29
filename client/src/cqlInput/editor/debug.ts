@@ -178,13 +178,9 @@ export const getDebugMappingHTML = (
     )
     .join("");
 
-  nodeDiagram += `
-    </div>
-  </div>`;
+  nodeDiagram += `</div></div>`;
 
   return nodeDiagram;
-
-  //  return `<div class="CqlDebug__mapping">${queryDiagram}${nodeDiagram}</div>`;
 };
 
 export const getDebugASTHTML = (query: CqlQuery) => {
