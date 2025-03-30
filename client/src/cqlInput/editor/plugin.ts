@@ -88,6 +88,7 @@ export const createCqlPlugin = ({
     syntaxHighlighting,
     debugEl,
     renderPopoverContent = defaultPopoverRenderer,
+    lang
   },
 }: {
   typeahead: Typeahead;
@@ -127,7 +128,7 @@ export const createCqlPlugin = ({
   const applyQueryToTr = (tr: Transaction) => {
     const queryBeforeParse = docToCqlStr(tr.doc);
 
-    const result = parseCqlStr(queryBeforeParse);
+    const result = parseCqlStr(queryBeforeParse, lang);
     const { tokens, queryAst, error, mapping, queryStr } = mapResult(result);
 
     const newDoc = tokensToDoc(tokens);

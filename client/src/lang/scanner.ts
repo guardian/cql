@@ -1,10 +1,11 @@
+import { mergeDeep } from "../utils/merge";
 import { Token, TokenType } from "./token";
 import { isLetterOrDigit, isWhitespace } from "./utils";
 
-export type ScannerSettings = Partial<{
+export type ScannerSettings = {
   groups: boolean;
   operators: boolean;
-}>;
+};
 
 const defaultScannerSettings: ScannerSettings = {
   groups: true,
@@ -16,11 +17,14 @@ export class Scanner {
   private start = 0;
   private current = 0;
   private line = 1;
+  private settings: Partial<ScannerSettings>;
 
   constructor(
     private program: string,
-    private settings: ScannerSettings = defaultScannerSettings
-  ) {}
+    settings: Partial<ScannerSettings> = {}
+  ) {
+    this.settings = mergeDeep(settings, defaultScannerSettings);
+  }
 
   public scanTokens = (): Token[] => {
     while (!this.isAtEnd()) {

@@ -2,7 +2,7 @@ import { either, Result } from "../utils/result";
 import { CqlQuery } from "./ast";
 import { queryStrFromQueryList } from "./capiQueryString";
 import { Parser } from "./parser";
-import { Scanner } from "./scanner";
+import { Scanner, ScannerSettings } from "./scanner";
 import { Token } from "./token";
 
 export interface CqlResult {
@@ -21,8 +21,8 @@ export class CqlResultEnvelope implements CqlResult {
   ) {}
 }
 
-export const parseCqlStr = (queryStr: string) => {
-  const scanner = new Scanner(queryStr);
+export const parseCqlStr = (queryStr: string, scannerSettings?: Partial<ScannerSettings>) => {
+  const scanner = new Scanner(queryStr, scannerSettings);
   const tokens = scanner.scanTokens();
   const parser = new Parser(tokens);
   const result = parser.parse();

@@ -44,6 +44,9 @@ const capiTypeahead = new Typeahead(typeaheadHelpersCapi.typeaheadFields);
 const CqlInputCapi = createCqlInput(capiTypeahead, {
   debugEl,
   syntaxHighlighting: true,
+  lang: {
+    groups: false
+  }
 });
 
 const guToolsTypeaheadFields: TypeaheadField[] = [

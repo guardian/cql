@@ -8,6 +8,7 @@ import {
 } from "./popover/TypeaheadPopover";
 import { Typeahead } from "../lang/typeahead";
 import { applyPartialTheme, CqlTheme } from "./theme";
+import { ScannerSettings } from "../lang/scanner";
 
 export const contentEditableTestId = "cql-input-contenteditable";
 export const typeaheadTestId = "cql-input-typeahead";
@@ -19,6 +20,7 @@ export type CqlConfig = {
   debugEl?: HTMLElement;
   renderPopoverContent?: RenderPopoverContent;
   theme?: Partial<CqlTheme>;
+  lang?: Partial<ScannerSettings>;
 };
 
 export const createCqlInput = (
@@ -26,6 +28,7 @@ export const createCqlInput = (
   config: CqlConfig = {
     syntaxHighlighting: true,
     theme: {},
+    lang: {},
   }
 ) => {
   class CqlInput extends HTMLElement {
@@ -40,7 +43,7 @@ export const createCqlInput = (
       const cqlTypeaheadId = "cql-typeahead";
       const cqlErrorId = "cql-error";
       const cqlErrorMsgId = "cql-error-msg";
-      const shadow = this.attachShadow({ mode: "open" });
+      const shadow = this.attachShadow({ mode: "closed" });
 
       shadow.innerHTML = `
         <div id="${cqlInputId}" spellcheck="false"></div>
@@ -137,6 +140,7 @@ export const createCqlInput = (
             display: block;
             position: relative;
             font-size: ${baseFontSize}px;
+            line-height: initial;
           }
 
           .Cql__ContentEditable {
