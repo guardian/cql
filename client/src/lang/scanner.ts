@@ -1,13 +1,26 @@
 import { Token, TokenType } from "./token";
 import { isLetterOrDigit, isWhitespace } from "./utils";
 
+export type ScannerSettings = Partial<{
+  groups: boolean;
+  operators: boolean;
+}>;
+
+const defaultScannerSettings: ScannerSettings = {
+  groups: true,
+  operators: true,
+};
+
 export class Scanner {
   private tokens: Array<Token> = [];
   private start = 0;
   private current = 0;
   private line = 1;
 
-  constructor(private program: string) {}
+  constructor(
+    private program: string,
+    private settings: ScannerSettings = defaultScannerSettings
+  ) {}
 
   public scanTokens = (): Token[] => {
     while (!this.isAtEnd()) {
@@ -30,10 +43,18 @@ export class Scanner {
         this.addValue();
         return;
       case "(":
-        this.addToken(TokenType.LEFT_BRACKET);
+        if (this.settings.groups) {
+          this.addToken(TokenType.LEFT_BRACKET);
+        } else {
+          this.addIdentifierOrUnquotedString();
+        }
         return;
       case ")":
-        this.addToken(TokenType.RIGHT_BRACKET);
+        if (this.settings.groups) {
+          this.addToken(TokenType.RIGHT_BRACKET);
+        } else {
+          this.addIdentifierOrUnquotedString();
+        }
         return;
       case " ":
         return;
@@ -80,7 +101,7 @@ export class Scanner {
     const maybeReservedWord =
       Token.reservedWordMap[text as keyof typeof Token.reservedWordMap];
 
-    return maybeReservedWord
+    return maybeReservedWord && this.settings.operators
       ? this.addToken(maybeReservedWord)
       : this.addUnquotedString();
   };

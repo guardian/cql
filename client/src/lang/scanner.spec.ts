@@ -171,4 +171,29 @@ describe("scanner", () => {
       expect(tokens).toEqual(expectedTokens);
     });
   });
+
+  describe.only("settings", () => {
+    it("should disable groups, interpreting parentheses as strings", () => {
+      const scanner = new Scanner("(two)", { groups: false });
+      const tokens = scanner.scanTokens();
+      const expectedTokens = [
+        unquotedStringToken("(two", 0),
+        unquotedStringToken(")", 4),
+        eofToken(5),
+      ];
+      expect(tokens).toEqual(expectedTokens);
+    });
+
+    it("should disable operators, interpreting them as strings", () => {
+      const scanner = new Scanner("this AND that", { operators: false });
+      const tokens = scanner.scanTokens();
+      const expectedTokens = [
+        unquotedStringToken("this", 0),
+        unquotedStringToken("AND", 5),
+        unquotedStringToken("that", 9),
+        eofToken(13),
+      ];
+      expect(tokens).toEqual(expectedTokens);
+    });
+  });
 });
