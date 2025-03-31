@@ -4,7 +4,7 @@ import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
 import { createCqlPlugin } from "./plugin";
 import { redo, undo } from "prosemirror-history";
-import { bottomOfLine, topOfLine } from "./commands";
+import { endOfLine, startOfLine } from "./commands";
 import { keymap } from "prosemirror-keymap";
 import {
   createProseMirrorTokenToDocumentMap,
@@ -82,8 +82,8 @@ const createCqlEditor = (initialQuery: string = "") => {
       keymap({
         "Mod-z": undo,
         "Mod-y": redo,
-        "Ctrl-a": topOfLine,
-        "Ctrl-e": bottomOfLine,
+        "Ctrl-a": startOfLine,
+        "Ctrl-e": endOfLine,
       }),
     ],
   });

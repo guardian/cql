@@ -4,7 +4,7 @@ import { doc, schema, queryStr } from "./schema";
 import { baseKeymap } from "prosemirror-commands";
 import { undo, redo, history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
-import { bottomOfLine, topOfLine } from "./commands";
+import { endOfLine, startOfLine } from "./commands";
 
 export const createEditorView = ({
   initialValue = "",
@@ -30,12 +30,12 @@ export const createEditorView = ({
           ...baseKeymap,
           "Mod-z": undo,
           "Mod-y": redo,
-          "Mod-ArrowLeft": topOfLine,
-          "Ctrl-a": topOfLine,
-          Home: topOfLine,
-          "Mod-ArrowRight": bottomOfLine,
-          "Ctrl-e": bottomOfLine,
-          End: bottomOfLine,
+          "Mod-ArrowLeft": startOfLine,
+          "Ctrl-a": startOfLine,
+          Home: startOfLine,
+          "Mod-ArrowRight": endOfLine,
+          "Ctrl-e": endOfLine,
+          End: endOfLine,
         }),
         history(),
       ],
