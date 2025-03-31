@@ -365,6 +365,10 @@
       .CqlToken__LEFT_BRACKET {
         color: lightpink;
       }
+
+      .Cql__ContentEditable.ProseMirror-focused {
+        outline: 2px solid lightblue;
+      }
     </style>
   </head>
   <body>
@@ -406,6 +410,7 @@
           id="cql-input"
           popover-container-id="popover-container"
         ></cql-input-capi>
+        <div id="error"></div>
       </div>
       <p>Press <tt>+</tt> to select a specific field to search.</p>
       <p>

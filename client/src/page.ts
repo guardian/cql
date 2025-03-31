@@ -4,6 +4,7 @@ import { CapiTypeaheadProvider } from "./typeahead/CapiTypeaheadHelpers.ts";
 import { Typeahead, TypeaheadField } from "./lang/typeahead.ts";
 import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
 import { parseCqlStr } from "./lang/Cql.ts";
+import { QueryChangeEventDetail } from "./types/dom";
 
 const debugEl = document.createElement("div");
 debugEl.className = "CqlSandbox__debug-container";
@@ -21,14 +22,18 @@ const cqlInputContainer = document.getElementById("cql-input-container")!;
 const cqlInput = document.getElementById("cql-input")!;
 const cqlEl = document.getElementById("cql")!;
 const queryEl = document.getElementById("query")!;
+const errorEl = document.getElementById("error")!;
 dataSourceSelect.addEventListener("change", (e: Event) => {
   const source = (e.target as HTMLSelectElement).value;
   const inputHtmlTagValue = dataSourceMap[source];
   cqlInputContainer.innerHTML = `<${inputHtmlTagValue} initial-value="" id="${source}" popover-container-id="popover-container"></${inputHtmlTagValue}>`;
 });
-cqlInput?.addEventListener("queryChange", ((e: CustomEvent) => {
-  queryEl.innerHTML = e.detail.queryStr;
-  cqlEl.innerHTML = e.detail.queryStr.replaceAll(" ", "·");
+cqlInput?.addEventListener("queryChange", ((
+  e: CustomEvent<QueryChangeEventDetail>
+) => {
+  queryEl.innerHTML = e.detail.queryStr ?? "";
+  cqlEl.innerHTML = e.detail.queryStr?.replaceAll(" ", "·") ?? "";
+  errorEl.innerHTML = e.detail.error ?? "";
 }) as EventListener);
 
 const params = new URLSearchParams(window.location.search);
@@ -45,8 +50,8 @@ const CqlInputCapi = createCqlInput(capiTypeahead, {
   debugEl,
   syntaxHighlighting: true,
   lang: {
-    groups: false
-  }
+    groups: false,
+  },
 });
 
 const guToolsTypeaheadFields: TypeaheadField[] = [

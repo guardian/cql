@@ -10,7 +10,6 @@ export class ErrorPopover extends Popover {
   public constructor(
     protected view: EditorView,
     protected popoverEl: HTMLElement,
-    private errorMsgEl: HTMLElement,
     debugEl?: HTMLElement,
     private debounceTime = 500
   ) {
@@ -51,17 +50,12 @@ export class ErrorPopover extends Popover {
     clearTimeout(this.visibilityTimeout);
 
     this.contentEl.innerHTML = "";
-    this.errorMsgEl.innerHTML = "";
-    this.errorMsgEl.classList.remove(CLASS_VISIBLE);
     this.popoverEl.classList.remove(CLASS_VISIBLE);
     this.hide();
   };
 
   private debouncedShowErrorMessages = (error: CqlError) => {
     this.visibilityTimeout = setTimeout(() => {
-      this.errorMsgEl.innerHTML = error.message;
-      this.errorMsgEl.classList.add(CLASS_VISIBLE);
-
       if (error.position !== undefined) {
         this.popoverEl.classList.add(CLASS_VISIBLE);
 

@@ -82,19 +82,17 @@ export const createCqlPlugin = ({
   typeahead,
   typeaheadEl,
   errorEl,
-  errorMsgEl,
   onChange,
   config: {
     syntaxHighlighting,
     debugEl,
     renderPopoverContent = defaultPopoverRenderer,
-    lang
+    lang,
   },
 }: {
   typeahead: Typeahead;
   typeaheadEl: HTMLElement;
   errorEl: HTMLElement;
-  errorMsgEl: HTMLElement;
   config: CqlConfig;
   onChange: (detail: QueryChangeEventDetail) => void;
 }) => {
@@ -496,12 +494,7 @@ export const createCqlPlugin = ({
         renderPopoverContent
       );
 
-      errorPopover = new ErrorPopover(
-        view,
-        errorEl,
-        errorMsgEl,
-        jsonDebugContainer
-      );
+      errorPopover = new ErrorPopover(view, errorEl, jsonDebugContainer);
 
       // Set up initial document with parsed query
       const { tr, queryStr, queryAst } = applyQueryToTr(view.state.tr);
@@ -523,6 +516,7 @@ export const createCqlPlugin = ({
           onChange({
             queryStr,
             queryAst,
+            error: error?.message,
           });
 
           if (!queryAst) {

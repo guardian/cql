@@ -94,7 +94,7 @@ export const TextSuggestionContent = ({
                   )}
                 </div>
                 {showValue && <div class="Cql__OptionValue">{value}</div>}
-                {showDescription && description && (
+                {showDescription && (description?.length ?? 0) > 0 && (
                   <div class="Cql__OptionDescription">{description}</div>
                 )}
               </div>

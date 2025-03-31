@@ -48,7 +48,6 @@ const createCqlEditor = (initialQuery: string = "") => {
     typeahead: testCqlService,
     typeaheadEl,
     errorEl,
-    errorMsgEl,
     config: { syntaxHighlighting: true },
     onChange: ({ queryStr: cqlQuery }) => dispatch(cqlQuery),
   });

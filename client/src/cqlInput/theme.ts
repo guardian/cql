@@ -1,16 +1,20 @@
 import { mergeDeep } from "../utils/merge";
 
 export type CqlTheme = {
-  baseFontSize: number;
-  baseBorderRadius: number;
-  colors: {
-    input: {
-      outlineFocused: string;
+  baseFontSize: string;
+  baseBorderRadius: string;
+  input: {
+    layout: {
+      padding: string;
     };
-    chipWrapper: {
+  };
+  chipWrapper: {
+    colors: {
       background: string;
     };
-    tokens: {
+  };
+  tokens: {
+    colors: {
       STRING: string;
       AND: string;
       OR: string;
@@ -21,16 +25,21 @@ export type CqlTheme = {
 };
 
 const defaultTheme: CqlTheme = {
-  baseFontSize: 28,
-  baseBorderRadius: 5,
-  colors: {
-    input: {
-      outlineFocused: "lightblue",
+  baseFontSize: "28px",
+  baseBorderRadius: "5px",
+
+  input: {
+    layout: {
+      padding: "5px",
     },
-    chipWrapper: {
+  },
+  chipWrapper: {
+    colors: {
       background: "rgba(255,255,255,0.2)",
     },
-    tokens: {
+  },
+  tokens: {
+    colors: {
       STRING: "lightblue",
       AND: "magenta",
       OR: "magenta",

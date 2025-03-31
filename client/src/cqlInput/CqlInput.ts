@@ -42,14 +42,12 @@ export const createCqlInput = (
       const cqlInputId = "cql-input";
       const cqlTypeaheadId = "cql-typeahead";
       const cqlErrorId = "cql-error";
-      const cqlErrorMsgId = "cql-error-msg";
       const shadow = this.attachShadow({ mode: "closed" });
 
       shadow.innerHTML = `
         <div id="${cqlInputId}" spellcheck="false"></div>
         <div id="${cqlTypeaheadId}" class="Cql__TypeaheadPopoverContainer" data-testid="${typeaheadTestId}" popover></div>
         <div id="${cqlErrorId}" class="Cql__ErrorPopover" data-testid="${errorTestId}" popover></div>
-        <div id="${cqlErrorMsgId}" class="Cql__ErrorMessageContainer" data-testid="${errorMsgTestId}"></div>
       `;
 
       const template = this.createTemplate(config.theme ?? {});
@@ -58,7 +56,6 @@ export const createCqlInput = (
       const cqlInput = shadow.getElementById(cqlInputId)!;
       const typeaheadEl = shadow.getElementById(cqlTypeaheadId)!;
       const errorEl = shadow.getElementById(cqlErrorId)!;
-      const errorMsgEl = shadow.getElementById(cqlErrorMsgId)!;
 
       const onChange = (detail: QueryChangeEventDetail) => {
         this.value = detail.queryStr;
@@ -73,7 +70,6 @@ export const createCqlInput = (
         typeahead,
         typeaheadEl,
         errorEl,
-        errorMsgEl,
         onChange,
         config,
       });
@@ -93,7 +89,7 @@ export const createCqlInput = (
     }
 
     public createTemplate(partialTheme: Partial<CqlTheme>) {
-      const { colors, baseBorderRadius, baseFontSize } =
+      const { input, tokens, chipWrapper, baseBorderRadius, baseFontSize } =
         applyPartialTheme(partialTheme);
       const template = document.createElement("template");
       template.innerHTML = `
@@ -114,7 +110,7 @@ export const createCqlInput = (
 
           chip-wrapper {
             display: inline-flex;
-            background-color: ${colors.chipWrapper.background};
+            background-color: ${chipWrapper.colors.background};
             margin: 0 5px;
             border-radius: ${baseBorderRadius}px;
           }
@@ -132,7 +128,7 @@ export const createCqlInput = (
             padding-right: 5px;
           }
 
-          ${Object.entries(colors.tokens)
+          ${Object.entries(tokens.colors)
             .map(([token, color]) => `.CqlToken__${token} { color: ${color}; }`)
             .join("\n")}
 
@@ -144,13 +140,12 @@ export const createCqlInput = (
           }
 
           .Cql__ContentEditable {
-            padding: 5px;
-            outline: 2px solid grey;
+            padding: ${input.layout.padding};
             border-radius: ${baseBorderRadius}px;
           }
 
-          .Cql__ContentEditable.ProseMirror-focused {
-            outline: 2px solid ${colors.input.outlineFocused};
+          .Cql__ContentEditable:focus {
+            outline: none;
           }
 
           .Cql__PopoverTabs {
@@ -190,6 +185,7 @@ export const createCqlInput = (
 
           .Cql__Option {
             padding: 5px;
+            font-weight: bold;
             transition: color 0.1s background 0.1s;
           }
 
@@ -218,7 +214,7 @@ export const createCqlInput = (
           }
 
           .Cql__OptionDescription {
-            font-size: ${baseFontSize * 0.8}px;
+            font-weight: normal;
           }
 
           .Cql__ChipKey--readonly {
@@ -326,7 +322,6 @@ export const createCqlInput = (
             background: darkgray;
             background: linear-gradient(to right, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0.2) 18%, rgba(255,255,255,0.1) 33%);
             background-size: 200% 2em;
-
           }
 
           .${CLASS_VISIBLE} {
