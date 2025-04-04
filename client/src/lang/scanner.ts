@@ -23,7 +23,7 @@ export class Scanner {
     private program: string,
     settings: Partial<ScannerSettings> = {}
   ) {
-    this.settings = mergeDeep(settings, defaultScannerSettings);
+    this.settings = mergeDeep(defaultScannerSettings, settings);
   }
 
   public scanTokens = (): Token[] => {
