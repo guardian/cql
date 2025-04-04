@@ -185,7 +185,6 @@ export const createCqlInput = (
 
           .Cql__Option {
             padding: 5px;
-            font-weight: bold;
             transition: color 0.1s background 0.1s;
           }
 
@@ -214,7 +213,7 @@ export const createCqlInput = (
           }
 
           .Cql__OptionDescription {
-            font-weight: normal;
+            font-size: calc(${baseFontSize} * 0.8);
           }
 
           .Cql__ChipKey--readonly {
