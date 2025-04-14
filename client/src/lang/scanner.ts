@@ -41,6 +41,7 @@ export class Scanner {
   private scanToken = () => {
     switch (this.advance()) {
       case "+":
+      case "-":
         this.addKey(TokenType.CHIP_KEY);
         return;
       case ":":

@@ -75,6 +75,18 @@ describe("scanner", () => {
       expect(tokens).toEqual(expectedTokens);
     });
 
+    it("should tokenise key value pairs for fields with reversed polarity", () => {
+      const scanner = new Scanner("-tag:");
+      const tokens = scanner.scanTokens();
+      const expectedTokens = [
+        new Token(TokenType.CHIP_KEY, "-tag", "tag", 0, 3),
+        new Token(TokenType.CHIP_VALUE, ":", undefined, 4, 4),
+        eofToken(5),
+      ];
+
+      expect(tokens).toEqual(expectedTokens);
+    });
+
     it("should tokenise key value pairs for fields", () => {
       const scanner = new Scanner("+tag:tone/news");
       const tokens = scanner.scanTokens();
@@ -172,7 +184,7 @@ describe("scanner", () => {
     });
   });
 
-  describe.only("settings", () => {
+  describe("settings", () => {
     it("should disable groups, interpreting parentheses as strings", () => {
       const scanner = new Scanner("(two)", { groups: false });
       const tokens = scanner.scanTokens();
