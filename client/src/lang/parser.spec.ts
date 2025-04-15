@@ -57,7 +57,7 @@ describe("parser", () => {
     it("should handle unmatched parenthesis - rhs, first token", () => {
       const tokens = [rightParenToken(), eofToken(2)];
       const result = new Parser(tokens).parse();
-      assertFailure(result, "I didn't expect to find a ')' here.");
+      assertFailure(result, "I didn't expect to find a `)` here.");
     });
 
     it("should handle unmatched parenthesis - rhs, subsequent tokens", () => {
@@ -67,7 +67,7 @@ describe("parser", () => {
         eofToken(2),
       ];
       const result = new Parser(tokens).parse();
-      assertFailure(result, "I didn't expect to find a ')' after 'a'");
+      assertFailure(result, "I didn't expect to find a `)` after `a`");
     });
 
     it("should handle empty groups", () => {
@@ -113,7 +113,7 @@ describe("parser", () => {
     it("should handle an unbalanced boolean", () => {
       const tokens = [quotedStringToken("example"), andToken(7), eofToken(0)];
       const result = new Parser(tokens).parse();
-      assertFailure(result, "There must be a query following 'AND'");
+      assertFailure(result, "There must be a query following `AND`");
     });
 
     it("should handle an unbalanced binary within parenthesis", () => {
@@ -125,7 +125,7 @@ describe("parser", () => {
         eofToken(10),
       ];
       const result = new Parser(tokens).parse();
-      assertFailure(result, "I didn't expect to find a ')' after 'AND'");
+      assertFailure(result, "I didn't expect to find a `)` after `AND`");
     });
 
     it("should handle a solo boolean operator", () => {
@@ -133,7 +133,7 @@ describe("parser", () => {
       const result = new Parser(tokens).parse();
       assertFailure(
         result,
-        "An AND keyword must have a search term before and after it, e.g. this AND that"
+        "An `AND` keyword must have a search term before and after it, e.g. `this AND that`"
       );
     });
   });
@@ -160,7 +160,7 @@ describe("parser", () => {
       const result = new Parser(tokens).parse();
       assertFailure(
         result,
-        `You cannot query for the field “tag” within a group`
+        "You cannot query for the field `tag` within a group"
       );
     });
 
@@ -173,7 +173,7 @@ describe("parser", () => {
         eofToken(10),
       ];
       const result = new Parser(tokens).parse();
-      assertFailure(result, `You cannot query for the field “tag” after 'AND'`);
+      assertFailure(result, "You cannot query for the field `tag` after `AND`");
     });
 
     it("should handle an empty query field key", () => {
@@ -201,7 +201,7 @@ describe("parser", () => {
     it("should handle a query value with no query key", () => {
       const tokens = [quotedStringToken("example"), queryValueToken("", 7)];
       const result = new Parser(tokens).parse();
-      assertFailure(result, "unexpected ':'");
+      assertFailure(result, "unexpected `:`");
     });
   });
 

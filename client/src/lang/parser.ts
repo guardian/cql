@@ -50,7 +50,7 @@ export class Parser {
     if (this.peek().tokenType === TokenType.CHIP_VALUE)
       throw new ParseError(
         this.peek().start,
-        "I found an unexpected ':'. Did you intend to search for a tag, section or similar, e.g. tag:news? If you would like to add a search phrase containing a ':' character, please surround it in double quotes."
+        "I found an unexpected `:`. Did you intend to search for a field, e.g. `tag:news`? If you would like to add a search phrase containing a `:` character, please surround it in double quotes."
       );
 
     const left = this.expr();
@@ -64,10 +64,10 @@ export class Parser {
       case TokenType.OR:
       case TokenType.AND: {
         this.consume(tokenType);
-        this.guardAgainstCqlField(`after '${tokenType}'.`);
+        this.guardAgainstCqlField(`after \`${tokenType}\`.`);
         if (this.isAtEnd()) {
           throw this.error(
-            `There must be a query following '${tokenType}', e.g. this ${tokenType} that.`
+            `There must be a query following \`${tokenType}\`, e.g. \`this ${tokenType} that\`.`
           );
         }
         return new CqlBinary(left, {
@@ -102,7 +102,7 @@ export class Parser {
       case TokenType.AND:
       case TokenType.OR: {
         throw this.error(
-          `An ${tokenType.toString()} keyword must have a search term before and after it, e.g. this ${tokenType.toString()} that.`
+          `An \`${tokenType.toString()}\` keyword must have a search term before and after it, e.g. \`this ${tokenType.toString()} that\`.`
         );
       }
       default: {
@@ -234,7 +234,7 @@ export class Parser {
 
   private unexpectedTokenError = () => {
     throw this.error(
-      `I didn't expect to find a '${this.peek().lexeme}' ${!this.previous() ? "here." : `after '${this.previous()?.lexeme}'`}`
+      `I didn't expect to find a \`${this.peek().lexeme}\` ${!this.previous() ? "here." : `after \`${this.previous()?.lexeme}\``}`
     );
   };
 }
