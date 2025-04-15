@@ -7,7 +7,8 @@ export const TokenType = {
 
   // Literals.
   STRING: "STRING",
-  CHIP_KEY: "CHIP_KEY",
+  CHIP_KEY_POSITIVE: "CHIP_KEY_POSITIVE",
+  CHIP_KEY_NEGATIVE: "CHIP_KEY_NEGATIVE",
   CHIP_VALUE: "CHIP_VALUE",
 
   // Keywords.
@@ -15,6 +16,11 @@ export const TokenType = {
   OR: "OR",
   EOF: "EOF",
 } as const;
+
+export const isChipKey = (tokenType?: TokenType) =>
+  tokenType &&
+  (tokenType === TokenType.CHIP_KEY_POSITIVE ||
+    tokenType === TokenType.CHIP_KEY_NEGATIVE);
 
 export class Token {
   public static reservedWordMap = {

@@ -1,4 +1,4 @@
-import { Token } from "./token";
+import { isChipKey, Token } from "./token";
 import {
   CqlQuery,
   CqlBinary,
@@ -95,7 +95,8 @@ export class Parser {
         return new CqlExpr(this.group());
       case TokenType.STRING:
         return new CqlExpr(this.str());
-      case TokenType.CHIP_KEY: {
+      case TokenType.CHIP_KEY_POSITIVE:
+      case TokenType.CHIP_KEY_NEGATIVE: {
         return new CqlExpr(this.field());
       }
       case TokenType.AND:
@@ -142,14 +143,14 @@ export class Parser {
   }
 
   private field(): CqlField {
-    const key = this.consume(
-      TokenType.CHIP_KEY,
-      "Expected a search key, e.g. +tag"
+    const key = this.consumeMany(
+      [TokenType.CHIP_KEY_POSITIVE, TokenType.CHIP_KEY_NEGATIVE],
+      "Expected a search key, e.g. `+tag`"
     );
 
     const maybeValue = this.safeConsume(
       TokenType.CHIP_VALUE,
-      "Expected a search value, e.g. +tag:new"
+      "Expected a search value, e.g. `+tag:new`"
     );
 
     return either(maybeValue)(
@@ -163,15 +164,11 @@ export class Parser {
    * found in the wrong place.
    */
   private guardAgainstCqlField = (errorLocation: string) => {
-    switch (this.peek().tokenType) {
-      case TokenType.CHIP_KEY: {
-        const queryFieldNode = this.field();
-        throw this.error(
-          `You cannot query for the field “${queryFieldNode.key.literal}” ${errorLocation}`
-        );
-      }
-      default:
-        return;
+    if (isChipKey(this.peek().tokenType)) {
+      const queryFieldNode = this.field();
+      throw this.error(
+        `You cannot query for the field \`${queryFieldNode.key.literal}\` ${errorLocation}`
+      );
     }
   };
 
@@ -199,6 +196,17 @@ export class Parser {
 
   private consume = (tokenType: TokenType, message: string = ""): Token => {
     if (this.check(tokenType)) {
+      return this.advance();
+    } else {
+      throw this.error(message);
+    }
+  };
+
+  private consumeMany = (
+    tokenTypes: TokenType[],
+    message: string = ""
+  ): Token => {
+    if (tokenTypes.some((tokenType) => this.check(tokenType))) {
       return this.advance();
     } else {
       throw this.error(message);

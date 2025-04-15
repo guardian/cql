@@ -9,20 +9,26 @@ import {
   doc,
   schema,
   queryStr,
+  POLARITY,
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection, Transaction } from "prosemirror-state";
 import { CLASS_ERROR, CqlError } from "./plugin";
-import { Token } from "../../lang/token";
+import { isChipKey, Token, TokenType } from "../../lang/token";
 import {
   MappedTypeaheadSuggestion,
   TypeaheadSuggestion,
 } from "../../lang/types";
 import { CqlResult } from "../../lang/Cql";
 
-const tokensToPreserve = ["CHIP_KEY", "CHIP_VALUE", "EOF"];
+const tokensToPreserve = [
+  TokenType.CHIP_KEY_POSITIVE,
+  TokenType.CHIP_KEY_NEGATIVE,
+  TokenType.CHIP_VALUE,
+  TokenType.EOF,
+] as string[];
 
-const joinqueryStrTokens = (tokens: ProseMirrorToken[]) =>
+const joinQueryStrTokens = (tokens: ProseMirrorToken[]) =>
   tokens.reduce((acc, token) => {
     if (tokensToPreserve.includes(token.tokenType)) {
       return acc.concat(token);
@@ -110,12 +116,13 @@ export const createProseMirrorTokenToDocumentMap = (
   // We only distinguish between key/val tokens here – other tokens are universally
   // represented as queryStr. We join the other tokens into single ranges so we
   // can provide mappings for their node representation.
-  const compactedTokenRanges = joinqueryStrTokens(tokens);
+  const compactedTokenRanges = joinQueryStrTokens(tokens);
 
   const ranges = compactedTokenRanges.reduce<[number, number, number][]>(
     (accRanges, { tokenType, from, to }, index, tokens) => {
       switch (tokenType) {
-        case "CHIP_KEY": {
+        case TokenType.CHIP_KEY_POSITIVE:
+        case TokenType.CHIP_KEY_NEGATIVE: {
           // If this field is at the start of the document, or preceded by a
           // field value, the editor will add a queryStr node to conform to
           // the schema, so we add a queryStr mapping to account for the
@@ -162,10 +169,11 @@ export const mapTokens = (tokens: ProseMirrorToken[]): ProseMirrorToken[] => {
  * Create a ProseMirror document from an array of ProseMirrorTokens.
  */
 export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
-  const nodes = joinqueryStrTokens(_tokens).reduce<Node[]>(
+  const nodes = joinQueryStrTokens(_tokens).reduce<Node[]>(
     (acc, token, index, tokens): Node[] => {
       switch (token.tokenType) {
-        case "CHIP_KEY": {
+        case TokenType.CHIP_KEY_POSITIVE:
+        case TokenType.CHIP_KEY_NEGATIVE: {
           const tokenKey = token.literal;
           const nextToken = tokens[index + 1];
           const tokenValue =
@@ -173,20 +181,26 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           const previousToken = tokens[index - 1];
           const isPrecededByChip =
             previousToken?.tokenType === "CHIP_VALUE" ||
-            previousToken?.tokenType === "CHIP_KEY";
+            isChipKey(previousToken?.tokenType);
           return acc.concat(
+            // Insert a string node if two chips are adjacent
             ...(isPrecededByChip ? [queryStr.create()] : []),
-
-            chip.create(undefined, [
-              chipKey.create(
-                undefined,
-                tokenKey ? schema.text(tokenKey) : undefined
-              ),
-              chipValue.create(
-                undefined,
-                tokenValue ? schema.text(tokenValue) : undefined
-              ),
-            ])
+            chip.create(
+              {
+                [POLARITY]:
+                  token.tokenType === TokenType.CHIP_KEY_POSITIVE ? "+" : "-",
+              },
+              [
+                chipKey.create(
+                  undefined,
+                  tokenKey ? schema.text(tokenKey) : undefined
+                ),
+                chipValue.create(
+                  undefined,
+                  tokenValue ? schema.text(tokenValue) : undefined
+                ),
+              ]
+            )
           );
         }
         case "EOF": {
@@ -197,8 +211,8 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             previousNode.type === queryStr
           ) {
             // If there is a gap between the previous queryStr token and EOF,
-            // there is whitespace at the end of the query – preserve at most
-            // one char to allow users to continue the query
+            // there is whitespace at the end of the query – preserve one char
+            // to allow users to continue the query
             return acc
               .slice(0, acc.length - 1)
               .concat(
@@ -224,7 +238,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           const previousToken = tokens[index - 1];
           if (
             token.tokenType === "CHIP_VALUE" &&
-            previousToken?.tokenType === "CHIP_KEY"
+            isChipKey(previousToken?.tokenType)
           ) {
             return acc;
           }
@@ -298,7 +312,7 @@ export const tokensToDecorations = (
 export const docToCqlStr = (doc: Node): string => {
   let str: string = "";
 
-  doc.descendants((node) => {
+  doc.descendants((node, _pos, parent) => {
     switch (node.type.name) {
       case "queryStr": {
         str += node.textContent;
@@ -307,9 +321,10 @@ export const docToCqlStr = (doc: Node): string => {
       case "chipKey": {
         const leadingWhitespace =
           str.trim() === "" || str.endsWith(" ") ? "" : " ";
+        const polarity = parent?.attrs[POLARITY];
         // Anticipate a chipValue here, adding the colon – if we do not, and a
         // chipValue is not present, we throw the mappings off.
-        str += `${leadingWhitespace}+${node.textContent}:`;
+        str += `${leadingWhitespace}${polarity}${node.textContent}:`;
         return false;
       }
       case "chipValue": {

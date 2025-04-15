@@ -197,7 +197,7 @@ This will necessitate a rethink in how we handle suggestions, as at the moment t
 - Factor them out into a separate, async call. This would mean a rethink of the suggestions API.
 - Make suggestions event-driven, to ensure we make a single call.
 
-### Pluses and minuses of pluses and minuses
+## Pluses and minuses of pluses and minuses
 
 Do we need a `+` for discovery? Or can we get away without?
 
@@ -207,7 +207,7 @@ Do we need a `+` for discovery? Or can we get away without?
 - Extra char
 - Users must discover what '+' does (and may never discover what '-' is)
 
-### Relative dates
+## Relative dates
 
 Where do we resolve relative dates?
 1. As they're accepted, within the query. Relative dates are made absolute within the CQL query, e.g. `+from-date:1970-01-01`.
@@ -220,3 +220,13 @@ Where do we resolve relative dates?
     - ❌ have to consider compatibility if the format changes
     - ✅ sharing queries preserves relative date
     - ✅ nice clear relative dates
+
+## Representing positive and negative search terms
+
+How do we represent positive and negative search terms in the lexical grammar?
+
+1. ❌ As PLUS,STRING,COLON,STRING / MINUS,STRING,COLON,STRING — we'd like to understand the key/value tokens for correct typeahead behaviour at the token level, as this makes correct typeahead behaviour possible even if the syntax for the CFG is invalid
+2. ⚖️ As CHIP_KEY_POSITIVE, CHIP_KEY_NEGATIVE — this permits typeahead at token level, but means we have two token types for chip keys, which everything downstream will need to reason about
+3. ⚖️ Just take the first character of the lexeme, which is guaranteed to be `+|-` — trivial to implement, but it feels icky not to have a token representation; what if the symbols change? Every piece of code that makes this assumption will have to change too, without a clear interface to test whether we've caught every case
+
+Probably 2.

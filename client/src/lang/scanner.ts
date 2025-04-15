@@ -41,8 +41,10 @@ export class Scanner {
   private scanToken = () => {
     switch (this.advance()) {
       case "+":
+        this.addKey(TokenType.CHIP_KEY_POSITIVE);
+        return;
       case "-":
-        this.addKey(TokenType.CHIP_KEY);
+        this.addKey(TokenType.CHIP_KEY_NEGATIVE);
         return;
       case ":":
         this.addValue();
@@ -75,11 +77,17 @@ export class Scanner {
   };
 
   private addKey = (tokenType: TokenType) => {
-    while (this.peek() != ":" && !isWhitespace(this.peek()) && !this.isAtEnd())
+    while (
+      this.peek() != ":" &&
+      !isWhitespace(this.peek()) &&
+      !this.isAtEnd()
+    ) {
       this.advance();
+    }
 
-    if (this.current - this.start === 1) this.addToken(tokenType);
-    else {
+    if (this.current - this.start === 1) {
+      this.addToken(tokenType);
+    } else {
       const key = this.program.substring(this.start + 1, this.current);
 
       this.addToken(tokenType, key);

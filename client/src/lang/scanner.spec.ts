@@ -28,7 +28,7 @@ describe("scanner", () => {
       const tokens = scanner.scanTokens();
       const expectedTokens = [
         unquotedStringToken("a "),
-        new Token(TokenType.CHIP_KEY, "+tag", "tag", 3, 6),
+        new Token(TokenType.CHIP_KEY_POSITIVE, "+tag", "tag", 3, 6),
         eofToken(7),
       ];
       expect(tokens).toEqual(expectedTokens);
@@ -67,7 +67,7 @@ describe("scanner", () => {
       const scanner = new Scanner("+tag:");
       const tokens = scanner.scanTokens();
       const expectedTokens = [
-        new Token(TokenType.CHIP_KEY, "+tag", "tag", 0, 3),
+        new Token(TokenType.CHIP_KEY_POSITIVE, "+tag", "tag", 0, 3),
         new Token(TokenType.CHIP_VALUE, ":", undefined, 4, 4),
         eofToken(5),
       ];
@@ -79,7 +79,7 @@ describe("scanner", () => {
       const scanner = new Scanner("-tag:");
       const tokens = scanner.scanTokens();
       const expectedTokens = [
-        new Token(TokenType.CHIP_KEY, "-tag", "tag", 0, 3),
+        new Token(TokenType.CHIP_KEY_NEGATIVE, "-tag", "tag", 0, 3),
         new Token(TokenType.CHIP_VALUE, ":", undefined, 4, 4),
         eofToken(5),
       ];
@@ -91,7 +91,7 @@ describe("scanner", () => {
       const scanner = new Scanner("+tag:tone/news");
       const tokens = scanner.scanTokens();
       const expectedTokens = [
-        new Token(TokenType.CHIP_KEY, "+tag", "tag", 0, 3),
+        new Token(TokenType.CHIP_KEY_POSITIVE, "+tag", "tag", 0, 3),
         new Token(TokenType.CHIP_VALUE, ":tone/news", "tone/news", 4, 13),
         eofToken(14),
       ];
@@ -103,7 +103,7 @@ describe("scanner", () => {
       const scanner = new Scanner("+section:commentisfree");
       const tokens = scanner.scanTokens();
       const expectedTokens = [
-        new Token(TokenType.CHIP_KEY, "+section", "section", 0, 7),
+        new Token(TokenType.CHIP_KEY_POSITIVE, "+section", "section", 0, 7),
         new Token(
           TokenType.CHIP_VALUE,
           ":commentisfree",
@@ -122,7 +122,7 @@ describe("scanner", () => {
       const tokens = scanner.scanTokens();
       const expectedTokens = [
         unquotedStringToken("example"),
-        new Token(TokenType.CHIP_KEY, "+", undefined, 8, 8),
+        new Token(TokenType.CHIP_KEY_POSITIVE, "+", undefined, 8, 8),
         eofToken(9),
       ];
       expect(tokens).toEqual(expectedTokens);
@@ -133,7 +133,7 @@ describe("scanner", () => {
       const tokens = scanner.scanTokens();
       const expectedTokens = [
         unquotedStringToken("example"),
-        new Token(TokenType.CHIP_KEY, "+tag", "tag", 8, 11),
+        new Token(TokenType.CHIP_KEY_POSITIVE, "+tag", "tag", 8, 11),
         new Token(TokenType.CHIP_VALUE, ":", undefined, 12, 12),
         eofToken(13),
       ];

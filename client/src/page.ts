@@ -148,7 +148,8 @@ class CqlInputSimple extends HTMLElement {
         pointer-events: none;
         height: auto;
       }
-      .CHIP_KEY {
+      .CHIP_KEY_POSITIVE,
+      .CHIP_KEY_NEGATIVE {
         color: #83c2ff;
       }
       .CHIP_VALUE {

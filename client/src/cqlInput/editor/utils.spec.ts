@@ -6,7 +6,7 @@ import {
   mapTokens,
   tokensToDoc,
 } from "./utils";
-import { schema } from "./schema";
+import { POLARITY, schema } from "./schema";
 import { builders } from "prosemirror-test-builder";
 import { parseCqlStr } from "../../lang/Cql";
 
@@ -45,7 +45,7 @@ describe("utils", () => {
 
       const expected = doc(
         queryStr("text"),
-        chip(chipKey("key"), chipValue("value")),
+        chip({ [POLARITY]: "+" }, chipKey("key"), chipValue("value")),
         queryStr("text")
       );
 

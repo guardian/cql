@@ -2,6 +2,7 @@ import { Schema } from "prosemirror-model";
 
 export const DELETE_CHIP_INTENT = "DELETE_CHIP_INTENT";
 export const IS_READ_ONLY = "IS_READ_ONLY";
+export const POLARITY = "POLARITY";
 
 export const schema = new Schema({
   nodes: {
@@ -15,8 +16,19 @@ export const schema = new Schema({
     },
     chip: {
       content: "(chipKey chipValue)?",
-      toDOM: () => ["chip", 0],
+      toDOM: (node) => ["chip", { "data-polarity": node.attrs[POLARITY] }, 0],
+      parseDOM: [
+        {
+          tag: "chip",
+          getAttrs: (node) => ({
+            [POLARITY]: node.dataset.polarity,
+          }),
+        },
+      ],
       attrs: {
+        [POLARITY]: {
+          default: "+",
+        },
         [DELETE_CHIP_INTENT]: {
           default: false,
         },
