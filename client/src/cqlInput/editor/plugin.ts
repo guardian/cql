@@ -30,9 +30,10 @@ import {
   DELETE_CHIP_INTENT,
   doc,
   IS_READ_ONLY,
+  POLARITY,
   schema,
 } from "./schema";
-import { DOMSerializer, Fragment } from "prosemirror-model";
+import { DOMSerializer, Fragment, Node } from "prosemirror-model";
 import { QueryChangeEventDetail } from "../../types/dom";
 import { ErrorPopover } from "../popover/ErrorPopover";
 import { CqlConfig } from "../CqlInput";
@@ -68,6 +69,8 @@ const ACTION_SERVER_ERROR = "SERVER_ERROR";
 export const CLASS_ERROR = "Cql__ErrorWidget";
 export const CLASS_VISIBLE = "Cql--isVisible";
 export const CLASS_CHIP_KEY_READONLY = "Cql__ChipKey--readonly";
+
+export const TEST_ID_POLARITY_HANDLE = "polarity-handle";
 
 /**
  * The CQL plugin handles most aspects of the editor behaviour, including
@@ -261,7 +264,7 @@ export const createCqlPlugin = ({
     props: {
       nodeViews: {
         [chip.name](initialNode, view, getPos) {
-          const handleDeleteClickEvent = () => {
+          const getNodeAtPos = (): { node: Node; pos: number } | undefined => {
             const pos = getPos();
             if (!pos) {
               return;
@@ -270,11 +273,31 @@ export const createCqlPlugin = ({
             const $pos = view.state.doc.resolve(pos);
             const node = $pos.nodeAfter;
 
-            if (!node) {
+            return node ? { node, pos } : undefined;
+          };
+
+          const handleDeleteClickEvent = () => {
+            const result = getNodeAtPos();
+
+            if (!result) {
               return;
             }
 
+            const { node, pos } = result;
+
             applyDeleteIntent(view, pos, pos + node.nodeSize + 1, node);
+          };
+
+          const handlePolarityClickEvent = () => {
+            const result = getNodeAtPos();
+
+            if (!result) {
+              return;
+            }
+            const newPolarity = result.node.attrs[POLARITY] === "+" ? "-" : "+";
+            view.dispatch(
+              view.state.tr.setNodeAttribute(result.pos, POLARITY, newPolarity)
+            );
           };
 
           const dom = document.createElement("chip-wrapper");
@@ -282,8 +305,10 @@ export const createCqlPlugin = ({
           contentDOM.classList.add("Cql__ChipWrapperContent");
           const polarityHandle = document.createElement("span");
           polarityHandle.classList.add("Cql__ChipWrapperPolarityHandle");
+          polarityHandle.setAttribute("data-testid", TEST_ID_POLARITY_HANDLE);
           polarityHandle.setAttribute("contentEditable", "false");
-          polarityHandle.innerHTML = "+";
+          polarityHandle.innerHTML = initialNode.attrs[POLARITY];
+          polarityHandle.addEventListener("click", handlePolarityClickEvent);
 
           const deleteHandle = document.createElement("span");
           deleteHandle.classList.add("Cql__ChipWrapperDeleteHandle");
@@ -308,6 +333,9 @@ export const createCqlPlugin = ({
               } else {
                 dom.classList.remove(pendingDeleteClass);
               }
+
+              polarityHandle.innerHTML = node.attrs[POLARITY];
+
               return true;
             },
           };

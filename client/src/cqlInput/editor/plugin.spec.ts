@@ -1,8 +1,14 @@
 import { describe, it, beforeEach, expect } from "bun:test";
 import { errorMsgTestId, errorTestId, typeaheadTestId } from "../CqlInput";
-import { findByTestId, findByText, fireEvent } from "@testing-library/dom";
+import {
+  findByTestId,
+  findByText,
+  fireEvent,
+  getByTestId,
+} from "@testing-library/dom";
+import userEvent from "@testing-library/user-event";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
-import { createCqlPlugin } from "./plugin";
+import { createCqlPlugin, TEST_ID_POLARITY_HANDLE } from "./plugin";
 import { redo, undo } from "prosemirror-history";
 import { endOfLine, startOfLine } from "./commands";
 import { keymap } from "prosemirror-keymap";
@@ -119,7 +125,9 @@ const createCqlEditor = (initialQuery: string = "") => {
       }, timeoutMs);
     });
 
-  return { editor, waitFor, container, moveCaretToQueryPos };
+  const user = userEvent.setup();
+
+  return { editor, waitFor, container, moveCaretToQueryPos, user };
 };
 
 const selectPopoverOption = async (
@@ -393,6 +401,17 @@ describe("plugin", () => {
   });
 
   describe("chip behaviour", () => {
+    it("should change the polarity of a chip when the polarity indicator is clicked", async () => {
+      const queryStr = "+tag:a";
+      const { waitFor, container, user } =
+        createCqlEditor(queryStr);
+      const polarityHandle = await getByTestId(container, TEST_ID_POLARITY_HANDLE);
+
+      await user.click(polarityHandle);
+
+      await waitFor("-tag:a ")
+    });
+
     it("should not de-chip text if the queryStr between chips is removed", async () => {
       const queryStr = "+tag:a b +tag:c";
       const { editor, moveCaretToQueryPos, waitFor } =
