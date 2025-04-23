@@ -544,20 +544,6 @@ const Tools: Tool = {
   links: [githubLink("tools-index")]
 };
 
-const Charts: Tool = {
-  name: "Charts Tool",
-  description: "Create basic charts",
-  team: "editorial-tools",
-  keywords: ["chart", "atom"],
-  primaryLink: prodLink("https://charts.gutools.co.uk"),
-  awsAccount: "composer",
-  links: [
-    githubLink("interactive-basichartool"),
-    codeLink("https://charts.code.dev-gutools.co.uk"),
-    riffRaffLink("basic-chart-tool")
-  ]
-};
-
 const Wires: Tool = {
   name: "Wires",
   description: "Editorial wires",
