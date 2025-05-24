@@ -90,6 +90,11 @@ describe("typeahead", () => {
             "tags-are-magic",
             "A magic tag"
           ),
+          new TextSuggestionOption(
+            "Tag with a space in it",
+            "Tag with space",
+            "A tag with whitespace in the id. Gosh"
+          ),
         ],
         type: "TEXT",
         suffix: " ",
@@ -123,6 +128,11 @@ describe("typeahead", () => {
             "Tags are magic",
             "tags-are-magic",
             "A magic tag"
+          ),
+          new TextSuggestionOption(
+            "Tag with a space in it",
+            "Tag with space",
+            "A tag with whitespace in the id. Gosh"
           ),
         ],
         type: "TEXT",
@@ -193,6 +203,11 @@ describe("typeahead", () => {
             "Tags are magic",
             "tags-are-magic",
             "A magic tag"
+          ),
+          new TextSuggestionOption(
+            "Tag with a space in it",
+            "Tag with space",
+            "A tag with whitespace in the id. Gosh"
           ),
         ],
         type: "TEXT",
