@@ -109,6 +109,19 @@ describe("utils", () => {
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
+    test("should preserve whitespace within values that have whitespace", async () => {
+      const tokens = await queryToProseMirrorTokens("+key:\"1 2\" ");
+      const node = tokensToDoc(tokens);
+
+      const expected = doc(
+        queryStr(),
+        chip(chipKey("key"), chipValue("1 2")),
+        queryStr()
+      );
+
+      expect(node.toJSON()).toEqual(expected.toJSON());
+    });
+
     test("should create chipWrappers for partial tags that precede existing tags", async () => {
       const tokens = await queryToProseMirrorTokens("+ +tag");
       const node = tokensToDoc(tokens);
@@ -163,8 +176,14 @@ describe("utils", () => {
         ]);
       });
 
-      test("with a tag at the beginning", async () => {
+      test("with a tag", async () => {
         const text = await getTextFromTokenRanges("+tag:test");
+
+        expect(text).toEqual(["tag", "test", ""]);
+      });
+
+      test("with a tag with a quoted value", async () => {
+        const text = await getTextFromTokenRanges("+tag:\"test\"");
 
         expect(text).toEqual(["tag", "test", ""]);
       });
@@ -243,6 +262,18 @@ describe("utils", () => {
       );
 
       const query = "example +tag:tags-are-magic ";
+
+      expect(docToCqlStr(queryDoc)).toBe(query);
+    });
+
+    test("should add quotes for chip values that contain whitespace", () => {
+      const queryDoc = doc(
+        queryStr("example"),
+        chip(chipKey("tag"), chipValue("Tag with whitespace")),
+        queryStr()
+      );
+
+      const query = "example +tag:\"Tag with whitespace\" ";
 
       expect(docToCqlStr(queryDoc)).toBe(query);
     });

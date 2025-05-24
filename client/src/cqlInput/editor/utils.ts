@@ -20,6 +20,7 @@ import {
   TypeaheadSuggestion,
 } from "../../lang/types";
 import { CqlResult } from "../../lang/Cql";
+import { hasWhitespace } from "../../lang/utils";
 
 const tokensToPreserve = [
   TokenType.CHIP_KEY_POSITIVE,
@@ -318,7 +319,7 @@ export const docToCqlStr = (doc: Node): string => {
         str += node.textContent;
         return false;
       }
-      case "chipKey": {
+    case "chipKey": {
         const leadingWhitespace =
           str.trim() === "" || str.endsWith(" ") ? "" : " ";
         const polarity = parent?.attrs[POLARITY];
@@ -328,8 +329,19 @@ export const docToCqlStr = (doc: Node): string => {
         return false;
       }
       case "chipValue": {
-        str +=
-          node.textContent.trim().length > 0 ? `${node.textContent} ` : " ";
+        const value = node.textContent;
+
+        if (value.trim().length === 0) {
+          str += " ";
+          return;
+        }
+
+        console.log({value})
+
+        const maybeQuoteMark = hasWhitespace(value) ? '"' : "";
+
+        str += `${maybeQuoteMark}${value}${maybeQuoteMark} `;
+
         return false;
       }
       default: {

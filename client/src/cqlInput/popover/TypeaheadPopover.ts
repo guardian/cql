@@ -4,7 +4,6 @@ import {
   TypeaheadSuggestion,
 } from "../../lang/types";
 import { EditorView } from "prosemirror-view";
-import { hasWhitespace } from "../../lang/utils";
 
 export const CLASS_PENDING = "Cql__Typeahead--pending";
 
