@@ -31,6 +31,11 @@ export class TestTypeaheadHelpers {
         "tags-are-magic",
         "A magic tag"
       ),
+      new TextSuggestionOption(
+        "Tag with a space in it",
+        "Tag with space",
+        "A tag with whitespace in the id. Gosh"
+      ),
     ]);
   }
 

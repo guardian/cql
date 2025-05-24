@@ -330,6 +330,21 @@ describe("plugin", () => {
           await waitFor("example +tag:tags-are-magic ");
         });
 
+        it("applies the given key in quotes when it contains whitespace", async () => {
+          const queryStr = "example +tag";
+          const { editor, container, waitFor, moveCaretToQueryPos } =
+            createCqlEditor("example +tag");
+
+          await moveCaretToQueryPos(queryStr.length);
+          await editor.insertText("t");
+          await selectPopoverOptionWithClick(
+            container,
+            "Tag with a space in it"
+          );
+
+          await waitFor("example +tag:\"Tag with space\" ");
+        });
+
         it("inserts a chip before a string", async () => {
           const { editor, waitFor } = createCqlEditor("a");
 

@@ -69,7 +69,7 @@ export class TypeaheadPopover extends Popover {
   public constructor(
     private view: EditorView,
     protected popoverEl: HTMLElement,
-    // Apply a suggestion to the input
+    // Apply a suggestion to the input, replacing the given range
     applySuggestion: (from: number, to: number, value: string) => void,
     // Skip a suggestion, and move on to the next valid field
     skipSuggestion: () => void,
