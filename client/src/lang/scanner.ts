@@ -1,6 +1,6 @@
 import { mergeDeep } from "../utils/merge";
 import { Token, TokenType } from "./token";
-import { isLetterOrDigit, isWhitespace } from "./utils";
+import { hasLetterOrDigit, hasWhitespace } from "./utils";
 
 export type ScannerSettings = {
   groups: boolean;
@@ -79,7 +79,7 @@ export class Scanner {
   private addKey = (tokenType: TokenType) => {
     while (
       this.peek() != ":" &&
-      !isWhitespace(this.peek()) &&
+      !hasWhitespace(this.peek()) &&
       !this.isAtEnd()
     ) {
       this.advance();
@@ -105,7 +105,7 @@ export class Scanner {
       return;
     }
 
-    while (!isWhitespace(this.peek()) && !this.isAtEnd()) this.advance();
+    while (!hasWhitespace(this.peek()) && !this.isAtEnd()) this.advance();
 
     if (this.current - this.start === 1) {
       // No content - add an empty token
@@ -117,7 +117,7 @@ export class Scanner {
   };
 
   private addIdentifierOrUnquotedString = () => {
-    while (isLetterOrDigit(this.peek())) {
+    while (hasLetterOrDigit(this.peek())) {
       this.advance();
     }
 
@@ -133,8 +133,8 @@ export class Scanner {
   private addUnquotedString = () => {
     while (
       // Consume whitespace up until the last whitespace char
-      (!isWhitespace(this.peek()) ||
-        isWhitespace(this.peek(1)) ||
+      (!hasWhitespace(this.peek()) ||
+        hasWhitespace(this.peek(1)) ||
         this.isAtEnd(1)) &&
       this.peek() != ")" &&
       !this.isAtEnd()

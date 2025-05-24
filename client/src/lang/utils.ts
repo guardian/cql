@@ -1,10 +1,10 @@
 import { CqlBinary, CqlExpr, CqlField } from "./ast";
 
 const whitespaceR = /\s/;
-export const isWhitespace = (str: string) => whitespaceR.test(str);
+export const hasWhitespace = (str: string) => whitespaceR.test(str);
 
 const letterOrDigitR = /[0-9A-z]/;
-export const isLetterOrDigit = (str: string) => letterOrDigitR.test(str);
+export const hasLetterOrDigit = (str: string) => letterOrDigitR.test(str);
 
 export function* getPermutations<T>(
   permutation: T[]
