@@ -62,8 +62,8 @@ describe("scanner", () => {
     });
   });
 
-  describe("search params", () => {
-    it("should tokenise key value pairs for fields", () => {
+  describe("fields", () => {
+    it("should tokenise keys for fields", () => {
       const scanner = new Scanner("+tag:");
       const tokens = scanner.scanTokens();
       const expectedTokens = [
@@ -75,7 +75,7 @@ describe("scanner", () => {
       expect(tokens).toEqual(expectedTokens);
     });
 
-    it("should tokenise key value pairs for fields with reversed polarity", () => {
+    it("should tokenise keys for fields with reversed polarity", () => {
       const scanner = new Scanner("-tag:");
       const tokens = scanner.scanTokens();
       const expectedTokens = [
@@ -112,6 +112,18 @@ describe("scanner", () => {
           21
         ),
         eofToken(22),
+      ];
+
+      expect(tokens).toEqual(expectedTokens);
+    });
+
+    it("should tokenise key value pairs for fields when the key value is in quotes", () => {
+      const scanner = new Scanner("+tag:\"tone/news\"");
+      const tokens = scanner.scanTokens();
+      const expectedTokens = [
+        new Token(TokenType.CHIP_KEY_POSITIVE, "+tag", "tag", 0, 3),
+        new Token(TokenType.CHIP_VALUE, ":\"tone/news\"", "tone/news", 4, 15),
+        eofToken(16),
       ];
 
       expect(tokens).toEqual(expectedTokens);

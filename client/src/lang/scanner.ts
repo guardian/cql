@@ -95,9 +95,20 @@ export class Scanner {
   };
 
   private addValue = () => {
+    if (this.peek() === "\"") {
+      this.advance();
+      this.consumeQuotedRange();
+      this.addToken(
+        TokenType.CHIP_VALUE,
+        this.program.substring(this.start + 2, this.current - 1)
+      );
+      return;
+    }
+
     while (!isWhitespace(this.peek()) && !this.isAtEnd()) this.advance();
 
-    if (this.current - this.start == 1) {
+    if (this.current - this.start === 1) {
+      // No content - add an empty token
       this.addToken(TokenType.CHIP_VALUE);
     } else {
       const value = this.program.substring(this.start + 1, this.current);
@@ -138,21 +149,28 @@ export class Scanner {
   };
 
   private addString = () => {
-    while (this.peek() != '"' && !this.isAtEnd()) {
-      this.advance();
-    }
-
-    if (this.isAtEnd()) {
-      this.error(this.line, "Unterminated string at end of file");
-    } else {
-      this.advance();
-    }
+    this.consumeQuotedRange();
 
     this.addToken(
       TokenType.STRING,
       this.program.substring(this.start + 1, this.current - 1)
     );
   };
+
+  /**
+   * Consumes a quoted range.
+   */
+  private consumeQuotedRange = () => {
+    while (this.peek() != '"' && !this.isAtEnd()) {
+      this.advance();
+    }
+
+    if (this.isAtEnd()) {
+      this.error(this.line, "I expected to encounter a closing double-quote (\") before the query ended");
+    } else {
+      this.advance();
+    }
+  }
 
   private addToken = (tokenType: TokenType, literal?: string) => {
     const text = this.program.substring(this.start, this.current);

@@ -30,7 +30,7 @@ query_content               -> query_group | query_str | query_quoted_str
 query_group                 -> '(' query_binary* ')'
 query_quoted_str            -> '"' string '"'
 query_str                   -> /\w/
-query_field                 -> '+' query_field_key ':'? query_field_value? // Permit incomplete meta queries for typeahead
+query_field                 -> '+' query_field_key ':'? (query_field_value | '"' query_field_value '"')? // Permit incomplete meta queries for typeahead
 query_field_key             -> 'tag' | 'section' | ...etc
 query_field_value           -> /\w/
 ```
