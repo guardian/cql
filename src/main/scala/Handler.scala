@@ -2,7 +2,7 @@ package cql
 
 import com.amazonaws.services.lambda.runtime.{Context, RequestHandler}
 import com.amazonaws.services.lambda.runtime.events.{
-  APIGatewayProxyRequestEvent,
+  Step,
   APIGatewayProxyResponseEvent
 }
 import io.circe.syntax._
