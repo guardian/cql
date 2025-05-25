@@ -32,11 +32,11 @@ export const createCqlInput = (
   },
 ) => {
   class CqlInput extends HTMLElement {
-    static observedAttributes = ["initialValue"];
+    static observedAttributes = ["value"];
 
     public editorView: EditorView | undefined;
-
     public value = "";
+    public updateEditorView: ((str: string) => void) | undefined = undefined;
 
     connectedCallback() {
       const cqlInputId = "cql-input";
@@ -74,18 +74,34 @@ export const createCqlInput = (
         config,
       });
 
-      const editorView = createEditorView({
-        initialValue: this.getAttribute("initial-value") ?? "",
+      const { editorView, updateEditorView } = createEditorView({
+        initialValue: this.getAttribute("value") ?? "",
         mountEl: cqlInput,
         plugins: [plugin],
       });
 
       editorView.dom.setAttribute("data-testid", contentEditableTestId);
       editorView.dom.classList.add("Cql__ContentEditable");
+
+      this.updateEditorView = updateEditorView;
     }
 
     disconnectedCallback() {
       this.editorView?.destroy();
+    }
+
+    public attributeChangedCallback(
+      name: string,
+      _oldValue: string,
+      newValue: string,
+    ) {
+      switch (name) {
+        case "value": {
+          if (newValue !== this.value) {
+            this.updateEditorView?.(newValue);
+          }
+        }
+      }
     }
 
     public createTemplate(partialTheme: Partial<CqlTheme>) {
