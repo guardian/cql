@@ -62,7 +62,7 @@ const getCqlFieldKeyRange = (from: number): [number, number, number] =>
 const getQueryValueRanges = (
   from: number,
   to: number,
-  isQuoted: boolean
+  isQuoted: boolean,
 ): [number, number, number][] => {
   const quoteOffset = isQuoted ? 1 : 0;
   return [
@@ -73,11 +73,11 @@ const getQueryValueRanges = (
     // chipValue end (-1)
     [to, -1 + quoteOffset, 0],
   ];
-}
+};
 
 const getQueryStrRanges = (
   from: number,
-  to: number
+  to: number,
 ): [number, number, number][] => [
   [from, -1, 0], // queryStr begin (+1)
   // If the queryStr node has content, it will begin with whitespace in the
@@ -116,7 +116,7 @@ const getQueryStrRanges = (
  * the document, relying on ProseMirror's schema to autofill missing nodes.
  */
 export const createProseMirrorTokenToDocumentMap = (
-  tokens: ProseMirrorToken[]
+  tokens: ProseMirrorToken[],
 ) => {
   // We only distinguish between key/val tokens here – other tokens are universally
   // represented as queryStr. We join the other tokens into single ranges so we
@@ -140,7 +140,7 @@ export const createProseMirrorTokenToDocumentMap = (
             ...(shouldAddQueryStrMapping
               ? getQueryStrRanges(previousToken?.to, previousToken?.to)
               : []),
-            getCqlFieldKeyRange(from)
+            getCqlFieldKeyRange(from),
           );
         }
         case "CHIP_VALUE": {
@@ -148,8 +148,8 @@ export const createProseMirrorTokenToDocumentMap = (
             ...getQueryValueRanges(
               from,
               to,
-              hasWhitespace(lexeme) ? true : false
-            )
+              hasWhitespace(lexeme) ? true : false,
+            ),
           );
         }
         default: {
@@ -157,7 +157,7 @@ export const createProseMirrorTokenToDocumentMap = (
         }
       }
     },
-    []
+    [],
   );
 
   return new Mapping([new StepMap(ranges.flat())]);
@@ -204,14 +204,14 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
               [
                 chipKey.create(
                   undefined,
-                  tokenKey ? schema.text(tokenKey) : undefined
+                  tokenKey ? schema.text(tokenKey) : undefined,
                 ),
                 chipValue.create(
                   undefined,
-                  tokenValue ? schema.text(tokenValue) : undefined
+                  tokenValue ? schema.text(tokenValue) : undefined,
                 ),
-              ]
-            )
+              ],
+            ),
           );
         }
         case "EOF": {
@@ -229,8 +229,8 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
               .concat(
                 queryStr.create(
                   undefined,
-                  schema.text(previousNode.textContent + " ")
-                )
+                  schema.text(previousNode.textContent + " "),
+                ),
               );
           }
 
@@ -281,23 +281,25 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
                     leadingWhitespace +
                       previousNode.textContent +
                       token.lexeme +
-                      trailingWhitespace
-                  )
-                )
+                      trailingWhitespace,
+                  ),
+                ),
               );
           }
 
           return acc.concat(
             queryStr.create(
               undefined,
-              schema.text(leadingWhitespace + token.lexeme + trailingWhitespace)
-            )
+              schema.text(
+                leadingWhitespace + token.lexeme + trailingWhitespace,
+              ),
+            ),
           );
         }
       }
     },
     // Our document always starts with an empty queryStr node
-    [queryStr.create()]
+    [queryStr.create()],
   );
 
   return doc.create(undefined, nodes);
@@ -306,7 +308,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
 const tokensThatAreNotDecorated = ["CHIP_KEY", "CHIP_VALUE", "EOF"];
 
 export const tokensToDecorations = (
-  tokens: ProseMirrorToken[]
+  tokens: ProseMirrorToken[],
 ): Decoration[] => {
   return mapTokens(tokens)
     .filter((token) => !tokensThatAreNotDecorated.includes(token.tokenType))
@@ -315,8 +317,8 @@ export const tokensToDecorations = (
         from,
         to,
         { class: `CqlToken__${tokenType}` },
-        { key: `${from}-${to}` }
-      )
+        { key: `${from}-${to}` },
+      ),
     );
 };
 
@@ -329,7 +331,7 @@ export const docToCqlStr = (doc: Node): string => {
         str += node.textContent;
         return false;
       }
-    case "chipKey": {
+      case "chipKey": {
         const leadingWhitespace =
           str.trim() === "" || str.endsWith(" ") ? "" : " ";
         const polarity = parent?.attrs[POLARITY];
@@ -346,7 +348,7 @@ export const docToCqlStr = (doc: Node): string => {
           return;
         }
 
-        console.log({value})
+        console.log({ value });
 
         const maybeQuoteMark = hasWhitespace(value) ? '"' : "";
 
@@ -409,7 +411,7 @@ export const maybeMoveSelectionIntoChipKey = ({
   return TextSelection.create(
     currentDoc,
     Math.min(selection.from, currentDoc.nodeSize - 2),
-    Math.min(selection.to, currentDoc.nodeSize - 2)
+    Math.min(selection.to, currentDoc.nodeSize - 2),
   );
 };
 
@@ -437,7 +439,7 @@ export const toProseMirrorTokens = (tokens: Token[]): ProseMirrorToken[] =>
 
 export const toMappedSuggestions = (
   typeaheadSuggestions: TypeaheadSuggestion[],
-  mapping: Mapping
+  mapping: Mapping,
 ) =>
   typeaheadSuggestions.map((suggestion) => {
     const from = mapping.map(suggestion.from);
@@ -470,17 +472,17 @@ const typeaheadSelectionSequence = [chipKey, chipValue, queryStr];
 
 export const getNextPositionAfterTypeaheadSelection = (
   currentDoc: Node,
-  currentPos: number
+  currentPos: number,
 ) => {
   const $pos = currentDoc.resolve(currentPos);
   const suggestionNode = $pos.node();
   const nodeTypeAfterIndex = typeaheadSelectionSequence.indexOf(
-    suggestionNode.type
+    suggestionNode.type,
   );
 
   if (nodeTypeAfterIndex === -1) {
     console.warn(
-      `Attempted to find a selection, but the position ${currentPos} w/in node ${suggestionNode.type.name} is not one of ${typeaheadSelectionSequence.map((_) => _.name).join(",")}`
+      `Attempted to find a selection, but the position ${currentPos} w/in node ${suggestionNode.type.name} is not one of ${typeaheadSelectionSequence.map((_) => _.name).join(",")}`,
     );
     return;
   }
@@ -489,7 +491,7 @@ export const getNextPositionAfterTypeaheadSelection = (
 
   if (!nodeTypeToSelect) {
     console.warn(
-      `Attempted to find a selection, but the position ${currentPos} w/in node ${suggestionNode.type.name} does not have anything to follow a node of type ${nodeTypeAfterIndex}`
+      `Attempted to find a selection, but the position ${currentPos} w/in node ${suggestionNode.type.name} does not have anything to follow a node of type ${nodeTypeAfterIndex}`,
     );
     return;
   }
@@ -507,7 +509,7 @@ export const getNextPositionAfterTypeaheadSelection = (
 
   if (insertPos === undefined) {
     console.warn(
-      `Attempted to find a selection after node ${suggestionNode.type.name} at ${$pos.pos}, but could not find a node of type ${nodeTypeToSelect.name}`
+      `Attempted to find a selection after node ${suggestionNode.type.name} at ${$pos.pos}, but could not find a node of type ${nodeTypeToSelect.name}`,
     );
     return;
   }
@@ -524,7 +526,7 @@ export const applyDeleteIntent = (
   view: EditorView,
   from: number,
   to: number,
-  node: Node
+  node: Node,
 ) => {
   if (node.type !== chip) {
     return false;
@@ -564,7 +566,7 @@ export const getErrorMessage = (e: unknown) =>
 
 export const queryHasChanged = (
   oldDoc: Node,
-  newDoc: Node
+  newDoc: Node,
 ): { prevQuery: string; currentQuery: string } | undefined => {
   if (oldDoc === newDoc) {
     return;
@@ -623,7 +625,7 @@ export const skipSuggestion = (view: EditorView) => () => {
   const tr = view.state.tr;
   const insertPos = getNextPositionAfterTypeaheadSelection(
     tr.doc,
-    tr.selection.from
+    tr.selection.from,
   );
 
   if (insertPos) {

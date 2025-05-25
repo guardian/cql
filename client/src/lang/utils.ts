@@ -7,7 +7,7 @@ const letterOrDigitR = /[0-9A-z]/;
 export const hasLetterOrDigit = (str: string) => letterOrDigitR.test(str);
 
 export function* getPermutations<T>(
-  permutation: T[]
+  permutation: T[],
 ): Generator<T[], T[], unknown> {
   const length = permutation.length,
     c = Array(length).fill(0);
@@ -35,17 +35,15 @@ export function* getPermutations<T>(
   return permutation.slice();
 }
 
-export const getCqlFieldsFromCqlBinary = (
-  queryBinary: CqlBinary
-): CqlField[] =>
+export const getCqlFieldsFromCqlBinary = (queryBinary: CqlBinary): CqlField[] =>
   getCqlFieldsFromQueryExpr(queryBinary.left).concat(
     queryBinary.right
       ? getCqlFieldsFromCqlBinary(queryBinary.right.binary)
-      : []
+      : [],
   );
 
 export const getCqlFieldsFromQueryExpr = (
-  queryContent: CqlExpr
+  queryContent: CqlExpr,
 ): CqlField[] => {
   switch (queryContent.content.type) {
     case "CqlField":

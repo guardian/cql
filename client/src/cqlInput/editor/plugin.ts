@@ -139,14 +139,14 @@ export const createCqlPlugin = ({
       debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
         queryAst,
         undefined,
-        "  "
+        "  ",
       )}</div>`;
     }
     if (debugTokenContainer) {
       debugTokenContainer.innerHTML = `<h2>Tokens</h2><div>${JSON.stringify(
         tokens,
         undefined,
-        "  "
+        "  ",
       )}</div>`;
     }
 
@@ -175,7 +175,7 @@ export const createCqlPlugin = ({
         maybeMoveSelectionIntoChipKey({
           selection: selectionPriorToInsertion,
           currentDoc: tr.doc,
-        })
+        }),
       );
     }
 
@@ -296,7 +296,7 @@ export const createCqlPlugin = ({
             }
             const newPolarity = result.node.attrs[POLARITY] === "+" ? "-" : "+";
             view.dispatch(
-              view.state.tr.setNodeAttribute(result.pos, POLARITY, newPolarity)
+              view.state.tr.setNodeAttribute(result.pos, POLARITY, newPolarity),
             );
           };
 
@@ -398,7 +398,7 @@ export const createCqlPlugin = ({
             const { doc, selection } = view.state;
             const suffix = doc.textBetween(
               selection.from,
-              Math.min(selection.to + 1, doc.nodeSize - 2)
+              Math.min(selection.to + 1, doc.nodeSize - 2),
             );
             const maybeTrailingWhitespace =
               selection.from === selection.to &&
@@ -446,7 +446,7 @@ export const createCqlPlugin = ({
               view,
               $nextPos.pos,
               $nextPos.pos + nextNode.nodeSize,
-              nextNode
+              nextNode,
             );
           }
           case "Backspace": {
@@ -507,7 +507,7 @@ export const createCqlPlugin = ({
           const node = doc.create(undefined, fragment);
           const queryStr = docToCqlStr(node);
           const plainTextNode = DOMSerializer.fromSchema(schema).serializeNode(
-            schema.text(queryStr)
+            schema.text(queryStr),
           );
           return plainTextNode;
         },
@@ -519,7 +519,7 @@ export const createCqlPlugin = ({
         typeaheadEl,
         applySuggestion(view),
         skipSuggestion(view),
-        renderPopoverContent
+        renderPopoverContent,
       );
 
       errorPopover = new ErrorPopover(view, errorEl, jsonDebugContainer);
@@ -536,7 +536,7 @@ export const createCqlPlugin = ({
       return {
         async update(view) {
           const { error, queryAst, queryStr, mapping } = cqlPluginKey.getState(
-            view.state
+            view.state,
           )!;
 
           errorPopover?.updateErrorMessage(error);
@@ -571,7 +571,7 @@ export const createCqlPlugin = ({
                       </p>
 
                 <div>${mappedSuggestions.map((suggestion) =>
-                  JSON.stringify(suggestion, undefined, "  ")
+                  JSON.stringify(suggestion, undefined, "  "),
                 )}</div>`;
             }
           } catch (e) {

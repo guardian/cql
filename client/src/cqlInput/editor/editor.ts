@@ -20,7 +20,7 @@ export const createEditorView = ({
       doc: doc.create(undefined, [
         queryStr.create(
           undefined,
-          [initialValue !== "" ? [schema.text(initialValue)] : []].flat()
+          [initialValue !== "" ? [schema.text(initialValue)] : []].flat(),
         ),
       ]),
       schema: schema,

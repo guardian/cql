@@ -17,11 +17,14 @@ export class CqlResultEnvelope implements CqlResult {
     public tokens: Token[],
     public queryAst?: CqlQuery,
     public queryStr?: string,
-    public error?: Error
+    public error?: Error,
   ) {}
 }
 
-export const parseCqlStr = (queryStr: string, scannerSettings?: Partial<ScannerSettings>) => {
+export const parseCqlStr = (
+  queryStr: string,
+  scannerSettings?: Partial<ScannerSettings>,
+) => {
   const scanner = new Scanner(queryStr, scannerSettings);
   const tokens = scanner.scanTokens();
   const parser = new Parser(tokens);
@@ -35,8 +38,8 @@ export const parseCqlStr = (queryStr: string, scannerSettings?: Partial<ScannerS
 
       return either(queryStringResult)(
         (error) => new CqlResultEnvelope(tokens, query, undefined, error),
-        (queryResult) => new CqlResultEnvelope(tokens, query, queryResult)
+        (queryResult) => new CqlResultEnvelope(tokens, query, queryResult),
       );
-    }
+    },
   );
 };

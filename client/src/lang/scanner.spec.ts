@@ -109,7 +109,7 @@ describe("scanner", () => {
           ":commentisfree",
           "commentisfree",
           8,
-          21
+          21,
         ),
         eofToken(22),
       ];
@@ -118,11 +118,11 @@ describe("scanner", () => {
     });
 
     it("should tokenise key value pairs for fields when the key value is in quotes", () => {
-      const scanner = new Scanner("+tag:\"tone/news\"");
+      const scanner = new Scanner('+tag:"tone/news"');
       const tokens = scanner.scanTokens();
       const expectedTokens = [
         new Token(TokenType.CHIP_KEY_POSITIVE, "+tag", "tag", 0, 3),
-        new Token(TokenType.CHIP_VALUE, ":\"tone/news\"", "tone/news", 4, 15),
+        new Token(TokenType.CHIP_VALUE, ':"tone/news"', "tone/news", 4, 15),
         eofToken(16),
       ];
 

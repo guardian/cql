@@ -13,7 +13,9 @@ import { Debounce } from "./Debounce";
 // flashes of loading for timely fetches.
 const loadingDelayMs = 500;
 
-export const PopoverContainer: FunctionComponent<Omit<PopoverRendererArgs, "popoverEl">> = ({
+export const PopoverContainer: FunctionComponent<
+  Omit<PopoverRendererArgs, "popoverEl">
+> = ({
   subscribeToState,
   subscribeToAction,
   applySuggestion,
@@ -35,7 +37,7 @@ export const PopoverContainer: FunctionComponent<Omit<PopoverRendererArgs, "popo
       setLoadingTimer(
         setTimeout(() => {
           setDisplayLoading(true);
-        }, loadingDelayMs)
+        }, loadingDelayMs),
       );
     }
 

@@ -34,14 +34,14 @@ export class TextSuggestionOption {
     public readonly label: string,
     public readonly value: string,
     public readonly description?: string,
-    public readonly count?: number
+    public readonly count?: number,
   ) {}
 }
 
 export class DateSuggestionOption {
   constructor(
     public readonly label: string,
-    public readonly value: string
+    public readonly value: string,
   ) {}
 }
 

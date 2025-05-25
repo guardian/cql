@@ -38,7 +38,7 @@ export const toolsSuggestionOptionResolvers: TextSuggestionOption[] =
     }
     return 0;
   }).map(
-    (team) => new TextSuggestionOption(team.team, team.team, team.description)
+    (team) => new TextSuggestionOption(team.team, team.team, team.description),
   );
 
 function sortByName(tools: Array<Tool>): Array<Tool> {
@@ -55,7 +55,7 @@ function sortByName(tools: Array<Tool>): Array<Tool> {
 
 export function getToolsByTeams(teams: Array<Team>): Array<Tool> {
   return sortByName(
-    AllTools.filter((tool) => teams.filter((_) => _ === tool.team).length > 0)
+    AllTools.filter((tool) => teams.filter((_) => _ === tool.team).length > 0),
   );
 }
 

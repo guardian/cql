@@ -23,17 +23,17 @@ describe("typeahead", () => {
           new TextSuggestionOption(
             "Tag",
             "tag",
-            "Search by content tags, e.g. sport/football"
+            "Search by content tags, e.g. sport/football",
           ),
           new TextSuggestionOption(
             "Section",
             "section",
-            "Search by content sections, e.g. section/news"
+            "Search by content sections, e.g. section/news",
           ),
           new TextSuggestionOption(
             "From date",
             "from-date",
-            "The date to search from"
+            "The date to search from",
           ),
         ],
         type: "TEXT",
@@ -53,7 +53,7 @@ describe("typeahead", () => {
           new TextSuggestionOption(
             "Tag",
             "tag",
-            "Search by content tags, e.g. sport/football"
+            "Search by content tags, e.g. sport/football",
           ),
         ],
         type: "TEXT",
@@ -74,7 +74,7 @@ describe("typeahead", () => {
           new TextSuggestionOption(
             "Tag",
             "tag",
-            "Search by content tags, e.g. sport/football"
+            "Search by content tags, e.g. sport/football",
           ),
         ],
         type: "TEXT",
@@ -88,12 +88,12 @@ describe("typeahead", () => {
           new TextSuggestionOption(
             "Tags are magic",
             "tags-are-magic",
-            "A magic tag"
+            "A magic tag",
           ),
           new TextSuggestionOption(
             "Tag with a space in it",
             "Tag with space",
-            "A tag with whitespace in the id. Gosh"
+            "A tag with whitespace in the id. Gosh",
           ),
         ],
         type: "TEXT",
@@ -113,7 +113,7 @@ describe("typeahead", () => {
           new TextSuggestionOption(
             "Tag",
             "tag",
-            "Search by content tags, e.g. sport/football"
+            "Search by content tags, e.g. sport/football",
           ),
         ],
         type: "TEXT",
@@ -127,12 +127,12 @@ describe("typeahead", () => {
           new TextSuggestionOption(
             "Tags are magic",
             "tags-are-magic",
-            "A magic tag"
+            "A magic tag",
           ),
           new TextSuggestionOption(
             "Tag with a space in it",
             "Tag with space",
-            "A tag with whitespace in the id. Gosh"
+            "A tag with whitespace in the id. Gosh",
           ),
         ],
         type: "TEXT",
@@ -153,7 +153,7 @@ describe("typeahead", () => {
           new TextSuggestionOption(
             "From date",
             "from-date",
-            "The date to search from"
+            "The date to search from",
           ),
         ],
         type: "TEXT",
@@ -188,7 +188,7 @@ describe("typeahead", () => {
           new TextSuggestionOption(
             "Tag",
             "tag",
-            "Search by content tags, e.g. sport/football"
+            "Search by content tags, e.g. sport/football",
           ),
         ],
         type: "TEXT",
@@ -202,12 +202,12 @@ describe("typeahead", () => {
           new TextSuggestionOption(
             "Tags are magic",
             "tags-are-magic",
-            "A magic tag"
+            "A magic tag",
           ),
           new TextSuggestionOption(
             "Tag with a space in it",
             "Tag with space",
-            "A tag with whitespace in the id. Gosh"
+            "A tag with whitespace in the id. Gosh",
           ),
         ],
         type: "TEXT",
@@ -221,17 +221,17 @@ describe("typeahead", () => {
           new TextSuggestionOption(
             "Tag",
             "tag",
-            "Search by content tags, e.g. sport/football"
+            "Search by content tags, e.g. sport/football",
           ),
           new TextSuggestionOption(
             "Section",
             "section",
-            "Search by content sections, e.g. section/news"
+            "Search by content sections, e.g. section/news",
           ),
           new TextSuggestionOption(
             "From date",
             "from-date",
-            "The date to search from"
+            "The date to search from",
           ),
         ],
         type: "TEXT",

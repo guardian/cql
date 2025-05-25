@@ -28,12 +28,16 @@ export const TextSuggestionContent = ({
       switch (action) {
         case "up":
           setCurrentOptionIndex(
-            wrapSelection(currentOptionIndex, -1, suggestion.suggestions.length)
+            wrapSelection(
+              currentOptionIndex,
+              -1,
+              suggestion.suggestions.length,
+            ),
           );
           return true;
         case "down": {
           setCurrentOptionIndex(
-            wrapSelection(currentOptionIndex, 1, suggestion.suggestions.length)
+            wrapSelection(currentOptionIndex, 1, suggestion.suggestions.length),
           );
           return true;
         }
@@ -99,7 +103,7 @@ export const TextSuggestionContent = ({
                 )}
               </div>
             );
-          }
+          },
         )}
       </div>
     </div>

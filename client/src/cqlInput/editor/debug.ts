@@ -25,7 +25,7 @@ export const logNode = (doc: Node) => {
     console.log(
       `${" ".repeat(indent)} ${node.type.name} ${pos}-${pos + node.nodeSize} ${
         content ? content : ""
-      }`
+      }`,
     );
   });
 };
@@ -92,7 +92,7 @@ export const getOriginalQueryHTML = (query: string) => `
             <div class="CqlDebug__queryBox">
                 <div class="CqlDebug__queryIndex">${index}</div>
                 <div class="CqlDebug__queryChar">${char}</div>
-            </div>`
+            </div>`,
       )
       .join("")}
       </div>
@@ -101,7 +101,7 @@ export const getOriginalQueryHTML = (query: string) => `
 export const getDebugMappingHTML = (
   query: string,
   mapping: Mapping,
-  doc: Node
+  doc: Node,
 ) => {
   const queryPosMap: Record<string, { char: string; originalPos: number }[]> =
     {};
@@ -146,7 +146,7 @@ export const getDebugMappingHTML = (
         (char, index) =>
           (posMap[index + pos + 1] = posMap[index + pos + 1]
             ? { char, ...posMap[index + pos + 1] }
-            : { char })
+            : { char }),
       );
   });
 
@@ -158,7 +158,7 @@ export const getDebugMappingHTML = (
                     <div class="CqlDebug__queryIndex">${pos}</div>
                     ${(queryPosMap[pos] ?? []).map(
                       ({ char }) =>
-                        `<div class="CqlDebug__originalChar">${char}</div>`
+                        `<div class="CqlDebug__originalChar">${char}</div>`,
                     )}
 
 
@@ -174,7 +174,7 @@ export const getDebugMappingHTML = (
                           }">${node}</div>`
                         : ""
                     }
-                </div>`
+                </div>`,
     )
     .join("");
 

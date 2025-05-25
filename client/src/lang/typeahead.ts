@@ -18,16 +18,16 @@ export class TypeaheadField {
     public name: string,
     public description: string,
     private resolver?: TypeaheadResolver,
-    public suggestionType: SuggestionType = "TEXT"
+    public suggestionType: SuggestionType = "TEXT",
   ) {}
 
   public resolveSuggestions(
     str: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<TextSuggestionOption[]> | undefined {
     if (Array.isArray(this.resolver)) {
       return Promise.resolve(
-        this.resolver.filter((item) => item.label.includes(str))
+        this.resolver.filter((item) => item.label.includes(str)),
       );
     }
 
@@ -45,13 +45,13 @@ export class Typeahead {
 
   constructor(private typeaheadFields: TypeaheadField[]) {
     this.typeaheadFieldEntries = this.typeaheadFields.map((field) =>
-      field.toSuggestionOption()
+      field.toSuggestionOption(),
     );
   }
 
   public getSuggestions(
     program: CqlQuery,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<TypeaheadSuggestion[]> {
     return new Promise((resolve, reject) => {
       // Abort existing fetch, if it exists
@@ -68,11 +68,11 @@ export class Typeahead {
       });
 
       const eventuallySuggestions = getCqlFieldsFromCqlBinary(
-        program.content
+        program.content,
       ).flatMap((queryField) => this.suggestCqlField(queryField, signal));
 
       return Promise.all(eventuallySuggestions)
-        .then(suggestions => resolve(suggestions.flat()))
+        .then((suggestions) => resolve(suggestions.flat()))
         .catch(reject);
     });
   }
@@ -98,7 +98,7 @@ export class Typeahead {
 
   private async suggestCqlField(
     q: CqlField,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<TypeaheadSuggestion[]> {
     const { key, value } = q;
 
@@ -110,7 +110,7 @@ export class Typeahead {
     const maybeValueSuggestions = this.suggestFieldValue(
       key.literal ?? "",
       value.literal ?? "",
-      signal
+      signal,
     );
 
     if (!maybeValueSuggestions) {
@@ -136,7 +136,7 @@ export class Typeahead {
     }
 
     const suggestions = this.typeaheadFieldEntries.filter((_) =>
-      _.value.includes(str.toLowerCase())
+      _.value.includes(str.toLowerCase()),
     );
 
     if (suggestions.length) {
@@ -149,7 +149,7 @@ export class Typeahead {
   private suggestFieldValue(
     key: string,
     str: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ):
     | { type: "TEXT"; suggestions: Promise<TextSuggestionOption[]> }
     | { type: "DATE"; suggestions: Promise<DateSuggestionOption[]> }

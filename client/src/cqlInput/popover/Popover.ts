@@ -40,7 +40,7 @@ export abstract class Popover {
   protected async show(
     referenceElement: VirtualElement,
     xOffset: number = 0,
-    yOffset: number = 0
+    yOffset: number = 0,
   ) {
     this.isVisible = true;
     this.updateRenderer();

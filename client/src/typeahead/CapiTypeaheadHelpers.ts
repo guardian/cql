@@ -10,7 +10,7 @@ export class CapiTypeaheadProvider {
   private cache = new LRUCache(1000);
   public constructor(
     private baseUrl: string,
-    private apiKey: string
+    private apiKey: string,
   ) {}
 
   public setBaseUrl(baseUrl: string) {
@@ -19,13 +19,13 @@ export class CapiTypeaheadProvider {
 
   private getTags = async (
     str: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<TextSuggestionOption[]> => {
     const tags = str.length
       ? await this.getJson<{ response: TagsResponse }>(
           "tags",
           { q: str },
-          signal
+          signal,
         ).then((body) => body.response.results)
       : this.mostUsedTags;
 
@@ -33,14 +33,14 @@ export class CapiTypeaheadProvider {
       const searchResponse = await this.getJson<{ response: SearchResponse }>(
         "search",
         { tag: tag.id },
-        signal
+        signal,
       );
 
       return new TextSuggestionOption(
         tag.webTitle,
         tag.id,
         tag.description,
-        searchResponse.response.total
+        searchResponse.response.total,
       );
     });
 
@@ -780,13 +780,13 @@ export class CapiTypeaheadProvider {
 
   private getSections = async (
     str: string,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<TextSuggestionOption[]> => {
     const sections = str.length
       ? await this.getJson<{ response: SectionsResponse }>(
           "sections",
           { q: str },
-          signal
+          signal,
         ).then((body) => body.response.results)
       : this.mostUsedSections;
 
@@ -794,14 +794,14 @@ export class CapiTypeaheadProvider {
       const searchResponse = await this.getJson<{ response: SearchResponse }>(
         "search",
         { section: section.id },
-        signal
+        signal,
       );
 
       return new TextSuggestionOption(
         section.webTitle,
         section.id,
         section.webTitle,
-        searchResponse.response.total
+        searchResponse.response.total,
       );
     });
 
@@ -812,7 +812,7 @@ export class CapiTypeaheadProvider {
 
   private sortResultsByCount = <T extends { count?: number }>(
     results: T[],
-    quantiseTo = 1000
+    quantiseTo = 1000,
   ): T[] => {
     return stableSort(results, (a, b) => {
       const aCount = Math.ceil((a.count ?? 1) / quantiseTo);
@@ -827,27 +827,27 @@ export class CapiTypeaheadProvider {
       "tag",
       "Tag",
       "Search by content tags, e.g. sport/football",
-      this.getTags
+      this.getTags,
     ),
     new TypeaheadField(
       "section",
       "Section",
       "Search by content sections, e.g. section/news",
-      this.getSections
+      this.getSections,
     ),
     new TypeaheadField(
       "from-date",
       "From date",
       "The date to search from",
       undefined,
-      "DATE"
+      "DATE",
     ),
     new TypeaheadField(
       "to-date",
       "To date",
       "The date to search to",
       undefined,
-      "DATE"
+      "DATE",
     ),
     new TypeaheadField(
       "format",
@@ -856,22 +856,22 @@ export class CapiTypeaheadProvider {
       [
         new TextSuggestionOption("JSON", "json", "JSON format"),
         new TextSuggestionOption("XML", "xml", "XML format"),
-      ]
+      ],
     ),
     new TypeaheadField(
       "query-fields",
       "Query fields",
-      "Specify in which indexed fields query terms should be searched on, e.g. 'body', 'body, thumbnail'"
+      "Specify in which indexed fields query terms should be searched on, e.g. 'body', 'body, thumbnail'",
     ),
     new TypeaheadField(
       "reference",
       "Reference",
-      "Return only content with those references, e.g. 'isbn/9780718178949'"
+      "Return only content with those references, e.g. 'isbn/9780718178949'",
     ),
     new TypeaheadField(
       "reference-type",
       "Reference type",
-      "Return only content with references of those types, e.g. 'isbn'"
+      "Return only content with references of those types, e.g. 'isbn'",
     ),
     new TypeaheadField(
       "rights",
@@ -881,19 +881,19 @@ export class CapiTypeaheadProvider {
         new TextSuggestionOption(
           "Syndicatable",
           "syndicatable",
-          "Content that can be syndicated"
+          "Content that can be syndicated",
         ),
         new TextSuggestionOption(
           "Subscription databases",
           "syndicatable",
-          "Content that is available to developer-tier keys"
+          "Content that is available to developer-tier keys",
         ),
-      ]
+      ],
     ),
     new TypeaheadField(
       "ids",
       "IDs",
-      "Return only content with those IDs, e.g. technology/2014/feb/17/flappy-bird-clones-apple-google"
+      "Return only content with those IDs, e.g. technology/2014/feb/17/flappy-bird-clones-apple-google",
     ),
     new TypeaheadField(
       "production-office",
@@ -904,15 +904,15 @@ export class CapiTypeaheadProvider {
         new TextSuggestionOption(
           "Australia",
           "aus",
-          "The Australia production office"
+          "The Australia production office",
         ),
         new TextSuggestionOption("US", "us", "The US production office"),
-      ]
+      ],
     ),
     new TypeaheadField(
       "lang",
       "Language",
-      "Return content that has the given ISO language code, e.g. 'en', 'fr'"
+      "Return content that has the given ISO language code, e.g. 'en', 'fr'",
     ),
     new TypeaheadField(
       "star-rating",
@@ -924,7 +924,7 @@ export class CapiTypeaheadProvider {
         new TextSuggestionOption("3", "3"),
         new TextSuggestionOption("4", "4"),
         new TextSuggestionOption("5", "5"),
-      ]
+      ],
     ),
     new TypeaheadField(
       "show-fields",
@@ -937,14 +937,14 @@ export class CapiTypeaheadProvider {
         new TextSuggestionOption(
           "showInRelatedContent",
           "showInRelatedContent",
-          "Description"
+          "Description",
         ),
         new TextSuggestionOption("body", "body", "Description"),
         new TextSuggestionOption("lastModified", "lastModified", "Description"),
         new TextSuggestionOption(
           "hasStoryPackage",
           "hasStoryPackage",
-          "Description"
+          "Description",
         ),
         new TextSuggestionOption("score", "score", "Description"),
         new TextSuggestionOption("standfirst", "standfirst", "Description"),
@@ -955,7 +955,7 @@ export class CapiTypeaheadProvider {
         new TextSuggestionOption(
           "isPremoderated",
           "isPremoderated",
-          "Description"
+          "Description",
         ),
         new TextSuggestionOption("allowUgc", "allowUgc", "Description"),
         new TextSuggestionOption("byline", "byline", "Description"),
@@ -963,37 +963,37 @@ export class CapiTypeaheadProvider {
         new TextSuggestionOption(
           "internalPageCode",
           "internalPageCode",
-          "Description"
+          "Description",
         ),
         new TextSuggestionOption(
           "productionOffice",
           "productionOffice",
-          "Description"
+          "Description",
         ),
         new TextSuggestionOption(
           "shouldHideAdverts",
           "shouldHideAdverts",
-          "Description"
+          "Description",
         ),
         new TextSuggestionOption(
           "liveBloggingNow",
           "liveBloggingNow",
-          "Description"
+          "Description",
         ),
         new TextSuggestionOption(
           "commentCloseDate",
           "commentCloseDate",
-          "Description"
+          "Description",
         ),
         new TextSuggestionOption("starRating", "starRating", "Description"),
-      ]
+      ],
     ),
   ];
 
   private async getJson<T>(
     path: string,
     _params: Record<string, string>,
-    signal?: AbortSignal
+    signal?: AbortSignal,
   ): Promise<T> {
     const params = new URLSearchParams({
       ..._params,

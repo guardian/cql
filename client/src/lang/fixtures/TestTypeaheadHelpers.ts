@@ -7,20 +7,20 @@ export class TestTypeaheadHelpers {
       "tag",
       "Tag",
       "Search by content tags, e.g. sport/football",
-      this.getTags
+      this.getTags,
     ),
     new TypeaheadField(
       "section",
       "Section",
       "Search by content sections, e.g. section/news",
-      this.getSections
+      this.getSections,
     ),
     new TypeaheadField(
       "from-date",
       "From date",
       "The date to search from",
       undefined,
-      "DATE"
+      "DATE",
     ),
   ];
 
@@ -29,12 +29,12 @@ export class TestTypeaheadHelpers {
       new TextSuggestionOption(
         "Tags are magic",
         "tags-are-magic",
-        "A magic tag"
+        "A magic tag",
       ),
       new TextSuggestionOption(
         "Tag with a space in it",
         "Tag with space",
-        "A tag with whitespace in the id. Gosh"
+        "A tag with whitespace in the id. Gosh",
       ),
     ]);
   }
@@ -44,7 +44,7 @@ export class TestTypeaheadHelpers {
       new TextSuggestionOption(
         "Also sections",
         "sections-are-magic",
-        "Sections are less magic"
+        "Sections are less magic",
       ),
     ]);
   }

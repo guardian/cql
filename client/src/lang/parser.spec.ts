@@ -26,7 +26,7 @@ import { Token, TokenType } from "./token";
 describe("parser", () => {
   const assertFailure = (
     queryBinary: Result<Error, CqlQuery>,
-    strContains: string
+    strContains: string,
   ) => {
     switch (queryBinary.kind) {
       case ResultKind.Err: {
@@ -96,15 +96,15 @@ describe("parser", () => {
                     {
                       operator: TokenType.OR,
                       binary: new CqlBinary(
-                        new CqlExpr(new CqlStr(unquotedStringToken("b", 2)))
+                        new CqlExpr(new CqlStr(unquotedStringToken("b", 2))),
                       ),
-                    }
-                  )
-                )
-              )
-            )
-          )
-        )
+                    },
+                  ),
+                ),
+              ),
+            ),
+          ),
+        ),
       );
     });
   });
@@ -133,7 +133,7 @@ describe("parser", () => {
       const result = new Parser(tokens).parse();
       assertFailure(
         result,
-        "An `AND` keyword must have a search term before and after it, e.g. `this AND that`"
+        "An `AND` keyword must have a search term before and after it, e.g. `this AND that`",
       );
     });
   });
@@ -147,7 +147,7 @@ describe("parser", () => {
       ];
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
-        ok(new CqlQuery(new CqlBinary(new CqlExpr(queryField("ta", "")))))
+        ok(new CqlQuery(new CqlBinary(new CqlExpr(queryField("ta", ""))))),
       );
     });
 
@@ -160,7 +160,7 @@ describe("parser", () => {
       const result = new Parser(tokens).parse();
       assertFailure(
         result,
-        "You cannot query for the field `tag` within a group"
+        "You cannot query for the field `tag` within a group",
       );
     });
 
@@ -190,11 +190,11 @@ describe("parser", () => {
               operator: TokenType.OR,
               binary: new CqlBinary(
                 new CqlExpr(new CqlField(queryFieldKeyToken("", 2), undefined)),
-                undefined
+                undefined,
               ),
-            })
-          )
-        )
+            }),
+          ),
+        ),
       );
     });
 

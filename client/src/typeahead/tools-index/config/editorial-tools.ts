@@ -14,17 +14,17 @@ const Composer: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase,value:PROD),query:(match:(stage:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:'app:%20apiv2%20OR%20app:%20%22composer-backend%22%20OR%20app:%20integration%20OR%20app:%20composer'),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase,value:PROD),query:(match:(stage:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:'app:%20apiv2%20OR%20app:%20%22composer-backend%22%20OR%20app:%20integration%20OR%20app:%20composer'),sort:!('@timestamp',desc))`,
+      ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase,value:CODE),query:(match:(stage:(query:CODE,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:'app:%20apiv2%20OR%20app:%20%22composer-backend%22%20OR%20app:%20integration%20OR%20app:%20composer'),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase,value:CODE),query:(match:(stage:(query:CODE,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:'app:%20apiv2%20OR%20app:%20%22composer-backend%22%20OR%20app:%20integration%20OR%20app:%20composer'),sort:!('@timestamp',desc))`,
+      ),
     },
-    riffRaffLink("Editorial Tools::Flexible Content")
-  ]
+    riffRaffLink("Editorial Tools::Flexible Content"),
+  ],
 };
 
 const MediaAtomMaker: Tool = {
@@ -40,17 +40,17 @@ const MediaAtomMaker: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=()&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:media-service),type:phrase),query:(match_phrase:(stack:(query:media-service)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:media-atom-maker),type:phrase),query:(match_phrase:(app:(query:media-atom-maker))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=()&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:media-service),type:phrase),query:(match_phrase:(stack:(query:media-service)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:media-atom-maker),type:phrase),query:(match_phrase:(app:(query:media-atom-maker))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
       ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=()&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:media-service),type:phrase),query:(match_phrase:(stack:(query:media-service)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:media-atom-maker),type:phrase),query:(match_phrase:(app:(query:media-atom-maker)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=()&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:media-service),type:phrase),query:(match_phrase:(stack:(query:media-service)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:media-atom-maker),type:phrase),query:(match_phrase:(app:(query:media-atom-maker)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
       ),
     },
-    riffRaffLink("media-service:media-atom-maker")
-  ]
+    riffRaffLink("media-service:media-atom-maker"),
+  ],
 };
 
 const Grid: Tool = {
@@ -65,28 +65,32 @@ const Grid: Tool = {
     codeLink("https://media.test.dev-gutools.co.uk"),
     {
       description: "PROD cerebro",
-      url: new URL("https://cerebro.media.gutools.co.uk/")
+      url: new URL("https://cerebro.media.gutools.co.uk/"),
     },
     {
       description: "CODE cerebro",
-      url: new URL("https://cerebro.media.test.dev-gutools.co.uk/")
+      url: new URL("https://cerebro.media.test.dev-gutools.co.uk/"),
     },
     {
-      description: 'PROD logs',
-      url: new URL(`https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,key:stack,negate:!f,params:(query:media-service),type:phrase,value:media-service),query:(match:(stack:(query:media-service,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,key:app,negate:!t,params:(query:media-atom-maker),type:phrase,value:media-atom-maker),query:(match:(app:(query:media-atom-maker,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,key:stage,negate:!f,params:(query:PROD),type:phrase,value:PROD),query:(match:(stage:(query:PROD,type:phrase))))),index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`)
+      description: "PROD logs",
+      url: new URL(
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,key:stack,negate:!f,params:(query:media-service),type:phrase,value:media-service),query:(match:(stack:(query:media-service,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,key:app,negate:!t,params:(query:media-atom-maker),type:phrase,value:media-atom-maker),query:(match:(app:(query:media-atom-maker,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,key:stage,negate:!f,params:(query:PROD),type:phrase,value:PROD),query:(match:(stage:(query:PROD,type:phrase))))),index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
+      ),
     },
     {
-      description: 'TEST logs',
-      url: new URL(`https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,key:stack,negate:!f,params:(query:media-service),type:phrase,value:media-service),query:(match:(stack:(query:media-service,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,key:app,negate:!t,params:(query:media-atom-maker),type:phrase,value:media-atom-maker),query:(match:(app:(query:media-atom-maker,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,key:stage,negate:!f,params:(query:TEST),type:phrase,value:TEST),query:(match:(stage:(query:TEST,type:phrase))))),index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`)
+      description: "TEST logs",
+      url: new URL(
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,key:stack,negate:!f,params:(query:media-service),type:phrase,value:media-service),query:(match:(stack:(query:media-service,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,key:app,negate:!t,params:(query:media-atom-maker),type:phrase,value:media-atom-maker),query:(match:(app:(query:media-atom-maker,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,key:stage,negate:!f,params:(query:TEST),type:phrase,value:TEST),query:(match:(stage:(query:TEST,type:phrase))))),index:a35a6090-59d7-11e8-bbe4-cbb5b151b19c,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
+      ),
     },
     {
       description: "Radiator",
       url: new URL(
-        `https://metrics.gutools.co.uk/d/MYer9zQZk/media-service-overview?orgId=1`
-      )
+        `https://metrics.gutools.co.uk/d/MYer9zQZk/media-service-overview?orgId=1`,
+      ),
     },
-    riffRaffLink("media-service::grid::all")
-  ]
+    riffRaffLink("media-service::grid::all"),
+  ],
 };
 
 const Workflow: Tool = {
@@ -102,17 +106,17 @@ const Workflow: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=()&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:description,negate:!f,params:(query:PROD,type:phrase),type:phrase,value:PROD),query:(match:(description:(query:PROD,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:workflow,type:phrase),type:phrase,value:workflow),query:(match:(stack:(query:workflow,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:'app:+workflow-frontend+OR+app:+prole+OR+app:+datastore+OR+app:+archiver'),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=()&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:description,negate:!f,params:(query:PROD,type:phrase),type:phrase,value:PROD),query:(match:(description:(query:PROD,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:workflow,type:phrase),type:phrase,value:workflow),query:(match:(stack:(query:workflow,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:'app:+workflow-frontend+OR+app:+prole+OR+app:+datastore+OR+app:+archiver'),sort:!('@timestamp',desc))`,
+      ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=()&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:workflow,type:phrase),type:phrase,value:workflow),query:(match:(stack:(query:workflow,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:description,negate:!f,params:(query:CODE,type:phrase),type:phrase,value:CODE),query:(match:(description:(query:CODE,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:'app:+workflow-frontend+OR+app:+prole+OR+app:+datastore+OR+app:+archiver'),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=()&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:workflow,type:phrase),type:phrase,value:workflow),query:(match:(stack:(query:workflow,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:description,negate:!f,params:(query:CODE,type:phrase),type:phrase,value:CODE),query:(match:(description:(query:CODE,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:'app:+workflow-frontend+OR+app:+prole+OR+app:+datastore+OR+app:+archiver'),sort:!('@timestamp',desc))`,
+      ),
     },
-    riffRaffLink("Editorial Tools::Workflow")
-  ]
+    riffRaffLink("Editorial Tools::Workflow"),
+  ],
 };
 const FrontsTool: Tool = {
   name: "Fronts Tool",
@@ -127,17 +131,17 @@ const FrontsTool: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:facia-tool),type:phrase,value:facia-tool),query:(match:(app:(query:facia-tool,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:cms-fronts),type:phrase,value:cms-fronts),query:(match:(stack:(query:cms-fronts,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase,value:{PROD}),query:(match:(stage:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:facia-tool),type:phrase,value:facia-tool),query:(match:(app:(query:facia-tool,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:cms-fronts),type:phrase,value:cms-fronts),query:(match:(stack:(query:cms-fronts,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase,value:{PROD}),query:(match:(stage:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
+      ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:facia-tool),type:phrase,value:facia-tool),query:(match:(app:(query:facia-tool,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:cms-fronts),type:phrase,value:cms-fronts),query:(match:(stack:(query:cms-fronts,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase,value:CODE),query:(match:(stage:(query:CODE,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:facia-tool),type:phrase,value:facia-tool),query:(match:(app:(query:facia-tool,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:cms-fronts),type:phrase,value:cms-fronts),query:(match:(stack:(query:cms-fronts,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase,value:CODE),query:(match:(stage:(query:CODE,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
+      ),
     },
-    riffRaffLink("cms-fronts::facia-tool")
-  ]
+    riffRaffLink("cms-fronts::facia-tool"),
+  ],
 };
 
 const BreakingNewsTool: Tool = {
@@ -153,17 +157,17 @@ const BreakingNewsTool: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:facia-tool),type:phrase,value:facia-tool),query:(match:(app:(query:facia-tool,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:cms-fronts),type:phrase,value:cms-fronts),query:(match:(stack:(query:cms-fronts,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase,value:{PROD}),query:(match:(stage:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:facia-tool),type:phrase,value:facia-tool),query:(match:(app:(query:facia-tool,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:cms-fronts),type:phrase,value:cms-fronts),query:(match:(stack:(query:cms-fronts,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase,value:{PROD}),query:(match:(stage:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
+      ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:facia-tool),type:phrase,value:facia-tool),query:(match:(app:(query:facia-tool,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:cms-fronts),type:phrase,value:cms-fronts),query:(match:(stack:(query:cms-fronts,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase,value:CODE),query:(match:(stage:(query:CODE,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:facia-tool),type:phrase,value:facia-tool),query:(match:(app:(query:facia-tool,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:cms-fronts),type:phrase,value:cms-fronts),query:(match:(stack:(query:cms-fronts,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase,value:CODE),query:(match:(stage:(query:CODE,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
+      ),
     },
-    riffRaffLink("cms-fronts::facia-tool")
-  ]
+    riffRaffLink("cms-fronts::facia-tool"),
+  ],
 };
 
 const AtomWorkshop: Tool = {
@@ -179,17 +183,17 @@ const AtomWorkshop: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:atom-workshop),type:phrase),query:(match_phrase:(app:(query:atom-workshop)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase),query:(match_phrase:(stack:(query:flexible)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:atom-workshop),type:phrase),query:(match_phrase:(app:(query:atom-workshop)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase),query:(match_phrase:(stack:(query:flexible)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
       ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:atom-workshop),type:phrase),query:(match_phrase:(app:(query:atom-workshop)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase),query:(match_phrase:(stack:(query:flexible)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:atom-workshop),type:phrase),query:(match_phrase:(app:(query:atom-workshop)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase),query:(match_phrase:(stack:(query:flexible)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
       ),
     },
-    riffRaffLink("editorial-tools:atom-workshop")
-  ]
+    riffRaffLink("editorial-tools:atom-workshop"),
+  ],
 };
 
 const TagManager: Tool = {
@@ -205,17 +209,17 @@ const TagManager: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible,type:phrase),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:tag-manager,type:phrase),type:phrase,value:tag-manager),query:(match:(app:(query:tag-manager,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD,type:phrase),type:phrase,value:PROD),query:(match:(stage:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible,type:phrase),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:tag-manager,type:phrase),type:phrase,value:tag-manager),query:(match:(app:(query:tag-manager,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD,type:phrase),type:phrase,value:PROD),query:(match:(stage:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
+      ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible,type:phrase),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:tag-manager,type:phrase),type:phrase,value:tag-manager),query:(match:(app:(query:tag-manager,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE,type:phrase),type:phrase,value:CODE),query:(match:(stage:(query:CODE,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible,type:phrase),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:tag-manager,type:phrase),type:phrase,value:tag-manager),query:(match:(app:(query:tag-manager,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE,type:phrase),type:phrase,value:CODE),query:(match:(stage:(query:CODE,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
+      ),
     },
-    riffRaffLink("editorial-tools:tag-manager")
-  ]
+    riffRaffLink("editorial-tools:tag-manager"),
+  ],
 };
 
 const Restorer: Tool = {
@@ -231,17 +235,17 @@ const Restorer: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase),query:(match_phrase:(stack:(query:flexible)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:restorer2),type:phrase),query:(match_phrase:(app:(query:restorer2)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:restorer),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase),query:(match_phrase:(stack:(query:flexible)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:restorer2),type:phrase),query:(match_phrase:(app:(query:restorer2)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:restorer),sort:!('@timestamp',desc))`,
       ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase),query:(match_phrase:(stack:(query:flexible)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:restorer2),type:phrase),query:(match_phrase:(app:(query:restorer2))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:restorer),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase),query:(match_phrase:(stack:(query:flexible)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:restorer2),type:phrase),query:(match_phrase:(app:(query:restorer2))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:restorer),sort:!('@timestamp',desc))`,
       ),
     },
-    riffRaffLink("editorial-tools:flexible:restorer2")
-  ]
+    riffRaffLink("editorial-tools:flexible:restorer2"),
+  ],
 };
 
 const Teleporter: Tool = {
@@ -252,13 +256,13 @@ const Teleporter: Tool = {
   primaryLink: {
     description: "install",
     url: new URL(
-      "https://s3-eu-west-1.amazonaws.com/gustaf-dist/composer/index.html"
-    )
+      "https://s3-eu-west-1.amazonaws.com/gustaf-dist/composer/index.html",
+    ),
   },
   links: [
     githubLink("teleporter"),
-    riffRaffLink("Editorial Tools::Teleporter")
-  ]
+    riffRaffLink("Editorial Tools::Teleporter"),
+  ],
 };
 
 const QuizBuilder: Tool = {
@@ -271,8 +275,8 @@ const QuizBuilder: Tool = {
   links: [
     githubLink("ten-four_quiz-builder"),
     codeLink("https://quizzes.code.dev-gutools.co.uk"),
-    riffRaffLink("ten-four_quiz-builder")
-  ]
+    riffRaffLink("ten-four_quiz-builder"),
+  ],
 };
 
 const Viewer: Tool = {
@@ -288,17 +292,17 @@ const Viewer: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase),query:(match_phrase:(stack:(query:flexible)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:viewer),type:phrase),query:(match_phrase:(app:(query:viewer)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:viewer),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase),query:(match_phrase:(stack:(query:flexible)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:viewer),type:phrase),query:(match_phrase:(app:(query:viewer)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:viewer),sort:!('@timestamp',desc))`,
       ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase),query:(match_phrase:(stack:(query:flexible)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:viewer),type:phrase),query:(match_phrase:(app:(query:viewer)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:viewer),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase),query:(match_phrase:(stack:(query:flexible)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:viewer),type:phrase),query:(match_phrase:(app:(query:viewer)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:viewer),sort:!('@timestamp',desc))`,
       ),
     },
-    riffRaffLink("editorial-tools:viewer")
-  ]
+    riffRaffLink("editorial-tools:viewer"),
+  ],
 };
 const S3Uploader: Tool = {
   name: "S3 Uploader",
@@ -310,8 +314,8 @@ const S3Uploader: Tool = {
   links: [
     githubLink("s3-upload"),
     codeLink("https://s3-uploader.code.dev-gutools.co.uk"),
-    riffRaffLink("media-service::s3-uploader")
-  ]
+    riffRaffLink("media-service::s3-uploader"),
+  ],
 };
 
 const Permissions: Tool = {
@@ -326,17 +330,17 @@ const Permissions: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:permissions),type:phrase),query:(match_phrase:(app:(query:permissions)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:workflow),type:phrase),query:(match_phrase:(stack:(query:workflow)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:permissions),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:permissions),type:phrase),query:(match_phrase:(app:(query:permissions)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:workflow),type:phrase),query:(match_phrase:(stack:(query:workflow)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:permissions),sort:!('@timestamp',desc))`,
       ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:permissions),type:phrase),query:(match_phrase:(app:(query:permissions)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:workflow),type:phrase),query:(match_phrase:(stack:(query:workflow)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:permissions),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:permissions),type:phrase),query:(match_phrase:(app:(query:permissions)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:workflow),type:phrase),query:(match_phrase:(stack:(query:workflow)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:permissions),sort:!('@timestamp',desc))`,
       ),
     },
-    riffRaffLink("editorial-tools:permissions")
-  ]
+    riffRaffLink("editorial-tools:permissions"),
+  ],
 };
 
 const ProductionMonitoring: Tool = {
@@ -351,11 +355,11 @@ const ProductionMonitoring: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:production-monitoring),type:phrase,value:production-monitoring),query:(match:(app:(query:production-monitoring,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase,value:PROD),query:(match:(stage:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!())&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:production-monitoring),type:phrase,value:production-monitoring),query:(match:(app:(query:production-monitoring,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase,value:PROD),query:(match:(stage:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
+      ),
     },
-    riffRaffLink("editorial-tools:production-monitoring")
-  ]
+    riffRaffLink("editorial-tools:production-monitoring"),
+  ],
 };
 
 const ProductionMonitoringSecondary: Tool = {
@@ -370,11 +374,11 @@ const ProductionMonitoringSecondary: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-15m,to:now))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible-secondary),type:phrase,value:flexible-secondary),query:(match:(stack:(query:flexible-secondary,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:production-monitoring),type:phrase,value:production-monitoring),query:(match:(app:(query:production-monitoring,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase,value:PROD),query:(match:(stage:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(filters:!(),refreshInterval:(pause:!t,value:0),time:(from:now-15m,to:now))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible-secondary),type:phrase,value:flexible-secondary),query:(match:(stack:(query:flexible-secondary,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:production-monitoring),type:phrase,value:production-monitoring),query:(match:(app:(query:production-monitoring,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase,value:PROD),query:(match:(stage:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
+      ),
     },
-    riffRaffLink("editorial-tools:production-monitoring")
-  ]
+    riffRaffLink("editorial-tools:production-monitoring"),
+  ],
 };
 
 const Targeting: Tool = {
@@ -390,17 +394,17 @@ const Targeting: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:targeting,type:phrase),type:phrase,value:targeting),query:(match:(app:(query:targeting,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible,type:phrase),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:description,negate:!f,params:(query:PROD,type:phrase),type:phrase,value:PROD),query:(match:(description:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:targeting,type:phrase),type:phrase,value:targeting),query:(match:(app:(query:targeting,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible,type:phrase),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:description,negate:!f,params:(query:PROD,type:phrase),type:phrase,value:PROD),query:(match:(description:(query:PROD,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
+      ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:targeting,type:phrase),type:phrase,value:targeting),query:(match:(app:(query:targeting,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible,type:phrase),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:description,negate:!f,params:(query:CODE,type:phrase),type:phrase,value:CODE),query:(match:(description:(query:CODE,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
-      )
+        `https://logs.gutools.co.uk/app/kibana#/discover?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(_source),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:targeting,type:phrase),type:phrase,value:targeting),query:(match:(app:(query:targeting,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible,type:phrase),type:phrase,value:flexible),query:(match:(stack:(query:flexible,type:phrase)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:description,negate:!f,params:(query:CODE,type:phrase),type:phrase,value:CODE),query:(match:(description:(query:CODE,type:phrase))))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
+      ),
     },
-    riffRaffLink("editorial-tools:targeting")
-  ]
+    riffRaffLink("editorial-tools:targeting"),
+  ],
 };
 
 const StoryPackages: Tool = {
@@ -416,17 +420,17 @@ const StoryPackages: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:story-packages),type:phrase),query:(match_phrase:(app:(query:story-packages)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:cms-fronts),type:phrase),query:(match_phrase:(stack:(query:cms-fronts)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:story-packages),type:phrase),query:(match_phrase:(app:(query:story-packages)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:cms-fronts),type:phrase),query:(match_phrase:(stack:(query:cms-fronts)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
       ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:story-packages),type:phrase),query:(match_phrase:(app:(query:story-packages)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:cms-fronts),type:phrase),query:(match_phrase:(stack:(query:cms-fronts)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:app,negate:!f,params:(query:story-packages),type:phrase),query:(match_phrase:(app:(query:story-packages)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:cms-fronts),type:phrase),query:(match_phrase:(stack:(query:cms-fronts)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
       ),
     },
-    riffRaffLink("cms-fronts::story-packages")
-  ]
+    riffRaffLink("cms-fronts::story-packages"),
+  ],
 };
 
 const ComposerSecondary: Tool = {
@@ -441,17 +445,17 @@ const ComposerSecondary: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible-secondary),type:phrase),query:(match_phrase:(stack:(query:flexible-secondary)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:secondary),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible-secondary),type:phrase),query:(match_phrase:(stack:(query:flexible-secondary)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:secondary),sort:!('@timestamp',desc))`,
       ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible-secondary),type:phrase),query:(match_phrase:(stack:(query:flexible-secondary)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:secondary),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stack,negate:!f,params:(query:flexible-secondary),type:phrase),query:(match_phrase:(stack:(query:flexible-secondary)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:b95116a0-59d7-11e8-ba01-2b66550a44f2,key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:b95116a0-59d7-11e8-ba01-2b66550a44f2,interval:auto,query:(language:lucene,query:secondary),sort:!('@timestamp',desc))`,
       ),
     },
-    riffRaffLink("Editorial Tools::Flexible Content")
-  ]
+    riffRaffLink("Editorial Tools::Flexible Content"),
+  ],
 };
 
 const SftpUserManager: Tool = {
@@ -462,10 +466,9 @@ const SftpUserManager: Tool = {
   primaryLink: prodLink("https://sftp-user-manager.gutools.co.uk"),
   links: [
     githubLink("sftp-user-manager"),
-    codeLink("https://sftp-user-manager.code.dev-gutools.co.uk/")
+    codeLink("https://sftp-user-manager.code.dev-gutools.co.uk/"),
   ],
 };
-
 
 const Birthdays: Tool = {
   name: "Birthdays",
@@ -475,7 +478,7 @@ const Birthdays: Tool = {
   primaryLink: prodLink("https://birthdays.gutools.co.uk/"),
   links: [
     githubLink("birthdays"),
-    codeLink("https://birthdays.code.dev-gutools.co.uk/")
+    codeLink("https://birthdays.code.dev-gutools.co.uk/"),
   ],
 };
 
@@ -488,7 +491,7 @@ const CrosswordV2: Tool = {
   links: [
     githubLink("crosswordv2"),
     codeLink("https://crosswordv2.code.dev-gutools.co.uk/"),
-  ]
+  ],
 };
 
 const ModTools: Tool = {
@@ -504,17 +507,17 @@ const ModTools: Tool = {
     {
       description: "PROD logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'48952b00-6e4e-11e8-96ad-49dd90b99a91',key:app,negate:!f,params:(query:modtools-api),type:phrase),query:(match_phrase:(app:(query:modtools-api)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'48952b00-6e4e-11e8-96ad-49dd90b99a91',key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:'48952b00-6e4e-11e8-96ad-49dd90b99a91',interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'48952b00-6e4e-11e8-96ad-49dd90b99a91',key:app,negate:!f,params:(query:modtools-api),type:phrase),query:(match_phrase:(app:(query:modtools-api)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'48952b00-6e4e-11e8-96ad-49dd90b99a91',key:stage,negate:!f,params:(query:PROD),type:phrase),query:(match_phrase:(stage:PROD)))),index:'48952b00-6e4e-11e8-96ad-49dd90b99a91',interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
       ),
     },
     {
       description: "CODE logs",
       url: new URL(
-        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'48952b00-6e4e-11e8-96ad-49dd90b99a91',key:app,negate:!f,params:(query:modtools-api),type:phrase),query:(match_phrase:(app:(query:modtools-api)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'48952b00-6e4e-11e8-96ad-49dd90b99a91',key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:'48952b00-6e4e-11e8-96ad-49dd90b99a91',interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`
+        `https://logs.gutools.co.uk/app/discover#/?_g=(refreshInterval:(display:Off,pause:!f,value:0),time:(from:now-15m,mode:quick,to:now))&_a=(columns:!(),filters:!(('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'48952b00-6e4e-11e8-96ad-49dd90b99a91',key:app,negate:!f,params:(query:modtools-api),type:phrase),query:(match_phrase:(app:(query:modtools-api)))),('$state':(store:appState),meta:(alias:!n,disabled:!f,index:'48952b00-6e4e-11e8-96ad-49dd90b99a91',key:stage,negate:!f,params:(query:CODE),type:phrase),query:(match_phrase:(stage:CODE)))),index:'48952b00-6e4e-11e8-96ad-49dd90b99a91',interval:auto,query:(language:lucene,query:''),sort:!('@timestamp',desc))`,
       ),
     },
-    riffRaffLink("Discussion::discussion-modtools-v2-frontend")
-  ]
+    riffRaffLink("Discussion::discussion-modtools-v2-frontend"),
+  ],
 };
 
 const YouTubePfPPlayerDemo: Tool = {
@@ -523,7 +526,7 @@ const YouTubePfPPlayerDemo: Tool = {
   team: "editorial-tools",
   keywords: ["video", "youtube", "pfp"],
   primaryLink: prodLink("https://youtube-pfp-player-demo.gutools.co.uk"),
-  links: [githubLink("youtube-pfp-player-demo")]
+  links: [githubLink("youtube-pfp-player-demo")],
 };
 
 const EditionsCardBuilder: Tool = {
@@ -532,7 +535,7 @@ const EditionsCardBuilder: Tool = {
   team: "editorial-tools",
   keywords: ["editions", "image", "card"],
   primaryLink: prodLink("https://editions-card-builder.gutools.co.uk"),
-  links: [githubLink("editions-card-builder")]
+  links: [githubLink("editions-card-builder")],
 };
 
 const Tools: Tool = {
@@ -541,7 +544,7 @@ const Tools: Tool = {
   team: "editorial-tools",
   keywords: ["tools"],
   primaryLink: prodLink("https://tools.gutools.co.uk"),
-  links: [githubLink("tools-index")]
+  links: [githubLink("tools-index")],
 };
 
 const Charts: Tool = {
@@ -554,8 +557,8 @@ const Charts: Tool = {
   links: [
     githubLink("interactive-basichartool"),
     codeLink("https://charts.code.dev-gutools.co.uk"),
-    riffRaffLink("basic-chart-tool")
-  ]
+    riffRaffLink("basic-chart-tool"),
+  ],
 };
 
 const Wires: Tool = {
@@ -568,8 +571,8 @@ const Wires: Tool = {
   links: [
     githubLink("editorial-wires"),
     codeLink("https://editorial-wires.code.dev-gutools.co.uk/"),
-    riffRaffLink("Editorial Tools::Editorial wires")
-  ]
+    riffRaffLink("Editorial Tools::Editorial wires"),
+  ],
 };
 
 const RemoteMachines: Tool = {
@@ -581,13 +584,14 @@ const RemoteMachines: Tool = {
   awsAccount: "composer",
   links: [
     githubLink("remote-machines"),
-    riffRaffLink("editorial-tools:remote-machines")
-  ]
+    riffRaffLink("editorial-tools:remote-machines"),
+  ],
 };
 
 const NewslettersTool: Tool = {
   name: "Newsletters Tool",
-  description: "View and update information on the Guardian's editorial newsletters",
+  description:
+    "View and update information on the Guardian's editorial newsletters",
   team: "editorial-tools",
   keywords: ["newsletters"],
   primaryLink: prodLink("https://newsletters-tool.gutools.co.uk/"),
@@ -595,8 +599,8 @@ const NewslettersTool: Tool = {
   links: [
     githubLink("newsletters-nx"),
     riffRaffLink("newsletters::newsletters-tool"),
-    codeLink('https://newsletters-tool.code.dev-gutools.co.uk/')
-  ]
+    codeLink("https://newsletters-tool.code.dev-gutools.co.uk/"),
+  ],
 };
 
 const Typerighter: Tool = {
@@ -609,10 +613,9 @@ const Typerighter: Tool = {
   links: [
     githubLink("typerighter"),
     codeLink("https://manager.typerighter.code.dev-gutools.co.uk/"),
-    riffRaffLink("Editorial Tools::Typerighter")
-  ]
+    riffRaffLink("Editorial Tools::Typerighter"),
+  ],
 };
-
 
 const All: Array<Tool> = [
   Composer,

@@ -35,7 +35,7 @@ export class Token {
     public lexeme: string,
     public literal: string | undefined,
     public start: number,
-    public end: number
+    public end: number,
   ) {}
   public toString() {
     return `${this.tokenType} ${this.lexeme} ${this.literal} ${this.start}-${this.end}`;

@@ -13,7 +13,7 @@ import { either, err, ok, Result } from "../utils/result";
 class ParseError extends Error {
   constructor(
     public position: number,
-    public message: string
+    public message: string,
   ) {
     super(message);
   }
@@ -50,7 +50,7 @@ export class Parser {
     if (this.peek().tokenType === TokenType.CHIP_VALUE)
       throw new ParseError(
         this.peek().start,
-        "I found an unexpected `:`. Did you intend to search for a field, e.g. `tag:news`? If you would like to add a search phrase containing a `:` character, please surround it in double quotes."
+        "I found an unexpected `:`. Did you intend to search for a field, e.g. `tag:news`? If you would like to add a search phrase containing a `:` character, please surround it in double quotes.",
       );
 
     const left = this.expr();
@@ -67,7 +67,7 @@ export class Parser {
         this.guardAgainstCqlField(`after \`${tokenType}\`.`);
         if (this.isAtEnd()) {
           throw this.error(
-            `There must be a query following \`${tokenType}\`, e.g. \`this ${tokenType} that\`.`
+            `There must be a query following \`${tokenType}\`, e.g. \`this ${tokenType} that\`.`,
           );
         }
         return new CqlBinary(left, {
@@ -102,7 +102,7 @@ export class Parser {
       case TokenType.AND:
       case TokenType.OR: {
         throw this.error(
-          `An \`${tokenType.toString()}\` keyword must have a search term before and after it, e.g. \`this ${tokenType.toString()} that\`.`
+          `An \`${tokenType.toString()}\` keyword must have a search term before and after it, e.g. \`this ${tokenType.toString()} that\`.`,
         );
       }
       default: {
@@ -114,23 +114,23 @@ export class Parser {
   private group(): CqlGroup {
     this.consume(
       TokenType.LEFT_BRACKET,
-      "Groups should start with a left bracket"
+      "Groups should start with a left bracket",
     );
 
     if (this.isAtEnd() || this.peek().tokenType === TokenType.RIGHT_BRACKET) {
       throw this.error(
-        "Groups can't be empty. Put a search term between the brackets!"
+        "Groups can't be empty. Put a search term between the brackets!",
       );
     }
 
     this.guardAgainstCqlField(
-      "within a group. Try putting this search term outside of the brackets!"
+      "within a group. Try putting this search term outside of the brackets!",
     );
 
     const binary = this.binary(true);
     this.consume(
       TokenType.RIGHT_BRACKET,
-      "Groups must end with a right bracket."
+      "Groups must end with a right bracket.",
     );
 
     return new CqlGroup(binary);
@@ -145,17 +145,17 @@ export class Parser {
   private field(): CqlField {
     const key = this.consumeMany(
       [TokenType.CHIP_KEY_POSITIVE, TokenType.CHIP_KEY_NEGATIVE],
-      "Expected a search key, e.g. `+tag`"
+      "Expected a search key, e.g. `+tag`",
     );
 
     const maybeValue = this.safeConsume(
       TokenType.CHIP_VALUE,
-      "Expected a search value, e.g. `+tag:new`"
+      "Expected a search value, e.g. `+tag:new`",
     );
 
     return either(maybeValue)(
       () => new CqlField(key, undefined),
-      (value: Token) => new CqlField(key, value)
+      (value: Token) => new CqlField(key, value),
     );
   }
 
@@ -167,7 +167,7 @@ export class Parser {
     if (isChipKey(this.peek().tokenType)) {
       const queryFieldNode = this.field();
       throw this.error(
-        `You cannot query for the field \`${queryFieldNode.key.literal}\` ${errorLocation}`
+        `You cannot query for the field \`${queryFieldNode.key.literal}\` ${errorLocation}`,
       );
     }
   };
@@ -204,7 +204,7 @@ export class Parser {
 
   private consumeMany = (
     tokenTypes: TokenType[],
-    message: string = ""
+    message: string = "",
   ): Token => {
     if (tokenTypes.some((tokenType) => this.check(tokenType))) {
       return this.advance();
@@ -215,7 +215,7 @@ export class Parser {
 
   private safeConsume = (
     tokenType: TokenType,
-    message: string = ""
+    message: string = "",
   ): Result<ParseError, Token> => {
     try {
       return ok(this.consume(tokenType, message));
@@ -234,7 +234,7 @@ export class Parser {
 
   private unexpectedTokenError = () => {
     throw this.error(
-      `I didn't expect to find a \`${this.peek().lexeme}\` ${!this.previous() ? "here." : `after \`${this.previous()?.lexeme}\``}`
+      `I didn't expect to find a \`${this.peek().lexeme}\` ${!this.previous() ? "here." : `after \`${this.previous()?.lexeme}\``}`,
     );
   };
 }

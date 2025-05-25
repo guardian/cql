@@ -118,9 +118,9 @@ const partition = <E, A>(results: Array<Result<E, A>>): Partitioned<E, A> =>
     ({ errs, oks }: Partitioned<E, A>, result) =>
       either<E, A>(result)<Partitioned<E, A>>(
         (err) => ({ errs: [...errs, err], oks }),
-        (ok) => ({ errs, oks: [...oks, ok] })
+        (ok) => ({ errs, oks: [...oks, ok] }),
       ),
-    { errs: [], oks: [] }
+    { errs: [], oks: [] },
   );
 
 // ----- Exports ----- //

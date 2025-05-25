@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 export function mergeDeep<A extends object, B extends object>(
   obj1: A,
-  obj2: B
+  obj2: B,
 ): A & B {
   const isObject = (obj: unknown) => obj && typeof obj === "object";
 

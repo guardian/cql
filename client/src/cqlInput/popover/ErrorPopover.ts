@@ -11,7 +11,7 @@ export class ErrorPopover extends Popover {
     protected view: EditorView,
     protected popoverEl: HTMLElement,
     debugEl?: HTMLElement,
-    private debounceTime = 500
+    private debounceTime = 500,
   ) {
     super(popoverEl);
 
@@ -63,7 +63,7 @@ export class ErrorPopover extends Popover {
           this.view.dom.getElementsByClassName(CLASS_ERROR)?.[0];
         if (!referenceEl) {
           console.warn(
-            `Attempt to render element popover at position ${error.position}, but no position widget found in document`
+            `Attempt to render element popover at position ${error.position}, but no position widget found in document`,
           );
           return;
         }

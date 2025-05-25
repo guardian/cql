@@ -27,7 +27,7 @@ export const Debounce = <ComponentProps extends object>({
       setTimeout(() => {
         setRenderToggle(!renderToggle);
         setIsPending(false);
-      }, throttleInMs)
+      }, throttleInMs),
     );
 
     setIsPending(true);

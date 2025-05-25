@@ -12,14 +12,14 @@ export class CqlBinary {
     public readonly right?: {
       operator: "OR" | "AND";
       binary: CqlBinary;
-    }
+    },
   ) {}
 }
 
 export class CqlExpr {
   public readonly type = "QueryExpr";
   constructor(
-    public readonly content: CqlStr | CqlBinary | CqlGroup | CqlField
+    public readonly content: CqlStr | CqlBinary | CqlGroup | CqlField,
   ) {}
 }
 
@@ -40,6 +40,6 @@ export class CqlField {
   public readonly type = "CqlField";
   constructor(
     public readonly key: Token,
-    public readonly value?: Token
+    public readonly value?: Token,
   ) {}
 }

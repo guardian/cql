@@ -46,7 +46,7 @@ describe("utils", () => {
       const expected = doc(
         queryStr("text"),
         chip({ [POLARITY]: "+" }, chipKey("key"), chipValue("value")),
-        queryStr("text")
+        queryStr("text"),
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
@@ -59,7 +59,7 @@ describe("utils", () => {
       const expected = doc(
         queryStr(),
         chip(chipKey("key"), chipValue("value")),
-        queryStr()
+        queryStr(),
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
@@ -81,7 +81,7 @@ describe("utils", () => {
       const expected = doc(
         queryStr(" this AND "),
         chip(chipKey("key"), chipValue()),
-        queryStr()
+        queryStr(),
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
@@ -94,7 +94,7 @@ describe("utils", () => {
       const expected = doc(
         queryStr("this AND "),
         chip(chipKey("key"), chipValue()),
-        queryStr()
+        queryStr(),
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
@@ -110,13 +110,15 @@ describe("utils", () => {
     });
 
     test("should preserve whitespace within values that have whitespace", async () => {
-      const tokens = await queryToProseMirrorTokens("example +key:\"1 2\" example");
+      const tokens = await queryToProseMirrorTokens(
+        'example +key:"1 2" example',
+      );
       const node = tokensToDoc(tokens);
 
       const expected = doc(
         queryStr("example"),
         chip(chipKey("key"), chipValue("1 2")),
-        queryStr("example")
+        queryStr("example"),
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
@@ -131,7 +133,7 @@ describe("utils", () => {
         chip(chipKey(), chipValue()),
         queryStr(),
         chip(chipKey("tag"), chipValue()),
-        queryStr()
+        queryStr(),
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
@@ -154,7 +156,7 @@ describe("utils", () => {
 
       test("with parens and tags", async () => {
         const text = await getTextFromTokenRanges(
-          "text (b OR c) +key:value text (b OR c)"
+          "text (b OR c) +key:value text (b OR c)",
         );
 
         expect(text).toEqual([
@@ -183,7 +185,7 @@ describe("utils", () => {
       });
 
       test("with a tag with a quoted value and whitespace", async () => {
-        const text = await getTextFromTokenRanges("+tag:\"1 2\" 3");
+        const text = await getTextFromTokenRanges('+tag:"1 2" 3');
 
         expect(text).toEqual(["tag", "1 2", "3", ""]);
       });
@@ -202,7 +204,7 @@ describe("utils", () => {
 
       test("with binary queries in the middle of tags", async () => {
         const text = await getTextFromTokenRanges(
-          "+key:value (a OR b) +key2:value2"
+          "+key:value (a OR b) +key2:value2",
         );
 
         expect(text).toEqual([
@@ -226,12 +228,12 @@ describe("utils", () => {
       const currentDoc = doc(
         queryStr(),
         chip(chipKey("key<fromPos>"), chipValue("<toPos>")),
-        queryStr()
+        queryStr(),
       );
 
       const insertPos = getNextPositionAfterTypeaheadSelection(
         currentDoc,
-        currentDoc.tag.fromPos
+        currentDoc.tag.fromPos,
       );
 
       expect(insertPos).toBe(currentDoc.tag.toPos);
@@ -241,12 +243,12 @@ describe("utils", () => {
       const currentDoc = doc(
         queryStr(),
         chip(chipKey("key"), chipValue("<fromPos>")),
-        queryStr("<toPos>")
+        queryStr("<toPos>"),
       );
 
       const insertPos = getNextPositionAfterTypeaheadSelection(
         currentDoc,
-        currentDoc.tag.fromPos
+        currentDoc.tag.fromPos,
       );
 
       expect(insertPos).toBe(currentDoc.tag.toPos);
@@ -256,12 +258,12 @@ describe("utils", () => {
       const currentDoc = doc(
         queryStr(),
         chip(chipKey("key"), chipValue("A key<fromPos>")),
-        queryStr("<toPos>")
+        queryStr("<toPos>"),
       );
 
       const insertPos = getNextPositionAfterTypeaheadSelection(
         currentDoc,
-        currentDoc.tag.fromPos
+        currentDoc.tag.fromPos,
       );
 
       expect(insertPos).toBe(currentDoc.tag.toPos);
@@ -273,7 +275,7 @@ describe("utils", () => {
       const queryDoc = doc(
         queryStr("example"),
         chip(chipKey("tag"), chipValue("tags-are-magic")),
-        queryStr()
+        queryStr(),
       );
 
       const query = "example +tag:tags-are-magic ";
@@ -285,10 +287,10 @@ describe("utils", () => {
       const queryDoc = doc(
         queryStr("example"),
         chip(chipKey("tag"), chipValue("Tag with whitespace")),
-        queryStr()
+        queryStr(),
       );
 
-      const query = "example +tag:\"Tag with whitespace\" ";
+      const query = 'example +tag:"Tag with whitespace" ';
 
       expect(docToCqlStr(queryDoc)).toBe(query);
     });
@@ -297,7 +299,7 @@ describe("utils", () => {
       const queryDoc = doc(
         queryStr(""),
         chip(chipKey("tag"), chipValue("tags-are-magic")),
-        queryStr()
+        queryStr(),
       );
 
       const query = "+tag:tags-are-magic ";
@@ -310,7 +312,7 @@ describe("utils", () => {
         queryStr(""),
         chip(chipKey("tag"), chipValue("tags-are-magic")),
         chip(chipKey("tag"), chipValue("tags-are-magic")),
-        queryStr()
+        queryStr(),
       );
 
       const query = "+tag:tags-are-magic +tag:tags-are-magic ";

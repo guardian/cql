@@ -16,7 +16,7 @@ export type PopoverRendererState = {
 
 type Unsubscriber = () => void;
 type StateSubscriber = (
-  sub: (state: PopoverRendererState) => void
+  sub: (state: PopoverRendererState) => void,
 ) => Unsubscriber;
 
 export type Actions = "left" | "right" | "up" | "down" | "enter";
@@ -42,14 +42,14 @@ export type RenderPopoverContent = (props: PopoverRendererArgs) => void;
 
 const noopActionHandler = () => {
   console.warn(
-    "[TypeaheadPopover]: No action handler has been registered by the popover renderer"
+    "[TypeaheadPopover]: No action handler has been registered by the popover renderer",
   );
   return undefined;
 };
 
 const noopUpdateRendererState = () => {
   console.warn(
-    "[TypeaheadPopover]: No update state callback has been registered by the popover renderer"
+    "[TypeaheadPopover]: No update state callback has been registered by the popover renderer",
   );
   return undefined;
 };
@@ -74,7 +74,7 @@ export class TypeaheadPopover extends Popover {
     skipSuggestion: () => void,
     // A callback that receives everything necessary to render popover content
     // as the input state changes.
-    renderPopoverContent: (args: PopoverRendererArgs) => void
+    renderPopoverContent: (args: PopoverRendererArgs) => void,
   ) {
     super(popoverEl);
     this._applySuggestion = applySuggestion;
@@ -86,8 +86,8 @@ export class TypeaheadPopover extends Popover {
       subscribeToAction: this.actionSubscriber,
       subscribeToState: this.stateSubscriber,
       closePopover: this.hide,
-      popoverEl
-    })
+      popoverEl,
+    });
 
     // Prevent the popover from stealing focus from the input, unless we are
     // focusing on another input within the popover
@@ -109,7 +109,7 @@ export class TypeaheadPopover extends Popover {
   public isRenderingNavigableMenu = () => this.isVisible;
 
   public updateItemsFromSuggestions = (
-    typeaheadSuggestions: MappedTypeaheadSuggestion[]
+    typeaheadSuggestions: MappedTypeaheadSuggestion[],
   ) => {
     this.isPending = false;
     if (
@@ -126,7 +126,7 @@ export class TypeaheadPopover extends Popover {
     const { selection: currentSelection } = this.view.state;
     const suggestionThatCoversSelection = typeaheadSuggestions.find(
       ({ from, to }) =>
-        currentSelection.from >= from && currentSelection.to <= to
+        currentSelection.from >= from && currentSelection.to <= to,
     );
 
     if (!suggestionThatCoversSelection) {
@@ -173,13 +173,13 @@ export class TypeaheadPopover extends Popover {
     return () => {
       this.updateRendererState = noopUpdateRendererState;
     };
-  }
+  };
 
   private actionSubscriber: ActionSubscriber = (handleAction) => {
     this.handleAction = handleAction;
 
     return () => (this.handleAction = noopActionHandler);
-  }
+  };
 
   private applySuggestion = (value: string) => {
     if (!this.currentSuggestion) {

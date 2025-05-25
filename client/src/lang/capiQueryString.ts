@@ -37,14 +37,14 @@ const parseDateValue = (value: string): string => {
       ? parseInt(quantity)
       : unit === "w"
         ? parseInt(quantity) * 7
-        : 0
+        : 0,
   );
   const date = new Date(year, month, day);
   return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 };
 
 export const queryStrFromQueryList = (
-  query: CqlQuery
+  query: CqlQuery,
 ): Result<Error, string> => {
   const { content } = query;
   if (!content) {
@@ -64,7 +64,7 @@ export const queryStrFromQueryList = (
             return [`${expr.key.literal ?? ""}=${value}`];
           } else {
             throw new CapiCqlStringError(
-              `The field '${expr.key.literal}' needs a value after it (e.g. '${expr.key.literal}:tone/news')`
+              `The field '${expr.key.literal}' needs a value after it (e.g. '${expr.key.literal}:tone/news')`,
             );
           }
         }

@@ -29,7 +29,7 @@ dataSourceSelect.addEventListener("change", (e: Event) => {
   cqlInputContainer.innerHTML = `<${inputHtmlTagValue} initial-value="" id="${source}" popover-container-id="popover-container"></${inputHtmlTagValue}>`;
 });
 cqlInput?.addEventListener("queryChange", ((
-  e: CustomEvent<QueryChangeEventDetail>
+  e: CustomEvent<QueryChangeEventDetail>,
 ) => {
   queryEl.innerHTML = e.detail.queryStr ?? "";
   cqlEl.innerHTML = e.detail.queryStr?.replaceAll(" ", "·") ?? "";
@@ -42,7 +42,7 @@ const endpoint = params.get("endpoint");
 const initialEndpointCapi = endpoint || "https://content.guardianapis.com";
 const typeaheadHelpersCapi = new CapiTypeaheadProvider(
   initialEndpointCapi,
-  "test"
+  "test",
 );
 const capiTypeahead = new Typeahead(typeaheadHelpersCapi.typeaheadFields);
 
@@ -59,7 +59,7 @@ const guToolsTypeaheadFields: TypeaheadField[] = [
     "team",
     "Team",
     "Search by team, e.g. capi",
-    toolsSuggestionOptionResolvers
+    toolsSuggestionOptionResolvers,
   ),
 ];
 
@@ -92,7 +92,7 @@ const setUrlParam = (key: string, value: string) => {
     "",
     `${window.location.origin}${
       window.location.pathname
-    }?${urlParams.toString()}`
+    }?${urlParams.toString()}`,
   );
 };
 
@@ -198,7 +198,7 @@ class CqlInputSimple extends HTMLElement {
           `<span class="${tokenType}" data-prev-end=${prevEnd} data-start=${start} data-end=${end}>${lexeme ?? ""}</span>`
         );
       },
-      ""
+      "",
     );
     if (this.overlay) {
       this.overlay.innerHTML =

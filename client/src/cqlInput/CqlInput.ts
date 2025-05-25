@@ -29,7 +29,7 @@ export const createCqlInput = (
     syntaxHighlighting: true,
     theme: {},
     lang: {},
-  }
+  },
 ) => {
   class CqlInput extends HTMLElement {
     static observedAttributes = ["initialValue"];
@@ -62,7 +62,7 @@ export const createCqlInput = (
         this.dispatchEvent(
           new CustomEvent("queryChange", {
             detail,
-          })
+          }),
         );
       };
 

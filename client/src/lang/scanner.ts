@@ -21,7 +21,7 @@ export class Scanner {
 
   constructor(
     private program: string,
-    settings: Partial<ScannerSettings> = {}
+    settings: Partial<ScannerSettings> = {},
   ) {
     this.settings = mergeDeep(defaultScannerSettings, settings);
   }
@@ -34,7 +34,7 @@ export class Scanner {
     }
 
     return this.tokens.concat(
-      new Token(TokenType.EOF, "", undefined, this.current, this.current)
+      new Token(TokenType.EOF, "", undefined, this.current, this.current),
     );
   };
 
@@ -95,12 +95,12 @@ export class Scanner {
   };
 
   private addValue = () => {
-    if (this.peek() === "\"") {
+    if (this.peek() === '"') {
       this.advance();
       this.consumeQuotedRange();
       this.addToken(
         TokenType.CHIP_VALUE,
-        this.program.substring(this.start + 2, this.current - 1)
+        this.program.substring(this.start + 2, this.current - 1),
       );
       return;
     }
@@ -144,7 +144,7 @@ export class Scanner {
 
     this.addToken(
       TokenType.STRING,
-      this.program.substring(this.start, this.current)
+      this.program.substring(this.start, this.current),
     );
   };
 
@@ -153,7 +153,7 @@ export class Scanner {
 
     this.addToken(
       TokenType.STRING,
-      this.program.substring(this.start + 1, this.current - 1)
+      this.program.substring(this.start + 1, this.current - 1),
     );
   };
 
@@ -166,16 +166,19 @@ export class Scanner {
     }
 
     if (this.isAtEnd()) {
-      this.error(this.line, "I expected to encounter a closing double-quote (\") before the query ended");
+      this.error(
+        this.line,
+        'I expected to encounter a closing double-quote (") before the query ended',
+      );
     } else {
       this.advance();
     }
-  }
+  };
 
   private addToken = (tokenType: TokenType, literal?: string) => {
     const text = this.program.substring(this.start, this.current);
     this.tokens = this.tokens.concat(
-      new Token(tokenType, text, literal, this.start, this.current - 1)
+      new Token(tokenType, text, literal, this.start, this.current - 1),
     );
   };
 

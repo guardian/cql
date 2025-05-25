@@ -33,8 +33,8 @@ export const DateSuggestionContent = ({
             wrapSelection(
               currentOptionIndex,
               -1,
-              suggestion.suggestions.length + indexOffset
-            )
+              suggestion.suggestions.length + indexOffset,
+            ),
           );
           return true;
         case "down": {
@@ -42,8 +42,8 @@ export const DateSuggestionContent = ({
             wrapSelection(
               currentOptionIndex,
               1,
-              suggestion.suggestions.length + indexOffset
-            )
+              suggestion.suggestions.length + indexOffset,
+            ),
           );
           return true;
         }
@@ -66,7 +66,7 @@ export const DateSuggestionContent = ({
             onSkip();
           } else {
             onSelect(
-              suggestion.suggestions[currentOptionIndex - indexOffset].value
+              suggestion.suggestions[currentOptionIndex - indexOffset].value,
             );
           }
           return true;
@@ -76,12 +76,12 @@ export const DateSuggestionContent = ({
         }
       }
     },
-    [currentOptionIndex, tabIndex, suggestion]
+    [currentOptionIndex, tabIndex, suggestion],
   );
 
   useEffect(
     () => subscribeToAction(handleAction),
-    [subscribeToAction, handleAction]
+    [subscribeToAction, handleAction],
   );
 
   useEffect(() => {

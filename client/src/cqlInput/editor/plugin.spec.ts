@@ -72,8 +72,8 @@ const createCqlEditor = (initialQuery: string = "") => {
     return editor.command((state, dispatch) => {
       dispatch?.(
         state.tr.setSelection(
-          TextSelection.near(state.doc.resolve(mapping.map(pos) + offset))
-        )
+          TextSelection.near(state.doc.resolve(mapping.map(pos) + offset)),
+        ),
       );
 
       return true;
@@ -120,7 +120,7 @@ const createCqlEditor = (initialQuery: string = "") => {
         rej(
           `Expected '${value}', but got '${
             valuesReceived.length ? valuesReceived.join(",") : "<no values>"
-          }'`
+          }'`,
         );
       }, timeoutMs);
     });
@@ -132,7 +132,7 @@ const createCqlEditor = (initialQuery: string = "") => {
 
 const selectPopoverOption = async (
   container: HTMLElement,
-  optionLabel: string
+  optionLabel: string,
 ) => {
   const popoverContainer = await findByTestId(container, typeaheadTestId);
   return await findByText(popoverContainer, optionLabel);
@@ -140,7 +140,7 @@ const selectPopoverOption = async (
 
 const selectPopoverOptionWithClick = async (
   container: HTMLElement,
-  optionLabel: string
+  optionLabel: string,
 ) => {
   const option = await selectPopoverOption(container, optionLabel);
   await fireEvent.click(option);
@@ -149,7 +149,7 @@ const selectPopoverOptionWithClick = async (
 const selectPopoverOptionWithEnter = async (
   editor: ProsemirrorTestChain,
   container: HTMLElement,
-  optionLabel: string
+  optionLabel: string,
 ) => {
   await selectPopoverOption(container, optionLabel);
   await editor.press("Enter");
@@ -308,7 +308,7 @@ describe("plugin", () => {
 
           const popoverContainer = await findByTestId(
             container,
-            typeaheadTestId
+            typeaheadTestId,
           );
 
           await findByText(popoverContainer, "Tags are magic");
@@ -324,7 +324,7 @@ describe("plugin", () => {
           await selectPopoverOptionWithEnter(
             editor,
             container,
-            "Tags are magic"
+            "Tags are magic",
           );
 
           await waitFor("example +tag:tags-are-magic ");
@@ -339,10 +339,10 @@ describe("plugin", () => {
           await editor.insertText("t");
           await selectPopoverOptionWithClick(
             container,
-            "Tag with a space in it"
+            "Tag with a space in it",
           );
 
-          await waitFor("example +tag:\"Tag with space\" ");
+          await waitFor('example +tag:"Tag with space" ');
         });
 
         it("inserts a chip before a string", async () => {
@@ -418,13 +418,15 @@ describe("plugin", () => {
   describe("chip behaviour", () => {
     it("should change the polarity of a chip when the polarity indicator is clicked", async () => {
       const queryStr = "+tag:a";
-      const { waitFor, container, user } =
-        createCqlEditor(queryStr);
-      const polarityHandle = await getByTestId(container, TEST_ID_POLARITY_HANDLE);
+      const { waitFor, container, user } = createCqlEditor(queryStr);
+      const polarityHandle = await getByTestId(
+        container,
+        TEST_ID_POLARITY_HANDLE,
+      );
 
       await user.click(polarityHandle);
 
-      await waitFor("-tag:a ")
+      await waitFor("-tag:a ");
     });
 
     it("should not de-chip text if the queryStr between chips is removed", async () => {
