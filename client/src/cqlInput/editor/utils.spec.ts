@@ -110,13 +110,13 @@ describe("utils", () => {
     });
 
     test("should preserve whitespace within values that have whitespace", async () => {
-      const tokens = await queryToProseMirrorTokens("+key:\"1 2\" ");
+      const tokens = await queryToProseMirrorTokens("example +key:\"1 2\" example");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
-        queryStr(),
+        queryStr("example"),
         chip(chipKey("key"), chipValue("1 2")),
-        queryStr()
+        queryStr("example")
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
@@ -182,10 +182,10 @@ describe("utils", () => {
         expect(text).toEqual(["tag", "test", ""]);
       });
 
-      test("with a tag with a quoted value", async () => {
-        const text = await getTextFromTokenRanges("+tag:\"test\"");
+      test("with a tag with a quoted value and whitespace", async () => {
+        const text = await getTextFromTokenRanges("+tag:\"1 2\" 3");
 
-        expect(text).toEqual(["tag", "test", ""]);
+        expect(text).toEqual(["tag", "1 2", "3", ""]);
       });
 
       test("with two queries", async () => {
@@ -241,6 +241,21 @@ describe("utils", () => {
       const currentDoc = doc(
         queryStr(),
         chip(chipKey("key"), chipValue("<fromPos>")),
+        queryStr("<toPos>")
+      );
+
+      const insertPos = getNextPositionAfterTypeaheadSelection(
+        currentDoc,
+        currentDoc.tag.fromPos
+      );
+
+      expect(insertPos).toBe(currentDoc.tag.toPos);
+    });
+
+    test("should move to queryStr position from the end of a value that contains whitespace", () => {
+      const currentDoc = doc(
+        queryStr(),
+        chip(chipKey("key"), chipValue("A key<fromPos>")),
         queryStr("<toPos>")
       );
 

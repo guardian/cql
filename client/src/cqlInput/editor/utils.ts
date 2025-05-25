@@ -61,17 +61,21 @@ const getCqlFieldKeyRange = (from: number): [number, number, number] =>
 
 const getQueryValueRanges = (
   from: number,
-  to: number
-): [number, number, number][] => [
-  // chipKey end (-1)
-  // chipValue start (-1)
-  // leading char (':') (+1)
-  [from, -1, 0],
-  // chipValue end (-1)
-  [to, -1, 0],
-];
+  to: number,
+  isQuoted: boolean
+): [number, number, number][] => {
+  const quoteOffset = isQuoted ? 1 : 0;
+  return [
+    // chipKey end (-1)
+    // chipValue start (-1)
+    // leading char (':') (+1)
+    [from, -1 + quoteOffset, 0],
+    // chipValue end (-1)
+    [to, -1 + quoteOffset, 0],
+  ];
+}
 
-const getqueryStrRanges = (
+const getQueryStrRanges = (
   from: number,
   to: number
 ): [number, number, number][] => [
@@ -120,7 +124,7 @@ export const createProseMirrorTokenToDocumentMap = (
   const compactedTokenRanges = joinQueryStrTokens(tokens);
 
   const ranges = compactedTokenRanges.reduce<[number, number, number][]>(
-    (accRanges, { tokenType, from, to }, index, tokens) => {
+    (accRanges, { tokenType, from, to, lexeme }, index, tokens) => {
       switch (tokenType) {
         case TokenType.CHIP_KEY_POSITIVE:
         case TokenType.CHIP_KEY_NEGATIVE: {
@@ -129,21 +133,27 @@ export const createProseMirrorTokenToDocumentMap = (
           // the schema, so we add a queryStr mapping to account for the
           // additional node.
           const previousToken = tokens[index - 1];
-          const shouldAddqueryStrMapping =
+          const shouldAddQueryStrMapping =
             previousToken?.tokenType === "CHIP_VALUE" || index === 0;
 
           return accRanges.concat(
-            ...(shouldAddqueryStrMapping
-              ? getqueryStrRanges(previousToken?.to, previousToken?.to)
+            ...(shouldAddQueryStrMapping
+              ? getQueryStrRanges(previousToken?.to, previousToken?.to)
               : []),
             getCqlFieldKeyRange(from)
           );
         }
         case "CHIP_VALUE": {
-          return accRanges.concat(...getQueryValueRanges(from, to));
+          return accRanges.concat(
+            ...getQueryValueRanges(
+              from,
+              to,
+              hasWhitespace(lexeme) ? true : false
+            )
+          );
         }
         default: {
-          return accRanges.concat(...getqueryStrRanges(from, to));
+          return accRanges.concat(...getQueryStrRanges(from, to));
         }
       }
     },
