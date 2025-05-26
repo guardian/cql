@@ -28,16 +28,17 @@ jobs:
           bun run build:page
 
       - name: Upload static assets
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           path: client/dist
 
       - name: Deploy static assets
-        uses: guardian/actions-static-site@v2
+        uses: guardian/actions-static-site@v3
         with:
           app: cql-sandbox
           domain: cql-sandbox.gutools.co.uk
-          guActionsRiffRaffRoleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
 
   gu-cdk-build:
     runs-on: ubuntu-latest
@@ -75,8 +76,10 @@ jobs:
           npm run synth
 
       - name: Upload to Riff-Raff
-        uses: guardian/actions-riff-raff@v2
+        uses: guardian/actions-riff-raff@v4
         with:
+          roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
           projectName: cql::cql-lambda
           configPath: ./cdk/cdk.out/riff-raff.yaml
           contentDirectories: |
