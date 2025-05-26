@@ -42,7 +42,7 @@ export const createCqlInput = (
       const cqlInputId = "cql-input";
       const cqlTypeaheadId = "cql-typeahead";
       const cqlErrorId = "cql-error";
-      const shadow = this.attachShadow({ mode: "closed" });
+      const shadow = this.attachShadow({ mode: "open" });
 
       shadow.innerHTML = `
         <div id="${cqlInputId}" spellcheck="false"></div>
