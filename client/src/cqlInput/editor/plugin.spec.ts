@@ -31,7 +31,8 @@ const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
 
 const createCqlEditor = (initialQuery: string = "") => {
-  const container = document.createElement("div");
+  document.body.innerHTML = "";
+  const container = document.body;
   const typeaheadEl = document.createElement("div");
   typeaheadEl.setAttribute("data-testid", typeaheadTestId);
   const errorEl = document.createElement("div");
@@ -97,6 +98,7 @@ const createCqlEditor = (initialQuery: string = "") => {
   editor.selectText("end");
 
   container.appendChild(editor.view.dom);
+  editor.view.focus();
 
   /**
    * Wait for a particular `cqlQuery` value from the component's onChange

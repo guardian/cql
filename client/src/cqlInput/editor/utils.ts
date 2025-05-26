@@ -348,10 +348,7 @@ export const docToCqlStr = (doc: Node): string => {
           return;
         }
 
-        console.log({ value });
-
         const maybeQuoteMark = hasWhitespace(value) ? '"' : "";
-
         str += `${maybeQuoteMark}${value}${maybeQuoteMark} `;
 
         return false;

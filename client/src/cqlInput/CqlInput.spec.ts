@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test";
 import { TestTypeaheadHelpers } from "../lang/fixtures/TestTypeaheadHelpers";
 import { createCqlInput, Typeahead } from "../lib";
-import { getByTextShadowed } from "../utils/test";
+import { getByTextShadowed, tick } from "../utils/test";
 
 describe("CqlInput", () => {
   const typeheadHelpers = new TestTypeaheadHelpers();
@@ -35,5 +35,16 @@ describe("CqlInput", () => {
     const result = await getByTextShadowed(container, "two");
     expect(result).toBeTruthy();
     expect(callbackValue).toBe("two");
+  });
+
+  test("should not display the popover when the input is updated programmatically, and not focused", async () => {
+    const { container, cqlInput } = createCqlInputContainer("");
+
+    cqlInput.setAttribute("value", "+");
+    // Wait for the popover to render
+    await tick();
+
+    const result = await getByTextShadowed(container, "Tag");
+    expect(!!result).toBeFalse();
   });
 });

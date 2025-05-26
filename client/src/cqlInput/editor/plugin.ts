@@ -560,7 +560,9 @@ export const createCqlPlugin = ({
           try {
             const suggestions = await typeahead.getSuggestions(queryAst);
             const mappedSuggestions = toMappedSuggestions(suggestions, mapping);
-            typeaheadPopover?.updateItemsFromSuggestions(mappedSuggestions);
+            if (view.hasFocus()) {
+              typeaheadPopover?.updateItemsFromSuggestions(mappedSuggestions);
+            }
 
             if (debugSuggestionsContainer) {
               debugSuggestionsContainer.innerHTML = `

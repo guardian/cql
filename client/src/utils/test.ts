@@ -35,7 +35,6 @@ const shadowFactory =
     }
 
     try {
-        console.log(container.tagName)
       resultElement = getByFunc(container, idOrRole, options);
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (e) {
