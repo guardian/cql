@@ -1,7 +1,7 @@
 {
   "name": "cql",
   "version": "1.0.0",
-  "description": "",
+  "description": "An experiement to see if a query DSL, coupled with first-class typeahead and syntax highlighting, might provide a more consistent and discoverable way to search Guardian content.",
   "type": "module",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
@@ -9,5 +9,5 @@
   "dependencies": {
     "@changesets/cli": "^2.29.4"
   },
-  "workspaces": ["client/*"]
+  "workspaces": ["lib/*"]
 }

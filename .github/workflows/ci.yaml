@@ -24,7 +24,7 @@ jobs:
       uses: oven-sh/setup-bun@v1
 
     - name: Build library
-      working-directory: client
+      working-directory: lib/cql
       run: |
         bun install --frozen-lockfile
         bun test
