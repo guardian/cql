@@ -40,6 +40,7 @@ jobs:
       with:
         title: "🦋 Release package updates"
         commit: "Bump package versions"
+        publish: bun publish
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
