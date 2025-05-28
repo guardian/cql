@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 0.1.3
+
+### Patch Changes
+
+- 93e9521: Initial release
+
 ## 0.1.2
 
 ### Patch Changes
