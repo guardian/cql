@@ -129,6 +129,18 @@ describe("scanner", () => {
       expect(tokens).toEqual(expectedTokens);
     });
 
+    it("should tokenise key value pairs for fields when the key value contains non-word characters", () => {
+      const scanner = new Scanner('+@tag:"tone/news"');
+      const tokens = scanner.scanTokens();
+      const expectedTokens = [
+        new Token(TokenType.CHIP_KEY_POSITIVE, "+@tag", "@tag", 0, 4),
+        new Token(TokenType.CHIP_VALUE, ':"tone/news"', "tone/news", 5, 16),
+        eofToken(17),
+      ];
+
+      expect(tokens).toEqual(expectedTokens);
+    });
+
     it("should yield a query field key when a search key is incomplete", () => {
       const scanner = new Scanner("example +");
       const tokens = scanner.scanTokens();
