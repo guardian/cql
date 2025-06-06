@@ -86,6 +86,14 @@
         isolation: isolate;
       }
 
+      /* End reset */
+
+      #cql-input-container {
+        margin: 10px 0;
+        border-radius: 5px;
+        background-color: #333;
+      }
+
       .Page__header {
         display: flex;
         align-items: center;
@@ -412,8 +420,8 @@
           id="cql-input"
           popover-container-id="popover-container"
         ></cql-input-capi>
-        <div id="error"></div>
       </div>
+      <div id="error"></div>
       <p>Press <tt>+</tt> to select a specific field to search.</p>
       <p>
         Join search terms with <tt class="CqlToken__AND">OR</tt> and

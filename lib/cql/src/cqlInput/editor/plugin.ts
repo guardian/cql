@@ -347,7 +347,6 @@ export const createCqlPlugin = ({
           separator.innerText = ":";
 
           const contentDOM = document.createElement("span");
-          contentDOM.classList.add("Cql__ChipWrapperContent");
           dom.appendChild(contentDOM);
           dom.appendChild(separator);
           if (node.attrs[IS_READ_ONLY]) {

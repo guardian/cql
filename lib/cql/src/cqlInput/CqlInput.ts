@@ -9,6 +9,7 @@ import {
 import { Typeahead } from "../lang/typeahead";
 import { applyPartialTheme, CqlTheme } from "./theme";
 import { ScannerSettings } from "../lang/scanner";
+import { DeepPartial } from "../types/utils";
 
 export const contentEditableTestId = "cql-input-contenteditable";
 export const typeaheadTestId = "cql-input-typeahead";
@@ -19,7 +20,7 @@ export type CqlConfig = {
   syntaxHighlighting?: boolean;
   debugEl?: HTMLElement;
   renderPopoverContent?: RenderPopoverContent;
-  theme?: Partial<CqlTheme>;
+  theme?: DeepPartial<CqlTheme>;
   lang?: Partial<ScannerSettings>;
 };
 
@@ -104,9 +105,17 @@ export const createCqlInput = (
       }
     }
 
-    public createTemplate(partialTheme: Partial<CqlTheme>) {
-      const { input, tokens, chipWrapper, baseBorderRadius, baseFontSize } =
-        applyPartialTheme(partialTheme);
+    public createTemplate(partialTheme: DeepPartial<CqlTheme>) {
+      const {
+        input,
+        tokens,
+        chipWrapper,
+        baseBorderRadius,
+        baseFontSize,
+        chipContent,
+        chipHandle,
+        typeahead,
+      } = applyPartialTheme(partialTheme);
       const template = document.createElement("template");
       template.innerHTML = `
         <style>
@@ -114,8 +123,10 @@ export const createCqlInput = (
             box-sizing: border-box;
           }
 
-          .ProseMirror {
+          .Cql__ContentEditable {
             white-space: pre-wrap;
+            display: inline-flex;
+            align-items: center;
           }
 
           query-str {
@@ -126,38 +137,39 @@ export const createCqlInput = (
 
           chip-wrapper {
             display: inline-flex;
-            background-color: ${chipWrapper.colors.background};
+            background-color: ${chipWrapper.color.background};
             margin: 0 5px;
-            border-radius: ${baseBorderRadius}px;
+            border-radius: ${baseBorderRadius};
           }
 
-          chip {
+          chip-key {
             display: inline-flex;
             padding: 0 5px;
           }
 
-          chip-key {
-            padding: 0 5px;
-          }
-
           chip-value {
+            display: inline-flex;
             padding-right: 5px;
           }
 
-          ${Object.entries(tokens.colors)
+          query-str, chip-key, chip-value {
+            white-space: nowrap;
+          }
+
+          ${Object.entries(tokens.color)
             .map(([token, color]) => `.CqlToken__${token} { color: ${color}; }`)
             .join("\n")}
 
           #cql-input {
             display: block;
             position: relative;
-            font-size: ${baseFontSize}px;
+            font-size: ${baseFontSize};
             line-height: initial;
           }
 
           .Cql__ContentEditable {
             padding: ${input.layout.padding};
-            border-radius: ${baseBorderRadius}px;
+            border-radius: ${baseBorderRadius};
           }
 
           .Cql__ContentEditable:focus {
@@ -167,7 +179,6 @@ export const createCqlInput = (
           .Cql__PopoverTabs {
             display: flex;
             flex-direction: column;
-            height: 100%;
           }
 
           .Cql__PopoverTabHeader {
@@ -180,7 +191,7 @@ export const createCqlInput = (
             cursor: pointer;
             flex-grow: 1;
             text-align: center;
-            border-bottom: 2px solid #495e65;
+            border-bottom: 1px solid #495e65;
           }
 
           .Cql__PopoverTabContentContainer {
@@ -191,7 +202,7 @@ export const createCqlInput = (
           .Cql__PopoverTabItem--active {
             background-color: rgba(255,255,255,0.1);
             color: #eee;
-            border-bottom: 2px solid lightblue;
+            border-bottom: 1px solid lightblue;
           }
 
           .Cql__Input {
@@ -233,33 +244,46 @@ export const createCqlInput = (
           }
 
           .Cql__ChipKey--readonly {
-            color: #bbb;
+            color: ${chipContent.color.readonly};
           }
 
           .Cql__ChipWrapperContent {
             display: inline-flex;
+            padding: ${chipContent.layout.padding};
           }
 
           .Cql__ChipWrapper--is-pending-delete {
-            box-shadow: 0 0 0 3px #c52b2b;
+            box-shadow: 0 0 0 1px #c52b2b;
             overflow: hidden;
           }
 
           .Cql__ChipWrapperDeleteHandle, .Cql__ChipWrapperPolarityHandle {
-            background-color: #3737378f;
+            display: inline-flex;
+            align-items: center;
+            background-color: ${chipHandle.color.background};
             padding: 0 5px;
             cursor: pointer;
           }
 
+          .Cql__ChipWrapperDeleteHandle {
+            border-radius: 0 ${baseBorderRadius} ${baseBorderRadius} 0;
+            ${chipHandle.color.border ? `border-left: 1px solid ${chipHandle.color.border}` : ""} ;
+          }
+
+          .Cql__ChipWrapperPolarityHandle {
+            border-radius: ${baseBorderRadius} 0 0 ${baseBorderRadius};
+            ${chipHandle.color.border ? `border-right: 1px solid ${chipHandle.color.border}` : ""} ;
+          }
+
           .Cql__TypeaheadDateInput {
             width: 100%;
-            border-radius: ${baseBorderRadius}px;
+            border-radius: ${baseBorderRadius};
             border: none;
           }
 
           .Cql__Button {
             background-color: transparent;
-            border: 2px solid #aaa;
+            border: 1px solid #aaa;
             color: #eee;
             border-radius: 3px;
             font-size: 1em;
@@ -273,7 +297,7 @@ export const createCqlInput = (
 
           .Cql__TypeaheadPopoverContainer, .Cql__ErrorPopover {
             position: absolute;
-            width: 500px;
+            width: ${typeahead.layout.width};
             height: 100%;
             max-height: min(80vh, 400px);
             margin: 0;
@@ -286,11 +310,11 @@ export const createCqlInput = (
             width: 100%;
             max-height: fit-content;
             height: 100%;
-            font-size: ${baseFontSize}px;
-            border-radius: ${baseBorderRadius}px;
+            font-size: ${baseFontSize};
+            border-radius: ${baseBorderRadius};
             color: #eee;
             background-color: #242424;
-            border: 2px solid grey;
+            border: 1px solid grey;
             overflow: hidden;
           }
 

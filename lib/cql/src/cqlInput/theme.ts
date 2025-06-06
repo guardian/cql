@@ -1,3 +1,4 @@
+import { DeepPartial } from "../types/utils";
 import { mergeDeep } from "../utils/merge";
 
 export type CqlTheme = {
@@ -9,12 +10,31 @@ export type CqlTheme = {
     };
   };
   chipWrapper: {
-    colors: {
+    color: {
       background: string;
     };
   };
+  chipContent: {
+    layout: {
+      padding: string;
+    };
+    color: {
+      readonly: string;
+    };
+  };
+  chipHandle: {
+    color: {
+      background: string;
+      border: string;
+    };
+  };
+  typeahead: {
+    layout: {
+      width: string;
+    };
+  };
   tokens: {
-    colors: {
+    color: {
       STRING: string;
       AND: string;
       OR: string;
@@ -27,19 +47,37 @@ export type CqlTheme = {
 const defaultTheme: CqlTheme = {
   baseFontSize: "28px",
   baseBorderRadius: "5px",
-
   input: {
     layout: {
       padding: "5px",
     },
   },
   chipWrapper: {
-    colors: {
+    color: {
       background: "rgba(255,255,255,0.2)",
     },
   },
+  chipContent: {
+    layout: {
+      padding: "5px",
+    },
+    color: {
+      readonly: "#bbb",
+    },
+  },
+  chipHandle: {
+    color: {
+      background: "#3737378f",
+      border: "none",
+    },
+  },
+  typeahead: {
+    layout: {
+      width: "400px",
+    },
+  },
   tokens: {
-    colors: {
+    color: {
       STRING: "lightblue",
       AND: "magenta",
       OR: "magenta",
@@ -49,5 +87,5 @@ const defaultTheme: CqlTheme = {
   },
 };
 
-export const applyPartialTheme = (theme: Partial<CqlTheme>): CqlTheme =>
+export const applyPartialTheme = (theme: DeepPartial<CqlTheme>): CqlTheme =>
   mergeDeep(defaultTheme, theme);
