@@ -168,6 +168,7 @@ export const createCqlInput = (
           }
 
           .Cql__ContentEditable {
+            width: 100%;
             padding: ${input.layout.padding};
             border-radius: ${baseBorderRadius};
           }
