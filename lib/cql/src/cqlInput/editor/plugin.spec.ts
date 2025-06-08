@@ -26,6 +26,8 @@ import { isVisibleDataAttr } from "../popover/Popover";
 import { tick } from "../../utils/test";
 import { parseCqlStr } from "../../lang/Cql";
 import { Typeahead } from "../../lang/typeahead";
+import { chip, IS_SELECTED } from "./schema";
+import { Node, NodeType } from "prosemirror-model";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
@@ -65,15 +67,20 @@ const createCqlEditor = (initialQuery: string = "") => {
     return tokensToDoc(tokens);
   };
 
-  const moveCaretToQueryPos = (pos: number, offset: number = 0) => {
+  const getPosFromQueryPos = (pos: number) => {
     const query = docToCqlStr(editor.view.state.doc);
     const result = parseCqlStr(query);
     const tokens = toProseMirrorTokens(result.tokens);
     const mapping = createProseMirrorTokenToDocumentMap(tokens);
+    return mapping.map(pos);
+  };
+
+  const moveCaretToQueryPos = (queryPos: number, offset: number = 0) => {
+    const pos = getPosFromQueryPos(queryPos);
     return editor.command((state, dispatch) => {
       dispatch?.(
         state.tr.setSelection(
-          TextSelection.near(state.doc.resolve(mapping.map(pos) + offset)),
+          TextSelection.near(state.doc.resolve(pos + offset)),
         ),
       );
 
@@ -129,7 +136,14 @@ const createCqlEditor = (initialQuery: string = "") => {
 
   const user = userEvent.setup();
 
-  return { editor, waitFor, container, moveCaretToQueryPos, user };
+  return {
+    editor,
+    waitFor,
+    container,
+    moveCaretToQueryPos,
+    getPosFromQueryPos,
+    user,
+  };
 };
 
 const selectPopoverOption = async (
@@ -450,6 +464,59 @@ describe("plugin", () => {
 
       expect(chipKey.isContentEditable).toBe(false);
     });
+
+    const findNodesByType = (doc: Node, type: NodeType) => {
+      const nodes: Node[] = [];
+      doc.descendants((node) => {
+        if (node.type === type) {
+          nodes.push(node);
+        }
+      });
+      return nodes;
+    };
+
+    it("not mark chips as selected when they are not covered by a selection", async () => {
+      const queryStr = "+tag:a b +tag:c";
+      const { editor, getPosFromQueryPos } = createCqlEditor(queryStr);
+
+      editor.selectText({
+        from: 0,
+        to: getPosFromQueryPos(queryStr.indexOf("b")),
+      });
+
+      const [firstChip, secondChip] = findNodesByType(editor.doc, chip);
+      expect(firstChip.attrs[IS_SELECTED]).toBe(true);
+      expect(secondChip.attrs[IS_SELECTED]).toBe(false);
+    });
+
+    it("should mark chips as selected when they are entirely covered by a selection", async () => {
+      const queryStr = "+tag:a b +tag:c";
+      const { editor } = createCqlEditor(queryStr);
+
+      editor.selectText("all");
+
+      const [firstChip, secondChip] = findNodesByType(editor.doc, chip);
+      expect(firstChip.attrs[IS_SELECTED]).toBe(true);
+      expect(secondChip.attrs[IS_SELECTED]).toBe(true);
+    });
+
+    it.todo(
+      "should not remove chip keys when hitting backspace from a chip value",
+      async () => {
+        const queryStr = " +tag:b ";
+        const { editor, moveCaretToQueryPos, waitFor } =
+          createCqlEditor(queryStr);
+
+        await moveCaretToQueryPos(queryStr.indexOf("b"));
+
+        // Doing this in a browser wraps the key node in a
+        // NodeSelection and then deletes it unless we explicitly
+        // prevent the selection, but that does not happen here.
+        await editor.backspace().backspace();
+
+        await waitFor("+tag:");
+      },
+    );
   });
 
   describe("caret movement and selection", () => {

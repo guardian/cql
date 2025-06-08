@@ -1,6 +1,7 @@
 import { DecorationSet } from "prosemirror-view";
 import {
   AllSelection,
+  NodeSelection,
   Plugin,
   PluginKey,
   Transaction,
@@ -20,6 +21,7 @@ import {
   getNodeTypeAtSelection,
   applySuggestion,
   skipSuggestion,
+  isChipSelected,
 } from "./utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "../popover/TypeaheadPopover";
@@ -30,6 +32,7 @@ import {
   DELETE_CHIP_INTENT,
   doc,
   IS_READ_ONLY,
+  IS_SELECTED,
   POLARITY,
   schema,
 } from "./schema";
@@ -67,9 +70,11 @@ const ACTION_NEW_STATE = "NEW_STATE";
 const ACTION_SERVER_ERROR = "SERVER_ERROR";
 
 export const CLASS_ERROR = "Cql__ErrorWidget";
-export const CLASS_VISIBLE = "Cql--isVisible";
-export const CLASS_CHIP_KEY_READONLY = "Cql__ChipKey--readonly";
+export const CLASS_VISIBLE = "Cql--is-visible";
+export const CLASS_CHIP_KEY_READONLY = "Cql__ChipKey--is-readonly";
+export const CLASS_CHIP_SELECTED = "Cql__ChipWrapper--is-selected"
 
+export const DATA_CHIP_SELECTED = "data-cql-chip-selected"
 export const TEST_ID_POLARITY_HANDLE = "polarity-handle";
 
 /**
@@ -232,8 +237,58 @@ export const createCqlPlugin = ({
         return maybeNewState;
       },
     },
+    filterTransaction(tr) {
+      // Do not permit NodeSelections that cover chip keys — they're readonly
+      if (
+        tr.selection instanceof NodeSelection &&
+        tr.selection.node.type === chipKey
+      ) {
+        return false;
+      }
+      return true;
+    },
     appendTransaction(_, oldState, newState) {
-      let tr: Transaction | undefined;
+      let tr = newState.tr;
+
+      // If the selection entirely covers any chipWrappers, mark them as selected, and vice-versa.
+      const selectedChipNodeToPos = new Map<Node, number>();
+
+      // Find all the nodes within the current selection.
+      newState.doc.nodesBetween(
+        newState.selection.from,
+        newState.selection.to,
+        (node, pos) => {
+          if (
+            node.type === chip &&
+            newState.selection.from <= pos &&
+            newState.selection.to >= pos + node.nodeSize
+          ) {
+            selectedChipNodeToPos.set(node, pos);
+            return false;
+          }
+        },
+      );
+
+      // Update every relevant node with the new selection state
+      newState.doc.descendants((node, pos) => {
+        const isCurrentlySelected = selectedChipNodeToPos.get(node) !== undefined;
+        const shouldUpdateNode =
+          (isChipSelected(node) && !isCurrentlySelected) ||
+          (!isChipSelected(node) && isCurrentlySelected);
+
+        if (shouldUpdateNode) {
+          console.log({pos})
+          tr.setNodeMarkup(pos, undefined, {
+            ...node.attrs,
+            [IS_SELECTED]: isCurrentlySelected,
+          });
+        }
+
+        // Do not descend into chip children
+        if (node.type === chipKey) {
+          return false;
+        }
+      });
 
       const maybeQueries = queryHasChanged(oldState.doc, newState.doc);
 
@@ -255,7 +310,6 @@ export const createCqlPlugin = ({
           posOfChipWrappersToReset.forEach((pos) => {
             tr?.setNodeAttribute(pos, DELETE_CHIP_INTENT, false);
           });
-          return tr;
         }
       }
 
@@ -335,6 +389,14 @@ export const createCqlPlugin = ({
               }
 
               polarityHandle.innerHTML = node.attrs[POLARITY];
+
+              if (
+                node.attrs[IS_SELECTED]
+              ) {
+                dom.classList.add("Cql__ChipWrapper--is-selected");
+              } else {
+                dom.classList.remove("Cql__ChipWrapper--is-selected");
+              }
 
               return true;
             },

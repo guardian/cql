@@ -2,6 +2,7 @@ import { Schema } from "prosemirror-model";
 
 export const DELETE_CHIP_INTENT = "DELETE_CHIP_INTENT";
 export const IS_READ_ONLY = "IS_READ_ONLY";
+export const IS_SELECTED = "IS_SELECTED";
 export const POLARITY = "POLARITY";
 
 export const schema = new Schema({
@@ -32,6 +33,9 @@ export const schema = new Schema({
         [DELETE_CHIP_INTENT]: {
           default: false,
         },
+        [IS_SELECTED]: {
+          default: false
+        }
       },
     },
     chipKey: {

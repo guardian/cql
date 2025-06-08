@@ -1,7 +1,7 @@
 import { EditorView } from "prosemirror-view";
 import { QueryChangeEventDetail } from "../types/dom";
 import { createEditorView } from "./editor/editor";
-import { createCqlPlugin, CLASS_VISIBLE } from "./editor/plugin";
+import { createCqlPlugin, CLASS_VISIBLE, CLASS_CHIP_SELECTED } from "./editor/plugin";
 import {
   CLASS_PENDING,
   RenderPopoverContent,
@@ -256,6 +256,10 @@ export const createCqlInput = (
           .Cql__ChipWrapper--is-pending-delete {
             box-shadow: 0 0 0 1px #c52b2b;
             overflow: hidden;
+          }
+
+          .${CLASS_CHIP_SELECTED} {
+            background-color: #334fa3;
           }
 
           .Cql__ChipWrapperDeleteHandle, .Cql__ChipWrapperPolarityHandle {

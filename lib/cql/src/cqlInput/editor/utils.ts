@@ -10,6 +10,7 @@ import {
   schema,
   queryStr,
   POLARITY,
+  IS_SELECTED,
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection, Transaction } from "prosemirror-state";
@@ -633,3 +634,5 @@ export const skipSuggestion = (view: EditorView) => () => {
 
   return true;
 };
+
+export const isChipSelected = (node: Node) => node.attrs[IS_SELECTED] === true;
