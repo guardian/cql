@@ -130,6 +130,8 @@ export const createCqlInput = (
           }
 
           query-str {
+            /* We apply wrapper padding here to ensure that when there is no chip, the input does not shrink */
+            padding: ${chipContent.layout.padding};
             /* Ensure there's always space for input */
             min-width: 5px;
           }
