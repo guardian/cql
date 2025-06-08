@@ -72,9 +72,9 @@ const ACTION_SERVER_ERROR = "SERVER_ERROR";
 export const CLASS_ERROR = "Cql__ErrorWidget";
 export const CLASS_VISIBLE = "Cql--is-visible";
 export const CLASS_CHIP_KEY_READONLY = "Cql__ChipKey--is-readonly";
-export const CLASS_CHIP_SELECTED = "Cql__ChipWrapper--is-selected"
+export const CLASS_CHIP_SELECTED = "Cql__ChipWrapper--is-selected";
 
-export const DATA_CHIP_SELECTED = "data-cql-chip-selected"
+export const DATA_CHIP_SELECTED = "data-cql-chip-selected";
 export const TEST_ID_POLARITY_HANDLE = "polarity-handle";
 
 /**
@@ -271,13 +271,13 @@ export const createCqlPlugin = ({
 
       // Update every relevant node with the new selection state
       newState.doc.descendants((node, pos) => {
-        const isCurrentlySelected = selectedChipNodeToPos.get(node) !== undefined;
+        const isCurrentlySelected =
+          selectedChipNodeToPos.get(node) !== undefined;
         const shouldUpdateNode =
           (isChipSelected(node) && !isCurrentlySelected) ||
           (!isChipSelected(node) && isCurrentlySelected);
 
         if (shouldUpdateNode) {
-          console.log({pos})
           tr.setNodeMarkup(pos, undefined, {
             ...node.attrs,
             [IS_SELECTED]: isCurrentlySelected,
@@ -390,9 +390,7 @@ export const createCqlPlugin = ({
 
               polarityHandle.innerHTML = node.attrs[POLARITY];
 
-              if (
-                node.attrs[IS_SELECTED]
-              ) {
+              if (node.attrs[IS_SELECTED]) {
                 dom.classList.add("Cql__ChipWrapper--is-selected");
               } else {
                 dom.classList.remove("Cql__ChipWrapper--is-selected");
@@ -404,7 +402,8 @@ export const createCqlPlugin = ({
         },
         [chipKey.name](node) {
           const dom = document.createElement("chip-key");
-          const separator = document.createElement("Cql__chipKeySeparator");
+          const separator = document.createElement("span");
+          separator.classList.add("Cql__ChipKeySeparator");
           separator.setAttribute("contentEditable", "false");
           separator.innerText = ":";
 

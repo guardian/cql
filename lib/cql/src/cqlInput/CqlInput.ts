@@ -124,14 +124,13 @@ export const createCqlInput = (
           }
 
           .Cql__ContentEditable {
-            white-space: pre-wrap;
             display: inline-flex;
             align-items: center;
+            white-space: pre-wrap;
           }
 
           query-str {
             /* Ensure there's always space for input */
-            display: inline-block;
             min-width: 5px;
           }
 
@@ -143,17 +142,13 @@ export const createCqlInput = (
           }
 
           chip-key {
+            /* This is to ensure the separator between key and value (':') remains aligned with the chip content */
             display: inline-flex;
             padding: 0 5px;
           }
 
           chip-value {
-            display: inline-flex;
             padding-right: 5px;
-          }
-
-          query-str, chip-key, chip-value {
-            white-space: nowrap;
           }
 
           ${Object.entries(tokens.color)
