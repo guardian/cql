@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 0.1.1
+
+### Patch Changes
+
+- de109c2: Many small changes to prepare for use in Grid
+
 ## 0.1.3
 
 ### Patch Changes
