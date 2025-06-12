@@ -31,3 +31,10 @@ One solution might be:
   - a good syntax-highlighter/typeahead input, wrapped as something that is useable anywhere (e.g. lightweight web component), to address discoverability
 
 This repo is a PoC.
+
+### Release
+This repository uses [changesets](https://github.com/changesets/changesets) for version management.
+
+To release a new version with your changes, run `bun changeset add` and follow the prompts. This will create a new changeset file in the .changeset directory. Commit this file with your PR.
+
+When your PR is merged, Changesets will create a PR to release the new version.
