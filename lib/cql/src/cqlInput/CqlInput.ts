@@ -311,8 +311,8 @@ export const createCqlInput = (
 
           .Cql__TypeaheadPopover {
             width: 100%;
-            max-height: fit-content;
-            height: 100%;
+            height: fit-content;
+            max-height: 100%;
             font-size: ${baseFontSize};
             border-radius: ${baseBorderRadius};
             color: #eee;
@@ -323,8 +323,8 @@ export const createCqlInput = (
 
           .Cql__TextSuggestionContainer {
             width: 100%;
-            height: 100%;
-            max-height: fit-content;
+            height: fit-content;
+            max-height: 100%;
             overflow-y: scroll;
           }
 
