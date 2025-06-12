@@ -2,7 +2,11 @@ import { h } from "preact";
 import { useEffect, useRef, useState } from "preact/hooks";
 import { TextSuggestion } from "../../../lang/types";
 import { wrapSelection } from "./utils";
-import { ActionSubscriber, CLASS_PENDING } from "../TypeaheadPopover";
+import {
+  ActionSubscriber,
+  CLASS_NO_RESULTS,
+  CLASS_PENDING,
+} from "../TypeaheadPopover";
 
 const numberFormat = new Intl.NumberFormat();
 
@@ -65,7 +69,7 @@ export const TextSuggestionContent = ({
 
   if (!suggestion.suggestions.length) {
     return (
-      <div class="Cql__Option">
+      <div class={`Cql__Option ${CLASS_NO_RESULTS}`}>
         <div class="Cql__OptionLabel">No results</div>
       </div>
     );

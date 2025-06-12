@@ -3,6 +3,7 @@ import { QueryChangeEventDetail } from "../types/dom";
 import { createEditorView } from "./editor/editor";
 import { createCqlPlugin, CLASS_VISIBLE, CLASS_CHIP_SELECTED } from "./editor/plugin";
 import {
+  CLASS_NO_RESULTS,
   CLASS_PENDING,
   RenderPopoverContent,
 } from "./popover/TypeaheadPopover";
@@ -363,6 +364,10 @@ export const createCqlInput = (
             background: darkgray;
             background: linear-gradient(to right, rgba(255,255,255,0.1) 10%, rgba(255,255,255,0.2) 18%, rgba(255,255,255,0.1) 33%);
             background-size: 200% 2em;
+          }
+
+          .${CLASS_NO_RESULTS} {
+            opacity: 0.5;
           }
 
           .${CLASS_VISIBLE} {

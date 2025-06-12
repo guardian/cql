@@ -6,6 +6,7 @@ import {
 import { EditorView } from "prosemirror-view";
 
 export const CLASS_PENDING = "Cql__Typeahead--pending";
+export const CLASS_NO_RESULTS = "Cql__Typeahead--no-results";
 
 export type PopoverRendererState = {
   suggestion: TypeaheadSuggestion | undefined;
@@ -177,8 +178,9 @@ export class TypeaheadPopover extends Popover {
 
   private actionSubscriber: ActionSubscriber = (handleAction) => {
     this.handleAction = handleAction;
+    const unsubscribe = () => (this.handleAction = noopActionHandler)
 
-    return () => (this.handleAction = noopActionHandler);
+    return unsubscribe;
   };
 
   private applySuggestion = (value: string) => {

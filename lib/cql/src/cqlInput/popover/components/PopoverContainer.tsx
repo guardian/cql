@@ -3,6 +3,7 @@ import { DateSuggestionContent } from "./DateSuggestionContent";
 import { TextSuggestionContent } from "./TextSuggestionContent";
 import { useEffect, useState } from "preact/hooks";
 import {
+  CLASS_NO_RESULTS,
   CLASS_PENDING,
   PopoverRendererArgs,
   PopoverRendererState,
@@ -67,7 +68,11 @@ export const PopoverContainer: FunctionComponent<
     }
 
     if (!state.suggestion) {
-      return <div>No results</div>;
+      return (
+        <div class={`Cql__Option ${CLASS_NO_RESULTS}`}>
+          <div class="Cql__OptionLabel">No results</div>
+        </div>
+      );
     }
 
     switch (state.suggestion.type) {
