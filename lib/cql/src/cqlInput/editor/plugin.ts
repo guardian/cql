@@ -77,6 +77,14 @@ export const CLASS_CHIP_SELECTED = "Cql__ChipWrapper--is-selected";
 export const DATA_CHIP_SELECTED = "data-cql-chip-selected";
 export const TEST_ID_POLARITY_HANDLE = "polarity-handle";
 
+const KeyToActionMap = {
+  ArrowUp: "up",
+  ArrowDown: "down",
+  ArrowLeft: "left",
+  ArrowRight: "right",
+  Enter: "enter",
+} as const;
+
 /**
  * The CQL plugin handles most aspects of the editor behaviour, including
  *  - fetching results from the language server, and applying them to the document
@@ -538,20 +546,13 @@ export const createCqlPlugin = ({
           }
         } else {
           switch (event.key) {
-            case "ArrowUp": {
-              return typeaheadPopover.handleAction("up");
-            }
-            case "ArrowDown": {
-              return typeaheadPopover.handleAction("down");
-            }
-            case "ArrowLeft": {
-              return typeaheadPopover.handleAction("left");
-            }
-            case "ArrowRight": {
-              return typeaheadPopover.handleAction("right");
-            }
+            case "ArrowUp":
+            case "ArrowDown":
+            case "ArrowLeft":
+            case "ArrowRight":
             case "Enter": {
-              return typeaheadPopover.handleAction("enter");
+              event.stopPropagation();
+              return typeaheadPopover.handleAction(KeyToActionMap[event.key]);
             }
           }
         }
