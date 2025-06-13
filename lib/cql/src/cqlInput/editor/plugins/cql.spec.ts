@@ -10,7 +10,7 @@ import userEvent from "@testing-library/user-event";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
 import { createCqlPlugin, TEST_ID_POLARITY_HANDLE } from "./cql";
 import { redo, undo } from "prosemirror-history";
-import { endOfLine, startOfLine } from "../commands";
+import { endOfLine, maybeSelectValue, startOfLine } from "../commands";
 import { keymap } from "prosemirror-keymap";
 import {
   createProseMirrorTokenToDocumentMap,
@@ -94,6 +94,7 @@ const createCqlEditor = (initialQuery: string = "") => {
     plugins: [
       plugin,
       keymap({
+        "Cmd-a": maybeSelectValue,
         "Mod-z": undo,
         "Mod-y": redo,
         "Ctrl-a": startOfLine,
@@ -196,6 +197,24 @@ describe("plugin", () => {
 
   describe("typeahead", () => {
     describe("chip keys", () => {
+      it("selects the key, then the whole query, when Mod-a is pressed", async () => {
+        const queryStr = "str +x:y str";
+        const { editor, getPosFromQueryPos } = createCqlEditor(queryStr);
+        const keyPosInQuery = queryStr.indexOf("y");
+        const keyPosInDoc = getPosFromQueryPos(keyPosInQuery);
+
+        await editor.selectText(keyPosInDoc);
+        await editor.shortcut("Cmd-a");
+
+        expect(editor.selection.from).toBe(keyPosInDoc);
+        expect(editor.selection.to).toBe(keyPosInDoc + 1);
+
+        await editor.shortcut("Cmd-a");
+
+        expect(editor.selection.from).toBe(0);
+        expect(editor.selection.to).toBe(editor.state.doc.content.size);
+      });
+
       it("displays a popover at the start of a query", async () => {
         const { editor, container } = createCqlEditor();
 

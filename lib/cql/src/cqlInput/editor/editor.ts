@@ -4,7 +4,7 @@ import { doc, schema, queryStr } from "./schema";
 import { baseKeymap } from "prosemirror-commands";
 import { undo, redo, history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
-import { endOfLine, startOfLine } from "./commands";
+import { endOfLine, maybeSelectValue, startOfLine } from "./commands";
 import { createPlaceholderPlugin } from "./plugins/placeholder";
 
 /**
@@ -39,6 +39,7 @@ export const createEditorView = ({
           ...baseKeymap,
           "Mod-z": undo,
           "Mod-y": redo,
+          "Mod-a": maybeSelectValue,
           "Mod-ArrowLeft": startOfLine,
           "Ctrl-ArrowLeft": startOfLine,
           "Ctrl-a": startOfLine,
