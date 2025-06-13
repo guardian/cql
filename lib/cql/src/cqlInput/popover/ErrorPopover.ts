@@ -1,6 +1,6 @@
 import { EditorView } from "prosemirror-view";
 import { Popover } from "./Popover";
-import { CLASS_ERROR, CLASS_VISIBLE, CqlError } from "../editor/plugin";
+import { CLASS_ERROR, CLASS_VISIBLE, CqlError } from "../editor/plugins/cql";
 
 export class ErrorPopover extends Popover {
   private debugContainer: HTMLElement | undefined;

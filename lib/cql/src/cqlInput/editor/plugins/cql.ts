@@ -22,9 +22,9 @@ import {
   applySuggestion,
   skipSuggestion,
   isChipSelected,
-} from "./utils";
+} from "../utils";
 import { Mapping } from "prosemirror-transform";
-import { TypeaheadPopover } from "../popover/TypeaheadPopover";
+import { TypeaheadPopover } from "../../popover/TypeaheadPopover";
 import {
   chip,
   chipKey,
@@ -35,21 +35,21 @@ import {
   IS_SELECTED,
   POLARITY,
   schema,
-} from "./schema";
+} from "../schema";
 import { DOMSerializer, Fragment, Node } from "prosemirror-model";
-import { QueryChangeEventDetail } from "../../types/dom";
-import { ErrorPopover } from "../popover/ErrorPopover";
-import { CqlConfig } from "../CqlInput";
+import { QueryChangeEventDetail } from "../../../types/dom";
+import { ErrorPopover } from "../../popover/ErrorPopover";
+import { CqlConfig } from "../../CqlInput";
 import {
   getDebugASTHTML,
   getDebugMappingHTML,
   getDebugTokenHTML,
   getOriginalQueryHTML,
-} from "./debug";
-import { CqlQuery } from "../../lang/ast";
-import { parseCqlStr } from "../../lang/Cql";
-import { Typeahead } from "../../lang/typeahead";
-import { defaultPopoverRenderer } from "../popover/components/defaultPopoverRenderer";
+} from "../debug";
+import { CqlQuery } from "../../../lang/ast";
+import { parseCqlStr } from "../../../lang/Cql";
+import { Typeahead } from "../../../lang/typeahead";
+import { defaultPopoverRenderer } from "../../popover/components/defaultPopoverRenderer";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 

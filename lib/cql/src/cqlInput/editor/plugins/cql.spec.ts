@@ -1,5 +1,5 @@
 import { describe, it, beforeEach, expect } from "bun:test";
-import { errorMsgTestId, errorTestId, typeaheadTestId } from "../CqlInput";
+import { errorMsgTestId, errorTestId, typeaheadTestId } from "../../CqlInput";
 import {
   findByTestId,
   findByText,
@@ -8,9 +8,9 @@ import {
 } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
-import { createCqlPlugin, TEST_ID_POLARITY_HANDLE } from "./plugin";
+import { createCqlPlugin, TEST_ID_POLARITY_HANDLE } from "./cql";
 import { redo, undo } from "prosemirror-history";
-import { endOfLine, startOfLine } from "./commands";
+import { endOfLine, startOfLine } from "../commands";
 import { keymap } from "prosemirror-keymap";
 import {
   createProseMirrorTokenToDocumentMap,
@@ -19,14 +19,14 @@ import {
   mapResult,
   tokensToDoc,
   toProseMirrorTokens,
-} from "./utils";
+} from "../utils";
 import { TextSelection } from "prosemirror-state";
-import { TestTypeaheadHelpers } from "../../lang/fixtures/TestTypeaheadHelpers";
-import { isVisibleDataAttr } from "../popover/Popover";
-import { tick } from "../../utils/test";
-import { parseCqlStr } from "../../lang/Cql";
-import { Typeahead } from "../../lang/typeahead";
-import { chip, IS_SELECTED } from "./schema";
+import { TestTypeaheadHelpers } from "../../../lang/fixtures/TestTypeaheadHelpers";
+import { isVisibleDataAttr } from "../../popover/Popover";
+import { tick } from "../../../utils/test";
+import { parseCqlStr } from "../../../lang/Cql";
+import { Typeahead } from "../../../lang/typeahead";
+import { chip, IS_SELECTED } from "../schema";
 import { Node, NodeType } from "prosemirror-model";
 
 const typeheadHelpers = new TestTypeaheadHelpers();

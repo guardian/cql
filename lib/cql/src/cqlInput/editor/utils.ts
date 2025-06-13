@@ -14,7 +14,7 @@ import {
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
 import { Selection, TextSelection, Transaction } from "prosemirror-state";
-import { CLASS_ERROR, CqlError } from "./plugin";
+import { CLASS_ERROR, CqlError } from "./plugins/cql";
 import { isChipKey, Token, TokenType } from "../../lang/token";
 import {
   MappedTypeaheadSuggestion,

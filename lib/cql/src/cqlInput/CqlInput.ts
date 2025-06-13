@@ -1,7 +1,11 @@
 import { EditorView } from "prosemirror-view";
 import { QueryChangeEventDetail } from "../types/dom";
 import { createEditorView } from "./editor/editor";
-import { createCqlPlugin, CLASS_VISIBLE, CLASS_CHIP_SELECTED } from "./editor/plugin";
+import {
+  createCqlPlugin,
+  CLASS_VISIBLE,
+  CLASS_CHIP_SELECTED,
+} from "./editor/plugins/cql";
 import {
   CLASS_NO_RESULTS,
   CLASS_PENDING,
@@ -34,7 +38,7 @@ export const createCqlInput = (
   },
 ) => {
   class CqlInput extends HTMLElement {
-    static observedAttributes = ["value"];
+    static observedAttributes = ["value", "placeholder"];
 
     public editorView: EditorView | undefined;
     public value = "";
@@ -45,6 +49,9 @@ export const createCqlInput = (
       const cqlTypeaheadId = "cql-typeahead";
       const cqlErrorId = "cql-error";
       const shadow = this.attachShadow({ mode: "open" });
+
+      const initialValue = this.getAttribute("value") ?? "";
+      const placeholder = this.getAttribute("placeholder") ?? undefined;
 
       shadow.innerHTML = `
         <div id="${cqlInputId}" spellcheck="false"></div>
@@ -77,7 +84,8 @@ export const createCqlInput = (
       });
 
       const { editorView, updateEditorView } = createEditorView({
-        initialValue: this.getAttribute("value") ?? "",
+        initialValue,
+        placeholder,
         mountEl: cqlInput,
         plugins: [plugin],
       });
