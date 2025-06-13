@@ -235,6 +235,30 @@ describe("plugin", () => {
         expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("false");
       });
 
+      ["ArrowUp", "ArrowDown"].forEach((arrowKey) => {
+        it(`shows the popover again when ${arrowKey} key is pressed`, async () => {
+          const { editor, container } = createCqlEditor();
+          const popoverContainer = await findByTestId(
+            container,
+            typeaheadTestId,
+          );
+
+          await editor.insertText("+");
+          await findByText(popoverContainer, "Tag");
+
+          expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("true");
+
+          await editor.press("Escape");
+
+          expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("false");
+
+          await editor.press(arrowKey);
+          await tick(); // Seems to be necessary to permit the popover to update
+
+          expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("true");
+        });
+      });
+
       it("dismisses the popover when the editor loses focus", async () => {
         const { editor, container } = createCqlEditor();
         const popoverContainer = await findByTestId(container, typeaheadTestId);

@@ -540,6 +540,11 @@ export const createCqlPlugin = ({
             case "Enter": {
               return skipSuggestion(view)();
             }
+            case "ArrowUp":
+            case "ArrowDown":
+              event.stopPropagation();
+              event.preventDefault();
+              return typeaheadPopover?.handleAction(KeyToActionMap[event.key]);
             default: {
               return false;
             }

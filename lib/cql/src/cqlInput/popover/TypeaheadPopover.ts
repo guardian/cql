@@ -56,7 +56,7 @@ const noopUpdateRendererState = () => {
 };
 
 export class TypeaheadPopover extends Popover {
-  public handleAction: ActionHandler = noopActionHandler;
+  private delegatedHandleAction: ActionHandler = noopActionHandler;
   private updateRendererState: (state: PopoverRendererState) => void =
     noopUpdateRendererState;
 
@@ -138,9 +138,7 @@ export class TypeaheadPopover extends Popover {
     }
 
     this.currentSuggestion = suggestionThatCoversSelection;
-
-    const { node } = this.view.domAtPos(this.currentSuggestion.from);
-    this.show(node as HTMLElement);
+    this.show();
   };
 
   public setIsPending = () => {
@@ -154,6 +152,27 @@ export class TypeaheadPopover extends Popover {
     if (!isAlreadyHidden) {
       this.view.focus();
     }
+  };
+
+  protected show = () => {
+    if (!this.currentSuggestion) {
+      return Promise.resolve();
+    }
+    const { node } = this.view.domAtPos(this.currentSuggestion.from);
+    return super.show(node as HTMLElement);
+  };
+
+  public handleAction: ActionHandler = (action) => {
+    switch (action) {
+      case "up":
+      case "down": {
+        if (this.currentSuggestion && !this.isVisible) {
+          this.show();
+        }
+      }
+    }
+
+    return this.delegatedHandleAction?.(action);
   };
 
   protected updateRenderer = () => {
@@ -177,8 +196,8 @@ export class TypeaheadPopover extends Popover {
   };
 
   private actionSubscriber: ActionSubscriber = (handleAction) => {
-    this.handleAction = handleAction;
-    const unsubscribe = () => (this.handleAction = noopActionHandler)
+    this.delegatedHandleAction = handleAction;
+    const unsubscribe = () => (this.delegatedHandleAction = noopActionHandler);
 
     return unsubscribe;
   };
