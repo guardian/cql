@@ -94,6 +94,11 @@ export const createCqlInput = (
       editorView.dom.classList.add("Cql__ContentEditable");
 
       this.updateEditorView = updateEditorView;
+
+      // Do not leak events to the wider DOM
+      ["keydown", "keyup", "keypress"].forEach((eventName) =>
+        this.stopPropagationForEvent(eventName, cqlInput),
+      );
     }
 
     disconnectedCallback() {
@@ -386,6 +391,9 @@ export const createCqlInput = (
 
       return template;
     }
+
+    public stopPropagationForEvent = (eventName: string, element: HTMLElement) =>
+      element.addEventListener(eventName, (e) => e.stopPropagation());
   }
 
   return CqlInput;

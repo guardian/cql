@@ -1,7 +1,8 @@
 import { describe, expect, test } from "bun:test";
+import { userEvent } from "@testing-library/user-event";
 import { TestTypeaheadHelpers } from "../lang/fixtures/TestTypeaheadHelpers";
 import { createCqlInput, Typeahead } from "../lib";
-import { getByTextShadowed, tick } from "../utils/test";
+import { getByTextShadowed, tick, wait } from "../utils/test";
 
 describe("CqlInput", () => {
   const typeheadHelpers = new TestTypeaheadHelpers();
@@ -15,7 +16,8 @@ describe("CqlInput", () => {
     const cqlInput = new CqlInput();
     container.appendChild(cqlInput);
     if (value) cqlInput.setAttribute("value", value);
-    return { container, cqlInput };
+    const user = userEvent.setup();
+    return { container, cqlInput, user };
   };
 
   test("should render the given value when first instantiated", async () => {
@@ -46,5 +48,24 @@ describe("CqlInput", () => {
 
     const result = await getByTextShadowed(container, "Tag");
     expect(!!result).toBeFalse();
+  });
+
+  test.todo("should not bubble events into the document", async () => {
+    const { container, cqlInput, user } = createCqlInputContainer("");
+
+    let eventReceived = false;
+    container.addEventListener("keydown", () => {
+      eventReceived = true;
+    });
+
+    cqlInput.focus();
+    await user.keyboard("example");
+
+    // At the moment, this test does not focus on the correct input,
+    // possibly because it exists in the shadow DOM
+    expect(
+      eventReceived,
+      "This event should not be propagated to the input's container",
+    ).toBe(false);
   });
 });
