@@ -13,8 +13,12 @@ import {
   IS_SELECTED,
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
-import { EditorState, Selection, TextSelection, Transaction } from "prosemirror-state";
-import { CLASS_ERROR, CqlError } from "./plugins/cql";
+import { Selection, TextSelection, Transaction } from "prosemirror-state";
+import {
+  CLASS_ERROR,
+  CqlError,
+  TRANSACTION_SET_CHIP_KEY as TRANSACTION_APPLY_SUGGESTION,
+} from "./plugins/cql";
 import { isChipKey, Token, TokenType } from "../../lang/token";
 import {
   MappedTypeaheadSuggestion,
@@ -584,28 +588,60 @@ export const getNodeTypeAtSelection = (view: EditorView) => {
   return doc.resolve(from).node().type;
 };
 
-export const applyReadOnlyChipKeys = (tr: Transaction) => {
+/**
+ * Applies chip lifecycle rules:
+ *
+ * - chip keys are readonly unless a selection points into them explicitly
+ * - chip values are readonly until their sibling chip key is readonly
+ * - chips that do not contain any values, nor a selection, are removed
+ */
+export const applyChipLifecycleRules = (tr: Transaction): void => {
+  const { from, to } = tr.selection;
   tr.doc.descendants((node, pos) => {
-    const isChipKey = node.type === chipKey;
+    switch (node.type) {
+      case chip: {
+        const keyNode = node.maybeChild(0);
 
-    const contentStart = pos;
-    const contentEnd = contentStart + node.nodeSize;
-    const selectionCoversChipKey =
-      tr.selection.from >= contentStart && tr.selection.to <= contentEnd;
+        if (!keyNode) {
+          return;
+        }
 
-    if (isChipKey && !selectionCoversChipKey) {
-      tr.setNodeAttribute(pos, IS_READ_ONLY, true);
+        const keyNodeStart = pos + 1;
+        const keyNodeEnd = keyNodeStart + keyNode.nodeSize;
+        const selectionCoversChipKey = from >= keyNodeStart && to <= keyNodeEnd;
+
+        const { node: valueNode, offset } = node.childBefore(node.nodeSize - 2);
+
+        if (!valueNode) {
+          return;
+        }
+
+        const valueNodeStart = pos + offset + 1;
+
+        if (!selectionCoversChipKey) {
+          tr.setNodeAttribute(
+            keyNodeStart,
+            IS_READ_ONLY,
+            true,
+          ).setNodeAttribute(valueNodeStart, IS_READ_ONLY, false);
+        }
+
+        return false;
+      }
     }
   });
 
-  return true;
+  logNode(tr.doc);
 };
 
 export const applySuggestion =
   (view: EditorView) => (from: number, to: number, value: string) => {
     const tr = view.state.tr;
 
-    tr.replaceRangeWith(from, to, schema.text(value));
+    tr.replaceRangeWith(from, to, schema.text(value)).setMeta(
+      TRANSACTION_APPLY_SUGGESTION,
+      true,
+    );
 
     const insertPos = getNextPositionAfterTypeaheadSelection(tr.doc, to);
 
@@ -637,12 +673,22 @@ export const skipSuggestion = (view: EditorView) => () => {
 
 export const isChipSelected = (node: Node) => node.attrs[IS_SELECTED] === true;
 
-export const isWithinKey = (state: EditorState) => {
-  const { from, to } = state.selection;
-  const $from = state.doc.resolve(from);
-  const $to = state.doc.resolve(to);
+/**
+ * If the selection is entirely within the node(s) of the given type, return the
+ * node.
+ */
+export const isSelectionWithinNodesOfType = (
+  doc: Node,
+  { from, to }: Selection,
+  nodeTypes: NodeType[],
+): Node | undefined => {
+  const $from = doc.resolve(from);
+  const $to = doc.resolve(to);
   const fromNode = $from.node();
   const toNode = $to.node();
+  if (fromNode !== toNode) {
+    return;
+  }
 
-  return fromNode.type === chipValue && fromNode === toNode;
+  return nodeTypes.includes(fromNode.type) ? fromNode : undefined;
 };

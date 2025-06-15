@@ -510,9 +510,18 @@ describe("plugin", () => {
 
     it("should not permit selections within read-only chip keys", async () => {
       const queryStr = "a +tag:b c";
-      const { editor, getPosFromQueryPos } =
-        createCqlEditor(queryStr);
+      const { editor, getPosFromQueryPos } = createCqlEditor(queryStr);
       const invalidPos = getPosFromQueryPos(queryStr.indexOf("g"));
+      const initialPos = editor.selection.from;
+      editor.selectText(invalidPos);
+
+      expect(editor.selection.from).toBe(initialPos);
+    });
+
+    it("should not permit selections within read-only chip values", async () => {
+      const queryStr = "a +tag: c";
+      const { editor, getPosFromQueryPos } = createCqlEditor(queryStr);
+      const invalidPos = getPosFromQueryPos(queryStr.indexOf(":"));
       const initialPos = editor.selection.from;
       editor.selectText(invalidPos);
 

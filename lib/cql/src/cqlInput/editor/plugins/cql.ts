@@ -16,11 +16,12 @@ import {
   mapResult,
   queryHasChanged,
   toMappedSuggestions,
-  applyReadOnlyChipKeys,
+  applyChipLifecycleRules,
   getNodeTypeAtSelection,
   applySuggestion,
   skipSuggestion,
   isChipSelected,
+  isSelectionWithinNodesOfType,
 } from "../utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "../../popover/TypeaheadPopover";
@@ -67,6 +68,8 @@ type PluginState = {
 
 const ACTION_NEW_STATE = "NEW_STATE";
 const ACTION_SERVER_ERROR = "SERVER_ERROR";
+
+export const TRANSACTION_SET_CHIP_KEY = "TRANSACTION_SET_CHIP_KEY";
 
 export const CLASS_ERROR = "Cql__ErrorWidget";
 export const CLASS_VISIBLE = "Cql--is-visible";
@@ -199,8 +202,6 @@ export const createCqlPlugin = ({
       queryStr: queryAfterParse,
     });
 
-    applyReadOnlyChipKeys(tr);
-
     return { queryStr: queryStr ?? "", queryAst, tr };
   };
 
@@ -245,15 +246,17 @@ export const createCqlPlugin = ({
       },
     },
     filterTransaction(tr) {
-      // Do not permit selections within chip keys if they are readonly
-      const { from, to } = tr.selection;
-      const $from = tr.doc.resolve(from);
-      const $to = tr.doc.resolve(to);
-      const fromNode = $from.parent;
-      const toNode = $to.parent;
-      const isWithinKey = fromNode.type === chipKey && fromNode === toNode;
+      if (tr.getMeta(TRANSACTION_SET_CHIP_KEY)) {
+        return true;
+      }
 
-      if (isWithinKey && fromNode.attrs[IS_READ_ONLY]) {
+      // Do not permit selections within chip keys or values if they are readonly
+      const node = isSelectionWithinNodesOfType(tr.doc, tr.selection, [
+        chipKey,
+        chipValue,
+      ]);
+
+      if (node?.attrs[IS_READ_ONLY]) {
         return false;
       }
 
@@ -324,6 +327,8 @@ export const createCqlPlugin = ({
           });
         }
       }
+
+      applyChipLifecycleRules(tr);
 
       return tr;
     },
@@ -417,7 +422,6 @@ export const createCqlPlugin = ({
           const separator = document.createElement("span");
           separator.classList.add("Cql__ChipKeySeparator");
           separator.setAttribute("contentEditable", "false");
-          separator.innerText = ":";
 
           const contentDOM = document.createElement("span");
           dom.appendChild(contentDOM);
@@ -432,6 +436,37 @@ export const createCqlPlugin = ({
             contentDOM,
             update(node) {
               if (node.type !== chipKey) {
+                return false;
+              }
+
+              if (node.attrs[IS_READ_ONLY]) {
+                dom.classList.add(CLASS_CHIP_KEY_READONLY);
+                dom.setAttribute("contenteditable", "false");
+                separator.innerText = ":";
+              } else {
+                dom.classList.remove(CLASS_CHIP_KEY_READONLY);
+                dom.setAttribute("contenteditable", "true");
+              }
+
+              return true;
+            },
+          };
+        },
+        [chipValue.name](node) {
+          const dom = document.createElement("chip-value");
+
+          const contentDOM = document.createElement("span");
+          dom.appendChild(contentDOM);
+          if (node.attrs[IS_READ_ONLY]) {
+            dom.classList.add(CLASS_CHIP_KEY_READONLY);
+            dom.setAttribute("contenteditable", "false");
+          }
+
+          return {
+            dom,
+            contentDOM,
+            update(node) {
+              if (node.type !== chipValue) {
                 return false;
               }
 

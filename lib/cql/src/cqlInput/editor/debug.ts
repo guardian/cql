@@ -9,6 +9,7 @@ import {
   CqlGroup,
   CqlStr,
 } from "../../lang/ast";
+import { IS_READ_ONLY } from "./schema";
 
 // Debugging and visualisation utilities.
 
@@ -23,7 +24,7 @@ export const logNode = (doc: Node) => {
     const content =
       node.type.name === "text" ? `'${node.textContent}'` : undefined;
     console.log(
-      `${" ".repeat(indent)} ${node.type.name} ${pos}-${pos + node.nodeSize} ${
+      `${" ".repeat(indent)} ${node.type.name} ${node.attrs[IS_READ_ONLY] ? "(readonly)" : ""} ${pos}-${pos + node.nodeSize} ${
         content ? content : ""
       }`,
     );

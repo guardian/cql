@@ -34,8 +34,8 @@ export const schema = new Schema({
           default: false,
         },
         [IS_SELECTED]: {
-          default: false
-        }
+          default: false,
+        },
       },
     },
     chipKey: {
@@ -51,6 +51,11 @@ export const schema = new Schema({
       content: "text*",
       whitespace: "pre",
       toDOM: () => ["chip-value", 0],
+      attrs: {
+        [IS_READ_ONLY]: {
+          default: true,
+        },
+      },
     },
     text: {},
   },
