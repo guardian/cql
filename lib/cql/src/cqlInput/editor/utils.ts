@@ -13,7 +13,7 @@ import {
   IS_SELECTED,
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
-import { Selection, TextSelection, Transaction } from "prosemirror-state";
+import { EditorState, Selection, TextSelection, Transaction } from "prosemirror-state";
 import { CLASS_ERROR, CqlError } from "./plugins/cql";
 import { isChipKey, Token, TokenType } from "../../lang/token";
 import {
@@ -636,3 +636,13 @@ export const skipSuggestion = (view: EditorView) => () => {
 };
 
 export const isChipSelected = (node: Node) => node.attrs[IS_SELECTED] === true;
+
+export const isWithinKey = (state: EditorState) => {
+  const { from, to } = state.selection;
+  const $from = state.doc.resolve(from);
+  const $to = state.doc.resolve(to);
+  const fromNode = $from.node();
+  const toNode = $to.node();
+
+  return fromNode.type === chipValue && fromNode === toNode;
+};

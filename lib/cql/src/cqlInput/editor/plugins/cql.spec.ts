@@ -508,6 +508,17 @@ describe("plugin", () => {
       expect(chipKey.isContentEditable).toBe(false);
     });
 
+    it("should not permit selections within read-only chip keys", async () => {
+      const queryStr = "a +tag:b c";
+      const { editor, getPosFromQueryPos } =
+        createCqlEditor(queryStr);
+      const invalidPos = getPosFromQueryPos(queryStr.indexOf("g"));
+      const initialPos = editor.selection.from;
+      editor.selectText(invalidPos);
+
+      expect(editor.selection.from).toBe(initialPos);
+    });
+
     const findNodesByType = (doc: Node, type: NodeType) => {
       const nodes: Node[] = [];
       doc.descendants((node) => {

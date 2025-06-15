@@ -1,4 +1,4 @@
-import { Command, Selection, TextSelection } from "prosemirror-state";
+import { Command, EditorState, Selection, TextSelection } from "prosemirror-state";
 import { chipValue } from "./schema";
 import { selectAll } from "prosemirror-commands";
 

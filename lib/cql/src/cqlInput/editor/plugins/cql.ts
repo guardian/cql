@@ -1,7 +1,6 @@
 import { DecorationSet } from "prosemirror-view";
 import {
   AllSelection,
-  NodeSelection,
   Plugin,
   PluginKey,
   Transaction,
@@ -246,13 +245,18 @@ export const createCqlPlugin = ({
       },
     },
     filterTransaction(tr) {
-      // Do not permit NodeSelections that cover chip keys — they're readonly
-      if (
-        tr.selection instanceof NodeSelection &&
-        tr.selection.node.type === chipKey
-      ) {
+      // Do not permit selections within chip keys if they are readonly
+      const { from, to } = tr.selection;
+      const $from = tr.doc.resolve(from);
+      const $to = tr.doc.resolve(to);
+      const fromNode = $from.parent;
+      const toNode = $to.parent;
+      const isWithinKey = fromNode.type === chipKey && fromNode === toNode;
+
+      if (isWithinKey && fromNode.attrs[IS_READ_ONLY]) {
         return false;
       }
+
       return true;
     },
     appendTransaction(_, oldState, newState) {
