@@ -5,6 +5,7 @@ import {
   createCqlPlugin,
   CLASS_VISIBLE,
   CLASS_CHIP_SELECTED,
+  CLASS_CHIP_KEY_READONLY,
 } from "./editor/plugins/cql";
 import {
   CLASS_NO_RESULTS,
@@ -362,6 +363,10 @@ export const createCqlInput = (
             100%{
                 background-position: 468px 0
             }
+          }
+
+          .${CLASS_CHIP_KEY_READONLY} {
+            pointer-events: none;
           }
 
           .${CLASS_PENDING} {
