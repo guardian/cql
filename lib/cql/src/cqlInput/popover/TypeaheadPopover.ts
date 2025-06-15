@@ -109,7 +109,7 @@ export class TypeaheadPopover extends Popover {
 
   public isRenderingNavigableMenu = () => this.isVisible;
 
-  public updateItemsFromSuggestions = (
+  public updateSuggestions = (
     typeaheadSuggestions: MappedTypeaheadSuggestion[],
   ) => {
     this.isPending = false;

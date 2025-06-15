@@ -56,8 +56,8 @@ export const createCqlInput = (
 
       shadow.innerHTML = `
         <div id="${cqlInputId}" spellcheck="false"></div>
-        <div id="${cqlTypeaheadId}" class="Cql__TypeaheadPopoverContainer" data-testid="${typeaheadTestId}" popover></div>
-        <div id="${cqlErrorId}" class="Cql__ErrorPopover" data-testid="${errorTestId}" popover></div>
+        <div id="${cqlTypeaheadId}" class="Cql__TypeaheadPopoverContainer" data-testid="${typeaheadTestId}" popover="manual"></div>
+        <div id="${cqlErrorId}" class="Cql__ErrorPopover" data-testid="${errorTestId}" popover="manual"></div>
       `;
 
       const template = this.createTemplate(config.theme ?? {});
