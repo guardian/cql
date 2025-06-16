@@ -182,7 +182,7 @@ export const createCqlInput = (
 
           chip-key {
             /* This is to ensure the separator between key and value (':') remains aligned with the chip content */
-            display: inline-flex;
+            display: inline;
             padding: 0 5px;
           }
 
