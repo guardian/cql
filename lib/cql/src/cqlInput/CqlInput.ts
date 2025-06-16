@@ -17,7 +17,6 @@ import { applyPartialTheme, CqlTheme } from "./theme";
 import { ScannerSettings } from "../lang/scanner";
 import { DeepPartial } from "../types/utils";
 
-export const contentEditableTestId = "cql-input-contenteditable";
 export const typeaheadTestId = "cql-input-typeahead";
 export const errorTestId = "cql-input-error";
 export const errorMsgTestId = "cql-input-error-message";
@@ -91,7 +90,6 @@ export const createCqlInput = (
         plugins: [plugin],
       });
 
-      editorView.dom.setAttribute("data-testid", contentEditableTestId);
       editorView.dom.classList.add("Cql__ContentEditable");
 
       this.updateEditorView = updateEditorView;

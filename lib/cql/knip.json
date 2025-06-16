@@ -1,0 +1,4 @@
+{
+  "entry": ["src/lib.ts", "src/page.ts", "happydom.ts"],
+  "project": ["src/**"]
+}

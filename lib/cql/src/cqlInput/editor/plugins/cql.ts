@@ -77,7 +77,6 @@ export const CLASS_VISIBLE = "Cql--is-visible";
 export const CLASS_CHIP_KEY_READONLY = "Cql__ChipKey--is-readonly";
 export const CLASS_CHIP_SELECTED = "Cql__ChipWrapper--is-selected";
 
-export const DATA_CHIP_SELECTED = "data-cql-chip-selected";
 export const TEST_ID_POLARITY_HANDLE = "polarity-handle";
 export const TEST_ID_CHIP_VALUE = "chip-value";
 

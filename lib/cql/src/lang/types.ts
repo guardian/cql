@@ -27,8 +27,6 @@ type SuggestionTypeMap = {
   DATE: DateSuggestionOption;
 };
 
-export type Suggestion = TextSuggestionOption | DateSuggestionOption;
-
 export class TextSuggestionOption {
   public constructor(
     public readonly label: string,

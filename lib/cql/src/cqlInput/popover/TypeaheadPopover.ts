@@ -20,7 +20,7 @@ type StateSubscriber = (
   sub: (state: PopoverRendererState) => void,
 ) => Unsubscriber;
 
-export type Actions = "left" | "right" | "up" | "down" | "enter";
+type Actions = "left" | "right" | "up" | "down" | "enter";
 export type ActionHandler = (action: Actions) => true | undefined;
 export type ActionSubscriber = (handler: ActionHandler) => Unsubscriber;
 export type PopoverRendererArgs = {

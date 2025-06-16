@@ -1,5 +1,4 @@
 import { Tool } from "../types/tool";
-import { Team } from "../types/team";
 import EditorialTools from "./editorial-tools";
 import DataTech from "./data-tech";
 import DesignSystem from "./design-system";
@@ -51,12 +50,6 @@ function sortByName(tools: Array<Tool>): Array<Tool> {
     }
     return 0;
   });
-}
-
-export function getToolsByTeams(teams: Array<Team>): Array<Tool> {
-  return sortByName(
-    AllTools.filter((tool) => teams.filter((_) => _ === tool.team).length > 0),
-  );
 }
 
 export default sortByName(AllTools);

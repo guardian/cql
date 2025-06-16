@@ -8,7 +8,7 @@ import {
 } from "./types";
 import { getCqlFieldsFromCqlBinary } from "./utils";
 
-export type TypeaheadResolver =
+type TypeaheadResolver =
   | ((str: string, signal?: AbortSignal) => Promise<TextSuggestionOption[]>)
   | TextSuggestionOption[];
 

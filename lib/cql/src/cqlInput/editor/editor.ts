@@ -12,7 +12,7 @@ import { createPlaceholderPlugin } from "./plugins/placeholder";
  * as a `queryStr`. When added to a document running the CQL plugin, the plugin
  * will hydrate this string into a proper query.
  */
-export const createBasicDocFromStr = (str: string) =>
+const createBasicDocFromStr = (str: string) =>
   doc.create(undefined, [
     queryStr.create(undefined, [str !== "" ? [schema.text(str)] : []].flat()),
   ]);

@@ -8,7 +8,8 @@
     "build:lib": "vite build --config vite.lib.config.ts && tsc -p ./tsconfig.lib.json",
     "test:debug": "bun test --inspect-wait=localhost:6499/vscode",
     "preview": "vite preview",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "knip": "knip"
   },
   "devDependencies": {
     "@eslint/js": "^9.14.0",
@@ -17,13 +18,12 @@
     "@testing-library/dom": "^10.4.0",
     "@testing-library/user-event": "^14.5.2",
     "@types/bun": "latest",
-    "@types/eslint__js": "^8.42.3",
     "@types/prosemirror-dev-tools": "^3.0.6",
     "jest-prosemirror": "^3.0.0",
+    "knip": "^5.61.0",
     "prosemirror-dev-tools": "^4.1.0",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "shadow-dom-testing-library": "^1.11.3",
     "typescript": "^5.6.3",
     "typescript-eslint": "^8.12.2",
     "vite": "^6.0.6",
@@ -35,8 +35,6 @@
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
     "happy-dom": "^15.11.7",
-    "install": "^0.13.0",
-    "npm": "^10.9.0",
     "preact": "^10.25.4",
     "prettier": "^3.5.3",
     "prosemirror-commands": "^1.6.0",

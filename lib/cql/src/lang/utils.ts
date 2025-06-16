@@ -42,7 +42,7 @@ export const getCqlFieldsFromCqlBinary = (queryBinary: CqlBinary): CqlField[] =>
       : [],
   );
 
-export const getCqlFieldsFromQueryExpr = (
+const getCqlFieldsFromQueryExpr = (
   queryContent: CqlExpr,
 ): CqlField[] => {
   switch (queryContent.content.type) {

@@ -3,8 +3,6 @@ import type { EditorState } from "prosemirror-state";
 import { Plugin, PluginKey } from "prosemirror-state";
 import { Decoration, DecorationSet } from "prosemirror-view";
 
-export const placeholderTestAttribute = "placeholder";
-
 const getDefaultPlaceholder = (text: string) => {
   const span = document.createElement("span");
   span.style.display = "inline-block";
@@ -19,13 +17,9 @@ const getDefaultPlaceholder = (text: string) => {
   span.style.cursor = "text";
   span.draggable = false;
   span.innerHTML = text;
-  span.setAttribute("data-cy", placeholderTestAttribute);
 
   return span;
 };
-
-export const containsPlaceholder = (element: HTMLElement): boolean =>
-  !!element.querySelector(`span[${placeholderTestAttribute}]`);
 
 /**
  * Get the first placeholder position in the document – assumed
@@ -36,13 +30,13 @@ const getFirstPlaceholderPosition = (node: Node, currentPos = 0): number =>
     ? getFirstPlaceholderPosition(node.firstChild, currentPos + 1)
     : currentPos;
 
-export type PlaceholderOption = string | (() => HTMLElement);
+type PlaceholderOption = string | (() => HTMLElement);
 
 const placeholderPluginKey = new PluginKey<PlaceholderOption>(
   "cql_placeholder_plugin",
 );
 
-export const CQL_UPDATE_PLACEHOLDER = "CQL_UPDATE_PLACEHOLDER";
+const CQL_UPDATE_PLACEHOLDER = "CQL_UPDATE_PLACEHOLDER";
 
 export const createPlaceholderPlugin = (text: PlaceholderOption) =>
   new Plugin<PlaceholderOption>({

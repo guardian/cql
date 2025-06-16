@@ -373,7 +373,7 @@ export const docToCqlStr = (doc: Node): string => {
   return str;
 };
 
-export const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
+const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
   let found = -1;
   doc.nodesBetween(pos - 1, doc.content.size, (node, pos) => {
     if (found > -1) return false;
@@ -455,7 +455,7 @@ export const toMappedSuggestions = (
     return { ...suggestion, from, to } as MappedTypeaheadSuggestion;
   });
 
-export const toMappedError = (error: CqlError, mapping: Mapping) => ({
+const toMappedError = (error: CqlError, mapping: Mapping) => ({
   message: error.message,
   position: error?.position ? mapping.map(error.position) : undefined,
 });
@@ -563,9 +563,6 @@ export const errorToDecoration = (position: number): Decoration => {
 
   return Decoration.widget(position, toDOM);
 };
-
-export const getErrorMessage = (e: unknown) =>
-  e instanceof Error ? e.message : String(e);
 
 export const queryHasChanged = (
   oldDoc: Node,
@@ -705,7 +702,7 @@ export const isSelectionWithinNodesOfType = (
   return nodeTypes.includes(fromNode.type) ? fromNode : undefined;
 };
 
-export const removeChipCoveringRange = (
+const removeChipCoveringRange = (
   from: number,
   to: number,
   tr: Transaction,

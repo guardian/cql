@@ -12,7 +12,7 @@ export interface CqlResult {
   error?: Error;
 }
 
-export class CqlResultEnvelope implements CqlResult {
+class CqlResultEnvelope implements CqlResult {
   constructor(
     public tokens: Token[],
     public queryAst?: CqlQuery,

@@ -22,10 +22,11 @@ const isParamContainer = (param: HTMLElement): boolean =>
   typeof param.querySelector === "function" &&
   typeof param.querySelectorAll === "function";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 type Func = (
   container: HTMLElement,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   idOrRole: any,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   options?: any,
 ) => HTMLElement;
 

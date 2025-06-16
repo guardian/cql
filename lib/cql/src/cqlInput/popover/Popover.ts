@@ -1,6 +1,6 @@
 import { computePosition, flip, offset, shift } from "@floating-ui/dom";
 
-export type VirtualElement = {
+type VirtualElement = {
   getBoundingClientRect: () => {
     width: number;
     height: number;
