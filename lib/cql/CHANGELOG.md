@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 0.1.3
+
+### Patch Changes
+
+- 5a7c926: Do not block updates on the state of the current query AST
+
 ## 0.1.2
 
 ### Patch Changes
