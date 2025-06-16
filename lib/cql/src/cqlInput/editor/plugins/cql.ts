@@ -146,7 +146,7 @@ export const createCqlPlugin = ({
     const queryBeforeParse = docToCqlStr(tr.doc);
 
     const result = parseCqlStr(queryBeforeParse, lang);
-    const { tokens, queryAst, error, mapping, queryStr } = mapResult(result);
+    const { tokens, queryAst, error, mapping } = mapResult(result);
 
     const newDoc = tokensToDoc(tokens);
     const queryAfterParse = docToCqlStr(newDoc); // The document may have changed as a result of the parse.
@@ -424,6 +424,18 @@ export const createCqlPlugin = ({
           };
         },
         [chipKey.name](node) {
+          const separator = document.createElement("span");
+          separator.classList.add("Cql__ChipKeySeparator");
+          separator.setAttribute("contentEditable", "false");
+          separator.innerText = ":";
+
+          const addSeparator = () => {
+            if (!dom.contains(separator)) {
+              console.log("adding separator")
+              dom.appendChild(separator);
+            }
+          };
+
           const dom = document.createElement("chip-key");
 
           const contentDOM = document.createElement("span");
@@ -432,6 +444,7 @@ export const createCqlPlugin = ({
           if (node.attrs[IS_READ_ONLY]) {
             dom.classList.add(CLASS_CHIP_KEY_READONLY);
             dom.setAttribute("contenteditable", "false");
+            addSeparator();
           }
 
           return {
@@ -441,16 +454,10 @@ export const createCqlPlugin = ({
               if (node.type !== chipKey) {
                 return false;
               }
-
               if (node.attrs[IS_READ_ONLY]) {
                 dom.classList.add(CLASS_CHIP_KEY_READONLY);
                 dom.setAttribute("contenteditable", "false");
-
-                const separator = document.createElement("span");
-                separator.classList.add("Cql__ChipKeySeparator");
-                separator.setAttribute("contentEditable", "false");
-                separator.innerText = ":";
-                dom.appendChild(separator);
+                addSeparator();
               } else {
                 dom.classList.remove(CLASS_CHIP_KEY_READONLY);
                 dom.setAttribute("contenteditable", "true");
@@ -586,7 +593,12 @@ export const createCqlPlugin = ({
 
             const prevNodePos = $prevPos.pos - prevNode.nodeSize;
 
-            return applyDeleteIntent(view, prevNodePos, $prevPos.pos + 1, prevNode);
+            return applyDeleteIntent(
+              view,
+              prevNodePos,
+              $prevPos.pos + 1,
+              prevNode,
+            );
           }
         }
 

@@ -201,6 +201,15 @@ describe("plugin", () => {
 
   describe("typeahead", () => {
     describe("chip keys", () => {
+      it("displays a colon between chip keys and values on first render", async () => {
+        const queryStr = "+x:y";
+        const { container } = createCqlEditor(queryStr);
+
+        const colonSeparator = await findByText(container, ':');
+
+        expect(colonSeparator).toBeTruthy();
+      });
+
       it("selects the key, then the whole query, when Mod-a is pressed", async () => {
         const queryStr = "str +x:y str";
         const { editor, getPosFromQueryPos } = createCqlEditor(queryStr);
