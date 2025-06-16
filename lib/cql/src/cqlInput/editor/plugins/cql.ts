@@ -22,6 +22,7 @@ import {
   skipSuggestion,
   isChipSelected,
   isSelectionWithinNodesOfType,
+  removeChipAtSelectionIfEmpty,
 } from "../utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "../../popover/TypeaheadPopover";
@@ -462,7 +463,7 @@ export const createCqlPlugin = ({
         },
         [chipValue.name](node) {
           const dom = document.createElement("chip-value");
-          dom.setAttribute("data-testid", TEST_ID_CHIP_VALUE)
+          dom.setAttribute("data-testid", TEST_ID_CHIP_VALUE);
 
           const contentDOM = document.createElement("span");
           dom.appendChild(contentDOM);
@@ -548,7 +549,11 @@ export const createCqlPlugin = ({
             return true;
           }
           case "Delete": {
-            // Look forward for node
+            if (removeChipAtSelectionIfEmpty(view)) {
+              return true;
+            }
+
+            // Look forward for a chip to remove
             const { anchor } = view.state.selection;
             const positionAfterSearchText = Math.max(anchor + 1, 0);
             const $nextPos = view.state.doc.resolve(positionAfterSearchText);
@@ -566,7 +571,11 @@ export const createCqlPlugin = ({
             );
           }
           case "Backspace": {
-            // Look backward for node
+            if (removeChipAtSelectionIfEmpty(view)) {
+              return true;
+            }
+
+            // Look backward for a chip to remove
             const { anchor } = view.state.selection;
             const positionBeforeSearchText = Math.max(anchor - 1, 0);
             const $prevPos = view.state.doc.resolve(positionBeforeSearchText);
@@ -578,7 +587,7 @@ export const createCqlPlugin = ({
 
             const prevNodePos = $prevPos.pos - prevNode.nodeSize;
 
-            return applyDeleteIntent(view, prevNodePos, $prevPos.pos, prevNode);
+            return applyDeleteIntent(view, prevNodePos, $prevPos.pos + 1, prevNode);
           }
         }
 

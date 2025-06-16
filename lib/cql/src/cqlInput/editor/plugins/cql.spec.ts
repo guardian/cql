@@ -537,28 +537,35 @@ describe("plugin", () => {
       // These tests are difficult to write because the click events here do not
       // seem to trigger selection behaviour. Leaving as todos for specification
       // purposes. Likely to require in-browser testing.
-      it.todo("should not permit selections within chip values when the sibling key does not have a value", async () => {
-        const queryStr = "a +: b";
-        const { editor, container } = createCqlEditor(queryStr);
-        const initialPos = editor.selection.from;
-        const chipValue = await findByTestId(container, TEST_ID_CHIP_VALUE);
+      it.todo(
+        "should not permit selections within chip values when the sibling key does not have a value",
+        async () => {
+          const queryStr = "a +: b";
+          const { editor, container } = createCqlEditor(queryStr);
+          const initialPos = editor.selection.from;
+          const chipValue = await findByTestId(container, TEST_ID_CHIP_VALUE);
 
-        await fireEvent.click(chipValue);
+          await fireEvent.click(chipValue);
 
-        expect(editor.selection.from).toBe(initialPos);
-      });
+          expect(editor.selection.from).toBe(initialPos);
+        },
+      );
 
-      it.todo("should permit selections within chip values when the sibling key does have a value", async () => {
-        const queryStr = "a +a: b";
-        const { editor, getPosFromQueryPos, container } = createCqlEditor(queryStr);
-        // +1 to push the selection into the chipValue content
-        const validPos = getPosFromQueryPos(queryStr.indexOf(":")) + 1;
-        const chipValue = await findByTestId(container, TEST_ID_CHIP_VALUE);
+      it.todo(
+        "should permit selections within chip values when the sibling key does have a value",
+        async () => {
+          const queryStr = "a +a: b";
+          const { editor, getPosFromQueryPos, container } =
+            createCqlEditor(queryStr);
+          // +1 to push the selection into the chipValue content
+          const validPos = getPosFromQueryPos(queryStr.indexOf(":")) + 1;
+          const chipValue = await findByTestId(container, TEST_ID_CHIP_VALUE);
 
-        await fireEvent.click(chipValue);
+          await fireEvent.click(chipValue);
 
-        expect(editor.selection.from).toBe(validPos);
-      });
+          expect(editor.selection.from).toBe(validPos);
+        },
+      );
     });
 
     const findNodesByType = (doc: Node, type: NodeType) => {
@@ -654,6 +661,20 @@ describe("plugin", () => {
   });
 
   describe("deletion", () => {
+    ["Backspace", "Delete"].forEach((key) => {
+      it(`removes an empty chip via ${key} within the chip`, async () => {
+        const queryStr = "before +: after";
+        const { editor, waitFor, getPosFromQueryPos } =
+          createCqlEditor(queryStr);
+
+        editor.selectText(getPosFromQueryPos(queryStr.indexOf("+")));
+
+        await editor.press(key);
+
+        await waitFor("before after");
+      });
+    });
+
     it("puts the chip in a pending state before deletion - keyboard", async () => {
       const { editor, waitFor } = createCqlEditor("+tag:a");
 

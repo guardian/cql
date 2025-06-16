@@ -544,12 +544,7 @@ export const applyDeleteIntent = (
 
   if (node.attrs[DELETE_CHIP_INTENT]) {
     // The caret belongs before the deleted chip
-    const insertAt = Math.max(0, from - 1);
-    tr.deleteRange(from, to)
-      // Ensure whitespace separates the two queryStr nodes surrounding the
-      // chip, which are now joined
-      .insertText(" ", insertAt)
-      .setSelection(TextSelection.create(tr.doc, insertAt));
+    removeChipCoveringRange(from, to, tr);
   } else {
     tr.setNodeAttribute(from, DELETE_CHIP_INTENT, true);
   }
@@ -708,4 +703,42 @@ export const isSelectionWithinNodesOfType = (
   }
 
   return nodeTypes.includes(fromNode.type) ? fromNode : undefined;
+};
+
+export const removeChipCoveringRange = (
+  from: number,
+  to: number,
+  tr: Transaction,
+) => {
+  const insertAt = Math.max(0, from - 1);
+  tr.deleteRange(from, to);
+
+  // If the document has content, ensure whitespace separates the two queryStr
+  // nodes surrounding the chip, which are now joined.
+  if (tr.doc.textContent) {
+    tr.setSelection(
+      TextSelection.near(tr.doc.resolve(insertAt), -1),
+    ).insertText(" ");
+  }
+};
+
+/**
+ * Remove the chip at the current selection if it is empty.
+ * @return true if a chip is removed, false if not.
+ */
+export const removeChipAtSelectionIfEmpty = (view: EditorView) => {
+  const { doc, selection } = view.state;
+
+  if (isSelectionWithinNodesOfType(doc, selection, [chipKey])) {
+    const $pos = doc.resolve(selection.from);
+    const nodeAtSelection = $pos.node();
+    if (!nodeAtSelection.textContent) {
+      const $chipKeyPos = doc.resolve($pos.before());
+      const tr = view.state.tr;
+      removeChipCoveringRange($chipKeyPos.before(), $chipKeyPos.after(), tr);
+      view.dispatch(tr);
+      return true;
+    }
+  }
+  return false;
 };
