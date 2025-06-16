@@ -6,6 +6,18 @@ import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
 import { parseCqlStr } from "./lang/Cql.ts";
 import { QueryChangeEventDetail } from "./types/dom";
 
+const setUrlParam = (key: string, value: string) => {
+  const urlParams = new URLSearchParams(window.location.search);
+  urlParams.set(key, value);
+  history.pushState(
+    "",
+    "",
+    `${window.location.origin}${
+      window.location.pathname
+    }?${urlParams.toString()}`,
+  );
+};
+
 const debugEl = document.createElement("div");
 debugEl.className = "CqlSandbox__debug-container";
 
@@ -20,19 +32,26 @@ const dataSourceMap: Record<string, string> = {
 const dataSourceSelect = document.getElementById("data-source")!;
 const cqlInputContainer = document.getElementById("cql-input-container")!;
 const cqlInput = document.getElementById("cql-input")!;
+cqlInput.setAttribute(
+  "value",
+  new URLSearchParams(window.location.search).get("query") ?? "",
+);
+
 const cqlEl = document.getElementById("cql")!;
 const queryEl = document.getElementById("query")!;
 const errorEl = document.getElementById("error")!;
 dataSourceSelect.addEventListener("change", (e: Event) => {
   const source = (e.target as HTMLSelectElement).value;
   const inputHtmlTagValue = dataSourceMap[source];
-  cqlInputContainer.innerHTML = `<${inputHtmlTagValue} initial-value="" id="${source}" popover-container-id="popover-container"></${inputHtmlTagValue}>`;
+  cqlInputContainer.innerHTML = `<${inputHtmlTagValue} id="${source}" popover-container-id="popover-container"></${inputHtmlTagValue}>`;
 });
 cqlInput?.addEventListener("queryChange", ((
   e: CustomEvent<QueryChangeEventDetail>,
 ) => {
-  queryEl.innerHTML = e.detail.queryStr ?? "";
-  cqlEl.innerHTML = e.detail.queryStr?.replaceAll(" ", "·") ?? "";
+  const queryStr = e.detail.queryStr ?? "";
+  setUrlParam("query", queryStr);
+  queryEl.innerHTML = queryStr;
+  cqlEl.innerHTML = queryStr.replaceAll(" ", "·");
   errorEl.innerHTML = e.detail.error ?? "";
 }) as EventListener);
 
@@ -53,8 +72,8 @@ const CqlInputCapi = createCqlInput(capiTypeahead, {
     groups: false,
   },
   theme: {
-    baseFontSize: "16px"
-  }
+    baseFontSize: "16px",
+  },
 });
 
 const guToolsTypeaheadFields: TypeaheadField[] = [
@@ -86,18 +105,6 @@ endpointInput?.addEventListener("input", (event) => {
   typeaheadHelpersCapi.setBaseUrl(endpoint);
 });
 endpointInput.value = initialEndpointCapi;
-
-const setUrlParam = (key: string, value: string) => {
-  const urlParams = new URLSearchParams(window.location.search);
-  urlParams.set(key, value);
-  history.pushState(
-    "",
-    "",
-    `${window.location.origin}${
-      window.location.pathname
-    }?${urlParams.toString()}`,
-  );
-};
 
 // Listen to URL changes and apply them to the URL
 window.addEventListener("popstate", function () {

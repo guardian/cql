@@ -203,7 +203,7 @@ export const createCqlPlugin = ({
       queryStr: queryAfterParse,
     });
 
-    return { queryStr: queryStr ?? "", queryAst, tr };
+    return { queryStr: queryAfterParse ?? "", queryAst, tr };
   };
 
   return new Plugin<PluginState>({
