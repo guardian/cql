@@ -171,6 +171,7 @@ export const createCqlInput = (
             padding: ${chipContent.layout.padding};
             /* Ensure there's always space for input */
             min-width: 5px;
+            flex-shrink: 0;
           }
 
           chip-wrapper {
@@ -187,6 +188,7 @@ export const createCqlInput = (
           }
 
           chip-value {
+            flex-shrink: 0;
             padding-right: 5px;
           }
 
