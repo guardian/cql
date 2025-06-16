@@ -431,7 +431,6 @@ export const createCqlPlugin = ({
 
           const addSeparator = () => {
             if (!dom.contains(separator)) {
-              console.log("adding separator")
               dom.appendChild(separator);
             }
           };
