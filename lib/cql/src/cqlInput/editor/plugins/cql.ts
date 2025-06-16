@@ -69,7 +69,7 @@ type PluginState = {
 const ACTION_NEW_STATE = "NEW_STATE";
 const ACTION_SERVER_ERROR = "SERVER_ERROR";
 
-export const TRANSACTION_SET_CHIP_KEY = "TRANSACTION_SET_CHIP_KEY";
+export const TRANSACTION_IGNORE_READONLY = "TRANSACTION_SET_CHIP_KEY";
 
 export const CLASS_ERROR = "Cql__ErrorWidget";
 export const CLASS_VISIBLE = "Cql--is-visible";
@@ -78,6 +78,7 @@ export const CLASS_CHIP_SELECTED = "Cql__ChipWrapper--is-selected";
 
 export const DATA_CHIP_SELECTED = "data-cql-chip-selected";
 export const TEST_ID_POLARITY_HANDLE = "polarity-handle";
+export const TEST_ID_CHIP_VALUE = "chip-value";
 
 const KeyToActionMap = {
   ArrowUp: "up",
@@ -246,14 +247,19 @@ export const createCqlPlugin = ({
       },
     },
     filterTransaction(tr) {
-      if (tr.getMeta(TRANSACTION_SET_CHIP_KEY)) {
+      if (tr.getMeta(TRANSACTION_IGNORE_READONLY)) {
         return true;
       }
 
-      // Do not permit selections within chip keys or values if they are readonly
+      // Do not permit selections within chip keys if they are readonly. We do
+      // permit selections within chip values at the transaction level, because
+      // if we do not, the caret cannot pass 'over' a chip value out of a chip
+      // when the user hits ArrowRight. Making chip values'
+      // `contenteditable=false` and preventing pointer-events is enough to
+      // prevent users from selecting a position within them (unlike chip keys,
+      // where a range selection is possible on content)
       const node = isSelectionWithinNodesOfType(tr.doc, tr.selection, [
         chipKey,
-        chipValue,
       ]);
 
       if (node?.attrs[IS_READ_ONLY]) {
@@ -419,13 +425,10 @@ export const createCqlPlugin = ({
         },
         [chipKey.name](node) {
           const dom = document.createElement("chip-key");
-          const separator = document.createElement("span");
-          separator.classList.add("Cql__ChipKeySeparator");
-          separator.setAttribute("contentEditable", "false");
 
           const contentDOM = document.createElement("span");
           dom.appendChild(contentDOM);
-          dom.appendChild(separator);
+
           if (node.attrs[IS_READ_ONLY]) {
             dom.classList.add(CLASS_CHIP_KEY_READONLY);
             dom.setAttribute("contenteditable", "false");
@@ -442,7 +445,12 @@ export const createCqlPlugin = ({
               if (node.attrs[IS_READ_ONLY]) {
                 dom.classList.add(CLASS_CHIP_KEY_READONLY);
                 dom.setAttribute("contenteditable", "false");
+
+                const separator = document.createElement("span");
+                separator.classList.add("Cql__ChipKeySeparator");
+                separator.setAttribute("contentEditable", "false");
                 separator.innerText = ":";
+                dom.appendChild(separator);
               } else {
                 dom.classList.remove(CLASS_CHIP_KEY_READONLY);
                 dom.setAttribute("contenteditable", "true");
@@ -454,6 +462,7 @@ export const createCqlPlugin = ({
         },
         [chipValue.name](node) {
           const dom = document.createElement("chip-value");
+          dom.setAttribute("data-testid", TEST_ID_CHIP_VALUE)
 
           const contentDOM = document.createElement("span");
           dom.appendChild(contentDOM);

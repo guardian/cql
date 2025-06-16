@@ -13,11 +13,17 @@ import {
   IS_SELECTED,
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
-import { Selection, TextSelection, Transaction } from "prosemirror-state";
+import {
+  NodeSelection,
+  Selection,
+  TextSelection,
+  Transaction,
+} from "prosemirror-state";
 import {
   CLASS_ERROR,
   CqlError,
-  TRANSACTION_SET_CHIP_KEY as TRANSACTION_APPLY_SUGGESTION,
+  TRANSACTION_IGNORE_READONLY as TRANSACTION_APPLY_SUGGESTION,
+  TRANSACTION_IGNORE_READONLY,
 } from "./plugins/cql";
 import { isChipKey, Token, TokenType } from "../../lang/token";
 import {
@@ -592,7 +598,7 @@ export const getNodeTypeAtSelection = (view: EditorView) => {
  * Applies chip lifecycle rules:
  *
  * - chip keys are readonly unless a selection points into them explicitly
- * - chip values are readonly until their sibling chip key is readonly
+ * - chip values are readonly until their sibling chip key has a value
  * - chips that do not contain any values, nor a selection, are removed
  */
 export const applyChipLifecycleRules = (tr: Transaction): void => {
@@ -609,6 +615,7 @@ export const applyChipLifecycleRules = (tr: Transaction): void => {
         const keyNodeStart = pos + 1;
         const keyNodeEnd = keyNodeStart + keyNode.nodeSize;
         const selectionCoversChipKey = from >= keyNodeStart && to <= keyNodeEnd;
+        const chipKeyHasContent = !!keyNode.textContent;
 
         const { node: valueNode, offset } = node.childBefore(node.nodeSize - 2);
 
@@ -618,7 +625,7 @@ export const applyChipLifecycleRules = (tr: Transaction): void => {
 
         const valueNodeStart = pos + offset + 1;
 
-        if (!selectionCoversChipKey) {
+        if (!selectionCoversChipKey && chipKeyHasContent) {
           tr.setNodeAttribute(
             keyNodeStart,
             IS_READ_ONLY,
@@ -630,8 +637,6 @@ export const applyChipLifecycleRules = (tr: Transaction): void => {
       }
     }
   });
-
-  logNode(tr.doc);
 };
 
 export const applySuggestion =
@@ -663,7 +668,10 @@ export const skipSuggestion = (view: EditorView) => () => {
   );
 
   if (insertPos) {
-    tr.setSelection(TextSelection.create(tr.doc, insertPos));
+    tr.setSelection(TextSelection.create(tr.doc, insertPos)).setMeta(
+      TRANSACTION_IGNORE_READONLY,
+      true,
+    );
   }
   view.dispatch(tr);
   view.focus();
@@ -679,9 +687,18 @@ export const isChipSelected = (node: Node) => node.attrs[IS_SELECTED] === true;
  */
 export const isSelectionWithinNodesOfType = (
   doc: Node,
-  { from, to }: Selection,
+  selection: Selection,
   nodeTypes: NodeType[],
 ): Node | undefined => {
+  if (
+    selection instanceof NodeSelection &&
+    nodeTypes.includes(selection.node.type)
+  ) {
+    return selection.node;
+  }
+
+  const { from, to } = selection;
+
   const $from = doc.resolve(from);
   const $to = doc.resolve(to);
   const fromNode = $from.node();

@@ -8,7 +8,11 @@ import {
 } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
-import { createCqlPlugin, TEST_ID_POLARITY_HANDLE } from "./cql";
+import {
+  createCqlPlugin,
+  TEST_ID_CHIP_VALUE,
+  TEST_ID_POLARITY_HANDLE,
+} from "./cql";
 import { redo, undo } from "prosemirror-history";
 import { endOfLine, maybeSelectValue, startOfLine } from "../commands";
 import { keymap } from "prosemirror-keymap";
@@ -499,33 +503,62 @@ describe("plugin", () => {
       await waitFor("+tag:a +tag:c ");
     });
 
-    it("should make chip keys read only when the selection does not fall within their content", async () => {
-      const queryStr = "a +tag:b c";
-      const { container } = createCqlEditor(queryStr);
+    describe("read-only behaviour", () => {
+      it("should not make chip keys read only when they are empty", async () => {
+        const queryStr = "a +: c";
+        const { getPosFromQueryPos, editor } = createCqlEditor(queryStr);
 
-      const chipKey = await findByText(container, "tag");
+        // +1 to place the selection within the chip key
+        const chipKeyPos = getPosFromQueryPos(queryStr.indexOf("+")) + 1;
+        editor.selectText(chipKeyPos);
 
-      expect(chipKey.isContentEditable).toBe(false);
-    });
+        expect(editor.selection.from).toBe(chipKeyPos);
+      });
 
-    it("should not permit selections within read-only chip keys", async () => {
-      const queryStr = "a +tag:b c";
-      const { editor, getPosFromQueryPos } = createCqlEditor(queryStr);
-      const invalidPos = getPosFromQueryPos(queryStr.indexOf("g"));
-      const initialPos = editor.selection.from;
-      editor.selectText(invalidPos);
+      it("should make chip keys read only when the selection does not fall within their content and they are not empty", async () => {
+        const queryStr = "a +tag:b c";
+        const { container } = createCqlEditor(queryStr);
 
-      expect(editor.selection.from).toBe(initialPos);
-    });
+        const chipKey = await findByText(container, "tag");
 
-    it("should not permit selections within read-only chip values", async () => {
-      const queryStr = "a +tag: c";
-      const { editor, getPosFromQueryPos } = createCqlEditor(queryStr);
-      const invalidPos = getPosFromQueryPos(queryStr.indexOf(":"));
-      const initialPos = editor.selection.from;
-      editor.selectText(invalidPos);
+        expect(chipKey.isContentEditable).toBe(false);
+      });
 
-      expect(editor.selection.from).toBe(initialPos);
+      it("should not permit selections within read-only chip keys", async () => {
+        const queryStr = "a +tag:b c";
+        const { editor, getPosFromQueryPos } = createCqlEditor(queryStr);
+        const invalidPos = getPosFromQueryPos(queryStr.indexOf("g"));
+        const initialPos = editor.selection.from;
+        editor.selectText(invalidPos);
+
+        expect(editor.selection.from).toBe(initialPos);
+      });
+
+      // These tests are difficult to write because the click events here do not
+      // seem to trigger selection behaviour. Leaving as todos for specification
+      // purposes. Likely to require in-browser testing.
+      it.todo("should not permit selections within chip values when the sibling key does not have a value", async () => {
+        const queryStr = "a +: b";
+        const { editor, container } = createCqlEditor(queryStr);
+        const initialPos = editor.selection.from;
+        const chipValue = await findByTestId(container, TEST_ID_CHIP_VALUE);
+
+        await fireEvent.click(chipValue);
+
+        expect(editor.selection.from).toBe(initialPos);
+      });
+
+      it.todo("should permit selections within chip values when the sibling key does have a value", async () => {
+        const queryStr = "a +a: b";
+        const { editor, getPosFromQueryPos, container } = createCqlEditor(queryStr);
+        // +1 to push the selection into the chipValue content
+        const validPos = getPosFromQueryPos(queryStr.indexOf(":")) + 1;
+        const chipValue = await findByTestId(container, TEST_ID_CHIP_VALUE);
+
+        await fireEvent.click(chipValue);
+
+        expect(editor.selection.from).toBe(validPos);
+      });
     });
 
     const findNodesByType = (doc: Node, type: NodeType) => {

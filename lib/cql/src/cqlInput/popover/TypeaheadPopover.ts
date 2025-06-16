@@ -133,7 +133,6 @@ export class TypeaheadPopover extends Popover {
     if (!suggestionThatCoversSelection) {
       this.currentSuggestion = undefined;
       this.hide();
-      this.updateRenderer();
       return;
     }
 

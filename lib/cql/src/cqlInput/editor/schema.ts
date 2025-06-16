@@ -40,7 +40,6 @@ export const schema = new Schema({
     },
     chipKey: {
       content: "text*",
-      toDOM: () => ["chip-key", 0],
       attrs: {
         [IS_READ_ONLY]: {
           default: false,
@@ -50,9 +49,9 @@ export const schema = new Schema({
     chipValue: {
       content: "text*",
       whitespace: "pre",
-      toDOM: () => ["chip-value", 0],
       attrs: {
         [IS_READ_ONLY]: {
+          // Chip values are read-only until their sibling key has content
           default: true,
         },
       },
