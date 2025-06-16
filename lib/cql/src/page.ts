@@ -114,6 +114,11 @@ window.addEventListener("popstate", function () {
   endpointInput.value = endpoint ?? "";
 });
 
+const programmaticInput = document.getElementById("programmatic-input");
+programmaticInput?.addEventListener("input", (e) => {
+  cqlInput.setAttribute("value", (e.target as HTMLInputElement).value ?? "");
+});
+
 // Basic input implementation to demonstrate overlay method
 class CqlInputSimple extends HTMLElement {
   public value = "";
