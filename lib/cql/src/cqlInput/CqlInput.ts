@@ -16,6 +16,8 @@ import { Typeahead } from "../lang/typeahead";
 import { applyPartialTheme, CqlTheme } from "./theme";
 import { ScannerSettings } from "../lang/scanner";
 import { DeepPartial } from "../types/utils";
+import { parseCqlStr } from "../lang/Cql";
+import { cqlQueryStrFromQueryAst } from "../lang/interpreter";
 
 export const typeaheadTestId = "cql-input-typeahead";
 export const errorTestId = "cql-input-error";
@@ -111,7 +113,29 @@ export const createCqlInput = (
     ) {
       switch (name) {
         case "value": {
-          if (newValue !== this.value) {
+          // We defend here against updating the view if the underlying query
+          // has not changed, because updating the underlying query is likely to
+          // disrupt the user selection. As an optimisation, we run a basic
+          // equivalence check, before normalising the new value and comparing
+          // it against the old one.
+          const basicValueHasNotChanged = newValue === this.value;
+          if (basicValueHasNotChanged) {
+            return;
+          }
+          const currentResult = parseCqlStr(this.value);
+          const newResult = parseCqlStr(newValue);
+
+          // This is a little dangerous: we are assuming that the query is well formed
+          // in both cases. This may not always be the case.
+          if (!currentResult.queryAst || !newResult.queryAst) {
+            return;
+          }
+
+          const normalisedValueHasChanged =
+            cqlQueryStrFromQueryAst(currentResult.queryAst) !==
+            cqlQueryStrFromQueryAst(newResult.queryAst);
+
+          if (normalisedValueHasChanged) {
             this.updateEditorView?.(newValue);
           }
         }
@@ -393,8 +417,10 @@ export const createCqlInput = (
       return template;
     }
 
-    public stopPropagationForEvent = (eventName: string, element: HTMLElement) =>
-      element.addEventListener(eventName, (e) => e.stopPropagation());
+    public stopPropagationForEvent = (
+      eventName: string,
+      element: HTMLElement,
+    ) => element.addEventListener(eventName, (e) => e.stopPropagation());
   }
 
   return CqlInput;

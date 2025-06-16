@@ -15,6 +15,7 @@ export interface CqlResult {
 class CqlResultEnvelope implements CqlResult {
   constructor(
     public tokens: Token[],
+    public originalQuery: string,
     public queryAst?: CqlQuery,
     public queryStr?: string,
     public error?: Error,
@@ -31,14 +32,14 @@ export const parseCqlStr = (
   const result = parser.parse();
 
   return either(result)(
-    (error) => new CqlResultEnvelope(tokens, undefined, undefined, error),
+    (error) => new CqlResultEnvelope(tokens, queryStr, undefined, undefined, error),
     (query) => {
       const queryStringResult: Result<Error, string> =
         queryStrFromQueryList(query);
 
       return either(queryStringResult)(
-        (error) => new CqlResultEnvelope(tokens, query, undefined, error),
-        (queryResult) => new CqlResultEnvelope(tokens, query, queryResult),
+        (error) => new CqlResultEnvelope(tokens, queryStr, query, undefined, error),
+        (queryResult) => new CqlResultEnvelope(tokens, queryStr, query, queryResult),
       );
     },
   );

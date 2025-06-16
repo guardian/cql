@@ -26,6 +26,7 @@ describe("CqlInput", () => {
     expect(result).toBeTruthy();
   });
 
+
   test("should update the rendered value, and call the callback, when the attribute changes", async () => {
     const { container, cqlInput } = createCqlInputContainer("one");
     let callbackValue = "";
@@ -37,6 +38,17 @@ describe("CqlInput", () => {
     const result = await getByTextShadowed(container, "two");
     expect(result).toBeTruthy();
     expect(callbackValue).toBe("two");
+  });
+
+  test("should not update the rendered value when the attribute changes but the normalised result is the same", async () => {
+    const { cqlInput } = createCqlInputContainer("+tag:one");
+    let callbackValue = "";
+    cqlInput.addEventListener(
+      "queryChange",
+      (e) => (callbackValue = e.detail.queryStr),
+    );
+    cqlInput.setAttribute("value", `+tag:"one"`);
+    expect(callbackValue).toBe("");
   });
 
   test("should not display the popover when the input is updated programmatically, and not focused", async () => {

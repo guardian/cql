@@ -98,10 +98,8 @@ export class Scanner {
     if (this.peek() === '"') {
       this.advance();
       this.consumeQuotedRange();
-      this.addToken(
-        TokenType.CHIP_VALUE,
-        this.program.substring(this.start + 2, this.current - 1),
-      );
+      const literal = this.program.substring(this.start + 2, this.current - 1);
+      this.addToken(TokenType.CHIP_VALUE, literal === "" ? undefined : literal);
       return;
     }
 

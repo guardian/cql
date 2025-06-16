@@ -129,6 +129,18 @@ describe("scanner", () => {
       expect(tokens).toEqual(expectedTokens);
     });
 
+    it("should tokenise key value pairs for fields, and give `undefined` for empty quotes", () => {
+      const scanner = new Scanner('+tag:""');
+      const tokens = scanner.scanTokens();
+      const expectedTokens = [
+        new Token(TokenType.CHIP_KEY_POSITIVE, "+tag", "tag", 0, 3),
+        new Token(TokenType.CHIP_VALUE, ':""', undefined, 4, 6),
+        eofToken(7),
+      ];
+
+      expect(tokens).toEqual(expectedTokens);
+    });
+
     it("should tokenise key value pairs for fields when the key value contains non-word characters", () => {
       const scanner = new Scanner('+@tag:"tone/news"');
       const tokens = scanner.scanTokens();
