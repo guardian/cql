@@ -125,14 +125,14 @@ export const createCqlInput = (
           const currentResult = parseCqlStr(this.value);
           const newResult = parseCqlStr(newValue);
 
-          // This is a little dangerous: we are assuming that the query is well formed
-          // in both cases. This may not always be the case.
-          if (!currentResult.queryAst || !newResult.queryAst) {
+          // This is a little dangerous: we are assuming that the incoming query is well formed.
+          if (!newResult.queryAst) {
             return;
           }
 
           const normalisedValueHasChanged =
-            cqlQueryStrFromQueryAst(currentResult.queryAst) !==
+            (currentResult.queryAst &&
+              cqlQueryStrFromQueryAst(currentResult.queryAst)) !==
             cqlQueryStrFromQueryAst(newResult.queryAst);
 
           if (normalisedValueHasChanged) {
