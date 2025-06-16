@@ -2,7 +2,7 @@ import { describe, expect, test } from "bun:test";
 import { userEvent } from "@testing-library/user-event";
 import { TestTypeaheadHelpers } from "../lang/fixtures/TestTypeaheadHelpers";
 import { createCqlInput, Typeahead } from "../lib";
-import { getByTextShadowed, tick, wait } from "../utils/test";
+import { getByTextShadowed, tick } from "../utils/test";
 
 describe("CqlInput", () => {
   const typeheadHelpers = new TestTypeaheadHelpers();

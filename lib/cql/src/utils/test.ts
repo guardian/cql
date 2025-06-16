@@ -3,9 +3,6 @@ import type { GetByText } from "@testing-library/dom";
 
 export const tick = async () => new Promise<void>((res) => setTimeout(res));
 
-export const wait = async (ms: number) =>
-  new Promise<void>((res) => setTimeout(res, ms));
-
 /**
  * Shadow root code taken from
  * https://github.com/porsche-design-system/porsche-design-system/blob/main/packages/components-js/projects/jsdom-polyfill/src/testing.ts
