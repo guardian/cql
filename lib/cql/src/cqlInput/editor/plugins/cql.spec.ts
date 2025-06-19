@@ -671,12 +671,24 @@ describe("plugin", () => {
 
   describe("deletion", () => {
     ["Backspace", "Delete"].forEach((key) => {
-      it(`removes an empty chip via ${key} within the chip`, async () => {
+      it(`removes an empty chip via ${key} within the chip key`, async () => {
         const queryStr = "before +: after";
         const { editor, waitFor, getPosFromQueryPos } =
           createCqlEditor(queryStr);
 
         editor.selectText(getPosFromQueryPos(queryStr.indexOf("+")));
+
+        await editor.press(key);
+
+        await waitFor("before after");
+      });
+
+      it(`removes an empty chip via ${key} within the chip value`, async () => {
+        const queryStr = "before +tag: after";
+        const { editor, waitFor, getPosFromQueryPos } =
+          createCqlEditor(queryStr);
+
+        editor.selectText(getPosFromQueryPos(queryStr.indexOf(":")));
 
         await editor.press(key);
 

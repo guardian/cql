@@ -396,6 +396,14 @@ export const maybeMoveSelectionIntoChipKey = ({
   selection: Selection;
   currentDoc: Node;
 }): Selection => {
+  const defaultSelection = TextSelection.near(
+    currentDoc.resolve(Math.min(selection.from, currentDoc.nodeSize - 2)),
+  );
+
+  if (selection.from > currentDoc.nodeSize) {
+    return defaultSelection;
+  }
+
   const $from = currentDoc.resolve(selection.from);
   const nodeAtCurrentSelection = $from.node().type;
   const nodeTypeAfterCurrentSelection = $from.nodeAfter?.type;
@@ -416,11 +424,7 @@ export const maybeMoveSelectionIntoChipKey = ({
     }
   }
 
-  return TextSelection.create(
-    currentDoc,
-    Math.min(selection.from, currentDoc.nodeSize - 2),
-    Math.min(selection.to, currentDoc.nodeSize - 2),
-  );
+  return defaultSelection;
 };
 
 export type ProseMirrorToken = Omit<Token, "start" | "end"> & {
@@ -702,11 +706,7 @@ export const isSelectionWithinNodesOfType = (
   return nodeTypes.includes(fromNode.type) ? fromNode : undefined;
 };
 
-const removeChipCoveringRange = (
-  from: number,
-  to: number,
-  tr: Transaction,
-) => {
+const removeChipCoveringRange = (from: number, to: number, tr: Transaction) => {
   const insertAt = Math.max(0, from - 1);
   tr.deleteRange(from, to);
 
@@ -720,19 +720,29 @@ const removeChipCoveringRange = (
 };
 
 /**
- * Remove the chip at the current selection if it is empty.
+ * Remove the chip at the current selection if:
+ *   - the selection is within a key, and the key is empty
+ *   - the selection is within a value, and the value is empty
  * @return true if a chip is removed, false if not.
  */
 export const removeChipAtSelectionIfEmpty = (view: EditorView) => {
   const { doc, selection } = view.state;
 
-  if (isSelectionWithinNodesOfType(doc, selection, [chipKey])) {
+  if (isSelectionWithinNodesOfType(doc, selection, [chipKey, chipValue])) {
     const $pos = doc.resolve(selection.from);
     const nodeAtSelection = $pos.node();
     if (!nodeAtSelection.textContent) {
-      const $chipKeyPos = doc.resolve($pos.before());
+      const $chipPos = doc.resolve($pos.before(1));
+      const chipNode = $chipPos.nodeAfter;
+      if (!chipNode || chipNode.type !== chip) {
+        return;
+      }
       const tr = view.state.tr;
-      removeChipCoveringRange($chipKeyPos.before(), $chipKeyPos.after(), tr);
+      removeChipCoveringRange(
+        $chipPos.pos,
+        $chipPos.pos + chipNode.nodeSize,
+        tr,
+      );
       view.dispatch(tr);
       return true;
     }
