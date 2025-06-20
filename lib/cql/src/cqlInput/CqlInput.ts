@@ -18,6 +18,7 @@ import { ScannerSettings } from "../lang/scanner";
 import { DeepPartial } from "../types/utils";
 import { parseCqlStr } from "../lang/Cql";
 import { cqlQueryStrFromQueryAst } from "../lang/interpreter";
+import { CLASSNAME_PLACEHOLDER } from "./editor/plugins/placeholder";
 
 export const typeaheadTestId = "cql-input-typeahead";
 export const errorTestId = "cql-input-error";
@@ -414,6 +415,23 @@ export const createCqlInput = (
 
           .${CLASS_VISIBLE} {
             display: block;
+          }
+
+          .${CLASSNAME_PLACEHOLDER} {
+            display: inline-block;
+            position: absolute;
+            width: 100%;
+            left: 0;
+            top: 0;
+            padding: calc(${input.layout.padding} + ${chipContent.layout.padding});
+            white-space: nowrap;
+            overflow-x: hidden;
+            text-overflow: ellipsis;
+            vertical-align: bottom;
+            /* Passes accessibility contrast on a white background */
+            color: #777575;
+            pointer-events: none;
+            cursor: text;
           }
         </style>
       `;
