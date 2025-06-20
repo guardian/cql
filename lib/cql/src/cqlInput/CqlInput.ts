@@ -164,6 +164,7 @@ export const createCqlInput = (
             display: inline-flex;
             align-items: center;
             white-space: pre-wrap;
+            overflow-x: scroll;
           }
 
           query-str {
@@ -176,6 +177,7 @@ export const createCqlInput = (
 
           chip-wrapper {
             display: inline-flex;
+            flex-shrink: 0;
             background-color: ${chipWrapper.color.background};
             margin: 0 5px;
             border-radius: ${baseBorderRadius};
