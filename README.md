@@ -30,9 +30,56 @@ One solution might be:
   - a text-based query DSL, addressing problem of affordances and consistency
   - a good syntax-highlighter/typeahead input, wrapped as something that is useable anywhere (e.g. lightweight web component), to address discoverability
 
-This repo is a PoC.
+## How can I use it?
 
-### Release
+This repo provides a web component that accepts `placeholder` and `value` attributes, and exposes an event listener, `queryChange`, that work as a HTML `input` element does:
+
+```typescript
+// Register the component
+const typeaheadGuTools = new Typeahead(guToolsTypeaheadFields);
+const CqlInputGuTools = createCqlInput(typeaheadGuTools);
+customElements.define("cql-input-gutools", CqlInputGuTools);
+```
+
+```html
+<!-- Add an input to the document -->
+<cql-input id="cql-input-1" value="+tag:article" placeholder="Search for content"></cql-input>
+```
+
+```typescript
+// Respond to changes
+const cqlInputElement = document.getElementById("cql-input-1");
+cqlInputElement.addEventListener("queryChange", ({ detail: {
+  queryStr,
+  queryAst,
+  error
+}) => {
+  // Respond to changes
+});
+```
+
+## How does it work?
+
+The flow of state within the input looks like: 
+
+```mermaid
+flowchart TD
+  Z["Application"] --"Updates input's 'value' prop"--> A
+  A --"Calls 'onchange'"--> Z
+  subgraph "CQL input component"
+      A["CQL query string"]
+      A --"Parsed into"--> B["Tokens, AST and errors"]
+      B --"Tokens are transformed into"--> C["ProseMirror document"]
+      C --"ProseMirror document is transformed into"--> A
+      C --> E["View is updated with diff from previous state"]
+  end
+```
+
+### Why use tokens to generate the document, rather than the AST?
+
+The token parser is more permissive than the AST parser, so we can represent more document states using tokens. Because, for the purposes of the editor, we only need to understand the difference between fields and query strings, which are effectively flat, the ProseMirror document does not need to reflect the AST's structure.
+
+## Release
 This repository uses [changesets](https://github.com/changesets/changesets) for version management.
 
 To release a new version with your changes, run `bun changeset add` and follow the prompts. This will create a new changeset file in the .changeset directory. Commit this file with your PR.
