@@ -14,6 +14,7 @@ import {
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
 import {
+  AllSelection,
   NodeSelection,
   Selection,
   TextSelection,
@@ -748,4 +749,25 @@ export const removeChipAtSelectionIfEmpty = (view: EditorView) => {
     }
   }
   return false;
+};
+
+/**
+ * Create a basic document from the given string, representing the entire query
+ * as a `queryStr`. When added to a document running the CQL plugin, the plugin
+ * will hydrate this string into a proper query.
+ */
+export const createBasicDocFromStr = (str: string) =>
+  doc.create(undefined, [
+    queryStr.create(undefined, [str !== "" ? [schema.text(str)] : []].flat()),
+  ]);
+
+export const updateEditorViewWithQueryStr = (
+  editorView: EditorView,
+  str: string,
+) => {
+  const doc = createBasicDocFromStr(str);
+
+  const { from, to } = new AllSelection(editorView.state.tr.doc);
+  const tr = editorView.state.tr.replaceRangeWith(from, to, doc);
+  editorView.dispatch(tr);
 };

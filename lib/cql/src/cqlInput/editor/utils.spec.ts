@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import {
   docToCqlStr,
   getNextPositionAfterTypeaheadSelection,
@@ -39,7 +39,7 @@ describe("utils", () => {
   };
 
   describe("tokensToNode", () => {
-    test("creates nodes from a list of tokens", async () => {
+    it("should create a node from a list of tokens", async () => {
       const tokens = await queryToProseMirrorTokens("text +key:value text");
       const node = tokensToDoc(tokens);
 
@@ -52,7 +52,7 @@ describe("utils", () => {
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
-    test("should insert a queryStr node if the query starts with a KV pair", async () => {
+    it("should insert a queryStr node if the query starts with a KV pair", async () => {
       const tokens = await queryToProseMirrorTokens("+key:value");
       const node = tokensToDoc(tokens);
 
@@ -65,7 +65,7 @@ describe("utils", () => {
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
-    test("should insert a queryStr node if the query starts with a KV pair", async () => {
+    it("should insert a queryStr node if the query starts with a KV pair", async () => {
       const tokens = await queryToProseMirrorTokens(":value");
       const node = tokensToDoc(tokens);
 
@@ -74,7 +74,7 @@ describe("utils", () => {
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
-    test("should preserve whitespace at the start of the document", async () => {
+    it("should preserve whitespace at the start of the document", async () => {
       const tokens = await queryToProseMirrorTokens(" this AND  +key");
       const node = tokensToDoc(tokens);
 
@@ -87,7 +87,7 @@ describe("utils", () => {
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
-    test("should preserve whitespace at end of non-chip tokens", async () => {
+    it("should preserve whitespace at end of non-chip tokens", async () => {
       const tokens = await queryToProseMirrorTokens("this AND  +key");
       const node = tokensToDoc(tokens);
 
@@ -100,7 +100,7 @@ describe("utils", () => {
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
-    test("should preserve whitespace at end of query", async () => {
+    it("should preserve whitespace at end of query", async () => {
       const tokens = await queryToProseMirrorTokens("example   ");
       const node = tokensToDoc(tokens);
 
@@ -109,7 +109,7 @@ describe("utils", () => {
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
-    test("should preserve whitespace within values that have whitespace", async () => {
+    it("should preserve whitespace within values that have whitespace", async () => {
       const tokens = await queryToProseMirrorTokens(
         'example +key:"1 2" example',
       );
@@ -124,7 +124,7 @@ describe("utils", () => {
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
-    test("should create chipWrappers for partial tags that precede existing tags", async () => {
+    it("should create chipWrappers for partial tags that precede existing tags", async () => {
       const tokens = await queryToProseMirrorTokens("+ +tag");
       const node = tokensToDoc(tokens);
 
@@ -142,19 +142,19 @@ describe("utils", () => {
 
   describe("mapTokens", () => {
     describe("should map tokens to text positions", () => {
-      test("with parens", async () => {
+      it("with parens", async () => {
         const text = await getTextFromTokenRanges("(b OR c)");
 
         expect(text).toEqual(["(", "b", "OR", "c", ")", ""]);
       });
 
-      test("with search text and tag", async () => {
+      it("with search text and tag", async () => {
         const text = await getTextFromTokenRanges("text +key:value text");
 
         expect(text).toEqual(["text", "key", "value", "text", ""]);
       });
 
-      test("with parens and tags", async () => {
+      it("with parens and tags", async () => {
         const text = await getTextFromTokenRanges(
           "text (b OR c) +key:value text (b OR c)",
         );
@@ -178,31 +178,31 @@ describe("utils", () => {
         ]);
       });
 
-      test("with a tag", async () => {
+      it("with a tag", async () => {
         const text = await getTextFromTokenRanges("+tag:test");
 
         expect(text).toEqual(["tag", "test", ""]);
       });
 
-      test("with a tag with a quoted value and whitespace", async () => {
+      it("with a tag with a quoted value and whitespace", async () => {
         const text = await getTextFromTokenRanges('+tag:"1 2" 3');
 
         expect(text).toEqual(["tag", "1 2", "3", ""]);
       });
 
-      test("with two queries", async () => {
+      it("with two queries", async () => {
         const text = await getTextFromTokenRanges("+key:value +key2:value2 ");
 
         expect(text).toEqual(["key", "value", "key2", "value2", ""]);
       });
 
-      test("with an incomplete chip", async () => {
+      it("with an incomplete chip", async () => {
         const text = await getTextFromTokenRanges("+: a b c");
 
         expect(text).toEqual(["", "", "a", "b", "c", ""]);
       });
 
-      test("with binary queries in the middle of tags", async () => {
+      it("with binary queries in the middle of tags", async () => {
         const text = await getTextFromTokenRanges(
           "+key:value (a OR b) +key2:value2",
         );
@@ -224,7 +224,7 @@ describe("utils", () => {
   });
 
   describe("getNextPositionAfterTypeaheadSelection", () => {
-    test("should move to value position from the end of a key", () => {
+    it("should move to value position from the end of a key", () => {
       const currentDoc = doc(
         queryStr(),
         chip(chipKey("key<fromPos>"), chipValue("<toPos>")),
@@ -239,7 +239,7 @@ describe("utils", () => {
       expect(insertPos).toBe(currentDoc.tag.toPos);
     });
 
-    test("should move to queryStr position from the end of a value", () => {
+    it("should move to queryStr position from the end of a value", () => {
       const currentDoc = doc(
         queryStr(),
         chip(chipKey("key"), chipValue("<fromPos>")),
@@ -254,7 +254,7 @@ describe("utils", () => {
       expect(insertPos).toBe(currentDoc.tag.toPos);
     });
 
-    test("should move to queryStr position from the end of a value that contains whitespace", () => {
+    it("should move to queryStr position from the end of a value that contains whitespace", () => {
       const currentDoc = doc(
         queryStr(),
         chip(chipKey("key"), chipValue("A key<fromPos>")),
@@ -271,7 +271,7 @@ describe("utils", () => {
   });
 
   describe("docToCqlStr", () => {
-    test("should convert a doc to a query string", () => {
+    it("should convert a doc to a query string", () => {
       const queryDoc = doc(
         queryStr("example"),
         chip(chipKey("tag"), chipValue("tags-are-magic")),
@@ -283,7 +283,7 @@ describe("utils", () => {
       expect(docToCqlStr(queryDoc)).toBe(query);
     });
 
-    test("should add quotes for chip values that contain whitespace", () => {
+    it("should add quotes for chip values that contain whitespace", () => {
       const queryDoc = doc(
         queryStr("example"),
         chip(chipKey("tag"), chipValue("Tag with whitespace")),
@@ -295,7 +295,7 @@ describe("utils", () => {
       expect(docToCqlStr(queryDoc)).toBe(query);
     });
 
-    test("should not prepend whitespace when the doc starts with a chip", () => {
+    it("should not prepend whitespace when the doc starts with a chip", () => {
       const queryDoc = doc(
         queryStr(""),
         chip(chipKey("tag"), chipValue("tags-are-magic")),
@@ -307,7 +307,7 @@ describe("utils", () => {
       expect(docToCqlStr(queryDoc)).toBe(query);
     });
 
-    test("should join chips with a single whitespace", () => {
+    it("should join chips with a single whitespace", () => {
       const queryDoc = doc(
         queryStr(""),
         chip(chipKey("tag"), chipValue("tags-are-magic")),
@@ -319,5 +319,10 @@ describe("utils", () => {
 
       expect(docToCqlStr(queryDoc)).toBe(query);
     });
+  });
+
+  describe("updateEditorViewWithQueryStr", () => {
+    it.todo("should update a document with the new state", () => {});
+    it.todo("should preserve the selection state insofar as possible", () => {});
   });
 });

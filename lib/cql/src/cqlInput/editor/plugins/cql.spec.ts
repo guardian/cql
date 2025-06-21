@@ -65,7 +65,7 @@ const createCqlEditor = (initialQuery: string = "") => {
     onChange: ({ queryStr: cqlQuery }) => dispatch(cqlQuery),
   });
 
-  const queryToProseMirrorTokens = (query: string) => {
+  const queryToProseMirrorDoc = (query: string) => {
     const result = parseCqlStr(query);
     const { tokens } = mapResult(result);
     return tokensToDoc(tokens);
@@ -92,7 +92,7 @@ const createCqlEditor = (initialQuery: string = "") => {
     });
   };
 
-  const doc = queryToProseMirrorTokens(initialQuery);
+  const doc = queryToProseMirrorDoc(initialQuery);
 
   const editor = createEditor(doc, {
     plugins: [
@@ -147,6 +147,7 @@ const createCqlEditor = (initialQuery: string = "") => {
     container,
     moveCaretToQueryPos,
     getPosFromQueryPos,
+    queryToProseMirrorDoc,
     user,
   };
 };
@@ -205,7 +206,7 @@ describe("plugin", () => {
         const queryStr = "+x:y";
         const { container } = createCqlEditor(queryStr);
 
-        const colonSeparator = await findByText(container, ':');
+        const colonSeparator = await findByText(container, ":");
 
         expect(colonSeparator).toBeTruthy();
       });

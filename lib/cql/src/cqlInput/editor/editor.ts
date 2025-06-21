@@ -1,21 +1,12 @@
 import { EditorView } from "prosemirror-view";
-import { AllSelection, EditorState, Plugin } from "prosemirror-state";
-import { doc, schema, queryStr } from "./schema";
+import { EditorState, Plugin } from "prosemirror-state";
+import { schema } from "./schema";
 import { baseKeymap } from "prosemirror-commands";
 import { undo, redo, history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
 import { endOfLine, maybeSelectValue, startOfLine } from "./commands";
 import { createPlaceholderPlugin } from "./plugins/placeholder";
-
-/**
- * Create a basic document from the given string, representing the entire query
- * as a `queryStr`. When added to a document running the CQL plugin, the plugin
- * will hydrate this string into a proper query.
- */
-export const createBasicDocFromStr = (str: string) =>
-  doc.create(undefined, [
-    queryStr.create(undefined, [str !== "" ? [schema.text(str)] : []].flat()),
-  ]);
+import { createBasicDocFromStr, updateEditorViewWithQueryStr } from "./utils";
 
 export const createEditorView = ({
   initialValue = "",
@@ -56,13 +47,8 @@ export const createEditorView = ({
 
   window.CQL_VIEW = editorView;
 
-  const update = (str: string) => {
-    const doc = createBasicDocFromStr(str);
+  const updateEditorView = (str: string) =>
+    updateEditorViewWithQueryStr(editorView, str);
 
-    const { from, to } = new AllSelection(editorView.state.tr.doc);
-    const tr = editorView.state.tr.replaceRangeWith(from, to, doc);
-    editorView.dispatch(tr);
-  };
-
-  return { editorView: editorView, updateEditorView: update };
+  return { editorView: editorView, updateEditorView };
 };

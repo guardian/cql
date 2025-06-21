@@ -43,7 +43,7 @@ const errorEl = document.getElementById("error")!;
 dataSourceSelect.addEventListener("change", (e: Event) => {
   const source = (e.target as HTMLSelectElement).value;
   const inputHtmlTagValue = dataSourceMap[source];
-  cqlInputContainer.innerHTML = `<${inputHtmlTagValue} id="${source}" popover-container-id="popover-container"></${inputHtmlTagValue}>`;
+  cqlInputContainer.innerHTML = `<${inputHtmlTagValue} id="${source}"></${inputHtmlTagValue}>`;
 });
 cqlInput?.addEventListener("queryChange", ((
   e: CustomEvent<QueryChangeEventDetail>,
