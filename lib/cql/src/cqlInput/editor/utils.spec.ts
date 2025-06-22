@@ -8,13 +8,13 @@ import {
 } from "./utils";
 import { POLARITY, schema } from "./schema";
 import { builders } from "prosemirror-test-builder";
-import { parseCqlStr } from "../../lang/Cql";
+import { createParser } from "../../lang/Cql";
 
 describe("utils", () => {
   const { chip, chipKey, chipValue, doc, queryStr } = builders(schema);
 
-  const queryToProseMirrorTokens = async (query: string) => {
-    const result = await parseCqlStr(query);
+  const queryToProseMirrorTokens = (query: string) => {
+    const result = createParser()(query);
     const { tokens } = mapResult(result);
     return tokens;
   };
@@ -319,10 +319,5 @@ describe("utils", () => {
 
       expect(docToCqlStr(queryDoc)).toBe(query);
     });
-  });
-
-  describe("updateEditorViewWithQueryStr", () => {
-    it.todo("should update a document with the new state", () => {});
-    it.todo("should preserve the selection state insofar as possible", () => {});
   });
 });

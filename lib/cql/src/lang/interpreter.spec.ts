@@ -1,15 +1,14 @@
 import { describe, expect, it } from "bun:test";
-import { parseCqlStr } from "./Cql";
+import { createParser } from "./Cql";
 import { cqlQueryStrFromQueryAst } from "./interpreter";
 
 describe("interpreter", () => {
+  const parser = createParser();
   it("should normalise complex queries", () => {
-    const firstQuery = parseCqlStr(
+    const firstQuery = parser(
       `  +: "marina" +section:commentisfree `,
     ).queryAst!;
-    const secondQuery = parseCqlStr(
-      `+: marina +section:"commentisfree"`,
-    ).queryAst!;
+    const secondQuery = parser(`+: marina +section:"commentisfree"`).queryAst!;
 
     const firstStr = cqlQueryStrFromQueryAst(firstQuery);
     const secondStr = cqlQueryStrFromQueryAst(secondQuery);

@@ -4,25 +4,33 @@ import { schema } from "./schema";
 import { baseKeymap } from "prosemirror-commands";
 import { undo, redo, history } from "prosemirror-history";
 import { keymap } from "prosemirror-keymap";
-import { endOfLine, maybeSelectValue, startOfLine } from "./commands";
+import {
+  applyQueryStr,
+  endOfLine,
+  maybeSelectValue,
+  startOfLine,
+} from "./commands";
 import { createPlaceholderPlugin } from "./plugins/placeholder";
-import { createBasicDocFromStr, updateEditorViewWithQueryStr } from "./utils";
+import { queryToProseMirrorDoc } from "./utils";
+import { createParser } from "../../lang/Cql";
 
 export const createEditorView = ({
   initialValue = "",
   mountEl,
   plugins,
   placeholder,
+  parser,
 }: {
   initialValue: string;
   mountEl: HTMLElement;
   plugins: Plugin[];
   placeholder?: string;
+  parser: ReturnType<typeof createParser>;
 }) => {
   const editorView = new EditorView(mountEl, {
     state: EditorState.create({
-      doc: createBasicDocFromStr(initialValue),
-      schema: schema,
+      doc: queryToProseMirrorDoc(initialValue, parser),
+      schema,
       plugins: [
         ...plugins,
         ...(placeholder ? [createPlaceholderPlugin(placeholder)] : []),
@@ -47,8 +55,11 @@ export const createEditorView = ({
 
   window.CQL_VIEW = editorView;
 
+  /**
+   * This might be better written as a transaction dispatched with the
+   */
   const updateEditorView = (str: string) =>
-    updateEditorViewWithQueryStr(editorView, str);
+    applyQueryStr(str, parser)(editorView.state, editorView.dispatch);
 
   return { editorView: editorView, updateEditorView };
 };

@@ -16,7 +16,7 @@ import { Typeahead } from "../lang/typeahead";
 import { applyPartialTheme, CqlTheme } from "./theme";
 import { ScannerSettings } from "../lang/scanner";
 import { DeepPartial } from "../types/utils";
-import { parseCqlStr } from "../lang/Cql";
+import { createParser } from "../lang/Cql";
 import { cqlQueryStrFromQueryAst } from "../lang/interpreter";
 import { CLASSNAME_PLACEHOLDER } from "./editor/plugins/placeholder";
 
@@ -46,6 +46,8 @@ export const createCqlInput = (
     public editorView: EditorView | undefined;
     public value = "";
     public updateEditorView: ((str: string) => void) | undefined = undefined;
+    private parseCqlStr: ReturnType<typeof createParser> | undefined =
+      undefined;
 
     connectedCallback() {
       const cqlInputId = "cql-input";
@@ -78,12 +80,15 @@ export const createCqlInput = (
         );
       };
 
+      this.parseCqlStr = createParser(config.lang);
+
       const plugin = createCqlPlugin({
         typeahead,
         typeaheadEl,
         errorEl,
         onChange,
         config,
+        parser: this.parseCqlStr,
       });
 
       const { editorView, updateEditorView } = createEditorView({
@@ -91,6 +96,7 @@ export const createCqlInput = (
         placeholder,
         mountEl: cqlInput,
         plugins: [plugin],
+        parser: this.parseCqlStr,
       });
 
       editorView.dom.classList.add("Cql__ContentEditable");
@@ -112,6 +118,10 @@ export const createCqlInput = (
       _oldValue: string,
       newValue: string,
     ) {
+      if (!this.parseCqlStr) {
+        return;
+      }
+
       switch (name) {
         case "value": {
           // We defend here against updating the view if the underlying query
@@ -123,8 +133,8 @@ export const createCqlInput = (
           if (basicValueHasNotChanged) {
             return;
           }
-          const currentResult = parseCqlStr(this.value);
-          const newResult = parseCqlStr(newValue);
+          const currentResult = this.parseCqlStr(this.value);
+          const newResult = this.parseCqlStr(newValue);
 
           // This is a little dangerous: we are assuming that the incoming query is well formed.
           if (!newResult.queryAst) {

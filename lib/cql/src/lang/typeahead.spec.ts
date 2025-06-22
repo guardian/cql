@@ -2,14 +2,14 @@ import { describe, expect, it } from "bun:test";
 import { Typeahead } from "./typeahead";
 import { DateSuggestionOption, TextSuggestionOption } from "./types";
 import { TestTypeaheadHelpers } from "./fixtures/TestTypeaheadHelpers";
-import { parseCqlStr } from "./Cql";
+import { createParser } from "./Cql";
 
 describe("typeahead", () => {
   const typeaheadQueryClient = new TestTypeaheadHelpers();
   const typeahead = new Typeahead(typeaheadQueryClient.typeaheadFields);
 
   const getSuggestions = async (query: string) =>
-    await typeahead.getSuggestions(parseCqlStr(query).queryAst!);
+    await typeahead.getSuggestions(createParser()(query).queryAst!);
 
   it("should give all options for empty queryFields", async () => {
     expect(await getSuggestions("")).toEqual([]);

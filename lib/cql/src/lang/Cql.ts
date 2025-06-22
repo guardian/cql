@@ -22,25 +22,26 @@ class CqlResultEnvelope implements CqlResult {
   ) {}
 }
 
-export const parseCqlStr = (
-  queryStr: string,
-  scannerSettings?: Partial<ScannerSettings>,
-) => {
-  const scanner = new Scanner(queryStr, scannerSettings);
-  const tokens = scanner.scanTokens();
-  const parser = new Parser(tokens);
-  const result = parser.parse();
+export const createParser =
+  (scannerSettings?: Partial<ScannerSettings>) => (queryStr: string) => {
+    const scanner = new Scanner(queryStr, scannerSettings);
+    const tokens = scanner.scanTokens();
+    const parser = new Parser(tokens);
+    const result = parser.parse();
 
-  return either(result)(
-    (error) => new CqlResultEnvelope(tokens, queryStr, undefined, undefined, error),
-    (query) => {
-      const queryStringResult: Result<Error, string> =
-        queryStrFromQueryList(query);
+    return either(result)(
+      (error) =>
+        new CqlResultEnvelope(tokens, queryStr, undefined, undefined, error),
+      (query) => {
+        const queryStringResult: Result<Error, string> =
+          queryStrFromQueryList(query);
 
-      return either(queryStringResult)(
-        (error) => new CqlResultEnvelope(tokens, queryStr, query, undefined, error),
-        (queryResult) => new CqlResultEnvelope(tokens, queryStr, query, queryResult),
-      );
-    },
-  );
-};
+        return either(queryStringResult)(
+          (error) =>
+            new CqlResultEnvelope(tokens, queryStr, query, undefined, error),
+          (queryResult) =>
+            new CqlResultEnvelope(tokens, queryStr, query, queryResult),
+        );
+      },
+    );
+  };

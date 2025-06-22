@@ -14,7 +14,6 @@ import {
 } from "./schema";
 import { Node, NodeType } from "prosemirror-model";
 import {
-  AllSelection,
   NodeSelection,
   Selection,
   TextSelection,
@@ -31,7 +30,7 @@ import {
   MappedTypeaheadSuggestion,
   TypeaheadSuggestion,
 } from "../../lang/types";
-import { CqlResult } from "../../lang/Cql";
+import { CqlResult, createParser } from "../../lang/Cql";
 import { hasWhitespace } from "../../lang/utils";
 
 const tokensToPreserve = [
@@ -121,8 +120,8 @@ const getQueryStrRanges = (
  * is represented in ProseMirror as
  *
  *  <doc> <queryStr> s t r </queryStr> <chipWrapper> <chip> <chipKey> k </chipKey> <chipValue> v </chipValue> </chip> </chipWrapper> </doc>
- * |     |            | | | |             |             |      |         | |          |           | |            |       |              |      |
- * 0     1            2 3 4 5             6             7      8         9 10         11         12 13           14      15             16     17
+ * |     |          | | | |           |             |      |         | |          |           | |            |       |              |      |
+ * 0     1          2 3 4 5           6             7      8         9 10         11         12 13           14      15             16     17
  *
  * NB: This function will not fill out the queryStr at the beginning or end of
  * the document, relying on ProseMirror's schema to autofill missing nodes.
@@ -751,23 +750,11 @@ export const removeChipAtSelectionIfEmpty = (view: EditorView) => {
   return false;
 };
 
-/**
- * Create a basic document from the given string, representing the entire query
- * as a `queryStr`. When added to a document running the CQL plugin, the plugin
- * will hydrate this string into a proper query.
- */
-export const createBasicDocFromStr = (str: string) =>
-  doc.create(undefined, [
-    queryStr.create(undefined, [str !== "" ? [schema.text(str)] : []].flat()),
-  ]);
-
-export const updateEditorViewWithQueryStr = (
-  editorView: EditorView,
-  str: string,
+export const queryToProseMirrorDoc = (
+  query: string,
+  parser: ReturnType<typeof createParser>,
 ) => {
-  const doc = createBasicDocFromStr(str);
-
-  const { from, to } = new AllSelection(editorView.state.tr.doc);
-  const tr = editorView.state.tr.replaceRangeWith(from, to, doc);
-  editorView.dispatch(tr);
+  const result = parser(query);
+  const { tokens } = mapResult(result);
+  return tokensToDoc(tokens);
 };

@@ -20,15 +20,14 @@ import {
   createProseMirrorTokenToDocumentMap,
   docToCqlStr,
   getNodeTypeAtSelection,
-  mapResult,
-  tokensToDoc,
+  queryToProseMirrorDoc,
   toProseMirrorTokens,
 } from "../utils";
 import { TextSelection } from "prosemirror-state";
 import { TestTypeaheadHelpers } from "../../../lang/fixtures/TestTypeaheadHelpers";
 import { isVisibleDataAttr } from "../../popover/Popover";
 import { tick } from "../../../utils/test";
-import { parseCqlStr } from "../../../lang/Cql";
+import { createParser } from "../../../lang/Cql";
 import { Typeahead } from "../../../lang/typeahead";
 import { chip, IS_SELECTED } from "../schema";
 import { Node, NodeType } from "prosemirror-model";
@@ -57,23 +56,20 @@ const createCqlEditor = (initialQuery: string = "") => {
     subscribers.forEach((s) => s(value));
   };
 
+  const parser = createParser();
+
   const plugin = createCqlPlugin({
     typeahead: testCqlService,
     typeaheadEl,
     errorEl,
     config: { syntaxHighlighting: true },
     onChange: ({ queryStr: cqlQuery }) => dispatch(cqlQuery),
+    parser,
   });
-
-  const queryToProseMirrorDoc = (query: string) => {
-    const result = parseCqlStr(query);
-    const { tokens } = mapResult(result);
-    return tokensToDoc(tokens);
-  };
 
   const getPosFromQueryPos = (pos: number) => {
     const query = docToCqlStr(editor.view.state.doc);
-    const result = parseCqlStr(query);
+    const result = parser(query);
     const tokens = toProseMirrorTokens(result.tokens);
     const mapping = createProseMirrorTokenToDocumentMap(tokens);
     return mapping.map(pos);
@@ -92,7 +88,7 @@ const createCqlEditor = (initialQuery: string = "") => {
     });
   };
 
-  const doc = queryToProseMirrorDoc(initialQuery);
+  const doc = queryToProseMirrorDoc(initialQuery, parser);
 
   const editor = createEditor(doc, {
     plugins: [

@@ -48,7 +48,7 @@ import {
   getOriginalQueryHTML,
 } from "../debug";
 import { CqlQuery } from "../../../lang/ast";
-import { parseCqlStr } from "../../../lang/Cql";
+import { createParser } from "../../../lang/Cql";
 import { Typeahead } from "../../../lang/typeahead";
 import { defaultPopoverRenderer } from "../../popover/components/defaultPopoverRenderer";
 
@@ -70,7 +70,7 @@ type PluginState = {
 const ACTION_NEW_STATE = "NEW_STATE";
 const ACTION_SERVER_ERROR = "SERVER_ERROR";
 
-export const TRANSACTION_IGNORE_READONLY = "TRANSACTION_SET_CHIP_KEY";
+export const TRANSACTION_IGNORE_READONLY = "TRANSACTION_IGNORE_READONLY";
 
 export const CLASS_ERROR = "Cql__ErrorWidget";
 export const CLASS_VISIBLE = "Cql--is-visible";
@@ -106,14 +106,15 @@ export const createCqlPlugin = ({
     syntaxHighlighting,
     debugEl,
     renderPopoverContent = defaultPopoverRenderer,
-    lang,
   },
+  parser,
 }: {
   typeahead: Typeahead;
   typeaheadEl: HTMLElement;
   errorEl: HTMLElement;
   config: CqlConfig;
   onChange: (detail: QueryChangeEventDetail) => void;
+  parser: ReturnType<typeof createParser>;
 }) => {
   let typeaheadPopover: TypeaheadPopover | undefined;
   let errorPopover: ErrorPopover | undefined;
@@ -145,7 +146,7 @@ export const createCqlPlugin = ({
   const applyQueryToTr = (tr: Transaction) => {
     const queryBeforeParse = docToCqlStr(tr.doc);
 
-    const result = parseCqlStr(queryBeforeParse, lang);
+    const result = parser(queryBeforeParse);
     const { tokens, queryAst, error, mapping } = mapResult(result);
 
     const newDoc = tokensToDoc(tokens);
@@ -216,7 +217,7 @@ export const createCqlPlugin = ({
           suggestions: [],
           mapping: new Mapping(),
           queryStr,
-          queryAst: parseCqlStr(queryStr).queryAst,
+          queryAst: parser(queryStr).queryAst,
           error: undefined,
         };
       },

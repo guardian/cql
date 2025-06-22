@@ -1,6 +1,12 @@
-import { Command, Selection, TextSelection } from "prosemirror-state";
+import {
+  Command,
+  Selection,
+  TextSelection,
+} from "prosemirror-state";
 import { chipValue } from "./schema";
 import { selectAll } from "prosemirror-commands";
+import { createParser } from "../../lang/Cql";
+import { queryToProseMirrorDoc } from "./utils";
 
 export const startOfLine: Command = (state, dispatch) => {
   const startSelection = Selection.atStart(state.doc);
@@ -39,3 +45,32 @@ export const maybeSelectValue: Command = (state, dispatch) => {
 
   return selectAll(state, dispatch);
 };
+
+/**
+ * Update the editor state with the document created by the given query string.
+ * Diffs to ensure that the update touches as little of the document as
+ * possible, to help preserve selection state.
+ */
+export const applyQueryStr =
+  (query: string, parser: ReturnType<typeof createParser>): Command =>
+  (state, dispatch) => {
+    const newDoc = queryToProseMirrorDoc(query, parser);
+
+    const start = newDoc.content.findDiffStart(state.doc.content);
+    if (start !== null) {
+      // We can assert here because we know that the docs differ
+      let { a: endA, b: endB } = newDoc.content.findDiffEnd(state.doc.content)!;
+      const overlap = start - Math.min(endA, endB);
+      if (overlap > 0) {
+        endA += overlap;
+        endB += overlap;
+      }
+      dispatch?.(
+        state.tr
+          .replace(start, endB, newDoc.slice(start, endA))
+          .setMeta("fromOutside", true),
+      );
+    }
+
+    return true;
+  };

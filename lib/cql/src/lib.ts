@@ -1,4 +1,4 @@
-export { parseCqlStr } from "./lang/Cql.ts";
+export { createParser } from "./lang/Cql.ts";
 export type { QueryChangeEventDetail } from "./types/dom";
 export { createCqlInput } from "./cqlInput/CqlInput";
 export { Typeahead } from "./lang/typeahead.ts";

@@ -3,7 +3,7 @@ import applyDevTools from "prosemirror-dev-tools";
 import { CapiTypeaheadProvider } from "./typeahead/CapiTypeaheadHelpers.ts";
 import { Typeahead, TypeaheadField } from "./lang/typeahead.ts";
 import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
-import { parseCqlStr } from "./lang/Cql.ts";
+import { createParser } from "./lang/Cql.ts";
 import { QueryChangeEventDetail } from "./types/dom";
 
 const setUrlParam = (key: string, value: string) => {
@@ -197,7 +197,7 @@ class CqlInputSimple extends HTMLElement {
 
   handleInput = (e: Event) => {
     const value = (e.target as HTMLInputElement).value;
-    const cql = parseCqlStr(value);
+    const cql = createParser()(value);
     const tokenSpansHtml = cql.tokens.reduce(
       (acc, { tokenType, lexeme, start, end }, index, arr) => {
         const prevEnd = arr[index - 1]?.end ?? 0;
