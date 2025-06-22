@@ -46,7 +46,7 @@ export const createCqlInput = (
     public editorView: EditorView | undefined;
     public value = "";
     public updateEditorView: ((str: string) => void) | undefined = undefined;
-    private parseCqlStr: ReturnType<typeof createParser> | undefined =
+    public parseCqlStr: ReturnType<typeof createParser> | undefined =
       undefined;
 
     connectedCallback() {
