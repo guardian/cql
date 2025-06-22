@@ -68,7 +68,7 @@ export const createPlaceholderPlugin = (text: string) => {
         )
           if (pluginState?.shouldDisplayPlaceholder) {
             view.dom.parentElement?.appendChild(placeholderEl);
-          } else {
+          } else if (view.dom.parentElement?.contains(placeholderEl)) {
             view.dom.parentElement?.removeChild(placeholderEl);
           }
       };

@@ -66,7 +66,20 @@ describe("updateEditorViewWithQueryStr", () => {
     expect(docToCqlStr(editorView.state.doc)).toEqual("+tag:a b");
   });
 
-  it("should preserve the selection state insofar as possible", () => {
+  it("should preserve the selection state insofar as possible - editing queryStr before selection", () => {
+    const initialQuery = "+tag:x";
+    const { editorView, updateEditorView } =
+      createEditorFromInitialState(initialQuery);
+    setQueryPosAsSelection(initialQuery.indexOf("x"), editorView);
+
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual("+tag:^$x ");
+
+    updateEditorView("a +tag:x ");
+
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual("a +tag:^$x ");
+  });
+
+  it("should preserve the selection state insofar as possible - editing queryStr after selection", () => {
     const initialQuery = "+tag:x";
     const { editorView, updateEditorView } =
       createEditorFromInitialState(initialQuery);
@@ -77,5 +90,35 @@ describe("updateEditorViewWithQueryStr", () => {
     updateEditorView("+tag:x b ");
 
     expect(docToCqlStrWithSelection(editorView.state)).toEqual("+tag:^$x b ");
+  });
+
+  it("should preserve the selection state insofar as possible - editing tag before selection", () => {
+    const initialQuery = "+tag:x";
+    const { editorView, updateEditorView } =
+      createEditorFromInitialState(initialQuery);
+    setQueryPosAsSelection(initialQuery.indexOf("x"), editorView);
+
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual("+tag:^$x ");
+
+    updateEditorView("+tag:y +tag:x ");
+
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual(
+      "+tag:y +tag:^$x ",
+    );
+  });
+
+  it("should preserve the selection state insofar as possible - editing tag after selection", () => {
+    const initialQuery = "+tag:x";
+    const { editorView, updateEditorView } =
+      createEditorFromInitialState(initialQuery);
+    setQueryPosAsSelection(initialQuery.indexOf("x"), editorView);
+
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual("+tag:^$x ");
+
+    updateEditorView("+tag:x +tag:y ");
+
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual(
+      "+tag:^$x +tag:y ",
+    );
   });
 });

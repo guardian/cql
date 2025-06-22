@@ -1,12 +1,9 @@
-import {
-  Command,
-  Selection,
-  TextSelection,
-} from "prosemirror-state";
+import { Command, Selection, TextSelection } from "prosemirror-state";
 import { chipValue } from "./schema";
 import { selectAll } from "prosemirror-commands";
 import { createParser } from "../../lang/Cql";
 import { queryToProseMirrorDoc } from "./utils";
+import { findDiffEndForContent, findDiffStartForContent } from "./diff";
 
 export const startOfLine: Command = (state, dispatch) => {
   const startSelection = Selection.atStart(state.doc);
@@ -56,15 +53,19 @@ export const applyQueryStr =
   (state, dispatch) => {
     const newDoc = queryToProseMirrorDoc(query, parser);
 
-    const start = newDoc.content.findDiffStart(state.doc.content);
+    const start = findDiffStartForContent(newDoc.content, state.doc.content);
     if (start !== null) {
       // We can assert here because we know that the docs differ
-      let { a: endA, b: endB } = newDoc.content.findDiffEnd(state.doc.content)!;
+      let { a: endA, b: endB } = findDiffEndForContent(
+        newDoc.content,
+        state.doc.content,
+      )!;
       const overlap = start - Math.min(endA, endB);
       if (overlap > 0) {
         endA += overlap;
         endB += overlap;
       }
+
       dispatch?.(
         state.tr
           .replace(start, endB, newDoc.slice(start, endA))

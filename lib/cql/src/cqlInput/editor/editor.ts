@@ -55,9 +55,6 @@ export const createEditorView = ({
 
   window.CQL_VIEW = editorView;
 
-  /**
-   * This might be better written as a transaction dispatched with the
-   */
   const updateEditorView = (str: string) =>
     applyQueryStr(str, parser)(editorView.state, editorView.dispatch);
 
