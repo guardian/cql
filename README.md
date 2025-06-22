@@ -60,19 +60,23 @@ cqlInputElement.addEventListener("queryChange", ({ detail: {
 
 ## How does it work?
 
-The flow of state within the input looks like: 
+The flow of state within the input looks like:
 
 ```mermaid
 flowchart TD
-  Z["Application"] --"Updates input's 'value' prop"--> A
-  A --"Calls 'onchange'"--> Z
-  subgraph "CQL input component"
-      A["CQL query string"]
-      A --"Parsed into"--> B["Tokens, AST and errors"]
-      B --"Tokens are transformed into"--> C["ProseMirror document"]
-      C --"ProseMirror document is transformed into"--> A
-      C --> E["View is updated with diff from previous state"]
-  end
+        Z["Application"] --"Updates input's 'value' prop"--> A
+        A --"Calls 'onchange'"--> Z
+        subgraph "CQL input component"
+            A["CQL query string"]
+            A --"Parsed into"--> B["Tokens, AST and errors"]
+            B --"Tokens are transformed into"--> C["ProseMirror document"]
+            C --"ProseMirror document is transformed into"--> A
+            C -- "passed to" --> E["View"]
+            E -- "updates" --> C
+
+        end
+        U["User"] -- "passes input to" --> E
+        E -- "presents UI to" --> U
 ```
 
 ### Why use tokens to generate the document, rather than the AST?
