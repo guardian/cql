@@ -12,6 +12,17 @@ type TypeaheadResolver =
   | ((str: string, signal?: AbortSignal) => Promise<TextSuggestionOption[]>)
   | TextSuggestionOption[];
 
+function filterTextSuggestionOption(
+  suggestions: TextSuggestionOption[],
+  str: string,
+) {
+  return suggestions.filter(
+    (_) =>
+      _.value.toLowerCase().includes(str.toLowerCase()) ||
+      _.label.toLowerCase().includes(str.toLowerCase()),
+  );
+}
+
 export class TypeaheadField {
   constructor(
     public id: string,
@@ -26,9 +37,7 @@ export class TypeaheadField {
     signal?: AbortSignal,
   ): Promise<TextSuggestionOption[]> | undefined {
     if (Array.isArray(this.resolver)) {
-      return Promise.resolve(
-        this.resolver.filter((item) => item.label.includes(str)),
-      );
+      return Promise.resolve(filterTextSuggestionOption(this.resolver, str));
     }
 
     return this.resolver?.(str, signal);
@@ -135,8 +144,9 @@ export class Typeahead {
       return this.typeaheadFieldEntries;
     }
 
-    const suggestions = this.typeaheadFieldEntries.filter((_) =>
-      _.value.includes(str.toLowerCase()),
+    const suggestions = filterTextSuggestionOption(
+      this.typeaheadFieldEntries,
+      str,
     );
 
     if (suggestions.length) {
