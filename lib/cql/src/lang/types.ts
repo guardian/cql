@@ -29,7 +29,7 @@ type SuggestionTypeMap = {
 
 export class TextSuggestionOption {
   public constructor(
-    public readonly label: string,
+    public readonly label: string | undefined,
     public readonly value: string,
     public readonly description?: string,
     public readonly count?: number,
