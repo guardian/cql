@@ -20,7 +20,7 @@ function filterTextSuggestionOption(
   return suggestions.filter(
     (_) =>
       _.value.toLowerCase().includes(lowerCaseStr) ||
-      _.label.toLowerCase().includes(lowerCaseStr),
+      _.label?.toLowerCase().includes(lowerCaseStr),
   );
 }
 

@@ -94,14 +94,16 @@ export const TextSuggestionContent = ({
                 onClick={() => onSelect(value)}
               >
                 <div class="Cql__OptionLabel">
-                  {label}
+                  {label ?? value}
                   {showCount && count !== undefined && (
                     <div class="Cql__OptionCount">
                       {numberFormat.format(count)}
                     </div>
                   )}
                 </div>
-                {showValue && <div class="Cql__OptionValue">{value}</div>}
+                {showValue && label !== undefined && (
+                  <div class="Cql__OptionValue">{value}</div>
+                )}
                 {showDescription && description && (
                   <div class="Cql__OptionDescription">{description}</div>
                 )}
