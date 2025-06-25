@@ -1,7 +1,14 @@
 import { describe, expect, it } from "bun:test";
 import { Typeahead } from "./typeahead";
-import { DateSuggestionOption, TextSuggestionOption } from "./types";
-import { TestTypeaheadHelpers } from "./fixtures/TestTypeaheadHelpers";
+import {
+  DateSuggestionOption,
+  TextSuggestionOption,
+  TypeaheadSuggestion,
+} from "./types";
+import {
+  testTags,
+  TestTypeaheadHelpers,
+} from "./fixtures/TestTypeaheadHelpers";
 import { createParser } from "./Cql";
 
 describe("typeahead", () => {
@@ -24,6 +31,11 @@ describe("typeahead", () => {
             "Tag",
             "tag",
             "Search by content tags, e.g. sport/football",
+          ),
+          new TextSuggestionOption(
+            "Sync",
+            "sync",
+            "Search synchronous list of tags",
           ),
           new TextSuggestionOption(
             "Section",
@@ -84,22 +96,65 @@ describe("typeahead", () => {
         from: 4,
         to: 18,
         position: "chipValue",
+        suggestions: testTags,
+        type: "TEXT",
+        suffix: " ",
+      },
+    ]);
+  });
+
+  it("should give typeahead suggestions in a case insensitive way for synchronous query meta keys across value and label", async () => {
+    const expectedSuggestions: TypeaheadSuggestion[] = [
+      {
+        from: 0,
+        position: "chipKey",
+        suffix: ":",
         suggestions: [
           new TextSuggestionOption(
-            "Tags are magic",
-            "tags-are-magic",
-            "A magic tag",
+            "Sync",
+            "sync",
+            "Search synchronous list of tags",
           ),
+        ],
+        to: 4,
+        type: "TEXT",
+      },
+      {
+        from: 5,
+        to: 8,
+        position: "chipValue",
+        suggestions: [
           new TextSuggestionOption(
-            "Tag with a space in it",
-            "Tag with space",
-            "A tag with whitespace in the id. Gosh",
+            "abc DEF",
+            "GHI jkl",
+            "A tag with a mix of upper and lowercase strings",
           ),
         ],
         type: "TEXT",
         suffix: " ",
       },
-    ]);
+    ];
+
+    const suggestionsUppercaseLabelQuery = await getSuggestions("+sync:ABC");
+
+    expect(suggestionsUppercaseLabelQuery).toEqual(expectedSuggestions);
+
+    const suggestionsLowercaseLabelQuery = await getSuggestions("+sync:def");
+
+    expect(suggestionsLowercaseLabelQuery).toEqual(expectedSuggestions);
+
+    const suggestionsUppercaseValueQuery = await getSuggestions("+sync:JKL");
+
+    expect(suggestionsUppercaseValueQuery).toEqual(expectedSuggestions);
+
+    const suggestionsLowercaseValueQuery = await getSuggestions("+sync:ghi");
+
+    expect(suggestionsLowercaseValueQuery).toEqual(expectedSuggestions);
+
+    const suggestionsForNonMatchingQuery = await getSuggestions("+sync:mno");
+    expect(suggestionsLowercaseValueQuery).not.toEqual(
+      suggestionsForNonMatchingQuery,
+    );
   });
 
   it("should give value suggestions for an empty string", async () => {
@@ -123,18 +178,7 @@ describe("typeahead", () => {
         from: 4,
         to: 4,
         position: "chipValue",
-        suggestions: [
-          new TextSuggestionOption(
-            "Tags are magic",
-            "tags-are-magic",
-            "A magic tag",
-          ),
-          new TextSuggestionOption(
-            "Tag with a space in it",
-            "Tag with space",
-            "A tag with whitespace in the id. Gosh",
-          ),
-        ],
+        suggestions: testTags,
         type: "TEXT",
         suffix: " ",
       },
@@ -198,18 +242,7 @@ describe("typeahead", () => {
         from: 4,
         to: 5,
         position: "chipValue",
-        suggestions: [
-          new TextSuggestionOption(
-            "Tags are magic",
-            "tags-are-magic",
-            "A magic tag",
-          ),
-          new TextSuggestionOption(
-            "Tag with a space in it",
-            "Tag with space",
-            "A tag with whitespace in the id. Gosh",
-          ),
-        ],
+        suggestions: testTags,
         type: "TEXT",
         suffix: " ",
       },
@@ -222,6 +255,11 @@ describe("typeahead", () => {
             "Tag",
             "tag",
             "Search by content tags, e.g. sport/football",
+          ),
+          new TextSuggestionOption(
+            "Sync",
+            "sync",
+            "Search synchronous list of tags",
           ),
           new TextSuggestionOption(
             "Section",
