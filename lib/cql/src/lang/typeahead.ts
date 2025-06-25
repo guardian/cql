@@ -16,10 +16,11 @@ function filterTextSuggestionOption(
   suggestions: TextSuggestionOption[],
   str: string,
 ) {
+  const lowerCaseStr = str.toLowerCase();
   return suggestions.filter(
     (_) =>
-      _.value.toLowerCase().includes(str.toLowerCase()) ||
-      _.label.toLowerCase().includes(str.toLowerCase()),
+      _.value.toLowerCase().includes(lowerCaseStr) ||
+      _.label.toLowerCase().includes(lowerCaseStr),
   );
 }
 
