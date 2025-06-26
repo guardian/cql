@@ -32,6 +32,18 @@ export type CqlTheme = {
     layout: {
       width: string;
     };
+    selectedOption: {
+      color: {
+        background: string;
+        text: string;
+      };
+    };
+    hover: {
+      color: {
+        background: string;
+        text: string;
+      };
+    };
   };
   tokens: {
     color: {
@@ -74,6 +86,18 @@ const defaultTheme: CqlTheme = {
   typeahead: {
     layout: {
       width: "400px",
+    },
+    selectedOption: {
+      color: {
+        background: "rgba(255,255,255,0.1)",
+        text: "#eee",
+      },
+    },
+    hover: {
+      color: {
+        background: "rgba(255,255,255,0.2)",
+        text: "#eee",
+      },
     },
   },
   tokens: {
