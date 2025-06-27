@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 0.1.5
+
+### Patch Changes
+
+- fc14517: Make the typeahead suggestion label optional
+
 ## 0.1.4
 
 ### Patch Changes
