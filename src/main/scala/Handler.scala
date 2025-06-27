@@ -1,10 +1,7 @@
 package cql
 
 import com.amazonaws.services.lambda.runtime.{Context, RequestHandler}
-import com.amazonaws.services.lambda.runtime.events.{
-  Step,
-  APIGatewayProxyResponseEvent
-}
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyResponseEvent
 import io.circe.syntax._
 import util.Logging
 
@@ -15,6 +12,7 @@ import scala.jdk.CollectionConverters._
 import scala.concurrent.Future
 import com.gu.contentapi.client.GuardianContentClient
 import cql.lang.{Cql, Typeahead, TypeaheadHelpersCapi}
+import com.amazonaws.services.lambda.runtime.events.APIGatewayProxyRequestEvent
 class Handler
     extends RequestHandler[
       APIGatewayProxyRequestEvent,

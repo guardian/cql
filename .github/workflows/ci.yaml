@@ -37,6 +37,7 @@ jobs:
     - name: Create Release Pull Request or Publish to npm
       id: changesets
       uses: changesets/action@v1
+      if: github.ref == 'refs/heads/main'
       with:
         title: "🦋 Release package updates"
         commit: "Bump package versions"
@@ -51,6 +52,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      pull-requests: write
 
     steps:
       - name: Checkout
@@ -84,6 +86,8 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      pull-requests: write
+
     steps:
       - name: Checkout
         uses: actions/checkout@v4
