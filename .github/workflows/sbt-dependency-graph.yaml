@@ -3,8 +3,7 @@ on:
   push:
     branches:
       - main
-      - sbt-dependency-graph-2399dadd2064f7c4
-  workflow_dispatch: 
+  workflow_dispatch:
 jobs:
   dependency-graph:
     runs-on: ubuntu-latest
