@@ -31,7 +31,7 @@ export class CqlGroup {
 export class CqlStr {
   public readonly type = "CqlStr";
   public readonly searchExpr: string;
-  constructor(public readonly token: Token) {
+  constructor(readonly token: Token) {
     this.searchExpr = token.literal ?? "";
   }
 }
