@@ -286,8 +286,6 @@ export const createCqlInput = (
           }
 
           .Cql__Option:hover {
-            background-color: ${typeahead.hover.color.background};
-            color: ${typeahead.hover.color.text};
             cursor: pointer;
           }
 

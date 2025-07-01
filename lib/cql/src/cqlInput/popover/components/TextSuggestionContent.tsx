@@ -92,6 +92,7 @@ export const TextSuggestionContent = ({
                 data-index={index}
                 ref={isSelected ? currentItemRef : null}
                 onClick={() => onSelect(value)}
+                onMouseEnter={() => setCurrentOptionIndex(index)}
               >
                 <div class="Cql__OptionLabel">
                   {label ?? value}
