@@ -30,7 +30,7 @@ export type CqlTheme = {
   };
   typeahead: {
     layout: {
-      width: string;
+      minWidth: string;
     };
     selectedOption: {
       color: {
@@ -79,7 +79,7 @@ const defaultTheme: CqlTheme = {
   },
   typeahead: {
     layout: {
-      width: "400px",
+      minWidth: "400px",
     },
     selectedOption: {
       color: {

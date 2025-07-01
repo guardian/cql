@@ -351,7 +351,7 @@ export const createCqlInput = (
 
           .Cql__TypeaheadPopoverContainer, .Cql__ErrorPopover {
             position: absolute;
-            width: ${typeahead.layout.width};
+            min-width: ${typeahead.layout.minWidth};
             height: 100%;
             max-height: min(80vh, 400px);
             margin: 0;
