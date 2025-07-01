@@ -286,8 +286,6 @@ export const createCqlInput = (
           }
 
           .Cql__Option:hover {
-            background-color: ${typeahead.hover.color.background};
-            color: ${typeahead.hover.color.text};
             cursor: pointer;
           }
 
@@ -353,7 +351,7 @@ export const createCqlInput = (
 
           .Cql__TypeaheadPopoverContainer, .Cql__ErrorPopover {
             position: absolute;
-            width: ${typeahead.layout.width};
+            min-width: ${typeahead.layout.minWidth};
             height: 100%;
             max-height: min(80vh, 400px);
             margin: 0;
@@ -366,6 +364,7 @@ export const createCqlInput = (
             display: flex;
             width: 100%;
             max-height: 100%;
+            padding: ${typeahead.layout.padding};
             font-size: ${baseFontSize};
             border-radius: ${baseBorderRadius};
             color: #eee;

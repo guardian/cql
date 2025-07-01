@@ -30,15 +30,10 @@ export type CqlTheme = {
   };
   typeahead: {
     layout: {
-      width: string;
+      minWidth: string;
+      padding: string;
     };
     selectedOption: {
-      color: {
-        background: string;
-        text: string;
-      };
-    };
-    hover: {
       color: {
         background: string;
         text: string;
@@ -85,17 +80,12 @@ const defaultTheme: CqlTheme = {
   },
   typeahead: {
     layout: {
-      width: "400px",
+      minWidth: "400px",
+      padding: "0",
     },
     selectedOption: {
       color: {
         background: "rgba(255,255,255,0.1)",
-        text: "#eee",
-      },
-    },
-    hover: {
-      color: {
-        background: "rgba(255,255,255,0.2)",
         text: "#eee",
       },
     },
