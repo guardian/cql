@@ -275,7 +275,8 @@ export const createCqlInput = (
           }
 
           .Cql__Option--is-selected {
-            background-color: rgba(255,255,255,0.1);
+            background-color: ${typeahead.selectedOption.color.background};
+            color: ${typeahead.selectedOption.color.text};
           }
 
           .Cql__Option--is-disabled {
@@ -285,7 +286,8 @@ export const createCqlInput = (
           }
 
           .Cql__Option:hover {
-            background-color: rgba(255,255,255,0.2);
+            background-color: ${typeahead.hover.color.background};
+            color: ${typeahead.hover.color.text};
             cursor: pointer;
           }
 
