@@ -364,6 +364,7 @@ export const createCqlInput = (
             display: flex;
             width: 100%;
             max-height: 100%;
+            padding: ${typeahead.layout.padding};
             font-size: ${baseFontSize};
             border-radius: ${baseBorderRadius};
             color: #eee;

@@ -31,6 +31,7 @@ export type CqlTheme = {
   typeahead: {
     layout: {
       minWidth: string;
+      padding: string;
     };
     selectedOption: {
       color: {
@@ -80,6 +81,7 @@ const defaultTheme: CqlTheme = {
   typeahead: {
     layout: {
       minWidth: "400px",
+      padding: "0",
     },
     selectedOption: {
       color: {
