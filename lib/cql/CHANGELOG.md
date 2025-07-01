@@ -1,5 +1,13 @@
 # @guardian/cql
 
+## 0.1.5
+
+### Patch Changes
+
+- d7772df: Alter selection index on hover
+- f7be8aa: Make the typeahead suggestion label optional
+  Makes typehead searches case insensitive, where the search is through a static list of values
+
 ## 0.1.4
 
 ### Patch Changes
