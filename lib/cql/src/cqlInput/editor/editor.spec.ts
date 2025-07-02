@@ -8,14 +8,32 @@ import {
 import { createEditorView } from "./editor";
 import { EditorView } from "prosemirror-view";
 import { EditorState, TextSelection } from "prosemirror-state";
+import { createCqlPlugin } from "./plugins/cql";
+import { TestTypeaheadHelpers } from "../../lang/fixtures/TestTypeaheadHelpers";
+import { Typeahead } from "../../lib";
+
+const typeheadHelpers = new TestTypeaheadHelpers();
+const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
 
 describe("updateEditorViewWithQueryStr", () => {
   const parser = createParser();
   const createEditorFromInitialState = (query: string) => {
     const mountEl = document.createElement("div");
+    const typeaheadEl = document.createElement("div");
+    const errorEl = document.createElement("div");
+
+    const cqlPlugin = createCqlPlugin({
+      typeahead: testCqlService,
+      typeaheadEl,
+      errorEl,
+      config: { syntaxHighlighting: true },
+      onChange: () => {},
+      parser,
+    });
+
     return createEditorView({
       initialValue: query,
-      plugins: [],
+      plugins: [cqlPlugin],
       parser,
       mountEl,
     });
@@ -43,7 +61,8 @@ describe("updateEditorViewWithQueryStr", () => {
    * returns the CQL str the document represents. For example, a document
    * `+tag:a` with the selection `AllSelection` would return `^+tag:a$`.
    */
-  const docToCqlStrWithSelection = (state: EditorState) => {
+  const docToCqlStrWithSelection = (_state: EditorState) => {
+    const state = _state.reconfigure({ plugins: [] });
     const tr = state.tr;
     const newState = state.apply(
       tr.insertText("^", tr.selection.from).insertText("$", tr.selection.to),
@@ -120,5 +139,18 @@ describe("updateEditorViewWithQueryStr", () => {
     expect(docToCqlStrWithSelection(editorView.state)).toEqual(
       "+tag:^$x +tag:y ",
     );
+  });
+
+  it("should preserve the selection state insofar as possible - adding tag", () => {
+    const initialQuery = "tag:";
+    const { editorView, updateEditorView } =
+      createEditorFromInitialState(initialQuery);
+    setQueryPosAsSelection(initialQuery.length, editorView);
+
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual("tag:^$");
+
+    updateEditorView("+tag:");
+
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual("+tag:^$ ");
   });
 });
