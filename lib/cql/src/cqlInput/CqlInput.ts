@@ -175,6 +175,14 @@ export const createCqlInput = (
             align-items: center;
             white-space: pre-wrap;
             overflow-x: scroll;
+            /* Hide scrollbars to emulate input scroll */
+            -ms-overflow-style: none;  /* Internet Explorer 10+ */
+            scrollbar-width: none;  /* Firefox, Safari 18.2+, Chromium 121+ */
+          }
+
+          .container::-webkit-scrollbar {
+            /* Hide scrollbars to emulate input scroll */
+            display: none;  /* Older Safari and Chromium */
           }
 
           query-str {
