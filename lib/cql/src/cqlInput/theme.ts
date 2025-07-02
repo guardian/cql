@@ -32,6 +32,13 @@ export type CqlTheme = {
     layout: {
       minWidth: string;
       padding: string;
+      borderRadius: string;
+    };
+    color: { background: string };
+    option: {
+      layout: {
+        padding: string;
+      };
     };
     selectedOption: {
       color: {
@@ -82,6 +89,15 @@ const defaultTheme: CqlTheme = {
     layout: {
       minWidth: "400px",
       padding: "0",
+      borderRadius: "5px",
+    },
+    color: {
+      background: "#242424",
+    },
+    option: {
+      layout: {
+        padding: "5px"
+      }
     },
     selectedOption: {
       color: {

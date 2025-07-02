@@ -46,8 +46,7 @@ export const createCqlInput = (
     public editorView: EditorView | undefined;
     public value = "";
     public updateEditorView: ((str: string) => void) | undefined = undefined;
-    public parseCqlStr: ReturnType<typeof createParser> | undefined =
-      undefined;
+    public parseCqlStr: ReturnType<typeof createParser> | undefined = undefined;
 
     connectedCallback() {
       const cqlInputId = "cql-input";
@@ -261,7 +260,7 @@ export const createCqlInput = (
           }
 
           .Cql__Option {
-            padding: 5px;
+            padding: ${typeahead.option.layout.padding};
             transition: color 0.1s background 0.1s;
           }
 
@@ -366,9 +365,9 @@ export const createCqlInput = (
             max-height: 100%;
             padding: ${typeahead.layout.padding};
             font-size: ${baseFontSize};
-            border-radius: ${baseBorderRadius};
+            border-radius: ${typeahead.layout.borderRadius};
             color: #eee;
-            background-color: #242424;
+            background-color: ${typeahead.color.background};
             border: 1px solid grey;
             overflow: hidden;
           }
