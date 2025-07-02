@@ -1,5 +1,13 @@
 # @guardian/cql
 
+## 0.1.6
+
+### Patch Changes
+
+- 5934944: Hide horizontal scrollbar to match browser input scroll behaviour
+- cdbd00b: Additional styling options for ease of integration w/ Grid
+- cdbd00b: When updating the query from the input value, move the selection within the chip value if it is on the edge of the doc diff, and there's a chip behind where it would be
+
 ## 0.1.5
 
 ### Patch Changes
