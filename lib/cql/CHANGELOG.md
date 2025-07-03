@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 0.1.7
+
+### Patch Changes
+
+- 2015347: Cmd-Shift-Z for redo
+
 ## 0.1.6
 
 ### Patch Changes
