@@ -37,7 +37,7 @@ export const createEditorView = ({
         keymap({
           ...baseKeymap,
           "Mod-z": undo,
-          "Mod-y": redo,
+          "Mod-Shift-z": redo,
           "Mod-a": maybeSelectValue,
           "Mod-ArrowLeft": startOfLine,
           "Ctrl-ArrowLeft": startOfLine,
