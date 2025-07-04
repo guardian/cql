@@ -58,5 +58,7 @@ export const createEditorView = ({
   const updateEditorView = (str: string) =>
     applyQueryStr(str, parser)(editorView.state, editorView.dispatch);
 
+  endOfLine(editorView.state, editorView.dispatch);
+
   return { editorView: editorView, updateEditorView };
 };
