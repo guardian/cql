@@ -610,8 +610,6 @@ export const createCqlPlugin = ({
             }
             case "ArrowUp":
             case "ArrowDown":
-              event.stopPropagation();
-              event.preventDefault();
               return typeaheadPopover?.handleAction(KeyToActionMap[event.key]);
             default: {
               return false;

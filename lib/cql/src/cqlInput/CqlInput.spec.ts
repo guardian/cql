@@ -61,4 +61,21 @@ describe("CqlInput", () => {
     const result = await getByTextShadowed(container, "Tag");
     expect(!!result).toBeFalse();
   });
+
+  test("should bubble events into the document", async () => {
+    const { container, cqlInput, user } = createCqlInputContainer("");
+
+    let eventReceived = false;
+    container.addEventListener("keydown", () => {
+      eventReceived = true;
+    });
+
+    cqlInput.focus();
+    await user.keyboard("{ArrowDown}");
+
+    expect(
+      eventReceived,
+      "This event should be propagated to the input's container, as it is not handled by the editor",
+    ).toBe(true);
+  });
 });

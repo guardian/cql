@@ -43,7 +43,6 @@ export const createCqlInput = (
   class CqlInput extends HTMLElement {
     static observedAttributes = ["value", "placeholder"];
 
-    public eventsToPropagate = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
     public editorView: EditorView | undefined;
     public value = "";
     public updateEditorView: ((str: string) => void) | undefined = undefined;
