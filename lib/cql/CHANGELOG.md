@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 0.1.10
+
+### Patch Changes
+
+- f8db4a8: Remove speculative tab handler, as it's trapping focus
+
 ## 0.1.9
 
 ### Patch Changes
