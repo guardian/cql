@@ -542,14 +542,6 @@ export const createCqlPlugin = ({
 
             return true;
           }
-          // What should the behaviour of tab be?
-          case "Tab": {
-            if (event.shiftKey) {
-              // Reverse tab
-              return true;
-            }
-            return true;
-          }
           case "Escape": {
             typeaheadPopover?.hide();
             return true;
