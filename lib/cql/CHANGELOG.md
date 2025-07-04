@@ -1,5 +1,13 @@
 # @guardian/cql
 
+## 0.1.9
+
+### Patch Changes
+
+- 20f9525: Skip to end of line on init to match focus behaviour elsewhere
+  Call ProseMirror's focus method to fix an issue with focus not applying in consuming apps
+  Add autofocus support
+
 ## 0.1.8
 
 ### Patch Changes
