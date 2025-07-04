@@ -43,7 +43,8 @@ const errorEl = document.getElementById("error")!;
 dataSourceSelect.addEventListener("change", (e: Event) => {
   const source = (e.target as HTMLSelectElement).value;
   const inputHtmlTagValue = dataSourceMap[source];
-  cqlInputContainer.innerHTML = `<${inputHtmlTagValue} id="${source}"></${inputHtmlTagValue}>`;
+  cqlInputContainer.innerHTML = `<${inputHtmlTagValue} autofocus id="${source}"></${inputHtmlTagValue}>`;
+  (cqlInputContainer.firstChild as HTMLElement)?.focus();
 });
 cqlInput?.addEventListener("queryChange", ((
   e: CustomEvent<QueryChangeEventDetail>,

@@ -57,6 +57,7 @@ export const createCqlInput = (
 
       const initialValue = this.getAttribute("value") ?? "";
       const placeholder = this.getAttribute("placeholder") ?? undefined;
+      const autofocus = this.getAttribute("autofocus");
 
       shadow.innerHTML = `
         <div id="${cqlInputId}" spellcheck="false"></div>
@@ -103,6 +104,10 @@ export const createCqlInput = (
       editorView.dom.classList.add("Cql__ContentEditable");
 
       this.updateEditorView = updateEditorView;
+      this.editorView = editorView;
+      if (autofocus) {
+        editorView.focus();
+      }
     }
 
     public disconnectedCallback() {
