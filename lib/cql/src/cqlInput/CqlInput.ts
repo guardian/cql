@@ -43,10 +43,12 @@ export const createCqlInput = (
   class CqlInput extends HTMLElement {
     static observedAttributes = ["value", "placeholder"];
 
+    public eventsToPropagate = ["ArrowUp", "ArrowDown", "ArrowLeft", "ArrowRight"];
     public editorView: EditorView | undefined;
     public value = "";
     public updateEditorView: ((str: string) => void) | undefined = undefined;
     public parseCqlStr: ReturnType<typeof createParser> | undefined = undefined;
+    public cqlInput: HTMLElement | undefined;
 
     connectedCallback() {
       const cqlInputId = "cql-input";
@@ -67,6 +69,7 @@ export const createCqlInput = (
       shadow.appendChild(template.content.cloneNode(true));
 
       const cqlInput = shadow.getElementById(cqlInputId)!;
+      this.cqlInput = cqlInput;
       const typeaheadEl = shadow.getElementById(cqlTypeaheadId)!;
       const errorEl = shadow.getElementById(cqlErrorId)!;
 
@@ -93,7 +96,7 @@ export const createCqlInput = (
       const { editorView, updateEditorView } = createEditorView({
         initialValue,
         placeholder,
-        mountEl: cqlInput,
+        mountEl: this.cqlInput,
         plugins: [plugin],
         parser: this.parseCqlStr,
       });
@@ -104,11 +107,11 @@ export const createCqlInput = (
 
       // Do not leak events to the wider DOM
       ["keydown", "keyup", "keypress"].forEach((eventName) =>
-        this.stopPropagationForEvent(eventName, cqlInput),
+        this.managePropagationForEvent(eventName, cqlInput),
       );
     }
 
-    disconnectedCallback() {
+    public disconnectedCallback() {
       this.editorView?.destroy();
     }
 
@@ -150,6 +153,10 @@ export const createCqlInput = (
           }
         }
       }
+    }
+
+    public focus() {
+      this.cqlInput?.focus();
     }
 
     public createTemplate(partialTheme: DeepPartial<CqlTheme>) {
@@ -457,10 +464,30 @@ export const createCqlInput = (
       return template;
     }
 
-    public stopPropagationForEvent = (
+    /**
+     * Manage event propagation. We do not want to propagate events which are
+     * handled by the core editor, or by keymappings, but we do want to
+     * propagate events which the consuming application might be interested in,
+     * like global keyboard shortcuts, if the editor has not handled them first.
+     *
+     * I do not know a reliable way to detect events that _will_ be handled by
+     * ProseMirror's contenteditable elements (as ProseMirror delegates some
+     * event handling to the browser, and then corrects the DOM if necessary),
+     * so we're using a rule-of-thumb here for now: if there's a modifier or an
+     * arrow key involved, and we haven't explicitly handled the event, pass it
+     * on.
+     */
+    public managePropagationForEvent = (
       eventName: string,
       element: HTMLElement,
-    ) => element.addEventListener(eventName, (e) => e.stopPropagation());
+    ) =>
+      element.addEventListener(eventName, (e) => {
+        const { shiftKey, altKey, metaKey, ctrlKey, key } = e as KeyboardEvent;
+        const noModifier = !(shiftKey || altKey || metaKey || ctrlKey);
+        if (e.defaultPrevented || (noModifier && !this.eventsToPropagate.includes(key))) {
+          e.stopPropagation();
+        }
+      });
   }
 
   return CqlInput;

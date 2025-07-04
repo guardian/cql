@@ -62,7 +62,24 @@ describe("CqlInput", () => {
     expect(!!result).toBeFalse();
   });
 
-  test.todo("should not bubble events into the document", async () => {
+  test("should bubble events into the document when they are not handled by the editor", async () => {
+    const { container, cqlInput, user } = createCqlInputContainer("");
+
+    let eventReceived = false;
+    container.addEventListener("keydown", () => {
+      eventReceived = true;
+    });
+
+    cqlInput.focus();
+    await user.keyboard("{ArrowDown}");
+
+    expect(
+      eventReceived,
+      "This event should be propagated to the input's container, as it is not handled by the editor",
+    ).toBe(true);
+  });
+
+  test("should not bubble events into the document when they are handled by the editor", async () => {
     const { container, cqlInput, user } = createCqlInputContainer("");
 
     let eventReceived = false;
@@ -73,8 +90,6 @@ describe("CqlInput", () => {
     cqlInput.focus();
     await user.keyboard("example");
 
-    // At the moment, this test does not focus on the correct input,
-    // possibly because it exists in the shadow DOM
     expect(
       eventReceived,
       "This event should not be propagated to the input's container",
