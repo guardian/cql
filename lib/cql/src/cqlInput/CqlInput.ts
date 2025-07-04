@@ -105,7 +105,8 @@ export const createCqlInput = (
 
       this.updateEditorView = updateEditorView;
       this.editorView = editorView;
-      if (autofocus) {
+
+      if (autofocus !== null && autofocus !== "false") {
         editorView.focus();
       }
     }
