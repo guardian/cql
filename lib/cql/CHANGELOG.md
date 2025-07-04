@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 0.1.8
+
+### Patch Changes
+
+- 7448926: Shocking U-turn: propagate all events, delegate to the consumer :D
+
 ## 0.1.7
 
 ### Patch Changes
