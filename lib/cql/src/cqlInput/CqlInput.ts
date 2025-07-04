@@ -155,7 +155,7 @@ export const createCqlInput = (
     }
 
     public focus() {
-      this.cqlInput?.focus();
+      this.editorView?.focus();
     }
 
     public createTemplate(partialTheme: DeepPartial<CqlTheme>) {
