@@ -5,11 +5,13 @@ import { hasLetterOrDigit, hasWhitespace } from "./utils";
 export type ScannerSettings = {
   groups: boolean;
   operators: boolean;
+  requireFieldPrefix: boolean;
 };
 
 const defaultScannerSettings: ScannerSettings = {
   groups: true,
   operators: true,
+  requireFieldPrefix: true
 };
 
 export class Scanner {
