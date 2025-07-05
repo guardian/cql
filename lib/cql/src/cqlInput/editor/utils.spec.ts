@@ -15,7 +15,7 @@ describe("utils", () => {
 
   const queryToProseMirrorTokens = (query: string) => {
     const result = createParser()(query);
-    const { tokens } = mapResult(result);
+    const { tokens } = mapResult(result, true);
     return tokens;
   };
 
@@ -25,7 +25,7 @@ describe("utils", () => {
    */
   const getTextFromTokenRanges = async (query: string) => {
     const tokens = await queryToProseMirrorTokens(query);
-    const mappedTokens = mapTokens(tokens);
+    const mappedTokens = mapTokens(tokens, true);
     const node = tokensToDoc(tokens);
 
     // Implicitly check that the document created by these functions conforms to

@@ -72,6 +72,9 @@ const CqlInputCapi = createCqlInput(capiTypeahead, {
   theme: {
     baseFontSize: "16px",
   },
+  lang: {
+    requireFieldPrefix: false
+  }
 });
 
 const guToolsTypeaheadFields: TypeaheadField[] = [

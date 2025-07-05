@@ -139,6 +139,8 @@ export const createCqlPlugin = ({
     jsonDebugContainer.appendChild(debugSuggestionsContainer);
   }
 
+  const requireFieldPrefix = !!lang?.requireFieldPrefix;
+
   /**
    * Replaces the current document with the query it produces on parse.
    *
@@ -188,10 +190,12 @@ export const createCqlPlugin = ({
     const docSelection = new AllSelection(tr.doc);
 
     if (!newDoc.eq(tr.doc)) {
-      const selectionPriorToInsertion = tr.selection;
+      const originalDoc = tr.doc;
+      const originalSelection = tr.selection;
       tr.replaceWith(docSelection.from, docSelection.to, newDoc).setSelection(
         maybeMoveSelectionIntoChipKey({
-          selection: selectionPriorToInsertion,
+          selection: originalSelection,
+          prevDoc: originalDoc,
           currentDoc: tr.doc,
         }),
       );
@@ -205,7 +209,7 @@ export const createCqlPlugin = ({
       queryStr: queryAfterParse,
     });
 
-    return { queryStr: queryAfterParse ?? "", queryAst, tr };
+    return { queryStr: docToCqlStr(newDoc, requireFieldPrefix), queryAst, tr };
   };
 
   return new Plugin<PluginState>({
@@ -624,13 +628,13 @@ export const createCqlPlugin = ({
       // Serialise outgoing content to a CQL string for portability in both plain text and html
       clipboardTextSerializer(content) {
         const node = doc.create(undefined, content.content);
-        const queryStr = docToCqlStr(node);
+        const queryStr = docToCqlStr(node, requireFieldPrefix);
         return queryStr;
       },
       clipboardSerializer: {
         serializeFragment: (fragment: Fragment) => {
           const node = doc.create(undefined, fragment);
-          const queryStr = docToCqlStr(node);
+          const queryStr = docToCqlStr(node, requireFieldPrefix);
           const plainTextNode = DOMSerializer.fromSchema(schema).serializeNode(
             schema.text(queryStr),
           );

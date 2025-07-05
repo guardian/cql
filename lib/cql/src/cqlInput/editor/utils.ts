@@ -333,7 +333,10 @@ export const tokensToDecorations = (
     );
 };
 
-export const docToCqlStr = (doc: Node, requireFieldPrefix: boolean): string => {
+export const docToCqlStr = (
+  doc: Node,
+  requireFieldPrefix: boolean = true,
+): string => {
   let str: string = "";
 
   doc.descendants((node, _pos, parent) => {
