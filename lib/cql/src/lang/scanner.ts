@@ -11,7 +11,7 @@ export type ScannerSettings = {
 const defaultScannerSettings: ScannerSettings = {
   groups: true,
   operators: true,
-  requireFieldPrefix: true
+  requireFieldPrefix: true,
 };
 
 export class Scanner {
@@ -55,14 +55,14 @@ export class Scanner {
         if (this.settings.groups) {
           this.addToken(TokenType.LEFT_BRACKET);
         } else {
-          this.addIdentifierOrUnquotedString();
+          this.handleUnquotedChars();
         }
         return;
       case ")":
         if (this.settings.groups) {
           this.addToken(TokenType.RIGHT_BRACKET);
         } else {
-          this.addIdentifierOrUnquotedString();
+          this.handleUnquotedChars();
         }
         return;
       case " ":
@@ -73,7 +73,7 @@ export class Scanner {
         this.addString();
         return;
       default:
-        this.addIdentifierOrUnquotedString();
+        this.handleUnquotedChars();
         return;
     }
   };
@@ -116,7 +116,11 @@ export class Scanner {
     }
   };
 
-  private addIdentifierOrUnquotedString = () => {
+  /**
+   * Unquoted chars could be a reserved word, a field key (if
+   * `requireFieldPrefix` is `false`), or an unquoted string.
+   */
+  private handleUnquotedChars = () => {
     while (hasLetterOrDigit(this.peek())) {
       this.advance();
     }
@@ -125,9 +129,18 @@ export class Scanner {
     const maybeReservedWord =
       Token.reservedWordMap[text as keyof typeof Token.reservedWordMap];
 
-    return maybeReservedWord && this.settings.operators
-      ? this.addToken(maybeReservedWord)
-      : this.addUnquotedString();
+    if (maybeReservedWord && this.settings.operators) {
+      return this.addToken(maybeReservedWord);
+    }
+
+    if (
+      this.settings.requireFieldPrefix === false &&
+      this.peek() === ":"
+    ) {
+      return this.addToken(TokenType.CHIP_KEY_POSITIVE, text);
+    }
+
+    this.addUnquotedString();
   };
 
   private addUnquotedString = () => {
