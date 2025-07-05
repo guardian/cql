@@ -398,29 +398,41 @@ const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
  */
 export const maybeMoveSelectionIntoChipKey = ({
   selection,
+  prevDoc,
   currentDoc,
 }: {
   selection: Selection;
+  prevDoc: Node;
   currentDoc: Node;
 }): Selection => {
   const defaultSelection = TextSelection.near(
     currentDoc.resolve(Math.min(selection.from, currentDoc.nodeSize - 2)),
   );
 
-  if (selection.from > currentDoc.nodeSize) {
+  if (selection.from > currentDoc.nodeSize || selection.from !== selection.to) {
     return defaultSelection;
   }
 
-  const $from = currentDoc.resolve(selection.from);
-  const nodeAtCurrentSelection = $from.node().type;
-  const nodeTypeAfterCurrentSelection = $from.nodeAfter?.type;
-  const shouldWrapSelectionInKey =
+  let nodeTypeToMoveTo: NodeType | undefined;
+  if (
     selection.from === selection.to &&
-    // Is the selection just before the start of a chip?
-    (nodeAtCurrentSelection === chip || nodeTypeAfterCurrentSelection === chip);
+    prevDoc.textBetween(selection.from - 1, selection.from) === ":"
+  ) {
+    nodeTypeToMoveTo = chipValue;
+  } else {
+    const $from = currentDoc.resolve(selection.from);
+    const nodeAtCurrentSelection = $from.node().type;
+    const nodeTypeAfterCurrentSelection = $from.nodeAfter?.type;
+    const shouldWrapSelectionInKey =
+      // Is the selection just before the start of a chip?
+      nodeAtCurrentSelection === chip || nodeTypeAfterCurrentSelection === chip;
+    if (shouldWrapSelectionInKey) {
+      nodeTypeToMoveTo = chipKey;
+    }
+  }
 
-  if (shouldWrapSelectionInKey) {
-    const nodePos = findNodeAt(selection.from, currentDoc, chipKey);
+  if (nodeTypeToMoveTo) {
+    const nodePos = findNodeAt(selection.from, currentDoc, nodeTypeToMoveTo);
 
     if (nodePos !== -1) {
       const $pos = currentDoc.resolve(nodePos);
