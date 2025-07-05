@@ -106,6 +106,7 @@ export const createCqlPlugin = ({
     syntaxHighlighting,
     debugEl,
     renderPopoverContent = defaultPopoverRenderer,
+    lang,
   },
   parser,
 }: {
@@ -144,13 +145,13 @@ export const createCqlPlugin = ({
    * Side-effects: mutates the given transaction, and re-applies debug UI if provided.
    */
   const applyQueryToTr = (tr: Transaction) => {
-    const queryBeforeParse = docToCqlStr(tr.doc);
+    const queryBeforeParse = docToCqlStr(tr.doc, lang?.requireFieldPrefix);
 
     const result = parser(queryBeforeParse);
     const { tokens, queryAst, error, mapping } = mapResult(result);
 
     const newDoc = tokensToDoc(tokens);
-    const queryAfterParse = docToCqlStr(newDoc); // The document may have changed as a result of the parse.
+    const queryAfterParse = docToCqlStr(newDoc, lang?.requireFieldPrefix); // The document may have changed as a result of the parse.
 
     if (debugASTContainer) {
       debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(

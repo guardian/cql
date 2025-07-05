@@ -333,7 +333,7 @@ export const tokensToDecorations = (
     );
 };
 
-export const docToCqlStr = (doc: Node): string => {
+export const docToCqlStr = (doc: Node, requireFieldPrefix: boolean): string => {
   let str: string = "";
 
   doc.descendants((node, _pos, parent) => {
@@ -345,7 +345,11 @@ export const docToCqlStr = (doc: Node): string => {
       case "chipKey": {
         const leadingWhitespace =
           str.trim() === "" || str.endsWith(" ") ? "" : " ";
-        const polarity = parent?.attrs[POLARITY];
+        const polarity =
+          !requireFieldPrefix && parent?.attrs[POLARITY] === "+"
+            ? ""
+            : parent?.attrs[POLARITY];
+
         // Anticipate a chipValue here, adding the colon – if we do not, and a
         // chipValue is not present, we throw the mappings off.
         str += `${leadingWhitespace}${polarity}${node.textContent}:`;
@@ -576,8 +580,8 @@ export const queryHasChanged = (
     return;
   }
 
-  const prevQuery = docToCqlStr(oldDoc);
-  const currentQuery = docToCqlStr(newDoc);
+  const prevQuery = docToCqlStr(oldDoc, true);
+  const currentQuery = docToCqlStr(newDoc, true);
 
   return prevQuery !== currentQuery ? { prevQuery, currentQuery } : undefined;
 };

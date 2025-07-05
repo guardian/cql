@@ -169,7 +169,7 @@ describe("scanner", () => {
   });
 
   describe("settings", () => {
-    describe("`requiredFieldPrefix: false`", () => {
+    describe("`requireFieldPrefix: false`", () => {
       it("should tokenise keys for fields", () => {
         assertTokens(
           "tag:",

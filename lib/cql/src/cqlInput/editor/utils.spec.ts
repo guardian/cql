@@ -280,7 +280,7 @@ describe("utils", () => {
 
       const query = "example +tag:tags-are-magic ";
 
-      expect(docToCqlStr(queryDoc)).toBe(query);
+      expect(docToCqlStr(queryDoc, true)).toBe(query);
     });
 
     it("should add quotes for chip values that contain whitespace", () => {
@@ -292,7 +292,7 @@ describe("utils", () => {
 
       const query = 'example +tag:"Tag with whitespace" ';
 
-      expect(docToCqlStr(queryDoc)).toBe(query);
+      expect(docToCqlStr(queryDoc, true)).toBe(query);
     });
 
     it("should not prepend whitespace when the doc starts with a chip", () => {
@@ -304,7 +304,7 @@ describe("utils", () => {
 
       const query = "+tag:tags-are-magic ";
 
-      expect(docToCqlStr(queryDoc)).toBe(query);
+      expect(docToCqlStr(queryDoc, true)).toBe(query);
     });
 
     it("should join chips with a single whitespace", () => {
@@ -317,7 +317,20 @@ describe("utils", () => {
 
       const query = "+tag:tags-are-magic +tag:tags-are-magic ";
 
-      expect(docToCqlStr(queryDoc)).toBe(query);
+      expect(docToCqlStr(queryDoc, true)).toBe(query);
+    });
+
+    it("should not add a field prefix if `requireFieldPrefix` is `false`", () => {
+      const queryDoc = doc(
+        queryStr(""),
+        chip(chipKey("tag"), chipValue("tags-are-magic")),
+        chip(chipKey("tag"), chipValue("tags-are-magic")),
+        queryStr(),
+      );
+
+      const query = "tag:tags-are-magic tag:tags-are-magic ";
+
+      expect(docToCqlStr(queryDoc, false)).toBe(query);
     });
   });
 });
