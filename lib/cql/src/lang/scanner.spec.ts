@@ -168,82 +168,58 @@ describe("scanner", () => {
     });
   });
 
-  describe("settings", () => {
-    describe("`requireFieldPrefix: false`", () => {
-      it("should tokenise keys for fields", () => {
-        assertTokens(
-          "tag:",
-          [
-            new Token(TokenType.CHIP_KEY_POSITIVE, "tag", "tag", 0, 2),
-            new Token(TokenType.CHIP_VALUE, ":", undefined, 3, 3),
-            eofToken(4),
-          ],
-          { requireFieldPrefix: false },
-        );
-      });
-
-      it("should tokenise key value pairs for fields, and give `undefined` for empty quotes,", () => {
-        assertTokens(
-          'tag:""',
-          [
-            new Token(TokenType.CHIP_KEY_POSITIVE, "tag", "tag", 0, 2),
-            new Token(TokenType.CHIP_VALUE, ':""', undefined, 3, 5),
-            eofToken(6),
-          ],
-          { requireFieldPrefix: false },
-        );
-      });
-
-      it("should tokenise key value pairs for fields when the key value contains non-word characters", () => {
-        assertTokens(
-          '@tag:"tone/news"',
-          [
-            new Token(TokenType.CHIP_KEY_POSITIVE, "@tag", "@tag", 0, 3),
-            new Token(TokenType.CHIP_VALUE, ':"tone/news"', "tone/news", 4, 15),
-            eofToken(16),
-          ],
-          { requireFieldPrefix: false },
-        );
-      });
-
-      it("should yield a query field value token when a query meta value is incomplete", () => {
-        assertTokens(
-          "example tag:",
-          [
-            unquotedStringToken("example"),
-            new Token(TokenType.CHIP_KEY_POSITIVE, "tag", "tag", 8, 10),
-            new Token(TokenType.CHIP_VALUE, ":", undefined, 11, 11),
-            eofToken(12),
-          ],
-          { requireFieldPrefix: false },
-        );
-      });
-
-      it("should tokenise key value pairs for fields when the key value is in quotes, containing whitespace and colon", () => {
-        assertTokens(
-          'tag:"tone news:"',
-          [
-            new Token(TokenType.CHIP_KEY_POSITIVE, "tag", "tag", 0, 2),
-            new Token(TokenType.CHIP_VALUE, ':"tone news:"', "tone news:", 3, 15),
-            eofToken(16),
-          ],
-          { requireFieldPrefix: false },
-        );
-      });
-
-      it("should tokenise key value pairs for fields", () => {
-        assertTokens(
-          "tag:tone/news",
-          [
-            new Token(TokenType.CHIP_KEY_POSITIVE, "tag", "tag", 0, 2),
-            new Token(TokenType.CHIP_VALUE, ":tone/news", "tone/news", 3, 12),
-            eofToken(13),
-          ],
-          { requireFieldPrefix: false },
-        );
-      });
+  describe("without field prefix", () => {
+    it("should tokenise keys for fields", () => {
+      assertTokens("tag:", [
+        new Token(TokenType.CHIP_KEY_POSITIVE, "tag", "tag", 0, 2),
+        new Token(TokenType.CHIP_VALUE, ":", undefined, 3, 3),
+        eofToken(4),
+      ]);
     });
 
+    it("should tokenise key value pairs for fields, and give `undefined` for empty quotes,", () => {
+      assertTokens('tag:""', [
+        new Token(TokenType.CHIP_KEY_POSITIVE, "tag", "tag", 0, 2),
+        new Token(TokenType.CHIP_VALUE, ':""', undefined, 3, 5),
+        eofToken(6),
+      ]);
+    });
+
+    it("should tokenise key value pairs for fields when the key value contains non-word characters", () => {
+      assertTokens('@tag:"tone/news"', [
+        new Token(TokenType.CHIP_KEY_POSITIVE, "@tag", "@tag", 0, 3),
+        new Token(TokenType.CHIP_VALUE, ':"tone/news"', "tone/news", 4, 15),
+        eofToken(16),
+      ]);
+    });
+
+    it("should yield a query field value token when a query meta value is incomplete", () => {
+      assertTokens("example tag:", [
+        unquotedStringToken("example"),
+        new Token(TokenType.CHIP_KEY_POSITIVE, "tag", "tag", 8, 10),
+        new Token(TokenType.CHIP_VALUE, ":", undefined, 11, 11),
+        eofToken(12),
+      ]);
+    });
+
+    it("should tokenise key value pairs for fields when the key value is in quotes, containing whitespace and colon", () => {
+      assertTokens('tag:"tone news:"', [
+        new Token(TokenType.CHIP_KEY_POSITIVE, "tag", "tag", 0, 2),
+        new Token(TokenType.CHIP_VALUE, ':"tone news:"', "tone news:", 3, 15),
+        eofToken(16),
+      ]);
+    });
+
+    it("should tokenise key value pairs for fields", () => {
+      assertTokens("tag:tone/news", [
+        new Token(TokenType.CHIP_KEY_POSITIVE, "tag", "tag", 0, 2),
+        new Token(TokenType.CHIP_VALUE, ":tone/news", "tone/news", 3, 12),
+        eofToken(13),
+      ]);
+    });
+  });
+
+  describe("settings", () => {
     describe("`groups: false`", () => {
       it("should disable groups, interpreting parentheses as strings", () => {
         assertTokens(

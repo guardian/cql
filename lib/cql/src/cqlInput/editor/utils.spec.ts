@@ -15,7 +15,7 @@ describe("utils", () => {
 
   const queryToProseMirrorTokens = (query: string) => {
     const result = createParser()(query);
-    const { tokens } = mapResult(result, true);
+    const { tokens } = mapResult(result);
     return tokens;
   };
 
@@ -25,7 +25,7 @@ describe("utils", () => {
    */
   const getTextFromTokenRanges = async (query: string) => {
     const tokens = await queryToProseMirrorTokens(query);
-    const mappedTokens = mapTokens(tokens, true);
+    const mappedTokens = mapTokens(tokens);
     const node = tokensToDoc(tokens);
 
     // Implicitly check that the document created by these functions conforms to
@@ -280,7 +280,7 @@ describe("utils", () => {
 
       const query = "example +tag:tags-are-magic ";
 
-      expect(docToCqlStr(queryDoc, true)).toBe(query);
+      expect(docToCqlStr(queryDoc)).toBe(query);
     });
 
     it("should add quotes for chip values that contain whitespace", () => {
@@ -292,7 +292,7 @@ describe("utils", () => {
 
       const query = 'example +tag:"Tag with whitespace" ';
 
-      expect(docToCqlStr(queryDoc, true)).toBe(query);
+      expect(docToCqlStr(queryDoc)).toBe(query);
     });
 
     it("should not prepend whitespace when the doc starts with a chip", () => {
@@ -304,7 +304,7 @@ describe("utils", () => {
 
       const query = "+tag:tags-are-magic ";
 
-      expect(docToCqlStr(queryDoc, true)).toBe(query);
+      expect(docToCqlStr(queryDoc)).toBe(query);
     });
 
     it("should join chips with a single whitespace", () => {
@@ -317,20 +317,7 @@ describe("utils", () => {
 
       const query = "+tag:tags-are-magic +tag:tags-are-magic ";
 
-      expect(docToCqlStr(queryDoc, true)).toBe(query);
-    });
-
-    it("should not add a field prefix if `requireFieldPrefix` is `false`", () => {
-      const queryDoc = doc(
-        queryStr(""),
-        chip(chipKey("tag"), chipValue("tags-are-magic")),
-        chip(chipKey("tag"), chipValue("tags-are-magic")),
-        queryStr(),
-      );
-
-      const query = "tag:tags-are-magic tag:tags-are-magic ";
-
-      expect(docToCqlStr(queryDoc, false)).toBe(query);
+      expect(docToCqlStr(queryDoc)).toBe(query);
     });
   });
 });

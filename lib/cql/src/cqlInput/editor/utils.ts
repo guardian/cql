@@ -335,7 +335,6 @@ export const tokensToDecorations = (
 
 export const docToCqlStr = (
   doc: Node,
-  requireFieldPrefix: boolean = true,
 ): string => {
   let str: string = "";
 
@@ -348,10 +347,7 @@ export const docToCqlStr = (
       case "chipKey": {
         const leadingWhitespace =
           str.trim() === "" || str.endsWith(" ") ? "" : " ";
-        const polarity =
-          !requireFieldPrefix && parent?.attrs[POLARITY] === "+"
-            ? ""
-            : parent?.attrs[POLARITY];
+        const polarity = parent?.attrs[POLARITY]
 
         // Anticipate a chipValue here, adding the colon – if we do not, and a
         // chipValue is not present, we throw the mappings off.
@@ -416,6 +412,7 @@ export const maybeMoveSelectionIntoChipKey = ({
   let nodeTypeToMoveTo: NodeType | undefined;
   if (
     selection.from === selection.to &&
+    selection.$from.node().type === queryStr &&
     prevDoc.textBetween(selection.from - 1, selection.from) === ":"
   ) {
     nodeTypeToMoveTo = chipValue;
@@ -595,8 +592,8 @@ export const queryHasChanged = (
     return;
   }
 
-  const prevQuery = docToCqlStr(oldDoc, true);
-  const currentQuery = docToCqlStr(newDoc, true);
+  const prevQuery = docToCqlStr(oldDoc);
+  const currentQuery = docToCqlStr(newDoc);
 
   return prevQuery !== currentQuery ? { prevQuery, currentQuery } : undefined;
 };

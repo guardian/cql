@@ -31,6 +31,7 @@ import { createParser } from "../../../lang/Cql";
 import { Typeahead } from "../../../lang/typeahead";
 import { chip, IS_SELECTED } from "../schema";
 import { Node, NodeType } from "prosemirror-model";
+import { cqlQueryStrFromQueryAst } from "../../../lang/interpreter";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
@@ -63,7 +64,8 @@ const createCqlEditor = (initialQuery: string = "") => {
     typeaheadEl,
     errorEl,
     config: { syntaxHighlighting: true },
-    onChange: ({ queryStr: cqlQuery }) => dispatch(cqlQuery),
+    onChange: ({ queryAst }) =>
+      dispatch(queryAst ? cqlQueryStrFromQueryAst(queryAst) : ""),
     parser,
   });
 
@@ -112,7 +114,7 @@ const createCqlEditor = (initialQuery: string = "") => {
    * Wait for a particular `cqlQuery` value from the component's onChange
    * handler. Fail after the specified timeout if no matching value is found.
    */
-  const waitFor = (value: string, timeoutMs = 1000) =>
+  const waitFor = (value: string, timeoutMs = 100) =>
     new Promise<void>((res, rej) => {
       if (valuesReceived.includes(value)) {
         return res();
@@ -190,9 +192,9 @@ describe("plugin", () => {
     it("accepts whitespace after non-string tokens", async () => {
       const { editor, waitFor } = createCqlEditor("a AND");
 
-      await editor.insertText(" ");
+      await editor.insertText(" b");
 
-      await waitFor("a AND ");
+      await waitFor("a AND b");
     });
   });
 
@@ -324,7 +326,7 @@ describe("plugin", () => {
         const nodeAtCaret = getNodeTypeAtSelection(editor.view);
         expect(nodeAtCaret.name).toBe("chipValue");
 
-        await waitFor("example +tag: ");
+        await waitFor("example tag:");
       });
 
       it("applies the given key when a popover option is selected with a click", async () => {
@@ -335,7 +337,7 @@ describe("plugin", () => {
         const nodeAtCaret = getNodeTypeAtSelection(editor.view);
         expect(nodeAtCaret.name).toBe("chipValue");
 
-        await waitFor("example +section: ");
+        await waitFor("example section:");
       });
 
       it("applies the given key when a popover option is selected at the start of the query", async () => {
@@ -344,7 +346,7 @@ describe("plugin", () => {
 
         await selectPopoverOptionWithEnter(editor, container, "Tag");
 
-        await waitFor("+tag: ");
+        await waitFor("tag:");
       });
 
       it("displays a popover after another chip", async () => {
@@ -361,7 +363,7 @@ describe("plugin", () => {
         await findByText(popoverContainer, "Section");
         await selectPopoverOptionWithEnter(editor, container, "Tag");
 
-        await waitFor("+tag:a +tag: ");
+        await waitFor("tag:a tag:");
       });
     });
 
@@ -396,7 +398,7 @@ describe("plugin", () => {
             "Tags are magic",
           );
 
-          await waitFor("example +tag:tags-are-magic ");
+          await waitFor("example tag:tags-are-magic");
         });
 
         it("applies the given key in quotes when it contains whitespace", async () => {
@@ -411,7 +413,7 @@ describe("plugin", () => {
             "Tag with a space in it",
           );
 
-          await waitFor('example +tag:"Tag with space" ');
+          await waitFor('example tag:"Tag with space"');
         });
 
         it("inserts a chip before a string", async () => {
@@ -419,7 +421,7 @@ describe("plugin", () => {
 
           await editor.selectText(1).insertText("+");
 
-          await waitFor("+: a");
+          await waitFor(": a");
         });
 
         it("inserts a single whitespace between chips", async () => {
@@ -427,7 +429,7 @@ describe("plugin", () => {
 
           await editor.insertText("+");
 
-          await waitFor("+tag:tags-are-magic +: ");
+          await waitFor("tag:tags-are-magic :");
         });
       });
     });
@@ -457,7 +459,7 @@ describe("plugin", () => {
         await tick(); // To allow the component state subscription to update
         await editor.press("Enter");
 
-        await waitFor("example +from-date:-1d ");
+        await waitFor("example from-date:-1d");
       });
 
       it("applies absolute dates on click", async () => {
@@ -479,7 +481,7 @@ describe("plugin", () => {
         const button = await findByText(popoverContainer, "Apply");
         await fireEvent.click(button);
 
-        await waitFor("example +from-date:2015-12-10 ");
+        await waitFor("example from-date:2015-12-10");
       });
     });
   });
@@ -495,7 +497,7 @@ describe("plugin", () => {
 
       await user.click(polarityHandle);
 
-      await waitFor("-tag:a ");
+      await waitFor("-tag:a");
     });
 
     it("should not de-chip text if the queryStr between chips is removed", async () => {
@@ -506,7 +508,7 @@ describe("plugin", () => {
       await moveCaretToQueryPos(queryStr.indexOf("b"), 1);
       await editor.backspace();
 
-      await waitFor("+tag:a +tag:c ");
+      await waitFor("tag:a tag:c");
     });
 
     describe("read-only behaviour", () => {
@@ -654,7 +656,7 @@ describe("plugin", () => {
 
       await editor.insertText("b").shortcut("Ctrl-a").insertText("a");
 
-      await waitFor("a +tag: b");
+      await waitFor("a tag: b");
     });
 
     it("permits additional query fields before query fields", async () => {
@@ -662,7 +664,7 @@ describe("plugin", () => {
 
       await editor.shortcut("Ctrl-a").insertText("+1");
 
-      await waitFor("+1: +2: ");
+      await waitFor("1: 2:");
     });
   });
 
@@ -698,7 +700,7 @@ describe("plugin", () => {
 
       await editor.press("Backspace");
 
-      await waitFor("+tag:a ");
+      await waitFor("tag:a");
     });
 
     it("puts the chip in a pending state before deletion - mouse", async () => {
@@ -707,7 +709,7 @@ describe("plugin", () => {
       const deleteBtn = await findByText(editor.view.dom, "×");
       await fireEvent.click(deleteBtn);
 
-      await waitFor("+tag:a ");
+      await waitFor("tag:a");
     });
 
     it("removes the chip via backspace", async () => {

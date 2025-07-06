@@ -19,6 +19,7 @@ import { DeepPartial } from "../types/utils";
 import { createParser } from "../lang/Cql";
 import { cqlQueryStrFromQueryAst } from "../lang/interpreter";
 import { CLASSNAME_PLACEHOLDER } from "./editor/plugins/placeholder";
+import { CqlQuery } from "../lib";
 
 export const typeaheadTestId = "cql-input-typeahead";
 export const errorTestId = "cql-input-error";
@@ -73,11 +74,27 @@ export const createCqlInput = (
       const typeaheadEl = shadow.getElementById(cqlTypeaheadId)!;
       const errorEl = shadow.getElementById(cqlErrorId)!;
 
-      const onChange = (detail: QueryChangeEventDetail) => {
-        this.value = detail.queryStr;
+      const onChange = ({
+        queryAst,
+        error,
+      }: {
+        queryAst?: CqlQuery;
+        error?: string;
+      }) => {
+        if (!queryAst) {
+          return;
+        }
+
+        const queryStr = cqlQueryStrFromQueryAst(queryAst);
+        this.value = queryStr;
+
         this.dispatchEvent(
-          new CustomEvent("queryChange", {
-            detail,
+          new CustomEvent<QueryChangeEventDetail>("queryChange", {
+            detail: {
+              queryAst,
+              error,
+              queryStr,
+            },
           }),
         );
       };

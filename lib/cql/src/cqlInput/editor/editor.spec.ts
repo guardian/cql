@@ -147,7 +147,7 @@ describe("updateEditorViewWithQueryStr", () => {
       createEditorFromInitialState(initialQuery);
     setQueryPosAsSelection(initialQuery.length, editorView);
 
-    expect(docToCqlStrWithSelection(editorView.state)).toEqual("tag:^$");
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual("+tag:^$ ");
 
     updateEditorView("+tag:");
 

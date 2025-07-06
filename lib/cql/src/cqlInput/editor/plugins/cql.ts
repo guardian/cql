@@ -38,7 +38,6 @@ import {
   schema,
 } from "../schema";
 import { DOMSerializer, Fragment, Node } from "prosemirror-model";
-import { QueryChangeEventDetail } from "../../../types/dom";
 import { ErrorPopover } from "../../popover/ErrorPopover";
 import { CqlConfig } from "../../CqlInput";
 import {
@@ -61,7 +60,6 @@ export type CqlError = {
 
 type PluginState = {
   tokens: ProseMirrorToken[];
-  queryStr: string;
   queryAst: CqlQuery | undefined;
   error: CqlError | undefined;
   mapping: Mapping;
@@ -106,7 +104,6 @@ export const createCqlPlugin = ({
     syntaxHighlighting,
     debugEl,
     renderPopoverContent = defaultPopoverRenderer,
-    lang,
   },
   parser,
 }: {
@@ -114,7 +111,7 @@ export const createCqlPlugin = ({
   typeaheadEl: HTMLElement;
   errorEl: HTMLElement;
   config: CqlConfig;
-  onChange: (detail: QueryChangeEventDetail) => void;
+  onChange: (detail: { queryAst?: CqlQuery; error?: string }) => void;
   parser: ReturnType<typeof createParser>;
 }) => {
   let typeaheadPopover: TypeaheadPopover | undefined;
@@ -139,21 +136,19 @@ export const createCqlPlugin = ({
     jsonDebugContainer.appendChild(debugSuggestionsContainer);
   }
 
-  const requireFieldPrefix = !!lang?.requireFieldPrefix;
-
   /**
    * Replaces the current document with the query it produces on parse.
    *
    * Side-effects: mutates the given transaction, and re-applies debug UI if provided.
    */
   const applyQueryToTr = (tr: Transaction) => {
-    const queryBeforeParse = docToCqlStr(tr.doc, lang?.requireFieldPrefix);
+    const queryBeforeParse = docToCqlStr(tr.doc);
 
     const result = parser(queryBeforeParse);
     const { tokens, queryAst, error, mapping } = mapResult(result);
 
     const newDoc = tokensToDoc(tokens);
-    const queryAfterParse = docToCqlStr(newDoc, lang?.requireFieldPrefix); // The document may have changed as a result of the parse.
+    const queryAfterParse = docToCqlStr(newDoc); // The document may have changed as a result of the parse.
 
     if (debugASTContainer) {
       debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
@@ -206,10 +201,9 @@ export const createCqlPlugin = ({
       error,
       queryAst,
       mapping,
-      queryStr: queryAfterParse,
     });
 
-    return { queryStr: docToCqlStr(newDoc, requireFieldPrefix), queryAst, tr };
+    return { queryAst, tr };
   };
 
   return new Plugin<PluginState>({
@@ -628,13 +622,13 @@ export const createCqlPlugin = ({
       // Serialise outgoing content to a CQL string for portability in both plain text and html
       clipboardTextSerializer(content) {
         const node = doc.create(undefined, content.content);
-        const queryStr = docToCqlStr(node, requireFieldPrefix);
+        const queryStr = docToCqlStr(node);
         return queryStr;
       },
       clipboardSerializer: {
         serializeFragment: (fragment: Fragment) => {
           const node = doc.create(undefined, fragment);
-          const queryStr = docToCqlStr(node, requireFieldPrefix);
+          const queryStr = docToCqlStr(node);
           const plainTextNode = DOMSerializer.fromSchema(schema).serializeNode(
             schema.text(queryStr),
           );
@@ -654,24 +648,22 @@ export const createCqlPlugin = ({
       errorPopover = new ErrorPopover(view, errorEl, jsonDebugContainer);
 
       // Set up initial document with parsed query
-      const { tr, queryStr, queryAst } = applyQueryToTr(view.state.tr);
+      const { tr, queryAst } = applyQueryToTr(view.state.tr);
       view.dispatch(tr);
 
       onChange({
-        queryStr,
         queryAst,
       });
 
       return {
         async update(view) {
-          const { error, queryAst, queryStr, mapping } = cqlPluginKey.getState(
+          const { error, queryAst, mapping } = cqlPluginKey.getState(
             view.state,
           )!;
 
           errorPopover?.updateErrorMessage(error);
 
           onChange({
-            queryStr,
             queryAst,
             error: error?.message,
           });

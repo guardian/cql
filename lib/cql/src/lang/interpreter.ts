@@ -28,14 +28,14 @@ const strFromBinary = (queryBinary: CqlBinary): string => {
   const leftStr = strFromContent(queryBinary.left);
 
   const rightStr = queryBinary.right
-    ? `${queryBinary.right.operator} ${strFromBinary(queryBinary.right.binary)}`
+    ? `${queryBinary.right.operator === "AND" ? "AND" : ""} ${strFromBinary(queryBinary.right.binary)}`
     : "";
 
-  return (leftStr ?? "") + (rightStr ? ` ${rightStr.trim()} ` : "");
+  return (leftStr ?? "") + (rightStr ? ` ${rightStr.trim()}` : "");
 };
 
 const strFromField = (field: CqlField): string => {
-  const polarity = field.key.tokenType === "CHIP_KEY_POSITIVE" ? "+" : "-";
+  const polarity = field.key.tokenType === "CHIP_KEY_POSITIVE" ? "" : "-";
   const literal = field.value?.literal ?? "";
   const normalisedLiteral = hasWhitespace(literal) ? `"${literal}"` : literal;
 
