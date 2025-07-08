@@ -368,6 +368,22 @@ describe("plugin", () => {
     });
 
     describe("chip values", () => {
+      it("inserts a chip before a string", async () => {
+        const { editor, waitFor } = createCqlEditor("a");
+
+        await editor.selectText(1).insertText("+");
+
+        await waitFor(": a");
+      });
+
+      it("inserts a single whitespace between chips", async () => {
+        const { editor, waitFor } = createCqlEditor("+tag:tags-are-magic ");
+
+        await editor.insertText("+");
+
+        await waitFor("tag:tags-are-magic :");
+      });
+
       describe("text suggestions", () => {
         it("displays a popover at the start of a value field", async () => {
           const queryStr = "example +tag";
@@ -416,20 +432,28 @@ describe("plugin", () => {
           await waitFor('example tag:"Tag with space"');
         });
 
-        it("inserts a chip before a string", async () => {
-          const { editor, waitFor } = createCqlEditor("a");
+        it("applies a suggestion correctly after adding a field without a prefix", async () => {
+          const { editor, container, waitFor } = createCqlEditor();
 
-          await editor.selectText(1).insertText("+");
+          await editor.insertText("tag:");
 
-          await waitFor(": a");
-        });
+          const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+          expect(nodeAtCaret.name).toBe("chipValue");
 
-        it("inserts a single whitespace between chips", async () => {
-          const { editor, waitFor } = createCqlEditor("+tag:tags-are-magic ");
+          const popoverContainer = await findByTestId(
+            container,
+            typeaheadTestId,
+          );
 
-          await editor.insertText("+");
+          await findByText(popoverContainer, "Tags are magic");
 
-          await waitFor("tag:tags-are-magic :");
+          await selectPopoverOptionWithEnter(
+            editor,
+            container,
+            "Tags are magic",
+          );
+
+          await waitFor("tag:tags-are-magic");
         });
       });
     });

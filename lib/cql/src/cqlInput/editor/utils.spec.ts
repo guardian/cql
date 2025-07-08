@@ -202,6 +202,12 @@ describe("utils", () => {
         expect(text).toEqual(["", "", "a", "b", "c", ""]);
       });
 
+      it("with chips without prefixes", async () => {
+        const text = await getTextFromTokenRanges("this:that this:that");
+
+        expect(text).toEqual(["this", "that", "this", "that", ""]);
+      });
+
       it("with binary queries in the middle of tags", async () => {
         const text = await getTextFromTokenRanges(
           "+key:value (a OR b) +key2:value2",

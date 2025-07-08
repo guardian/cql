@@ -142,10 +142,12 @@ export const createCqlPlugin = ({
    * Side-effects: mutates the given transaction, and re-applies debug UI if provided.
    */
   const applyQueryToTr = (tr: Transaction) => {
-    const queryBeforeParse = docToCqlStr(tr.doc);
+    const originalDoc = tr.doc;
+    const queryBeforeParse = docToCqlStr(originalDoc);
 
     const result = parser(queryBeforeParse);
     const { tokens, queryAst, error, mapping } = mapResult(result);
+
 
     const newDoc = tokensToDoc(tokens);
     const queryAfterParse = docToCqlStr(newDoc); // The document may have changed as a result of the parse.
@@ -185,7 +187,6 @@ export const createCqlPlugin = ({
     const docSelection = new AllSelection(tr.doc);
 
     if (!newDoc.eq(tr.doc)) {
-      const originalDoc = tr.doc;
       const originalSelection = tr.selection;
       tr.replaceWith(docSelection.from, docSelection.to, newDoc).setSelection(
         maybeMoveSelectionIntoChipKey({

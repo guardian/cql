@@ -63,12 +63,16 @@ const joinQueryStrTokens = (tokens: ProseMirrorToken[]) =>
     });
   }, [] as ProseMirrorToken[]);
 
-const getCqlFieldKeyRange = (from: number): [number, number, number] =>
-  // leading char ('+') (+1)
+const getCqlFieldKeyRange = (
+  from: number,
+  hasPrefix: boolean,
+): [number, number, number] => {
+  // optional leading char ('+') (+1)
   // chipKey begin (-1)
   // chip begin (-1)
-  // 🤔 Unclear why we need an extra bump when our query field is the first token
-  [from - 1, -1, 0];
+  const prefixOffset = hasPrefix ? 1 : 0;
+  return [from - 1, -2 + prefixOffset, 0];
+};
 
 const getQueryValueRanges = (
   from: number,
@@ -146,12 +150,13 @@ export const createProseMirrorTokenToDocumentMap = (
           const previousToken = tokens[index - 1];
           const shouldAddQueryStrMapping =
             previousToken?.tokenType === "CHIP_VALUE" || index === 0;
+          const hasPrefix = lexeme.startsWith("+") || lexeme.startsWith("-");
 
           return accRanges.concat(
             ...(shouldAddQueryStrMapping
               ? getQueryStrRanges(previousToken?.to, previousToken?.to)
               : []),
-            getCqlFieldKeyRange(from),
+            getCqlFieldKeyRange(from, hasPrefix),
           );
         }
         case "CHIP_VALUE": {
@@ -333,9 +338,7 @@ export const tokensToDecorations = (
     );
 };
 
-export const docToCqlStr = (
-  doc: Node,
-): string => {
+export const docToCqlStr = (doc: Node): string => {
   let str: string = "";
 
   doc.descendants((node, _pos, parent) => {
@@ -347,7 +350,7 @@ export const docToCqlStr = (
       case "chipKey": {
         const leadingWhitespace =
           str.trim() === "" || str.endsWith(" ") ? "" : " ";
-        const polarity = parent?.attrs[POLARITY]
+        const polarity = parent?.attrs[POLARITY];
 
         // Anticipate a chipValue here, adding the colon – if we do not, and a
         // chipValue is not present, we throw the mappings off.
