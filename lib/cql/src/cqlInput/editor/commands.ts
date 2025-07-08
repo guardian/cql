@@ -1,10 +1,9 @@
 import { Command, Selection, TextSelection } from "prosemirror-state";
-import { chip, chipValue, queryStr } from "./schema";
+import { chipValue } from "./schema";
 import { selectAll } from "prosemirror-commands";
 import { createParser } from "../../lang/Cql";
 import { queryToProseMirrorDoc } from "./utils";
 import { findDiffEndForContent, findDiffStartForContent } from "./diff";
-import { logNode } from "./debug";
 
 export const startOfLine: Command = (state, dispatch) => {
   const startSelection = Selection.atStart(state.doc);
@@ -67,31 +66,7 @@ export const applyQueryStr =
         endB += overlap;
       }
 
-      logNode(state.doc);
-
       const tr = state.tr.replace(start, endB, newDoc.slice(start, endA));
-
-      const selectionIsCollapsed = state.selection.from === state.selection.to;
-      const selectionIsAtEndOfDiff = state.selection.to === endB;
-
-      if (selectionIsCollapsed && selectionIsAtEndOfDiff) {
-        // If the caret is pointing at the end of the diff, and there's a chip
-        // behind it, keep the selection within a chip value, rather than
-        // shunting it into an empty queryStr
-        const mappedSelection = tr.mapping.map(endB);
-        const $posAtSelection = tr.doc.resolve(mappedSelection);
-        const $posBeforeSelection = tr.doc.resolve(
-          Math.max($posAtSelection.before() - 1, 0)
-        );
-        if (
-          $posAtSelection.node().type === queryStr &&
-          $posBeforeSelection.node().type === chip
-        ) {
-          const newSelection = TextSelection.near($posBeforeSelection, -1);
-
-          tr.setSelection(newSelection);
-        }
-      }
 
       dispatch?.(tr);
     }
