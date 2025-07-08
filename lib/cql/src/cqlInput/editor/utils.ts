@@ -777,3 +777,49 @@ export const queryToProseMirrorDoc = (
   const { tokens } = mapResult(result);
   return tokensToDoc(tokens);
 };
+
+/**
+ * Get content from a clipboard event.
+ *
+ * HTML content that's serialised by ProseMirror can be handed back as HTML, to
+ * be handled by ProseMirror's native paste behaviour, but HTML content that is
+ * actually a plain text query should be parsed by the CQL plugin to ensure that
+ * we do the relevant diffing on the incoming content, and preserve selection
+ * state.
+ *
+ * For example, copying what looks like plain text in VSCode populates the
+ * `text/html` buffer for the copied string `+tag:type/article` with:
+ *
+ * <meta charset='utf-8'><div style="color: #cccccc;background-color: #1f1f1f;font-family: Menlo, Monaco, 'Courier New', monospace;font-weight: normal;font-size: 12px;line-height: 18px;white-space: pre;"><div><span style="color: #cccccc;">};</span></div><div><span style="color: #d4d4d4;">+</span><span style="color: #c8c8c8;">tag</span><span style="color: #cccccc;">:</span><span style="color: #9cdcfe;">type</span><span style="color: #d4d4d4;">/</span><span style="color: #9cdcfe;">article</span><span style="color: #cccccc;"> </span></div></div>
+ *
+ * ... which we treat as plain text.
+ */
+export const getContentFromClipboard = (
+  event: ClipboardEvent,
+):
+  | { type: "TEXT"; content: string }
+  | { type: "HTML"; content: string }
+  | undefined => {
+  const maybeHtml = event.clipboardData?.getData("text/html");
+  if (maybeHtml) {
+    const element = document.createElement("div");
+    element.innerHTML = maybeHtml;
+    const isNativeProseMirrorContent = !!element.querySelector("query-str");
+    if (isNativeProseMirrorContent) {
+      return { type: "HTML", content: element.innerText };
+    }
+
+    return { type: "TEXT", content: element.innerText };
+  }
+
+  const maybeText = event.clipboardData?.getData("text/plain");
+
+  if (!maybeText) {
+    return;
+  }
+
+  return {
+    type: "TEXT",
+    content: maybeText,
+  };
+};

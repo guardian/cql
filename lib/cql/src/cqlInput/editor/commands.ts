@@ -4,6 +4,7 @@ import { selectAll } from "prosemirror-commands";
 import { createParser } from "../../lang/Cql";
 import { queryToProseMirrorDoc } from "./utils";
 import { findDiffEndForContent, findDiffStartForContent } from "./diff";
+import { Node } from "prosemirror-model";
 
 export const startOfLine: Command = (state, dispatch) => {
   const startSelection = Selection.atStart(state.doc);
@@ -50,9 +51,17 @@ export const maybeSelectValue: Command = (state, dispatch) => {
  */
 export const applyQueryStr =
   (query: string, parser: ReturnType<typeof createParser>): Command =>
-  (state, dispatch) => {
-    const newDoc = queryToProseMirrorDoc(query, parser);
+  (state, dispatch) =>
+    mergeDocs(queryToProseMirrorDoc(query, parser))(state, dispatch);
 
+/**
+ * Update the editor state with the document. Diffs to ensure that the update
+ * touches as little of the document as possible, to help preserve selection
+ * state.
+ */
+export const mergeDocs =
+  (newDoc: Node): Command =>
+  (state, dispatch) => {
     const start = findDiffStartForContent(newDoc.content, state.doc.content);
     if (start !== null) {
       // We can assert here because we know that the docs differ

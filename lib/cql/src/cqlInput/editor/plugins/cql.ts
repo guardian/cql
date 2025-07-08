@@ -23,6 +23,8 @@ import {
   isChipSelected,
   isSelectionWithinNodesOfType,
   removeChipAtSelectionIfEmpty,
+  queryToProseMirrorDoc,
+  getContentFromClipboard,
 } from "../utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "../../popover/TypeaheadPopover";
@@ -35,9 +37,8 @@ import {
   IS_READ_ONLY,
   IS_SELECTED,
   POLARITY,
-  schema,
 } from "../schema";
-import { DOMSerializer, Fragment, Node } from "prosemirror-model";
+import { Node } from "prosemirror-model";
 import { ErrorPopover } from "../../popover/ErrorPopover";
 import { CqlConfig } from "../../CqlInput";
 import {
@@ -50,6 +51,7 @@ import { CqlQuery } from "../../../lang/ast";
 import { createParser } from "../../../lang/Cql";
 import { Typeahead } from "../../../lang/typeahead";
 import { defaultPopoverRenderer } from "../../popover/components/defaultPopoverRenderer";
+import { mergeDocs } from "../commands";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -147,7 +149,6 @@ export const createCqlPlugin = ({
 
     const result = parser(queryBeforeParse);
     const { tokens, queryAst, error, mapping } = mapResult(result);
-
 
     const newDoc = tokensToDoc(tokens);
     const queryAfterParse = docToCqlStr(newDoc); // The document may have changed as a result of the parse.
@@ -620,22 +621,37 @@ export const createCqlPlugin = ({
           }
         }
       },
+      /**
+       * Handle pasting text manually, to ensure that selection state is
+       * preserved. Without this, expanding pasted string content into chip keys
+       * and values causes us to lose selection state.
+       */
+      handlePaste(view, event) {
+        const maybeContent = getContentFromClipboard(event);
+
+        if (!maybeContent || maybeContent?.type === "HTML") {
+          return false;
+        }
+
+        // Create the document that pasting would produce
+        const docToInsert = queryToProseMirrorDoc(maybeContent.content, parser);
+        const { tr } = view.state;
+        const { from, to } = view.state.selection;
+        const newState = view.state.apply(
+          tr.replaceRange(from, to, docToInsert.slice(0)),
+        );
+
+        // Merge it with the current document, producing a minimal diff to
+        // preserve selection state
+        mergeDocs(newState.doc)(view.state, view.dispatch);
+
+        return true;
+      },
       // Serialise outgoing content to a CQL string for portability in both plain text and html
       clipboardTextSerializer(content) {
         const node = doc.create(undefined, content.content);
-        const queryStr = docToCqlStr(node);
-        return queryStr;
+        return docToCqlStr(node);
       },
-      clipboardSerializer: {
-        serializeFragment: (fragment: Fragment) => {
-          const node = doc.create(undefined, fragment);
-          const queryStr = docToCqlStr(node);
-          const plainTextNode = DOMSerializer.fromSchema(schema).serializeNode(
-            schema.text(queryStr),
-          );
-          return plainTextNode;
-        },
-      } as DOMSerializer, // Cast because docs specify only serializeFragment is needed
     },
     view(view) {
       typeaheadPopover = new TypeaheadPopover(

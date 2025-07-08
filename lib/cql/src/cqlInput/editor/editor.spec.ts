@@ -153,4 +153,34 @@ describe("updateEditorViewWithQueryStr", () => {
 
     expect(docToCqlStrWithSelection(editorView.state)).toEqual("+tag:^$ ");
   });
+
+  const pasteContent = (view: EditorView, payload: string, type: string) => {
+    const clipboardData = new DataTransfer();
+    clipboardData.setData(type, payload);
+    const event = new ClipboardEvent("paste", { clipboardData });
+
+    view.pasteText(payload, event);
+  };
+
+  it(`should preserve the selection state on paste for data type "text/plain"`, () => {
+    const { editorView } = createEditorFromInitialState("text ");
+    const contentToPaste = "+tag:example";
+
+    pasteContent(editorView, contentToPaste, "text/plain");
+
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual(
+      "text +tag:example ^$",
+    );
+  });
+
+  it(`should preserve the selection state on paste for data type "text/html"`, () => {
+    const { editorView } = createEditorFromInitialState("text ");
+    const contentToPaste = "+tag:example";
+
+    pasteContent(editorView, contentToPaste, "text/html");
+
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual(
+      "text +tag:example ^$",
+    );
+  });
 });
