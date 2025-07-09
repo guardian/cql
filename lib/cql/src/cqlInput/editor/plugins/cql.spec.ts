@@ -432,6 +432,20 @@ describe("plugin", () => {
           await waitFor('example tag:"Tag with space"');
         });
 
+        it("applies the given key over another key correctly when it contains whitespace", async () => {
+          const queryStr = `example +tag:"Tag with spac"`;
+          const { container, waitFor, moveCaretToQueryPos } =
+            createCqlEditor(queryStr);
+          await moveCaretToQueryPos(queryStr.length - 2);
+
+          await selectPopoverOptionWithClick(
+            container,
+            "Tag with a space in it",
+          );
+
+          await waitFor('example tag:"Tag with space"');
+        });
+
         it("applies a suggestion correctly after adding a field without a prefix", async () => {
           const { editor, container, waitFor } = createCqlEditor();
 
