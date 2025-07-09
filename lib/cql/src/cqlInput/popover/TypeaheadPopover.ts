@@ -41,20 +41,8 @@ export type PopoverRendererArgs = {
 };
 export type RenderPopoverContent = (props: PopoverRendererArgs) => void;
 
-const noopActionHandler = () => {
-  console.warn(
-    "[TypeaheadPopover]: No action handler has been registered by the popover renderer",
-  );
-  return undefined;
-};
-
-const noopUpdateRendererState = () => {
-  console.warn(
-    "[TypeaheadPopover]: No update state callback has been registered by the popover renderer",
-  );
-  return undefined;
-};
-
+const noopActionHandler = () => undefined;
+const noopUpdateRendererState = () => undefined;
 export class TypeaheadPopover extends Popover {
   private delegatedHandleAction: ActionHandler = noopActionHandler;
   private updateRendererState: (state: PopoverRendererState) => void =
