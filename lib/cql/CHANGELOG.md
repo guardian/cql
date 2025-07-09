@@ -1,5 +1,20 @@
 # @guardian/cql
 
+## 1.0.0
+
+### Major Changes
+
+- 20227b8: Make field prefix generally optional, normalising output to remove it by default.
+
+  This ensures instantiating chips with `+` is still possible, while keeping the syntax of the output cleaner.
+
+  This is a breaking change, as it changes the output of query string.
+
+### Patch Changes
+
+- b533b58: Correct mappings to ensure that suggestions are correctly applied when chip values are quoted
+- eb1651f: Preserve selection on paste
+
 ## 0.1.10
 
 ### Patch Changes
