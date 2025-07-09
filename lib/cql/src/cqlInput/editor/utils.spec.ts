@@ -33,9 +33,9 @@ describe("utils", () => {
     // node.check() will throw if the node content is not valid
     node.check();
 
-    return mappedTokens.map(({ from, to, tokenType }) => {
-      return tokenType !== "EOF" ? node.textBetween(from, to) : "";
-    });
+    return mappedTokens.map(({ from, to, tokenType }) =>
+      tokenType !== "EOF" ? node.textBetween(from, to) : "",
+    );
   };
 
   describe("tokensToNode", () => {

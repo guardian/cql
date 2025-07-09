@@ -44,8 +44,10 @@ export const getDebugTokenHTML = (tokens: Token[]) => {
       .fill(undefined)
       .map((_, index) => {
         const lexemeChar = token.lexeme[index];
-        const literalOffset =
-          token.literal?.length === token.lexeme.length ? 0 : 1;
+        const literalOffset = token.lexeme.indexOf(
+          token.literal?.slice(0, 1) ?? "",
+        );
+
         const literalChar = token.literal?.[index - literalOffset];
         return `
         <div class="CqlDebug__queryBox">
