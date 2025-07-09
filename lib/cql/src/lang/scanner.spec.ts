@@ -117,6 +117,14 @@ describe("scanner", () => {
       ]);
     });
 
+    it("should tokenise unprefixed key value pairs for fields when the key value contains non-word characters", () => {
+      assertTokens('@tag.tag:"tone/news"', [
+        new Token(TokenType.CHIP_KEY_POSITIVE, "@tag.tag", "@tag.tag", 0, 7),
+        new Token(TokenType.CHIP_VALUE, ':"tone/news"', "tone/news", 8, 19),
+        eofToken(20),
+      ]);
+    });
+
     it("should yield a query field key when a search key is incomplete", () => {
       assertTokens("example +", [
         unquotedStringToken("example"),

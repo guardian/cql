@@ -1,6 +1,6 @@
 import { mergeDeep } from "../utils/merge";
 import { Token, TokenType } from "./token";
-import { hasLetterOrDigit, hasWhitespace } from "./utils";
+import { hasUnreservedChar, hasWhitespace } from "./utils";
 
 export type ScannerSettings = {
   groups: boolean;
@@ -119,7 +119,7 @@ export class Scanner {
    * or an unquoted string.
    */
   private handleUnquotedChars = () => {
-    while (hasLetterOrDigit(this.peek())) {
+    while (hasUnreservedChar(this.peek()) && !this.isAtEnd()) {
       this.advance();
     }
 
