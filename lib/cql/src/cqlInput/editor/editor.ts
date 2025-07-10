@@ -1,5 +1,5 @@
 import { EditorView } from "prosemirror-view";
-import { EditorState, Plugin } from "prosemirror-state";
+import { Command, EditorState, Plugin } from "prosemirror-state";
 import { schema } from "./schema";
 import { baseKeymap } from "prosemirror-commands";
 import { undo, redo, history } from "prosemirror-history";
@@ -27,6 +27,18 @@ export const createEditorView = ({
   placeholder?: string;
   parser: ReturnType<typeof createParser>;
 }) => {
+  const isMac = window.navigator.platform.toLowerCase().indexOf("mac") !== -1;
+  const platformKeys: {
+    [key: string]: Command;
+  } = isMac
+    ? {
+        "Mod-ArrowLeft": startOfLine,
+        "Ctrl-ArrowLeft": startOfLine,
+        "Mod-ArrowRight": endOfLine,
+        "Ctrl-ArrowRight": endOfLine,
+      }
+    : {};
+
   const editorView = new EditorView(mountEl, {
     state: EditorState.create({
       doc: queryToProseMirrorDoc(initialValue, parser),
@@ -36,15 +48,12 @@ export const createEditorView = ({
         ...(placeholder ? [createPlaceholderPlugin(placeholder)] : []),
         keymap({
           ...baseKeymap,
+          ...platformKeys,
           "Mod-z": undo,
           "Mod-Shift-z": redo,
           "Mod-a": maybeSelectValue,
-          "Mod-ArrowLeft": startOfLine,
-          "Ctrl-ArrowLeft": startOfLine,
           "Ctrl-a": startOfLine,
           Home: startOfLine,
-          "Mod-ArrowRight": endOfLine,
-          "Ctrl-ArrowRight": endOfLine,
           "Ctrl-e": endOfLine,
           End: endOfLine,
         }),
