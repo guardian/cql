@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 1.1.0
+
+### Minor Changes
+
+- 0322be7: Permit all unreserved characters in chip keys
+
 ## 1.0.0
 
 ### Major Changes
