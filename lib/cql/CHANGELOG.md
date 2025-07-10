@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 1.2.0
+
+### Minor Changes
+
+- 84b424f: Adjust keymapping to account for cross-platform behaviour
+
 ## 1.1.0
 
 ### Minor Changes
