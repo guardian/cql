@@ -37,8 +37,6 @@ export const createCqlInput = (
   typeahead: Typeahead,
   config: CqlConfig = {
     syntaxHighlighting: true,
-    theme: {},
-    lang: {},
   },
 ) => {
   class CqlInput extends HTMLElement {
