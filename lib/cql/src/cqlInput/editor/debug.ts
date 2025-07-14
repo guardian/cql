@@ -10,6 +10,7 @@ import {
   CqlStr,
 } from "../../lang/ast";
 import { IS_READ_ONLY } from "./schema";
+import { Selection } from "prosemirror-state";
 
 // Debugging and visualisation utilities.
 
@@ -31,7 +32,11 @@ export const logNode = (doc: Node) => {
   });
 };
 
-export const getDebugTokenHTML = (tokens: Token[]) => {
+export const getDebugTokenHTML = (
+  tokens: Token[],
+  mapping: Mapping,
+  selection: Selection,
+) => {
   let html = `
     <div class="CqlDebug__queryDiagram CqlDebug__queryDiagramToken">
       <div class="CqlDebug__queryDiagramLabel">
@@ -39,6 +44,10 @@ export const getDebugTokenHTML = (tokens: Token[]) => {
         <div>Literal</div>
       </div>
       <div class="CqlDebug__queryDiagramContent">`;
+  const invertedMapping = mapping.invert();
+  const mappedFrom = invertedMapping.map(selection.from);
+  const mappedTo = invertedMapping.map(selection.to);
+
   tokens.forEach((token, index) => {
     html += `${Array(Math.max(1, token.lexeme.length))
       .fill(undefined)
@@ -51,6 +60,7 @@ export const getDebugTokenHTML = (tokens: Token[]) => {
         const literalChar = token.literal?.[index - literalOffset];
         return `
         <div class="CqlDebug__queryBox">
+          ${getSelectionHTML(mappedFrom, mappedTo, token.start + index, true)}
           <div class="CqlDebug__queryIndex">${token.start + index}</div>
           ${
             lexemeChar !== undefined
@@ -105,6 +115,7 @@ export const getDebugMappingHTML = (
   query: string,
   mapping: Mapping,
   doc: Node,
+  selection: Selection,
 ) => {
   const queryPosMap: Record<string, { char: string; originalPos: number }[]> =
     {};
@@ -158,13 +169,12 @@ export const getDebugMappingHTML = (
       ([pos, { char, node }]) =>
         `
                 <div class="CqlDebug__queryBox CqlDebug__queryBox--offset" data-pos="${pos}">
+                    ${getSelectionHTML(selection.from, selection.to, parseInt(pos))}
                     <div class="CqlDebug__queryIndex">${pos}</div>
                     ${(queryPosMap[pos] ?? []).map(
                       ({ char }) =>
                         `<div class="CqlDebug__originalChar">${char}</div>`,
                     )}
-
-
                     ${
                       char?.length === 1
                         ? `<div class="CqlDebug__nodeChar">${char}</div>`
@@ -185,6 +195,11 @@ export const getDebugMappingHTML = (
 
   return nodeDiagram;
 };
+
+const getSelectionHTML = (from: number, to: number, pos: number, applyOffset: boolean = false) =>
+  from <= pos && to >= pos
+    ? `<div class="CqlDebug__selection ${from === pos || to === pos ? "CqlDebug__selection-edge" : ""} ${applyOffset ? "CqlDebug__selection-offset" : ""}"></div>`
+    : "";
 
 export const getDebugASTHTML = (query: CqlQuery) => {
   return `<div class="tree--container">

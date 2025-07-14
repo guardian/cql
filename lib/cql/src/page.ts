@@ -101,22 +101,6 @@ if (window.CQL_VIEW) {
   applyDevTools(window.CQL_VIEW);
 }
 
-const endpointInput = document.getElementById("endpoint") as HTMLInputElement;
-endpointInput?.addEventListener("input", (event) => {
-  const endpoint = (event.target as HTMLInputElement).value;
-  setUrlParam("endpoint", endpoint);
-  typeaheadHelpersCapi.setBaseUrl(endpoint);
-});
-endpointInput.value = initialEndpointCapi;
-
-// Listen to URL changes and apply them to the URL
-window.addEventListener("popstate", function () {
-  const params = new URLSearchParams(window.location.search);
-  const endpoint = params.get("endpoint");
-
-  endpointInput.value = endpoint ?? "";
-});
-
 const programmaticInput = document.getElementById("programmatic-input");
 programmaticInput?.addEventListener("input", (e) => {
   cqlInput.setAttribute("value", (e.target as HTMLInputElement).value ?? "");

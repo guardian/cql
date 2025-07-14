@@ -173,15 +173,15 @@ export const createCqlPlugin = ({
             <p>Original query: </p>
             ${getOriginalQueryHTML(queryAfterParse)}
             <p>Tokenises to:</p>
-            ${getDebugTokenHTML(result.tokens)}
+            ${getDebugTokenHTML(result.tokens, mapping, newSelection)}
+            <p>Maps to nodes: </p>
+            ${getDebugMappingHTML(queryAfterParse, mapping, tr.doc, newSelection)}
             ${
               result.queryAst
                 ? `<p>AST: </p>
             ${getDebugASTHTML(result.queryAst)}`
                 : ""
             }
-            <p>Maps to nodes: </p>
-            ${getDebugMappingHTML(queryAfterParse, mapping, newDoc)}
           `;
     }
 

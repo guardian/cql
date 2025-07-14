@@ -202,6 +202,21 @@
         background-color: rgb(74, 105, 120);
       }
 
+      .CqlDebug__selection {
+        background-color: rgba(130, 82, 130, 0.5);
+        position: absolute;
+        top: -1rem;
+        left: 0;
+      }
+
+      .CqlDebug__selection.CqlDebug__selection-edge {
+        background-color: rgb(130, 82, 130);
+      }
+
+      .CqlDebug__selection.CqlDebug__selection-offset {
+        left: -50%;
+      }
+
       .CqlDebug__nodeChar {
         background-color: rgb(130, 82, 82);
         position: absolute;
@@ -440,7 +455,11 @@
         >
       </p>
       <div>
-        <input id="programmatic-input" type="text" placeholder="Edit the search field programmatically"/>
+        <input
+          id="programmatic-input"
+          type="text"
+          placeholder="Edit the search field programmatically"
+        />
       </div>
       <div id="cql-sandbox" class="CqlSandbox">
         <div class="CqlSandbox__query-results">
@@ -452,14 +471,6 @@
             <h2>API query</h2>
             <div id="query"></div>
           </div>
-        </div>
-        <h2>Config</h2>
-        <div class="CqlSandbox__input-container">
-          <input
-            type="text"
-            id="endpoint"
-            placeholder="Add a CQL language server endpoint"
-          />
         </div>
       </div>
     </div>
