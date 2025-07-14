@@ -9,12 +9,16 @@ import {
 import { POLARITY, schema } from "./schema";
 import { builders } from "prosemirror-test-builder";
 import { createParser } from "../../lang/Cql";
+import { ScannerSettings } from "../../lang/scanner";
 
 describe("utils", () => {
   const { chip, chipKey, chipValue, doc, queryStr } = builders(schema);
 
-  const queryToProseMirrorTokens = (query: string) => {
-    const result = createParser()(query);
+  const queryToProseMirrorTokens = (
+    query: string,
+    settings: Partial<ScannerSettings> = {},
+  ) => {
+    const result = createParser(settings)(query);
     const { tokens } = mapResult(result);
     return tokens;
   };
@@ -26,7 +30,7 @@ describe("utils", () => {
   const getTextFromTokenRanges = async (query: string) => {
     const tokens = await queryToProseMirrorTokens(query);
     const mappedTokens = mapTokens(tokens);
-    const node = tokensToDoc(tokens);
+    const { node } = tokensToDoc(tokens);
 
     // Implicitly check that the document created by these functions conforms to
     // the schema, so we know tests downstream are dealing with correct data -
@@ -41,7 +45,7 @@ describe("utils", () => {
   describe("tokensToNode", () => {
     it("should create a node from a list of tokens", async () => {
       const tokens = await queryToProseMirrorTokens("text +key:value text");
-      const node = tokensToDoc(tokens);
+      const { node } = tokensToDoc(tokens);
 
       const expected = doc(
         queryStr("text"),
@@ -54,7 +58,7 @@ describe("utils", () => {
 
     it("should insert a queryStr node if the query starts with a KV pair", async () => {
       const tokens = await queryToProseMirrorTokens("+key:value");
-      const node = tokensToDoc(tokens);
+      const { node } = tokensToDoc(tokens);
 
       const expected = doc(
         queryStr(),
@@ -67,7 +71,7 @@ describe("utils", () => {
 
     it("should insert a queryStr node if the query starts with a KV pair", async () => {
       const tokens = await queryToProseMirrorTokens(":value");
-      const node = tokensToDoc(tokens);
+      const { node } = tokensToDoc(tokens);
 
       const expected = doc(queryStr(":value"));
 
@@ -76,7 +80,7 @@ describe("utils", () => {
 
     it("should preserve whitespace at the start of the document", async () => {
       const tokens = await queryToProseMirrorTokens(" this AND  +key");
-      const node = tokensToDoc(tokens);
+      const { node } = tokensToDoc(tokens);
 
       const expected = doc(
         queryStr(" this AND "),
@@ -89,7 +93,7 @@ describe("utils", () => {
 
     it("should preserve whitespace at end of non-chip tokens", async () => {
       const tokens = await queryToProseMirrorTokens("this AND  +key");
-      const node = tokensToDoc(tokens);
+      const { node } = tokensToDoc(tokens);
 
       const expected = doc(
         queryStr("this AND "),
@@ -102,7 +106,7 @@ describe("utils", () => {
 
     it("should preserve whitespace at end of query", async () => {
       const tokens = await queryToProseMirrorTokens("example   ");
-      const node = tokensToDoc(tokens);
+      const { node } = tokensToDoc(tokens);
 
       const expected = doc(queryStr("example   "));
 
@@ -113,7 +117,7 @@ describe("utils", () => {
       const tokens = await queryToProseMirrorTokens(
         'example +key:"1 2" example',
       );
-      const node = tokensToDoc(tokens);
+      const { node } = tokensToDoc(tokens);
 
       const expected = doc(
         queryStr("example"),
@@ -126,7 +130,7 @@ describe("utils", () => {
 
     it("should create chipWrappers for partial tags that precede existing tags", async () => {
       const tokens = await queryToProseMirrorTokens("+ +tag");
-      const node = tokensToDoc(tokens);
+      const { node } = tokensToDoc(tokens);
 
       const expected = doc(
         queryStr(),
@@ -137,6 +141,25 @@ describe("utils", () => {
       );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
+    });
+
+    it("should expand shortcuts", async () => {
+      const tokens = await queryToProseMirrorTokens("#", {
+        shortcuts: { "#": "tag" },
+      });
+      const { node, tokenMapping } = tokensToDoc(tokens, { "#": "tag" });
+
+      const expected = doc(
+        queryStr(),
+        chip(chipKey("tag"), chipValue()),
+        queryStr(),
+      );
+
+      console.log({ tokenMapping });
+
+      expect(node.toJSON()).toEqual(expected.toJSON());
+      expect(tokenMapping.map(2)).toBe(5);
+      expect(docToCqlStr(node)).toBe("+tag: ");
     });
   });
 

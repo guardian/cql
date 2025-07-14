@@ -276,7 +276,7 @@ describe("scanner", () => {
         assertTokens(
           "#tone/news",
           [
-            new Token(TokenType.CHIP_KEY_POSITIVE, "#", "tag", 0, 0),
+            new Token(TokenType.CHIP_KEY_POSITIVE, "#", "#", 0, 0),
             new Token(TokenType.CHIP_VALUE, "#tone/news", "tone/news", 0, 9),
             eofToken(10),
           ],

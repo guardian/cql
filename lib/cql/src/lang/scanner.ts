@@ -88,7 +88,7 @@ export class Scanner {
       default: {
         const current = this.peek(-1);
         if (this.settings.shortcuts[current]) {
-          this.addShortcut(this.settings.shortcuts[current]);
+          this.addShortcut(current);
           return;
         } else {
           this.handleUnquotedChars();

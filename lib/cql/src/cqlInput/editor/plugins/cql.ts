@@ -1,12 +1,13 @@
 import { DecorationSet } from "prosemirror-view";
 import {
   AllSelection,
+  EditorState,
   Plugin,
   PluginKey,
+  TextSelection,
   Transaction,
 } from "prosemirror-state";
 import {
-  maybeMoveSelectionIntoChipKey,
   docToCqlStr,
   tokensToDecorations,
   tokensToDoc,
@@ -14,7 +15,6 @@ import {
   applyDeleteIntent,
   errorToDecoration,
   mapResult,
-  queryHasChanged,
   toMappedSuggestions,
   applyChipLifecycleRules,
   getNodeTypeAtSelection,
@@ -25,6 +25,8 @@ import {
   removeChipAtSelectionIfEmpty,
   queryToProseMirrorDoc,
   getContentFromClipboard,
+  queryHasChanged,
+  maybeMoveSelectionIntoChipKey,
 } from "../utils";
 import { Mapping } from "prosemirror-transform";
 import { TypeaheadPopover } from "../../popover/TypeaheadPopover";
@@ -106,6 +108,7 @@ export const createCqlPlugin = ({
     syntaxHighlighting,
     debugEl,
     renderPopoverContent = defaultPopoverRenderer,
+    lang,
   },
   parser,
 }: {
@@ -143,15 +146,14 @@ export const createCqlPlugin = ({
    *
    * Side-effects: mutates the given transaction, and re-applies debug UI if provided.
    */
-  const applyQueryToTr = (tr: Transaction) => {
+  const applyQueryToTr = (tr: Transaction, prevState: EditorState) => {
     const originalDoc = tr.doc;
+    const originalMapping = cqlPluginKey.getState(prevState)!.mapping;
     const queryBeforeParse = docToCqlStr(originalDoc);
 
     const result = parser(queryBeforeParse);
     const { tokens, queryAst, error, mapping } = mapResult(result);
-
-    const newDoc = tokensToDoc(tokens);
-    const queryAfterParse = docToCqlStr(newDoc); // The document may have changed as a result of the parse.
+    const { node: newDoc, tokenMapping } = tokensToDoc(tokens, lang?.shortcuts);
 
     if (debugASTContainer) {
       debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
@@ -168,14 +170,43 @@ export const createCqlPlugin = ({
       )}</div>`;
     }
 
+    if (!newDoc.eq(tr.doc)) {
+      const docSelection = new AllSelection(tr.doc);
+      const originalSelection = tr.selection;
+
+      tr.replaceWith(docSelection.from, docSelection.to, newDoc);
+
+      if (tokenMapping.maps.length) {
+        const mapToTokens = originalMapping.invert();
+
+        const tokenFrom = mapToTokens.map(originalSelection.from);
+        const tokenTo = mapToTokens.map(originalSelection.to);
+
+        const newFrom = mapping.map(tokenMapping.map(tokenFrom));
+        const newTo = mapping.map(tokenMapping.map(tokenTo));
+
+        tr.setSelection(
+          TextSelection.between(tr.doc.resolve(newFrom), tr.doc.resolve(newTo)),
+        );
+      } else {
+        tr.setSelection(
+          maybeMoveSelectionIntoChipKey({
+            selection: originalSelection,
+            prevDoc: originalDoc,
+            currentDoc: tr.doc,
+          }),
+        );
+      }
+    }
+
     if (debugMappingContainer) {
       debugMappingContainer.innerHTML = `
             <p>Original query: </p>
-            ${getOriginalQueryHTML(queryAfterParse)}
+            ${getOriginalQueryHTML(queryBeforeParse)}
             <p>Tokenises to:</p>
-            ${getDebugTokenHTML(result.tokens, mapping, newSelection)}
+            ${getDebugTokenHTML(result.tokens, mapping, tr.selection)}
             <p>Maps to nodes: </p>
-            ${getDebugMappingHTML(queryAfterParse, mapping, tr.doc, newSelection)}
+            ${getDebugMappingHTML(queryBeforeParse, mapping, tr.doc, tr.selection)}
             ${
               result.queryAst
                 ? `<p>AST: </p>
@@ -183,19 +214,6 @@ export const createCqlPlugin = ({
                 : ""
             }
           `;
-    }
-
-    const docSelection = new AllSelection(tr.doc);
-
-    if (!newDoc.eq(tr.doc)) {
-      const originalSelection = tr.selection;
-      tr.replaceWith(docSelection.from, docSelection.to, newDoc).setSelection(
-        maybeMoveSelectionIntoChipKey({
-          selection: originalSelection,
-          prevDoc: originalDoc,
-          currentDoc: tr.doc,
-        }),
-      );
     }
 
     tr.setMeta(ACTION_NEW_STATE, {
@@ -316,7 +334,7 @@ export const createCqlPlugin = ({
       const maybeQueries = queryHasChanged(oldState.doc, newState.doc);
 
       if (maybeQueries) {
-        const { tr: newTr } = applyQueryToTr(newState.tr);
+        const { tr: newTr } = applyQueryToTr(newState.tr, newState);
         tr = newTr;
       }
 
@@ -665,7 +683,7 @@ export const createCqlPlugin = ({
       errorPopover = new ErrorPopover(view, errorEl, jsonDebugContainer);
 
       // Set up initial document with parsed query
-      const { tr, queryAst } = applyQueryToTr(view.state.tr);
+      const { tr, queryAst } = applyQueryToTr(view.state.tr, view.state);
       view.dispatch(tr);
 
       onChange({

@@ -71,7 +71,7 @@ const getCqlFieldKeyRange = (
   // chipKey begin (-1)
   // chip begin (-1)
   const prefixOffset = hasPrefix ? 1 : 0;
-  return [from - 1, -2 + prefixOffset, 0];
+  return [from, -2 + prefixOffset, 0];
 };
 
 const getQueryValueRanges = (
@@ -170,7 +170,14 @@ export const createProseMirrorTokenToDocumentMap = (
             ),
           );
         }
+        case "EOF": {
+          return accRanges;
+        }
         default: {
+          console.log({
+            token: { tokenType, from, to, lexeme },
+            queryStrRanges: getQueryStrRanges(from, to),
+          });
           return accRanges.concat(...getQueryStrRanges(from, to));
         }
       }
@@ -197,13 +204,28 @@ export const mapTokens = (tokens: ProseMirrorToken[]): ProseMirrorToken[] => {
 /**
  * Create a ProseMirror document from an array of ProseMirrorTokens.
  */
-export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
-  const nodes = joinQueryStrTokens(_tokens).reduce<Node[]>(
-    (acc, token, index, tokens): Node[] => {
+export const tokensToDoc = (
+  _tokens: ProseMirrorToken[],
+  shortcuts: Record<string, string> = {},
+): { node: Node; tokenMapping: Mapping } => {
+  const { nodes, tokenMapping } = joinQueryStrTokens(_tokens).reduce<{
+    nodes: Node[];
+    tokenMapping: Mapping;
+  }>(
+    (
+      { nodes, tokenMapping },
+      token,
+      index,
+      tokens,
+    ): {
+      nodes: Node[];
+      tokenMapping: Mapping;
+    } => {
       switch (token.tokenType) {
         case TokenType.CHIP_KEY_POSITIVE:
         case TokenType.CHIP_KEY_NEGATIVE: {
-          const tokenKey = token.literal;
+          const shortcut = shortcuts[token.literal ?? ""];
+          const tokenKey = shortcut ?? token.literal;
           const nextToken = tokens[index + 1];
           const tokenValue =
             nextToken.tokenType === "CHIP_VALUE" ? nextToken.literal : "";
@@ -211,30 +233,43 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           const isPrecededByChip =
             previousToken?.tokenType === "CHIP_VALUE" ||
             isChipKey(previousToken?.tokenType);
-          return acc.concat(
-            // Insert a string node if two chips are adjacent
-            ...(isPrecededByChip ? [queryStr.create()] : []),
-            chip.create(
-              {
-                [POLARITY]:
-                  token.tokenType === TokenType.CHIP_KEY_POSITIVE ? "+" : "-",
-              },
-              [
-                chipKey.create(
-                  undefined,
-                  tokenKey ? schema.text(tokenKey) : undefined,
-                ),
-                chipValue.create(
-                  undefined,
-                  tokenValue ? schema.text(tokenValue) : undefined,
-                ),
-              ],
+
+          if (shortcut) {
+            tokenMapping.appendMap(
+              new StepMap([token.from, 0, shortcut.length]),
+            );
+          } else if (!token.lexeme.startsWith("+")) {
+            console.log("++");
+            tokenMapping.appendMap(new StepMap([token.from, 1, 0]));
+          }
+
+          return {
+            nodes: nodes.concat(
+              // Insert a string node if two chips are adjacent
+              ...(isPrecededByChip ? [queryStr.create()] : []),
+              chip.create(
+                {
+                  [POLARITY]:
+                    token.tokenType === TokenType.CHIP_KEY_POSITIVE ? "+" : "-",
+                },
+                [
+                  chipKey.create(
+                    undefined,
+                    tokenKey ? schema.text(tokenKey) : undefined,
+                  ),
+                  chipValue.create(
+                    undefined,
+                    tokenValue ? schema.text(tokenValue) : undefined,
+                  ),
+                ],
+              ),
             ),
-          );
+            tokenMapping,
+          };
         }
         case "EOF": {
           const previousToken = tokens[index - 1];
-          const previousNode = acc[acc.length - 1];
+          const previousNode = nodes[nodes.length - 1];
           if (
             previousToken?.to < token.from &&
             previousNode.type === queryStr
@@ -242,22 +277,25 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             // If there is a gap between the previous queryStr token and EOF,
             // there is whitespace at the end of the query – preserve one char
             // to allow users to continue the query
-            return acc
-              .slice(0, acc.length - 1)
-              .concat(
-                queryStr.create(
-                  undefined,
-                  schema.text(previousNode.textContent + " "),
+            return {
+              nodes: nodes
+                .slice(0, nodes.length - 1)
+                .concat(
+                  queryStr.create(
+                    undefined,
+                    schema.text(previousNode.textContent + " "),
+                  ),
                 ),
-              );
+              tokenMapping,
+            };
           }
 
           if (previousNode?.type !== queryStr) {
             // Always end with a queryStr node
-            return acc.concat(queryStr.create());
+            return { nodes: nodes.concat(queryStr.create()), tokenMapping };
           }
 
-          return acc;
+          return { nodes, tokenMapping };
         }
         // All other tokens become queryStr
         default: {
@@ -269,7 +307,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             token.tokenType === "CHIP_VALUE" &&
             isChipKey(previousToken?.tokenType)
           ) {
-            return acc;
+            return { nodes, tokenMapping };
           }
 
           // If the next token is further ahead of this token by more than one
@@ -287,40 +325,51 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           const prevToken = tokens[index - 1];
           const leadingWhitespace = " ".repeat(prevToken ? 0 : token.from);
 
-          const previousNode = acc[acc.length - 1];
+          const previousNode = nodes[nodes.length - 1];
           if (previousNode?.type === queryStr) {
             // Join consecutive queryStr nodes
-            return acc
-              .slice(0, acc.length - 1)
-              .concat(
-                queryStr.create(
-                  undefined,
-                  schema.text(
-                    leadingWhitespace +
-                      previousNode.textContent +
-                      token.lexeme +
-                      trailingWhitespace,
+            return {
+              nodes: nodes
+                .slice(0, nodes.length - 1)
+                .concat(
+                  queryStr.create(
+                    undefined,
+                    schema.text(
+                      leadingWhitespace +
+                        previousNode.textContent +
+                        token.lexeme +
+                        trailingWhitespace,
+                    ),
                   ),
                 ),
-              );
+              tokenMapping,
+            };
           }
 
-          return acc.concat(
-            queryStr.create(
-              undefined,
-              schema.text(
-                leadingWhitespace + token.lexeme + trailingWhitespace,
+          return {
+            nodes: nodes.concat(
+              queryStr.create(
+                undefined,
+                schema.text(
+                  leadingWhitespace + token.lexeme + trailingWhitespace,
+                ),
               ),
             ),
-          );
+            tokenMapping,
+          };
         }
       }
     },
     // Our document always starts with an empty queryStr node
-    [queryStr.create()],
+    { nodes: [queryStr.create()], tokenMapping: new Mapping() },
   );
 
-  return doc.create(undefined, nodes);
+  const node = doc.create(undefined, nodes);
+
+  return {
+    node,
+    tokenMapping,
+  };
 };
 
 const tokensThatAreNotDecorated = ["CHIP_KEY", "CHIP_VALUE", "EOF"];
@@ -399,7 +448,6 @@ const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
  */
 export const maybeMoveSelectionIntoChipKey = ({
   selection,
-  prevDoc,
   currentDoc,
 }: {
   selection: Selection;
@@ -415,26 +463,19 @@ export const maybeMoveSelectionIntoChipKey = ({
   }
 
   let nodeTypeToMoveTo: NodeType | undefined;
-  if (
-    selection.from === selection.to &&
-    selection.$from.node().type === queryStr &&
-    prevDoc.textBetween(selection.from - 1, selection.from) === ":"
-  ) {
-    nodeTypeToMoveTo = chipValue;
-  } else {
-    const $from = currentDoc.resolve(selection.from);
-    const nodeAtCurrentSelection = $from.node().type;
-    const nodeTypeAfterCurrentSelection = $from.nodeAfter?.type;
-    const shouldWrapSelectionInKey =
-      // Is the selection just before the start of a chip?
-      nodeAtCurrentSelection === chip || nodeTypeAfterCurrentSelection === chip;
-    if (shouldWrapSelectionInKey) {
-      nodeTypeToMoveTo = chipKey;
-    }
+
+  const $from = currentDoc.resolve(selection.from);
+  const nodeAtCurrentSelection = $from.node().type;
+  const nodeTypeAfterCurrentSelection = $from.nodeAfter?.type;
+  const shouldWrapSelectionInKey =
+    // Is the selection just before the start of a chip?
+    nodeAtCurrentSelection === chip || nodeTypeAfterCurrentSelection === chip;
+  if (shouldWrapSelectionInKey) {
+    nodeTypeToMoveTo = chipKey;
   }
 
-  if (nodeTypeToMoveTo) {
-    const nodePos = findNodeAt(selection.from, currentDoc, nodeTypeToMoveTo);
+  if (shouldWrapSelectionInKey) {
+    const nodePos = findNodeAt(selection.from, currentDoc, chipKey);
 
     if (nodePos !== -1) {
       const $pos = currentDoc.resolve(nodePos);
@@ -777,7 +818,7 @@ export const queryToProseMirrorDoc = (
 ) => {
   const result = parser(query);
   const { tokens } = mapResult(result);
-  return tokensToDoc(tokens);
+  return tokensToDoc(tokens, {}).node;
 };
 
 /**
