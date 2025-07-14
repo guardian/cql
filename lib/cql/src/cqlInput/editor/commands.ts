@@ -1,10 +1,16 @@
-import { Command, Selection, TextSelection } from "prosemirror-state";
-import { chipValue } from "./schema";
+import {
+  Command,
+  NodeSelection,
+  Selection,
+  TextSelection,
+} from "prosemirror-state";
+import { chip, chipKey, chipValue } from "./schema";
 import { selectAll } from "prosemirror-commands";
 import { createParser } from "../../lang/Cql";
-import { queryToProseMirrorDoc } from "./utils";
+import { findNodeAt, queryToProseMirrorDoc } from "./utils";
 import { findDiffEndForContent, findDiffStartForContent } from "./diff";
 import { Node } from "prosemirror-model";
+import { schema } from "prosemirror-test-builder";
 
 export const startOfLine: Command = (state, dispatch) => {
   const startSelection = Selection.atStart(state.doc);
@@ -79,6 +85,26 @@ export const mergeDocs =
 
       dispatch?.(tr);
     }
+
+    return true;
+  };
+
+export const insertChip =
+  (chipKeyContent: string): Command =>
+  (state, dispatch) => {
+    const tr = state.tr;
+    const node = chip.create(null, [
+      chipKey.create(null, schema.text(chipKeyContent)),
+      chipValue.create(),
+    ]);
+
+    tr.replaceSelectionWith(node);
+
+    const chipValuePos = findNodeAt(state.selection.from, tr.doc, chipValue);
+    const sel = NodeSelection.create(tr.doc, chipValuePos);
+    tr.setSelection(sel);
+
+    dispatch?.(tr);
 
     return true;
   };

@@ -37,6 +37,7 @@ import {
   IS_READ_ONLY,
   IS_SELECTED,
   POLARITY,
+  queryStr,
 } from "../schema";
 import { Node } from "prosemirror-model";
 import { ErrorPopover } from "../../popover/ErrorPopover";
@@ -51,7 +52,7 @@ import { CqlQuery } from "../../../lang/ast";
 import { createParser } from "../../../lang/Cql";
 import { Typeahead } from "../../../lang/typeahead";
 import { defaultPopoverRenderer } from "../../popover/components/defaultPopoverRenderer";
-import { mergeDocs } from "../commands";
+import { insertChip, mergeDocs } from "../commands";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -106,6 +107,7 @@ export const createCqlPlugin = ({
     syntaxHighlighting,
     debugEl,
     renderPopoverContent = defaultPopoverRenderer,
+    lang,
   },
   parser,
 }: {
@@ -593,6 +595,16 @@ export const createCqlPlugin = ({
               prevNode,
             );
           }
+        }
+
+        // Shortcuts
+        const $selFrom = view.state.selection.$from;
+        const isInQueryStr = $selFrom.node().type === queryStr;
+        if (lang?.shortcuts?.[event.key] && isInQueryStr) {
+          return insertChip(lang?.shortcuts?.[event.key])(
+            view.state,
+            view.dispatch,
+          );
         }
 
         // Typeahead-specific behaviours
