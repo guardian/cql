@@ -381,7 +381,7 @@ export const docToCqlStr = (doc: Node): string => {
   return str;
 };
 
-const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
+export const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
   let found = -1;
   doc.nodesBetween(pos - 1, doc.content.size, (node, pos) => {
     if (found > -1) return false;

@@ -5,11 +5,13 @@ import { hasUnreservedChar, hasWhitespace } from "./utils";
 export type ScannerSettings = {
   groups: boolean;
   operators: boolean;
+  shortcuts: Record<string, string>;
 };
 
 const defaultScannerSettings: ScannerSettings = {
   groups: true,
   operators: true,
+  shortcuts: {},
 };
 
 export class Scanner {
@@ -17,13 +19,26 @@ export class Scanner {
   private start = 0;
   private current = 0;
   private line = 1;
-  private settings: Partial<ScannerSettings>;
+  private settings: ScannerSettings;
 
   constructor(
     private program: string,
     settings: Partial<ScannerSettings> = {},
   ) {
     this.settings = mergeDeep(defaultScannerSettings, settings);
+
+    Object.keys(this.settings.shortcuts).forEach((shortcut) => {
+      if (!hasUnreservedChar(shortcut)) {
+        throw new Error(
+          `The character '${shortcut}' is reserved, and cannot be used as a shortcut`,
+        );
+      }
+      if (shortcut.length > 1) {
+        throw new Error(
+          `The shortcut '${shortcut}' is too long: shortcuts can only be a single character`,
+        );
+      }
+    });
   }
 
   public scanTokens = (): Token[] => {
@@ -70,9 +85,16 @@ export class Scanner {
       case '"':
         this.addString();
         return;
-      default:
-        this.handleUnquotedChars();
+      default: {
+        const current = this.peek(-1);
+        if (this.settings.shortcuts[current]) {
+          this.addShortcut(this.settings.shortcuts[current]);
+          return;
+        } else {
+          this.handleUnquotedChars();
+        }
         return;
+      }
     }
   };
 
@@ -111,6 +133,14 @@ export class Scanner {
     } else {
       const value = this.program.substring(this.start + 1, this.current);
       this.addToken(TokenType.CHIP_VALUE, value);
+    }
+  };
+
+  private addShortcut = (shortcut: string) => {
+    this.addToken(TokenType.CHIP_KEY_POSITIVE, shortcut);
+    if (!this.isAtEnd() && !hasWhitespace(this.peek())) {
+      this.advance();
+      this.addValue();
     }
   };
 
@@ -184,9 +214,9 @@ export class Scanner {
   };
 
   private addToken = (tokenType: TokenType, literal?: string) => {
-    const text = this.program.substring(this.start, this.current);
+    const lexeme = this.program.substring(this.start, this.current);
     this.tokens = this.tokens.concat(
-      new Token(tokenType, text, literal, this.start, this.current - 1),
+      new Token(tokenType, lexeme, literal, this.start, this.current - 1),
     );
   };
 

@@ -1,5 +1,10 @@
 import { describe, it, beforeEach, expect } from "bun:test";
-import { errorMsgTestId, errorTestId, typeaheadTestId } from "../../CqlInput";
+import {
+  CqlConfig,
+  errorMsgTestId,
+  errorTestId,
+  typeaheadTestId,
+} from "../../CqlInput";
 import {
   findByTestId,
   findByText,
@@ -29,14 +34,18 @@ import { isVisibleDataAttr } from "../../popover/Popover";
 import { tick } from "../../../utils/test";
 import { createParser } from "../../../lang/Cql";
 import { Typeahead } from "../../../lang/typeahead";
-import { chip, IS_SELECTED } from "../schema";
+import { chip, chipValue, IS_SELECTED } from "../schema";
 import { Node, NodeType } from "prosemirror-model";
 import { cqlQueryStrFromQueryAst } from "../../../lang/interpreter";
+import { logNode } from "../debug";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
 
-const createCqlEditor = (initialQuery: string = "") => {
+const createCqlEditor = (
+  initialQuery: string = "",
+  config: CqlConfig = { syntaxHighlighting: false },
+) => {
   document.body.innerHTML = "";
   const container = document.body;
   const typeaheadEl = document.createElement("div");
@@ -63,7 +72,7 @@ const createCqlEditor = (initialQuery: string = "") => {
     typeahead: testCqlService,
     typeaheadEl,
     errorEl,
-    config: { syntaxHighlighting: true },
+    config,
     onChange: ({ queryAst }) =>
       dispatch(queryAst ? cqlQueryStrFromQueryAst(queryAst) : ""),
     parser,
@@ -547,6 +556,43 @@ describe("plugin", () => {
       await editor.backspace();
 
       await waitFor("tag:a tag:c");
+    });
+
+    it("should move the selection into value position when the user types a shortcut", async () => {
+      const { editor, waitFor } = createCqlEditor("", {
+        lang: {
+          shortcuts: {
+            "#": "tag",
+          },
+        },
+      });
+
+      await editor.insertText("#");
+
+      await waitFor("tag:");
+      expect(editor.selection.$from.node().type).toBe(chipValue);
+    });
+
+    it("should move the selection into value position when the user types a shortcut after text", async () => {
+      const queryStr = "a ";
+      const { editor, getPosFromQueryPos, waitFor } = createCqlEditor(
+        queryStr,
+        {
+          lang: {
+            shortcuts: {
+              "#": "tag",
+            },
+          },
+        },
+      );
+
+      await editor.insertText("#");
+
+      await waitFor("a tag:");
+      const chipValuePos = getPosFromQueryPos("a +tag:".indexOf(":") + 1);
+
+      logNode(editor.doc);
+      expect(editor.selection.from).toBe(chipValuePos);
     });
 
     describe("read-only behaviour", () => {

@@ -256,5 +256,33 @@ describe("scanner", () => {
         );
       });
     });
+
+    describe("shortcuts", () => {
+      it("should throw an error when a shortcut conflicts with a reserved character", () => {
+        const shouldThrow = () =>
+          new Scanner("", { shortcuts: { "(": "invalid" } });
+
+        expect(shouldThrow).toThrow();
+      });
+
+      it("should throw an error when a shortcut is more than a single character long", () => {
+        const shouldThrow = () =>
+          new Scanner("", { shortcuts: { aa: "invalid" } });
+
+        expect(shouldThrow).toThrow();
+      });
+
+      it("parse a shortcut followed by a chip value", () => {
+        assertTokens(
+          "#tone/news",
+          [
+            new Token(TokenType.CHIP_KEY_POSITIVE, "#", "tag", 0, 0),
+            new Token(TokenType.CHIP_VALUE, "#tone/news", "tone/news", 0, 9),
+            eofToken(10),
+          ],
+          { shortcuts: { "#": "tag" } },
+        );
+      });
+    });
   });
 });
