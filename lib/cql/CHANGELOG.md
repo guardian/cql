@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 1.3.0
+
+### Minor Changes
+
+- fe653b6: Parse shortcuts from query strings, and add chips when shortcuts are pressed in the UI
+
 ## 1.2.0
 
 ### Minor Changes
