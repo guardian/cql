@@ -468,10 +468,9 @@ export const createCqlInput = (
             overflow-x: hidden;
             text-overflow: ellipsis;
             vertical-align: bottom;
-            /* Passes accessibility contrast on a white background */
-            color: #777575;
             pointer-events: none;
             cursor: text;
+            opacity: 0.8;
           }
         </style>
       `;
