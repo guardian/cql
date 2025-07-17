@@ -552,7 +552,7 @@ export const getNextPositionAfterTypeaheadSelection = (
 
 /**
  * Apply a delete intent to the node at the given range:
- *  - mark the node for deletion, or
+ *  - mark the node for deletion if `forceDelete` is not specified, or
  *  - delete the node if already marked for deletion
  */
 export const applyDeleteIntent = (
@@ -560,6 +560,7 @@ export const applyDeleteIntent = (
   from: number,
   to: number,
   node: Node,
+  forceDelete: boolean = false
 ) => {
   if (node.type !== chip) {
     return false;
@@ -567,7 +568,7 @@ export const applyDeleteIntent = (
 
   const tr = view.state.tr;
 
-  if (node.attrs[DELETE_CHIP_INTENT]) {
+  if (node.attrs[DELETE_CHIP_INTENT] || forceDelete) {
     // The caret belongs before the deleted chip
     removeChipCoveringRange(from, to, tr);
   } else {

@@ -832,12 +832,12 @@ describe("plugin", () => {
       await waitFor("");
     });
 
-    it("removes the chips via click", async () => {
+    it("removes the chip via click", async () => {
       const { editor, waitFor } = createCqlEditor("+tag:a");
 
       const deleteBtn = await findByText(editor.view.dom, "×");
       await fireEvent.click(deleteBtn);
-      await fireEvent.click(deleteBtn);
+
 
       await waitFor("");
     });

@@ -308,7 +308,7 @@ export const createCqlPlugin = ({
 
             const { node, pos } = result;
 
-            applyDeleteIntent(view, pos, pos + node.nodeSize + 1, node);
+            applyDeleteIntent(view, pos, pos + node.nodeSize + 1, node, true);
           };
 
           const handlePolarityClickEvent = () => {
