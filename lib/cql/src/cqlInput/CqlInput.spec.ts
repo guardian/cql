@@ -1,4 +1,4 @@
-import { describe, expect, test } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import { userEvent } from "@testing-library/user-event";
 import { TestTypeaheadHelpers } from "../lang/fixtures/TestTypeaheadHelpers";
 import { createCqlInput, Typeahead } from "../lib";
@@ -20,14 +20,14 @@ describe("CqlInput", () => {
     return { container, cqlInput, user };
   };
 
-  test("should render the given value when first instantiated", async () => {
+  it("should render the given value when first instantiated", async () => {
     const { container } = createCqlInputContainer("one");
     const result = await getByTextShadowed(container, "one");
     expect(result).toBeTruthy();
   });
 
 
-  test("should update the rendered value, and call the callback, when the attribute changes", async () => {
+  it("should update the rendered value, and call the callback, when the attribute changes", async () => {
     const { container, cqlInput } = createCqlInputContainer("one");
     let callbackValue = "";
     cqlInput.addEventListener(
@@ -40,7 +40,7 @@ describe("CqlInput", () => {
     expect(callbackValue).toBe("two");
   });
 
-  test("should not update the rendered value when the attribute changes but the normalised result is the same", async () => {
+  it("should not update the rendered value when the attribute changes but the normalised result is the same", async () => {
     const { cqlInput } = createCqlInputContainer("+tag:one");
     let callbackValue = "";
     cqlInput.addEventListener(
@@ -51,7 +51,7 @@ describe("CqlInput", () => {
     expect(callbackValue).toBe("");
   });
 
-  test("should not display the popover when the input is updated programmatically, and not focused", async () => {
+  it("should not display the popover when the input is updated programmatically, and not focused", async () => {
     const { container, cqlInput } = createCqlInputContainer("");
 
     cqlInput.setAttribute("value", "+");
@@ -62,7 +62,7 @@ describe("CqlInput", () => {
     expect(!!result).toBeFalse();
   });
 
-  test("should bubble events into the document", async () => {
+  it("should bubble events into the document", async () => {
     const { container, cqlInput, user } = createCqlInputContainer("");
 
     let eventReceived = false;
