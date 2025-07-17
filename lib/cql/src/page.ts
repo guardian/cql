@@ -107,42 +107,28 @@ const cqlEl = document.getElementById("cql")!;
 const queryEl = document.getElementById("query")!;
 const errorEl = document.getElementById("error")!;
 
-function handleQueryChange(e: CustomEvent<QueryChangeEventDetail>) {
-  const queryStr = e.detail.queryStr ?? "";
+function handleQueryChange(queryStr: string, errorMessage?: string) {
   setUrlParam("query", queryStr);
   queryEl.innerHTML = queryStr;
   cqlEl.innerHTML = queryStr.replaceAll(" ", "·");
-  errorEl.innerHTML = e.detail.error ?? "";
+  errorEl.innerHTML = errorMessage ?? "";
   updateDebugPanel(queryStr);
+}
+
+function handleQueryChangeEvent(e: CustomEvent<QueryChangeEventDetail>) {
+  handleQueryChange(e.detail.queryStr ?? "", e.detail.error);
 }
 
 dataSourceSelect.addEventListener("change", (e: Event) => {
   const source = (e.target as HTMLSelectElement).value;
   const inputHtmlTagValue = dataSourceMap[source];
   cqlInputContainer.innerHTML = `<${inputHtmlTagValue} autofocus id="${source}"></${inputHtmlTagValue}>`;
-  const cqlInput = cqlInputContainer.firstChild as HTMLElement;
-  cqlInput?.focus();
-  cqlInput?.addEventListener("queryChange", ((
-    e: CustomEvent<QueryChangeEventDetail>,
-  ) => {
-    const queryStr = e.detail.queryStr ?? "";
-    setUrlParam("query", queryStr);
-    queryEl.innerHTML = queryStr;
-    cqlEl.innerHTML = queryStr.replaceAll(" ", "·");
-    errorEl.innerHTML = e.detail.error ?? "";
-    updateDebugPanel(queryStr);
-  }) as EventListener);
+  const newCqlInput = cqlInputContainer.firstChild as HTMLElement;
+  newCqlInput?.focus();
+  handleQueryChange("");
+  newCqlInput?.addEventListener("queryChange", handleQueryChangeEvent);
 });
-cqlInput?.addEventListener("queryChange", ((
-  e: CustomEvent<QueryChangeEventDetail>,
-) => {
-  const queryStr = e.detail.queryStr ?? "";
-  setUrlParam("query", queryStr);
-  queryEl.innerHTML = queryStr;
-  cqlEl.innerHTML = queryStr.replaceAll(" ", "·");
-  errorEl.innerHTML = e.detail.error ?? "";
-  updateDebugPanel(queryStr);
-}) as EventListener);
+cqlInput?.addEventListener("queryChange", handleQueryChangeEvent);
 
 const params = new URLSearchParams(window.location.search);
 const endpoint = params.get("endpoint");
