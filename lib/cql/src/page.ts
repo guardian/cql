@@ -1,9 +1,16 @@
-import { createCqlInput } from "./cqlInput/CqlInput";
 import applyDevTools from "prosemirror-dev-tools";
-import { CapiTypeaheadProvider } from "./typeahead/CapiTypeaheadHelpers.ts";
-import { Typeahead, TypeaheadField } from "./lang/typeahead.ts";
-import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
+import { createCqlInput } from "./cqlInput/CqlInput";
+import {
+  getDebugASTHTML,
+  getDebugMappingHTML,
+  getDebugTokenHTML,
+  getOriginalQueryHTML,
+} from "./cqlInput/editor/debug.ts";
+import { mapResult, tokensToDoc } from "./cqlInput/editor/utils.ts";
 import { createParser } from "./lang/Cql.ts";
+import { Typeahead, TypeaheadField } from "./lang/typeahead.ts";
+import { CapiTypeaheadProvider } from "./typeahead/CapiTypeaheadHelpers.ts";
+import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
 import { QueryChangeEventDetail } from "./types/dom";
 
 const setUrlParam = (key: string, value: string) => {
@@ -23,6 +30,65 @@ debugEl.className = "CqlSandbox__debug-container";
 
 document.getElementById("cql-sandbox")!.appendChild(debugEl);
 
+const debugMappingContainer = document.createElement("div");
+debugMappingContainer.classList.add("CqlDebug__mapping");
+debugEl.appendChild(debugMappingContainer);
+const jsonDebugContainer = document.createElement("div");
+jsonDebugContainer.classList.add("CqlDebug__json");
+debugEl.appendChild(jsonDebugContainer);
+const debugTokenContainer = document.createElement("div");
+jsonDebugContainer.appendChild(debugTokenContainer);
+const debugASTContainer = document.createElement("div");
+jsonDebugContainer.appendChild(debugASTContainer);
+const debugSuggestionsContainer = document.createElement("div");
+jsonDebugContainer.appendChild(debugSuggestionsContainer);
+const debugErrorContainer = document.createElement("div");
+jsonDebugContainer.appendChild(debugErrorContainer);
+
+const parser = createParser();
+
+function updateDebugPanel(query: string) {
+  const result = parser(query);
+  const { tokens, queryAst, error, mapping } = mapResult(result);
+
+  const newDoc = tokensToDoc(tokens);
+
+  debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
+    queryAst,
+    undefined,
+    "  ",
+  )}</div>`;
+
+  debugTokenContainer.innerHTML = `<h2>Tokens</h2><div>${JSON.stringify(
+    tokens,
+    undefined,
+    "  ",
+  )}</div>`;
+
+  debugMappingContainer.innerHTML = `
+            <p>Original query: </p>
+            ${getOriginalQueryHTML(query)}
+            <p>Tokenises to:</p>
+            ${getDebugTokenHTML(result.tokens)}
+            ${
+              result.queryAst
+                ? `<p>AST: </p>
+            ${getDebugASTHTML(result.queryAst)}`
+                : ""
+            }
+            <p>Maps to nodes: </p>
+            ${getDebugMappingHTML(query, mapping, newDoc)}
+          `;
+
+  debugErrorContainer.innerHTML = error
+    ? `
+        <h2>Error</h2>
+        <div>Position: ${error.position ?? "No position given"}</div>
+        <div>Message: ${error.message}</div>
+      `
+    : "";
+}
+
 const dataSourceMap: Record<string, string> = {
   "content-api": "cql-input-capi",
   "tools-index": "cql-input-gutools",
@@ -40,11 +106,32 @@ cqlInput.setAttribute(
 const cqlEl = document.getElementById("cql")!;
 const queryEl = document.getElementById("query")!;
 const errorEl = document.getElementById("error")!;
+
+function handleQueryChange(e: CustomEvent<QueryChangeEventDetail>) {
+  const queryStr = e.detail.queryStr ?? "";
+  setUrlParam("query", queryStr);
+  queryEl.innerHTML = queryStr;
+  cqlEl.innerHTML = queryStr.replaceAll(" ", "·");
+  errorEl.innerHTML = e.detail.error ?? "";
+  updateDebugPanel(queryStr);
+}
+
 dataSourceSelect.addEventListener("change", (e: Event) => {
   const source = (e.target as HTMLSelectElement).value;
   const inputHtmlTagValue = dataSourceMap[source];
   cqlInputContainer.innerHTML = `<${inputHtmlTagValue} autofocus id="${source}"></${inputHtmlTagValue}>`;
-  (cqlInputContainer.firstChild as HTMLElement)?.focus();
+  const cqlInput = cqlInputContainer.firstChild as HTMLElement;
+  cqlInput?.focus();
+  cqlInput?.addEventListener("queryChange", ((
+    e: CustomEvent<QueryChangeEventDetail>,
+  ) => {
+    const queryStr = e.detail.queryStr ?? "";
+    setUrlParam("query", queryStr);
+    queryEl.innerHTML = queryStr;
+    cqlEl.innerHTML = queryStr.replaceAll(" ", "·");
+    errorEl.innerHTML = e.detail.error ?? "";
+    updateDebugPanel(queryStr);
+  }) as EventListener);
 });
 cqlInput?.addEventListener("queryChange", ((
   e: CustomEvent<QueryChangeEventDetail>,
@@ -54,6 +141,7 @@ cqlInput?.addEventListener("queryChange", ((
   queryEl.innerHTML = queryStr;
   cqlEl.innerHTML = queryStr.replaceAll(" ", "·");
   errorEl.innerHTML = e.detail.error ?? "";
+  updateDebugPanel(queryStr);
 }) as EventListener);
 
 const params = new URLSearchParams(window.location.search);
@@ -67,7 +155,6 @@ const typeaheadHelpersCapi = new CapiTypeaheadProvider(
 const capiTypeahead = new Typeahead(typeaheadHelpersCapi.typeaheadFields);
 
 const CqlInputCapi = createCqlInput(capiTypeahead, {
-  debugEl,
   syntaxHighlighting: true,
   theme: {
     baseFontSize: "16px",
@@ -90,7 +177,6 @@ const guToolsTypeaheadFields: TypeaheadField[] = [
 
 const typeaheadGuTools = new Typeahead(guToolsTypeaheadFields);
 const CqlInputGuTools = createCqlInput(typeaheadGuTools, {
-  debugEl,
   syntaxHighlighting: true,
 });
 

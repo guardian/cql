@@ -1,25 +1,25 @@
 import { EditorView } from "prosemirror-view";
+import { createParser } from "../lang/Cql";
+import { cqlQueryStrFromQueryAst } from "../lang/interpreter";
+import { ScannerSettings } from "../lang/scanner";
+import { Typeahead } from "../lang/typeahead";
+import { CqlQuery } from "../lib";
 import { QueryChangeEventDetail } from "../types/dom";
+import { DeepPartial } from "../types/utils";
 import { createEditorView } from "./editor/editor";
 import {
-  createCqlPlugin,
-  CLASS_VISIBLE,
-  CLASS_CHIP_SELECTED,
   CLASS_CHIP_KEY_READONLY,
+  CLASS_CHIP_SELECTED,
+  CLASS_VISIBLE,
+  createCqlPlugin,
 } from "./editor/plugins/cql";
+import { CLASSNAME_PLACEHOLDER } from "./editor/plugins/placeholder";
 import {
   CLASS_NO_RESULTS,
   CLASS_PENDING,
   RenderPopoverContent,
 } from "./popover/TypeaheadPopover";
-import { Typeahead } from "../lang/typeahead";
 import { applyPartialTheme, CqlTheme } from "./theme";
-import { ScannerSettings } from "../lang/scanner";
-import { DeepPartial } from "../types/utils";
-import { createParser } from "../lang/Cql";
-import { cqlQueryStrFromQueryAst } from "../lang/interpreter";
-import { CLASSNAME_PLACEHOLDER } from "./editor/plugins/placeholder";
-import { CqlQuery } from "../lib";
 
 export const typeaheadTestId = "cql-input-typeahead";
 export const errorTestId = "cql-input-error";
@@ -27,7 +27,6 @@ export const errorMsgTestId = "cql-input-error-message";
 
 export type CqlConfig = {
   syntaxHighlighting?: boolean;
-  debugEl?: HTMLElement;
   renderPopoverContent?: RenderPopoverContent;
   theme?: DeepPartial<CqlTheme>;
   lang?: Partial<ScannerSettings>;
