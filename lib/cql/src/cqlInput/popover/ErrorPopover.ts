@@ -1,27 +1,20 @@
 import { EditorView } from "prosemirror-view";
-import { Popover } from "./Popover";
 import { CLASS_ERROR, CLASS_VISIBLE, CqlError } from "../editor/plugins/cql";
+import { Popover } from "./Popover";
 
 export class ErrorPopover extends Popover {
-  private debugContainer: HTMLElement | undefined;
   private contentEl: HTMLElement;
   private visibilityTimeout: ReturnType<typeof setTimeout> | undefined;
 
   public constructor(
     protected view: EditorView,
     protected popoverEl: HTMLElement,
-    debugEl?: HTMLElement,
     private debounceTime = 500,
   ) {
     super(popoverEl);
 
     this.contentEl = document.createElement("div");
     popoverEl.appendChild(this.contentEl);
-
-    if (debugEl) {
-      this.debugContainer = document.createElement("div");
-      debugEl.appendChild(this.debugContainer);
-    }
 
     this.hide();
   }
@@ -32,18 +25,7 @@ export class ErrorPopover extends Popover {
       return;
     }
 
-    this.updateDebugContainer(error);
     this.debouncedShowErrorMessages(error);
-  };
-
-  private updateDebugContainer = (error: CqlError) => {
-    if (this.debugContainer) {
-      this.debugContainer.innerHTML = `
-        <h2>Error</h2>
-        <div>Position: ${error.position ?? "No position given"}</div>
-        <div>Message: ${error.message}</div>
-      `;
-    }
   };
 
   public hideErrorMessages = () => {

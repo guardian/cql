@@ -1,4 +1,4 @@
-import { DecorationSet } from "prosemirror-view";
+import { Node } from "prosemirror-model";
 import {
   AllSelection,
   Plugin,
@@ -6,29 +6,16 @@ import {
   TextSelection,
   Transaction,
 } from "prosemirror-state";
-import {
-  maybeMoveSelectionIntoChipKey,
-  docToCqlStr,
-  tokensToDecorations,
-  tokensToDoc,
-  ProseMirrorToken,
-  applyDeleteIntent,
-  errorToDecoration,
-  mapResult,
-  queryHasChanged,
-  toMappedSuggestions,
-  applyChipLifecycleRules,
-  getNodeTypeAtSelection,
-  applySuggestion,
-  skipSuggestion,
-  isChipSelected,
-  isSelectionWithinNodesOfType,
-  removeChipAtSelectionIfEmpty,
-  queryToProseMirrorDoc,
-  getContentFromClipboard,
-} from "../utils";
 import { Mapping } from "prosemirror-transform";
+import { DecorationSet } from "prosemirror-view";
+import { CqlQuery } from "../../../lang/ast";
+import { createParser } from "../../../lang/Cql";
+import { Typeahead } from "../../../lang/typeahead";
+import { CqlConfig } from "../../CqlInput";
+import { defaultPopoverRenderer } from "../../popover/components/defaultPopoverRenderer";
+import { ErrorPopover } from "../../popover/ErrorPopover";
 import { TypeaheadPopover } from "../../popover/TypeaheadPopover";
+import { insertChip, mergeDocs } from "../commands";
 import {
   chip,
   chipKey,
@@ -40,20 +27,27 @@ import {
   POLARITY,
   queryStr,
 } from "../schema";
-import { Node } from "prosemirror-model";
-import { ErrorPopover } from "../../popover/ErrorPopover";
-import { CqlConfig } from "../../CqlInput";
 import {
-  getDebugASTHTML,
-  getDebugMappingHTML,
-  getDebugTokenHTML,
-  getOriginalQueryHTML,
-} from "../debug";
-import { CqlQuery } from "../../../lang/ast";
-import { createParser } from "../../../lang/Cql";
-import { Typeahead } from "../../../lang/typeahead";
-import { defaultPopoverRenderer } from "../../popover/components/defaultPopoverRenderer";
-import { insertChip, mergeDocs } from "../commands";
+  applyChipLifecycleRules,
+  applyDeleteIntent,
+  applySuggestion,
+  docToCqlStr,
+  errorToDecoration,
+  getContentFromClipboard,
+  getNodeTypeAtSelection,
+  isChipSelected,
+  isSelectionWithinNodesOfType,
+  mapResult,
+  maybeMoveSelectionIntoChipKey,
+  ProseMirrorToken,
+  queryHasChanged,
+  queryToProseMirrorDoc,
+  removeChipAtSelectionIfEmpty,
+  skipSuggestion,
+  tokensToDecorations,
+  tokensToDoc,
+  toMappedSuggestions,
+} from "../utils";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -106,7 +100,6 @@ export const createCqlPlugin = ({
   onChange,
   config: {
     syntaxHighlighting,
-    debugEl,
     renderPopoverContent = defaultPopoverRenderer,
     lang,
   },
@@ -121,25 +114,6 @@ export const createCqlPlugin = ({
 }) => {
   let typeaheadPopover: TypeaheadPopover | undefined;
   let errorPopover: ErrorPopover | undefined;
-  let debugTokenContainer: HTMLElement | undefined;
-  let debugASTContainer: HTMLElement | undefined;
-  let debugMappingContainer: HTMLElement | undefined;
-  let jsonDebugContainer: HTMLElement | undefined;
-  let debugSuggestionsContainer: HTMLElement | undefined;
-  if (debugEl) {
-    debugMappingContainer = document.createElement("div");
-    debugMappingContainer.classList.add("CqlDebug__mapping");
-    debugEl.appendChild(debugMappingContainer);
-    jsonDebugContainer = document.createElement("div");
-    jsonDebugContainer.classList.add("CqlDebug__json");
-    debugEl.appendChild(jsonDebugContainer);
-    debugTokenContainer = document.createElement("div");
-    jsonDebugContainer.appendChild(debugTokenContainer);
-    debugASTContainer = document.createElement("div");
-    jsonDebugContainer.appendChild(debugASTContainer);
-    debugSuggestionsContainer = document.createElement("div");
-    jsonDebugContainer.appendChild(debugSuggestionsContainer);
-  }
 
   /**
    * Replaces the current document with the query it produces on parse.
@@ -154,39 +128,6 @@ export const createCqlPlugin = ({
     const { tokens, queryAst, error, mapping } = mapResult(result);
 
     const newDoc = tokensToDoc(tokens);
-    const queryAfterParse = docToCqlStr(newDoc); // The document may have changed as a result of the parse.
-
-    if (debugASTContainer) {
-      debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
-        queryAst,
-        undefined,
-        "  ",
-      )}</div>`;
-    }
-    if (debugTokenContainer) {
-      debugTokenContainer.innerHTML = `<h2>Tokens</h2><div>${JSON.stringify(
-        tokens,
-        undefined,
-        "  ",
-      )}</div>`;
-    }
-
-    if (debugMappingContainer) {
-      debugMappingContainer.innerHTML = `
-            <p>Original query: </p>
-            ${getOriginalQueryHTML(queryAfterParse)}
-            <p>Tokenises to:</p>
-            ${getDebugTokenHTML(result.tokens)}
-            ${
-              result.queryAst
-                ? `<p>AST: </p>
-            ${getDebugASTHTML(result.queryAst)}`
-                : ""
-            }
-            <p>Maps to nodes: </p>
-            ${getDebugMappingHTML(queryAfterParse, mapping, newDoc)}
-          `;
-    }
 
     const docSelection = new AllSelection(tr.doc);
 
@@ -689,7 +630,7 @@ export const createCqlPlugin = ({
         renderPopoverContent,
       );
 
-      errorPopover = new ErrorPopover(view, errorEl, jsonDebugContainer);
+      errorPopover = new ErrorPopover(view, errorEl);
 
       // Set up initial document with parsed query
       const { tr, queryAst } = applyQueryToTr(view.state.tr);
@@ -727,19 +668,6 @@ export const createCqlPlugin = ({
             const mappedSuggestions = toMappedSuggestions(suggestions, mapping);
             if (view.hasFocus()) {
               typeaheadPopover?.updateSuggestions(mappedSuggestions);
-            }
-
-            if (debugSuggestionsContainer) {
-              debugSuggestionsContainer.innerHTML = `
-                  <h2>Typeahead</h2>
-                      <p>Current selection: ${view.state.selection.from}-${
-                        view.state.selection.to
-                      }
-                      </p>
-
-                <div>${mappedSuggestions.map((suggestion) =>
-                  JSON.stringify(suggestion, undefined, "  "),
-                )}</div>`;
             }
           } catch (e) {
             if (!(e instanceof DOMException && e.name == "AbortError")) {
