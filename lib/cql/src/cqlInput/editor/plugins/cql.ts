@@ -3,6 +3,7 @@ import {
   AllSelection,
   Plugin,
   PluginKey,
+  TextSelection,
   Transaction,
 } from "prosemirror-state";
 import {
@@ -633,6 +634,15 @@ export const createCqlPlugin = ({
           }
         }
       },
+      handleDOMEvents: {
+        blur: (view) => {
+          view.dispatch(
+            view.state.tr.setSelection(
+              TextSelection.near(view.state.doc.resolve(0)),
+            ),
+          );
+        },
+      },
       /**
        * Handle pasting text manually, to ensure that selection state is
        * preserved. Without this, expanding pasted string content into chip keys
@@ -658,6 +668,11 @@ export const createCqlPlugin = ({
         mergeDocs(newState.doc)(view.state, view.dispatch);
 
         return true;
+      },
+      handleDoubleClick(view) {
+        view.dispatch(
+          view.state.tr.setSelection(new AllSelection(view.state.doc)),
+        );
       },
       // Serialise outgoing content to a CQL string for portability in both plain text and html
       clipboardTextSerializer(content) {

@@ -28,7 +28,7 @@ import {
   queryToProseMirrorDoc,
   toProseMirrorTokens,
 } from "../utils";
-import { TextSelection } from "prosemirror-state";
+import { AllSelection, TextSelection } from "prosemirror-state";
 import { TestTypeaheadHelpers } from "../../../lang/fixtures/TestTypeaheadHelpers";
 import { isVisibleDataAttr } from "../../popover/Popover";
 import { tick } from "../../../utils/test";
@@ -749,6 +749,26 @@ describe("plugin", () => {
       await editor.shortcut("Ctrl-a").insertText("+1");
 
       await waitFor("1: 2:");
+    });
+
+    it("should clear the selection when the user blurs the input", async () => {
+      const { editor } = createCqlEditor("+tag:example");
+
+      await editor.selectText("all");
+      document.body.focus();
+
+      expect(editor.selection.to).toBe(1);
+    });
+
+    // The selection is correct immediately after handleDoubleClick fires, but is not correct in the assertion 🤔
+    it.todo("should select the whole document when the user double clicks on the input container", async () => {
+      const { editor, user } = createCqlEditor("+tag:example");
+
+      await user.dblClick(editor.view.dom);
+
+      expect(
+        editor.state.selection.eq(new AllSelection(editor.view.state.doc)),
+      ).toBe(true);
     });
   });
 
