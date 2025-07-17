@@ -1,5 +1,12 @@
 # @guardian/cql
 
+## 1.3.3
+
+### Patch Changes
+
+- 5325e02: Account for whitespace at the start of the document when it begins with a chip
+- fc1f615: Proper minus for chip polarity minus
+
 ## 1.3.2
 
 ### Patch Changes
