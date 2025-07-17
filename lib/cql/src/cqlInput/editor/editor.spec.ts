@@ -154,19 +154,24 @@ describe("updateEditorViewWithQueryStr", () => {
     expect(docToCqlStrWithSelection(editorView.state)).toEqual("+tag:^$ ");
   });
 
-  const pasteContent = (view: EditorView, payload: string, type: string) => {
+  const pasteContent = (
+    view: EditorView,
+    data: { payload: string; type: string }[],
+  ) => {
     const clipboardData = new DataTransfer();
-    clipboardData.setData(type, payload);
+    data.forEach(({ payload, type }) => {
+      clipboardData.setData(type, payload);
+    });
     const event = new ClipboardEvent("paste", { clipboardData });
 
-    view.pasteText(payload, event);
+    view.pasteHTML(data[0].payload, event);
   };
 
   it(`should preserve the selection state on paste for data type "text/plain"`, () => {
     const { editorView } = createEditorFromInitialState("text ");
-    const contentToPaste = "+tag:example";
+    const payload = "+tag:example";
 
-    pasteContent(editorView, contentToPaste, "text/plain");
+    pasteContent(editorView, [{ payload, type: "text/plain" }]);
 
     expect(docToCqlStrWithSelection(editorView.state)).toEqual(
       "text +tag:example ^$",
@@ -175,12 +180,25 @@ describe("updateEditorViewWithQueryStr", () => {
 
   it(`should preserve the selection state on paste for data type "text/html"`, () => {
     const { editorView } = createEditorFromInitialState("text ");
-    const contentToPaste = "+tag:example";
+    const payload = `<meta charset='utf-8'><query-str data-pm-slice="0 0 []"></query-str><chip data-polarity="+"><chip-key>tag</chip-key><chip-value>type/article</chip-value></chip><query-str></query-str>`;
 
-    pasteContent(editorView, contentToPaste, "text/html");
+    pasteContent(editorView, [{ payload, type: "text/html" }]);
 
     expect(docToCqlStrWithSelection(editorView.state)).toEqual(
-      "text +tag:example ^$",
+      "text +tag:type/article ^$",
     );
+  });
+
+  it(`should not use HTML that does not contain ProseMirror markup as HTML`, () => {
+    const { editorView } = createEditorFromInitialState("");
+    const htmlPayload = "html";
+    const textPayload = "this then that";
+
+    pasteContent(editorView, [
+      { payload: htmlPayload, type: "text/html" },
+      { payload: textPayload, type: "text/plain" },
+    ]);
+
+    expect(docToCqlStr(editorView.state.doc)).toEqual(textPayload);
   });
 });

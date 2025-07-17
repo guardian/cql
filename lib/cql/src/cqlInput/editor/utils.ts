@@ -803,12 +803,10 @@ export const getContentFromClipboard = (
   if (maybeHtml) {
     const element = document.createElement("div");
     element.innerHTML = maybeHtml;
-    const isNativeProseMirrorContent = !!element.querySelector("query-str");
+    const isNativeProseMirrorContent = !!element.querySelector("query-str") || !!element.querySelector("chip");
     if (isNativeProseMirrorContent) {
       return { type: "HTML" };
     }
-
-    return { type: "TEXT", content: element.innerText };
   }
 
   const maybeText = event.clipboardData?.getData("text/plain");
