@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 1.3.2
+
+### Patch Changes
+
+- d0a4e3e: Do not attempt to parse HTML on paste if the HTML is not a cql doc
+
 ## 1.3.1
 
 ### Patch Changes
