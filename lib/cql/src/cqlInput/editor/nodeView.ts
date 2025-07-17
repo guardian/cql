@@ -15,6 +15,11 @@ import {
   TEST_ID_POLARITY_HANDLE,
 } from "./plugins/cql";
 
+const polarityUIMap: Record<string, string> = {
+  "-": "−",
+  "+": "+",
+};
+
 export const chipNodeView: NodeViewConstructor = (
   initialNode,
   view,
@@ -63,7 +68,7 @@ export const chipNodeView: NodeViewConstructor = (
   polarityHandle.classList.add("Cql__ChipWrapperPolarityHandle");
   polarityHandle.setAttribute("data-testid", TEST_ID_POLARITY_HANDLE);
   polarityHandle.setAttribute("contentEditable", "false");
-  polarityHandle.innerHTML = initialNode.attrs[POLARITY];
+  polarityHandle.innerHTML = polarityUIMap[initialNode.attrs[POLARITY]];
   polarityHandle.addEventListener("click", handlePolarityClickEvent);
 
   const deleteHandle = document.createElement("span");
@@ -90,7 +95,7 @@ export const chipNodeView: NodeViewConstructor = (
         dom.classList.remove(pendingDeleteClass);
       }
 
-      polarityHandle.innerHTML = node.attrs[POLARITY];
+      polarityHandle.innerHTML = polarityUIMap[node.attrs[POLARITY]];
 
       if (node.attrs[IS_SELECTED]) {
         dom.classList.add("Cql__ChipWrapper--is-selected");
