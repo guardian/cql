@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 1.3.1
+
+### Patch Changes
+
+- d9ebea2: Double clicking on the input selects everything; blurring the input removes the selection correctly, deselected selected chips
+
 ## 1.3.0
 
 ### Minor Changes
