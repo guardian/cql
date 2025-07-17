@@ -75,11 +75,24 @@ describe("utils", () => {
     });
 
     it("should preserve whitespace at the start of the document", async () => {
-      const tokens = await queryToProseMirrorTokens(" this AND  +key");
+      const tokens = await queryToProseMirrorTokens(" this AND +key");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
-        queryStr(" this AND "),
+        queryStr(" this AND"),
+        chip(chipKey("key"), chipValue()),
+        queryStr(),
+      );
+
+      expect(node.toJSON()).toEqual(expected.toJSON());
+    });
+
+    it("should preserve whitespace at the start of the document beginning with a chip", async () => {
+      const tokens = await queryToProseMirrorTokens("  +key");
+      const node = tokensToDoc(tokens);
+
+      const expected = doc(
+        queryStr("  "),
         chip(chipKey("key"), chipValue()),
         queryStr(),
       );

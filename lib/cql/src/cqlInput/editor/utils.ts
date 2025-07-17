@@ -198,6 +198,16 @@ export const mapTokens = (tokens: ProseMirrorToken[]): ProseMirrorToken[] => {
  * Create a ProseMirror document from an array of ProseMirrorTokens.
  */
 export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
+  const leadingWhitespaceCount = _tokens[0]?.from ?? 0;
+  const leadingNodeContent =
+    leadingWhitespaceCount > 0
+      ? schema.text(" ".repeat(leadingWhitespaceCount))
+      : null;
+
+  // Our document always starts with an empty queryStr node that accounts for
+  // any leading whitespace
+  const initialContent = [queryStr.create(null, leadingNodeContent)];
+
   const nodes = joinQueryStrTokens(_tokens).reduce<Node[]>(
     (acc, token, index, tokens): Node[] => {
       switch (token.tokenType) {
@@ -281,12 +291,6 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             : 0;
           const trailingWhitespace = " ".repeat(trailingWhitespaceChars);
 
-          // If we are at the beginning of our token list and the `from` is not
-          // 0, the document begins with whitespace — prepend the whitespace to
-          // this node
-          const prevToken = tokens[index - 1];
-          const leadingWhitespace = " ".repeat(prevToken ? 0 : token.from);
-
           const previousNode = acc[acc.length - 1];
           if (previousNode?.type === queryStr) {
             // Join consecutive queryStr nodes
@@ -296,8 +300,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
                 queryStr.create(
                   undefined,
                   schema.text(
-                    leadingWhitespace +
-                      previousNode.textContent +
+                    previousNode.textContent +
                       token.lexeme +
                       trailingWhitespace,
                   ),
@@ -308,16 +311,13 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           return acc.concat(
             queryStr.create(
               undefined,
-              schema.text(
-                leadingWhitespace + token.lexeme + trailingWhitespace,
-              ),
+              schema.text(token.lexeme + trailingWhitespace),
             ),
           );
         }
       }
     },
-    // Our document always starts with an empty queryStr node
-    [queryStr.create()],
+    initialContent,
   );
 
   return doc.create(undefined, nodes);
@@ -560,7 +560,7 @@ export const applyDeleteIntent = (
   from: number,
   to: number,
   node: Node,
-  forceDelete: boolean = false
+  forceDelete: boolean = false,
 ) => {
   if (node.type !== chip) {
     return false;
@@ -804,7 +804,8 @@ export const getContentFromClipboard = (
   if (maybeHtml) {
     const element = document.createElement("div");
     element.innerHTML = maybeHtml;
-    const isNativeProseMirrorContent = !!element.querySelector("query-str") || !!element.querySelector("chip");
+    const isNativeProseMirrorContent =
+      !!element.querySelector("query-str") || !!element.querySelector("chip");
     if (isNativeProseMirrorContent) {
       return { type: "HTML" };
     }
