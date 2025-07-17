@@ -798,17 +798,14 @@ export const queryToProseMirrorDoc = (
  */
 export const getContentFromClipboard = (
   event: ClipboardEvent,
-):
-  | { type: "TEXT"; content: string }
-  | { type: "HTML"; content: string }
-  | undefined => {
+): { type: "TEXT"; content: string } | { type: "HTML" } | undefined => {
   const maybeHtml = event.clipboardData?.getData("text/html");
   if (maybeHtml) {
     const element = document.createElement("div");
     element.innerHTML = maybeHtml;
     const isNativeProseMirrorContent = !!element.querySelector("query-str");
     if (isNativeProseMirrorContent) {
-      return { type: "HTML", content: element.innerText };
+      return { type: "HTML" };
     }
 
     return { type: "TEXT", content: element.innerText };
