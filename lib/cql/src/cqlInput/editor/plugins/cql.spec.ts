@@ -24,6 +24,7 @@ import { keymap } from "prosemirror-keymap";
 import {
   createProseMirrorTokenToDocumentMap,
   docToCqlStr,
+  findNodeAt,
   getNodeTypeAtSelection,
   queryToProseMirrorDoc,
   toProseMirrorTokens,
@@ -31,12 +32,13 @@ import {
 import { AllSelection, TextSelection } from "prosemirror-state";
 import { TestTypeaheadHelpers } from "../../../lang/fixtures/TestTypeaheadHelpers";
 import { isVisibleDataAttr } from "../../popover/Popover";
-import { tick } from "../../../utils/test";
+import { docToCqlStrWithSelection, tick } from "../../../utils/test";
 import { createParser } from "../../../lang/Cql";
 import { Typeahead } from "../../../lang/typeahead";
 import { chip, chipValue, IS_SELECTED } from "../schema";
 import { Node, NodeType } from "prosemirror-model";
 import { cqlQueryStrFromQueryAst } from "../../../lang/interpreter";
+import { EditorView } from "prosemirror-view";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
@@ -759,15 +761,18 @@ describe("cql plugin", () => {
     });
 
     // The selection is correct immediately after handleDoubleClick fires, but is not correct in the assertion 🤔
-    it.todo("should select the whole document when the user double clicks on the input container", async () => {
-      const { editor, user } = createCqlEditor("+tag:example");
+    it.todo(
+      "should select the whole document when the user double clicks on the input container",
+      async () => {
+        const { editor, user } = createCqlEditor("+tag:example");
 
-      await user.dblClick(editor.view.dom);
+        await user.dblClick(editor.view.dom);
 
-      expect(
-        editor.state.selection.eq(new AllSelection(editor.view.state.doc)),
-      ).toBe(true);
-    });
+        expect(
+          editor.state.selection.eq(new AllSelection(editor.view.state.doc)),
+        ).toBe(true);
+      },
+    );
   });
 
   describe("deletion", () => {
@@ -836,8 +841,117 @@ describe("cql plugin", () => {
       const deleteBtn = await findByText(editor.view.dom, "×");
       await fireEvent.click(deleteBtn);
 
-
       await waitFor("");
+    });
+  });
+
+  describe("paste behaviour", () => {
+    const pasteContent = (
+      view: EditorView,
+      data: { payload: string; type: string }[],
+    ) => {
+      const clipboardData = new DataTransfer();
+      data.forEach(({ payload, type }) => {
+        clipboardData.setData(type, payload);
+      });
+      const event = new ClipboardEvent("paste", { clipboardData });
+
+      view.pasteHTML(data[0].payload, event);
+    };
+
+    describe("chip values", () => {
+      it("should handle text pasted into chip value position, preserving whitespace and reserved characters where necessary", () => {
+        const { editor } = createCqlEditor("+tag:");
+        const payload = "https://a.url.com";
+        const selectionPos = findNodeAt(0, editor.doc, chipValue);
+        editor.selectText(selectionPos);
+
+        pasteContent(editor.view, [{ payload, type: "text/plain" }]);
+
+        expect(docToCqlStrWithSelection(editor.state)).toEqual(
+          `+tag:"${payload}^$" `,
+        );
+      });
+    });
+
+    describe("selection", () => {
+      it(`should preserve the selection state on paste into a blank document for data type "text/plain"`, () => {
+        const { editor } = createCqlEditor("");
+        const payload = "+tag:example";
+
+        pasteContent(editor.view, [{ payload, type: "text/plain" }]);
+
+        expect(docToCqlStrWithSelection(editor.state)).toEqual(
+          "+tag:example ^$",
+        );
+      });
+
+      it(`should preserve the selection state on paste for data type "text/plain" before text`, () => {
+        const { editor } = createCqlEditor("text");
+        editor.view.dispatch(
+          editor.state.tr.setSelection(
+            TextSelection.near(editor.state.doc.resolve(0)),
+          ),
+        );
+        const payload = "+tag:example";
+
+        pasteContent(editor.view, [{ payload, type: "text/plain" }]);
+
+        expect(docToCqlStrWithSelection(editor.state)).toEqual(
+          "+tag:example ^$text",
+        );
+      });
+
+      it(`should preserve the selection state on paste for data type "text/plain" in middle of text`, () => {
+        const { editor } = createCqlEditor("a  b");
+        editor.view.dispatch(
+          editor.state.tr.setSelection(
+            TextSelection.near(editor.state.doc.resolve(3)),
+          ),
+        );
+        const payload = "start +tag:example end";
+
+        pasteContent(editor.view, [{ payload, type: "text/plain" }]);
+
+        expect(docToCqlStrWithSelection(editor.state)).toEqual(
+          "a start +tag:example end^$ b",
+        );
+      });
+
+      it(`should preserve the selection state on paste for data type "text/plain" after text`, () => {
+        const { editor } = createCqlEditor("text ");
+        const payload = "+tag:example";
+
+        pasteContent(editor.view, [{ payload, type: "text/plain" }]);
+
+        expect(docToCqlStrWithSelection(editor.state)).toEqual(
+          "text +tag:example ^$",
+        );
+      });
+
+      it(`should preserve the selection state on paste for data type "text/html"`, () => {
+        const { editor } = createCqlEditor("text ");
+        const payload = `<meta charset='utf-8'><query-str data-pm-slice="0 0 []"></query-str><chip data-polarity="+"><chip-key>tag</chip-key><chip-value>type/article</chip-value></chip><query-str></query-str>`;
+
+        pasteContent(editor.view, [{ payload, type: "text/html" }]);
+
+        expect(docToCqlStrWithSelection(editor.state)).toEqual(
+          "text +tag:type/article ^$",
+        );
+      });
+    });
+
+    it(`should not use HTML that does not contain ProseMirror markup as HTML`, () => {
+      const { editor } = createCqlEditor("");
+      const htmlPayload = "html";
+      const textPayload = "this then that";
+
+      pasteContent(editor.view, [
+        { payload: htmlPayload, type: "text/html" },
+        { payload: textPayload, type: "text/plain" },
+      ]);
+
+      expect(docToCqlStr(editor.state.doc)).toEqual(textPayload);
     });
   });
 });

@@ -1,5 +1,7 @@
 import { getByText } from "@testing-library/dom";
 import type { GetByText } from "@testing-library/dom";
+import { EditorState } from "prosemirror-state";
+import { docToCqlStr } from "../cqlInput/editor/utils";
 
 export const tick = async () => new Promise<void>((res) => setTimeout(res));
 
@@ -88,3 +90,17 @@ export function getByTextShadowed<T extends HTMLElement>(
   // @ts-expect-error test
   return shadowFactory(getByText, getByTextShadowed)(...args);
 }
+
+/**
+ * Adds the current selection anchor (^) and head ($) to the document, and
+ * returns the CQL str the document represents. For example, a document
+ * `+tag:a` with the selection `AllSelection` would return `^+tag:a$`.
+ */
+export const docToCqlStrWithSelection = (_state: EditorState) => {
+  const state = _state.reconfigure({ plugins: [] });
+  const tr = state.tr;
+  const newState = state.apply(
+    tr.insertText("^", tr.selection.from).insertText("$", tr.selection.to),
+  );
+  return docToCqlStr(newState.doc);
+};

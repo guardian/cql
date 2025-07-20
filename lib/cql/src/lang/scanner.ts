@@ -1,6 +1,6 @@
 import { mergeDeep } from "../utils/merge";
 import { Token, TokenType } from "./token";
-import { hasUnreservedChar, hasWhitespace } from "./utils";
+import { hasReservedChar, hasWhitespace } from "./utils";
 
 export type ScannerSettings = {
   groups: boolean;
@@ -28,7 +28,7 @@ export class Scanner {
     this.settings = mergeDeep(defaultScannerSettings, settings);
 
     Object.keys(this.settings.shortcuts).forEach((shortcut) => {
-      if (!hasUnreservedChar(shortcut)) {
+      if (hasReservedChar(shortcut)) {
         throw new Error(
           `The character '${shortcut}' is reserved, and cannot be used as a shortcut`,
         );
@@ -149,7 +149,7 @@ export class Scanner {
    * or an unquoted string.
    */
   private handleUnquotedChars = () => {
-    while (hasUnreservedChar(this.peek()) && !this.isAtEnd()) {
+    while (!hasReservedChar(this.peek()) && !this.isAtEnd()) {
       this.advance();
     }
 

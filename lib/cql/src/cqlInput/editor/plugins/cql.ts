@@ -442,10 +442,22 @@ export const createCqlPlugin = ({
           return false;
         }
 
-        // Create the document that pasting would produce
-        const docToInsert = queryToProseMirrorDoc(maybeContent.content, parser);
-
         const { tr } = view.state;
+        const { content } = maybeContent;
+        const { $from, $to } = view.state.selection;
+        const fromNode = $from.node();
+        const toNode = $to.node();
+        const selectionIsWithinChipValue =
+          fromNode.type === chipValue && fromNode === toNode;
+
+        if (selectionIsWithinChipValue) {
+          view.dispatch(tr.insertText(content, $from.pos, $to.pos));
+
+          return true;
+        }
+
+        // Create the document that pasting would produce
+        const docToInsert = queryToProseMirrorDoc(content, parser);
 
         tr.replaceRange(
           view.state.selection.from,

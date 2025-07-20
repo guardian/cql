@@ -12,7 +12,7 @@ import {
   POLARITY,
   IS_SELECTED,
 } from "./schema";
-import { Node, NodeType } from "prosemirror-model";
+import { Fragment, Node, NodeType } from "prosemirror-model";
 import {
   NodeSelection,
   Selection,
@@ -31,7 +31,7 @@ import {
   TypeaheadSuggestion,
 } from "../../lang/types";
 import { CqlResult, createParser } from "../../lang/Cql";
-import { hasWhitespace } from "../../lang/utils";
+import { hasReservedChar, hasWhitespace } from "../../lang/utils";
 
 const tokensToPreserve = [
   TokenType.CHIP_KEY_POSITIVE,
@@ -141,7 +141,7 @@ export const createProseMirrorTokenToDocumentMap = (
   const compactedTokenRanges = joinQueryStrTokens(tokens);
 
   const ranges = compactedTokenRanges.reduce<[number, number, number][]>(
-    (accRanges, { tokenType, from, to, lexeme }, index, tokens) => {
+    (accRanges, { tokenType, from, to, lexeme, literal }, index, tokens) => {
       switch (tokenType) {
         case TokenType.CHIP_KEY_POSITIVE:
         case TokenType.CHIP_KEY_NEGATIVE: {
@@ -166,7 +166,7 @@ export const createProseMirrorTokenToDocumentMap = (
             ...getQueryValueRanges(
               from,
               to,
-              hasWhitespace(lexeme) ? true : false,
+              shouldQuoteFieldValue(literal ?? "") ? true : false,
             ),
           );
         }
@@ -180,6 +180,9 @@ export const createProseMirrorTokenToDocumentMap = (
 
   return new Mapping([new StepMap(ranges.flat())]);
 };
+
+const shouldQuoteFieldValue = (literal: string) =>
+  hasReservedChar(literal) || hasWhitespace(literal);
 
 /**
  * Map ProseMirrorTokens to their document positions.
@@ -367,7 +370,7 @@ export const docToCqlStr = (doc: Node): string => {
           return;
         }
 
-        const maybeQuoteMark = hasWhitespace(value) ? '"' : "";
+        const maybeQuoteMark = shouldQuoteFieldValue(value) ? '"' : "";
         str += `${maybeQuoteMark}${value}${maybeQuoteMark} `;
 
         return false;
@@ -381,9 +384,19 @@ export const docToCqlStr = (doc: Node): string => {
   return str;
 };
 
-export const findNodeAt = (pos: number, doc: Node, type: NodeType): number => {
+/**
+ * Find a node at or after the given position, searching forwards until a node
+ * is found.
+ */
+export const findNodeAt = (
+  pos: number,
+  doc: Node | Fragment,
+  type: NodeType,
+): number => {
   let found = -1;
-  doc.nodesBetween(pos - 1, doc.content.size, (node, pos) => {
+  const size = doc instanceof Node ? doc.content.size : doc.size;
+
+  doc.nodesBetween(pos - 1, size, (node, pos) => {
     if (found > -1) return false;
 
     if (node.type === type) {

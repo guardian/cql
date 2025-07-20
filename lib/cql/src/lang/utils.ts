@@ -3,8 +3,8 @@ import { CqlBinary, CqlExpr, CqlField } from "./ast";
 const whitespaceR = /\s/;
 export const hasWhitespace = (str: string) => whitespaceR.test(str);
 
-const unreservedCharR = /[\s:()"]/;
-export const hasUnreservedChar = (str: string) => !unreservedCharR.test(str);
+const reservedChar = /[\s:()"]/;
+export const hasReservedChar = (str: string) => reservedChar.test(str);
 
 export function* getPermutations<T>(
   permutation: T[],
