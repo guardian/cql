@@ -184,7 +184,7 @@ const selectPopoverOptionWithEnter = async (
   await editor.press("Enter");
 };
 
-describe("plugin", () => {
+describe("cql plugin", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
   });

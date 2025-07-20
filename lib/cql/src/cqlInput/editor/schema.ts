@@ -16,7 +16,7 @@ export const schema = new Schema({
       whitespace: "pre",
     },
     chip: {
-      content: "(chipKey chipValue)?",
+      content: "chipKey chipValue",
       toDOM: (node) => ["chip", { "data-polarity": node.attrs[POLARITY] }, 0],
       parseDOM: [
         {

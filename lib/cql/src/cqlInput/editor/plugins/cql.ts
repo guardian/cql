@@ -1,4 +1,4 @@
-import { Node } from "prosemirror-model";
+import { Node, Slice } from "prosemirror-model";
 import {
   AllSelection,
   Plugin,
@@ -15,7 +15,7 @@ import { CqlConfig } from "../../CqlInput";
 import { defaultPopoverRenderer } from "../../popover/components/defaultPopoverRenderer";
 import { ErrorPopover } from "../../popover/ErrorPopover";
 import { TypeaheadPopover } from "../../popover/TypeaheadPopover";
-import { insertChip, mergeDocs } from "../commands";
+import { insertChip } from "../commands";
 import {
   chip,
   chipKey,
@@ -34,6 +34,7 @@ import {
   errorToDecoration,
   getContentFromClipboard,
   getNodeTypeAtSelection,
+  getSizeOfDocWithContent,
   isChipSelected,
   isSelectionWithinNodesOfType,
   mapResult,
@@ -48,6 +49,7 @@ import {
   toMappedSuggestions,
 } from "../utils";
 import { chipKeyNodeView, chipNodeView, chipValueNodeView } from "../nodeView";
+import { logNode } from "../debug";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -444,15 +446,19 @@ export const createCqlPlugin = ({
 
         // Create the document that pasting would produce
         const docToInsert = queryToProseMirrorDoc(maybeContent.content, parser);
+
         const { tr } = view.state;
-        const { from, to } = view.state.selection;
-        const newState = view.state.apply(
-          tr.replaceRange(from, to, docToInsert.slice(0)),
+
+        tr.replaceRange(
+          view.state.selection.from,
+          view.state.selection.to,
+          // We create a slice to ensure that queryStr nodes are joined
+          // with their new siblings - if they are not, then they will
+          // spawn chips to match the schema's context expression
+          new Slice(docToInsert.content, 1, 1),
         );
 
-        // Merge it with the current document, producing a minimal diff to
-        // preserve selection state
-        mergeDocs(newState.doc)(view.state, view.dispatch);
+        view.dispatch(tr);
 
         return true;
       },

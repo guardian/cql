@@ -730,7 +730,7 @@ export const isSelectionWithinNodesOfType = (
 
 const removeChipCoveringRange = (from: number, to: number, tr: Transaction) => {
   const insertAt = Math.max(0, from - 1);
-  tr.deleteRange(from, to);
+  tr.deleteRange(from - 1, to + 1);
 
   // If the document has content, ensure whitespace separates the two queryStr
   // nodes surrounding the chip, which are now joined.

@@ -15,61 +15,61 @@ import { Typeahead } from "../../lib";
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
 
+const parser = createParser();
+const createEditorFromInitialState = (query: string) => {
+  const mountEl = document.createElement("div");
+  const typeaheadEl = document.createElement("div");
+  const errorEl = document.createElement("div");
+
+  const cqlPlugin = createCqlPlugin({
+    typeahead: testCqlService,
+    typeaheadEl,
+    errorEl,
+    config: { syntaxHighlighting: true },
+    onChange: () => {},
+    parser,
+  });
+
+  return createEditorView({
+    initialValue: query,
+    plugins: [cqlPlugin],
+    parser,
+    mountEl,
+  });
+};
+
+const getPosFromQueryPos = (pos: number, editor: EditorView) => {
+  const query = docToCqlStr(editor.state.doc);
+  const result = parser(query);
+  const tokens = toProseMirrorTokens(result.tokens);
+  const mapping = createProseMirrorTokenToDocumentMap(tokens);
+  return mapping.map(pos);
+};
+
+const setQueryPosAsSelection = (pos: number, editorView: EditorView) => {
+  const docPos = getPosFromQueryPos(pos, editorView);
+  editorView.dispatch(
+    editorView.state.tr.setSelection(
+      TextSelection.near(editorView.state.doc.resolve(docPos)),
+    ),
+  );
+};
+
+/**
+ * Adds the current selection anchor (^) and head ($) to the document, and
+ * returns the CQL str the document represents. For example, a document
+ * `+tag:a` with the selection `AllSelection` would return `^+tag:a$`.
+ */
+const docToCqlStrWithSelection = (_state: EditorState) => {
+  const state = _state.reconfigure({ plugins: [] });
+  const tr = state.tr;
+  const newState = state.apply(
+    tr.insertText("^", tr.selection.from).insertText("$", tr.selection.to),
+  );
+  return docToCqlStr(newState.doc);
+};
+
 describe("updateEditorViewWithQueryStr", () => {
-  const parser = createParser();
-  const createEditorFromInitialState = (query: string) => {
-    const mountEl = document.createElement("div");
-    const typeaheadEl = document.createElement("div");
-    const errorEl = document.createElement("div");
-
-    const cqlPlugin = createCqlPlugin({
-      typeahead: testCqlService,
-      typeaheadEl,
-      errorEl,
-      config: { syntaxHighlighting: true },
-      onChange: () => {},
-      parser,
-    });
-
-    return createEditorView({
-      initialValue: query,
-      plugins: [cqlPlugin],
-      parser,
-      mountEl,
-    });
-  };
-
-  const getPosFromQueryPos = (pos: number, editor: EditorView) => {
-    const query = docToCqlStr(editor.state.doc);
-    const result = parser(query);
-    const tokens = toProseMirrorTokens(result.tokens);
-    const mapping = createProseMirrorTokenToDocumentMap(tokens);
-    return mapping.map(pos);
-  };
-
-  const setQueryPosAsSelection = (pos: number, editorView: EditorView) => {
-    const docPos = getPosFromQueryPos(pos, editorView);
-    editorView.dispatch(
-      editorView.state.tr.setSelection(
-        TextSelection.near(editorView.state.doc.resolve(docPos)),
-      ),
-    );
-  };
-
-  /**
-   * Adds the current selection anchor (^) and head ($) to the document, and
-   * returns the CQL str the document represents. For example, a document
-   * `+tag:a` with the selection `AllSelection` would return `^+tag:a$`.
-   */
-  const docToCqlStrWithSelection = (_state: EditorState) => {
-    const state = _state.reconfigure({ plugins: [] });
-    const tr = state.tr;
-    const newState = state.apply(
-      tr.insertText("^", tr.selection.from).insertText("$", tr.selection.to),
-    );
-    return docToCqlStr(newState.doc);
-  };
-
   it("should create a document in the correct state", () => {
     const { editorView } = createEditorFromInitialState("+tag:a");
 
@@ -153,7 +153,9 @@ describe("updateEditorViewWithQueryStr", () => {
 
     expect(docToCqlStrWithSelection(editorView.state)).toEqual("+tag:^$ ");
   });
+});
 
+describe("paste behaviour", () => {
   const pasteContent = (
     view: EditorView,
     data: { payload: string; type: string }[],
@@ -167,7 +169,50 @@ describe("updateEditorViewWithQueryStr", () => {
     view.pasteHTML(data[0].payload, event);
   };
 
-  it(`should preserve the selection state on paste for data type "text/plain"`, () => {
+  it(`should preserve the selection state on paste into a blank document for data type "text/plain"`, () => {
+    const { editorView } = createEditorFromInitialState("");
+    const payload = "+tag:example";
+
+    pasteContent(editorView, [{ payload, type: "text/plain" }]);
+
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual(
+      "+tag:example ^$",
+    );
+  });
+
+  it(`should preserve the selection state on paste for data type "text/plain" before text`, () => {
+    const { editorView } = createEditorFromInitialState("text");
+    editorView.dispatch(
+      editorView.state.tr.setSelection(
+        TextSelection.near(editorView.state.doc.resolve(0)),
+      ),
+    );
+    const payload = "+tag:example";
+
+    pasteContent(editorView, [{ payload, type: "text/plain" }]);
+
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual(
+      "+tag:example ^$text",
+    );
+  });
+
+  it(`should preserve the selection state on paste for data type "text/plain" in middle of text`, () => {
+    const { editorView } = createEditorFromInitialState("a  b");
+    editorView.dispatch(
+      editorView.state.tr.setSelection(
+        TextSelection.near(editorView.state.doc.resolve(3)),
+      ),
+    );
+    const payload = "start +tag:example end";
+
+    pasteContent(editorView, [{ payload, type: "text/plain" }]);
+
+    expect(docToCqlStrWithSelection(editorView.state)).toEqual(
+      "a start +tag:example end^$ b",
+    );
+  });
+
+  it(`should preserve the selection state on paste for data type "text/plain" after text`, () => {
     const { editorView } = createEditorFromInitialState("text ");
     const payload = "+tag:example";
 
