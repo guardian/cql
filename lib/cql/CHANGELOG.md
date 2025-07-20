@@ -1,5 +1,12 @@
 # @guardian/cql
 
+## 1.3.5
+
+### Patch Changes
+
+- 0be2010: Serialise chip values as plain text when they're all that's selected, to avoid surrounding their content into quotes
+- 8d00ca5: Handle strings pasted into chip values as text, to permit them to include reserved characters
+
 ## 1.3.4
 
 ### Patch Changes
