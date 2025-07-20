@@ -1,5 +1,12 @@
 # @guardian/cql
 
+## 1.3.4
+
+### Patch Changes
+
+- 4156c05: Only focus the whole document when double-clicking on the outer editor
+- 60b7f00: Pasting is better behaved when plain text queries are pasted
+
 ## 1.3.3
 
 ### Patch Changes
