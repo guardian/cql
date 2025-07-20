@@ -7,7 +7,7 @@
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
-    "@changesets/cli": "^2.29.4"
+    "@changesets/cli": "^2.29.5"
   },
   "workspaces": [
     "lib/*"
