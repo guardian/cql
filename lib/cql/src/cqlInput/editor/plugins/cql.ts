@@ -32,6 +32,7 @@ import {
   applySuggestion,
   docToCqlStr,
   errorToDecoration,
+  findNodeAt,
   getContentFromClipboard,
   getNodeTypeAtSelection,
   isChipSelected,
@@ -482,6 +483,17 @@ export const createCqlPlugin = ({
       // Serialise outgoing content to a CQL string for portability in both plain text and html
       clipboardTextSerializer(content) {
         const node = doc.create(undefined, content.content);
+
+        // If we are serialising just a chipValue, ensure that we only serialise
+        // the chip's text content, to avoid serialising the entire node, which
+        // will wrap its content in quotes.
+        const chipValueNodePos = findNodeAt(0, node, chipValue);
+        const chipKeyNodePos = findNodeAt(0, node, chipKey);
+        const justChipValue = chipValueNodePos > -1 && chipKeyNodePos === -1;
+        if (justChipValue) {
+          return node.nodeAt(chipValueNodePos)?.textContent ?? "";
+        }
+
         return docToCqlStr(node);
       },
     },
