@@ -37,7 +37,6 @@ import { Typeahead } from "../../../lang/typeahead";
 import { chip, chipValue, IS_SELECTED } from "../schema";
 import { Node, NodeType } from "prosemirror-model";
 import { cqlQueryStrFromQueryAst } from "../../../lang/interpreter";
-import { logNode } from "../debug";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
@@ -591,7 +590,6 @@ describe("cql plugin", () => {
       await waitFor("a tag:");
       const chipValuePos = getPosFromQueryPos("a +tag:".indexOf(":") + 1);
 
-      logNode(editor.doc);
       expect(editor.selection.from).toBe(chipValuePos);
     });
 

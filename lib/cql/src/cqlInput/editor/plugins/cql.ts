@@ -34,7 +34,6 @@ import {
   errorToDecoration,
   getContentFromClipboard,
   getNodeTypeAtSelection,
-  getSizeOfDocWithContent,
   isChipSelected,
   isSelectionWithinNodesOfType,
   mapResult,
@@ -49,7 +48,6 @@ import {
   toMappedSuggestions,
 } from "../utils";
 import { chipKeyNodeView, chipNodeView, chipValueNodeView } from "../nodeView";
-import { logNode } from "../debug";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
