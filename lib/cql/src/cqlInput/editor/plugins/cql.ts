@@ -456,10 +456,12 @@ export const createCqlPlugin = ({
 
         return true;
       },
-      handleDoubleClick(view) {
-        view.dispatch(
-          view.state.tr.setSelection(new AllSelection(view.state.doc)),
-        );
+      handleDoubleClick(view, _pos, event) {
+        if (event.target === view.dom) {
+          view.dispatch(
+            view.state.tr.setSelection(new AllSelection(view.state.doc)),
+          );
+        }
       },
       // Serialise outgoing content to a CQL string for portability in both plain text and html
       clipboardTextSerializer(content) {
