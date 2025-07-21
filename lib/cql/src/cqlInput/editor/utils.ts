@@ -85,10 +85,10 @@ const getQueryValueRanges = (
     // chipValue start (-1)
     // leading char (':') (+1)
     [from, -1, 0],
+    // maybe start quote (+1)
     [from, quoteOffset, 0],
-    // chipValue end (-1)
-    [to, quoteOffset, 0],
-    [to, -1, 0],
+    // chipValue end(-1) - maybe end quote (+1)
+    [to, -1 + quoteOffset, 0],
   ];
 };
 

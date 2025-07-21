@@ -162,7 +162,7 @@ export const getDebugMappingHTML = (
                     ${(queryPosMap[pos] ?? []).map(
                       ({ char }) =>
                         `<div class="CqlDebug__originalChar">${char}</div>`,
-                    )}
+                    ).join(" ")}
 
 
                     ${

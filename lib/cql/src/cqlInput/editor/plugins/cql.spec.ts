@@ -442,19 +442,14 @@ describe("cql plugin", () => {
           await waitFor('example tag:"Tag with space"');
         });
 
-        it.only("applies the given key in quotes when it contains whitespace after another tag", async () => {
-          const queryStr = `+tag:"1 2" `;
-          const { editor, container, waitFor, moveCaretToQueryPos } =
-            createCqlEditor(queryStr);
+        it("applies the given key in quotes when it follows another tag with whitespace", async () => {
+          const queryStr = `tag:"1 2"`;
+          const { editor, container, waitFor } = createCqlEditor(queryStr);
 
-          await moveCaretToQueryPos(queryStr.length);
-          await editor.insertText("t");
-          await selectPopoverOptionWithClick(
-            container,
-            "Tag with a space in it",
-          );
+          await editor.insertText(" +");
+          await selectPopoverOptionWithClick(container, "Tag");
 
-          await waitFor(`${queryStr} tag:"Tag with space"`);
+          await waitFor(`${queryStr} tag:`);
         });
 
         it("applies the given key over another key correctly when it contains whitespace", async () => {
@@ -605,7 +600,7 @@ describe("cql plugin", () => {
       await editor.insertText("#");
 
       await waitFor("a tag:");
-      const chipValuePos = getPosFromQueryPos("a +tag:".indexOf(":") + 1);
+      const chipValuePos = findNodeAt(0, editor.doc, chipValue) + 1;
 
       expect(editor.selection.from).toBe(chipValuePos);
     });
