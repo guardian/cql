@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 1.3.6
+
+### Patch Changes
+
+- 3b4707d: Correct mappings for quoted values
+
 ## 1.3.5
 
 ### Patch Changes
