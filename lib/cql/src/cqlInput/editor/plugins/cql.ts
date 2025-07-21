@@ -49,6 +49,7 @@ import {
   toMappedSuggestions,
 } from "../utils";
 import { chipKeyNodeView, chipNodeView, chipValueNodeView } from "../nodeView";
+import { DebugChangeEventDetail } from "../../../types/dom";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -99,6 +100,7 @@ export const createCqlPlugin = ({
   typeaheadEl,
   errorEl,
   onChange,
+  onDebug,
   config: {
     syntaxHighlighting,
     renderPopoverContent = defaultPopoverRenderer,
@@ -111,6 +113,7 @@ export const createCqlPlugin = ({
   errorEl: HTMLElement;
   config: CqlConfig;
   onChange: (detail: { queryAst?: CqlQuery; error?: string }) => void;
+  onDebug?: (detail: DebugChangeEventDetail) => void;
   parser: ReturnType<typeof createParser>;
 }) => {
   let typeaheadPopover: TypeaheadPopover | undefined;
@@ -149,6 +152,18 @@ export const createCqlPlugin = ({
       queryAst,
       mapping,
     });
+
+    if (onDebug) {
+      onDebug({
+        queryStr: docToCqlStr(tr.doc),
+        selection: tr.selection,
+        doc: tr.doc,
+        tokens: result.tokens,
+        mapping,
+        queryAst,
+        error,
+      });
+    }
 
     return { queryAst, tr };
   };

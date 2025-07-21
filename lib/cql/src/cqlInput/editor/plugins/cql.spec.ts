@@ -442,6 +442,21 @@ describe("cql plugin", () => {
           await waitFor('example tag:"Tag with space"');
         });
 
+        it.only("applies the given key in quotes when it contains whitespace after another tag", async () => {
+          const queryStr = `+tag:"1 2" `;
+          const { editor, container, waitFor, moveCaretToQueryPos } =
+            createCqlEditor(queryStr);
+
+          await moveCaretToQueryPos(queryStr.length);
+          await editor.insertText("t");
+          await selectPopoverOptionWithClick(
+            container,
+            "Tag with a space in it",
+          );
+
+          await waitFor(`${queryStr} tag:"Tag with space"`);
+        });
+
         it("applies the given key over another key correctly when it contains whitespace", async () => {
           const queryStr = `example +tag:"Tag with spac"`;
           const { container, waitFor, moveCaretToQueryPos } =

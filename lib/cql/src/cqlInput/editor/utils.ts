@@ -166,7 +166,7 @@ export const createProseMirrorTokenToDocumentMap = (
             ...getQueryValueRanges(
               from,
               to,
-              shouldQuoteFieldValue(literal ?? "") ? true : false,
+              shouldQuoteFieldValue(literal ?? ""),
             ),
           );
         }

@@ -4,7 +4,7 @@ import { cqlQueryStrFromQueryAst } from "../lang/interpreter";
 import { ScannerSettings } from "../lang/scanner";
 import { Typeahead } from "../lang/typeahead";
 import { CqlQuery } from "../lib";
-import { QueryChangeEventDetail } from "../types/dom";
+import { DebugChangeEventDetail, QueryChangeEventDetail } from "../types/dom";
 import { DeepPartial } from "../types/utils";
 import { createEditorView } from "./editor/editor";
 import {
@@ -30,7 +30,10 @@ export type CqlConfig = {
   renderPopoverContent?: RenderPopoverContent;
   theme?: DeepPartial<CqlTheme>;
   lang?: Partial<ScannerSettings>;
+  enableDebugEvents?: boolean;
 };
+
+
 
 export const createCqlInput = (
   typeahead: Typeahead,
@@ -98,11 +101,22 @@ export const createCqlInput = (
 
       this.parseCqlStr = createParser(config.lang);
 
+      const onDebug = config.enableDebugEvents
+        ? (detail: DebugChangeEventDetail) => {
+            this.dispatchEvent(
+              new CustomEvent<DebugChangeEventDetail>("debugChange", {
+                detail,
+              }),
+            );
+          }
+        : undefined;
+
       const plugin = createCqlPlugin({
         typeahead,
         typeaheadEl,
         errorEl,
         onChange,
+        onDebug,
         config,
         parser: this.parseCqlStr,
       });

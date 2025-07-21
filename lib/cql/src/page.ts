@@ -6,12 +6,11 @@ import {
   getDebugTokenHTML,
   getOriginalQueryHTML,
 } from "./cqlInput/editor/debug.ts";
-import { mapResult, tokensToDoc } from "./cqlInput/editor/utils.ts";
 import { createParser } from "./lang/Cql.ts";
 import { Typeahead, TypeaheadField } from "./lang/typeahead.ts";
 import { CapiTypeaheadProvider } from "./typeahead/CapiTypeaheadHelpers.ts";
 import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
-import { QueryChangeEventDetail } from "./types/dom";
+import { DebugChangeEventDetail, QueryChangeEventDetail } from "./types/dom";
 
 const setUrlParam = (key: string, value: string) => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -45,14 +44,10 @@ jsonDebugContainer.appendChild(debugSuggestionsContainer);
 const debugErrorContainer = document.createElement("div");
 jsonDebugContainer.appendChild(debugErrorContainer);
 
-const parser = createParser();
-
-function updateDebugPanel(query: string) {
-  const result = parser(query);
-  const { tokens, queryAst, error, mapping } = mapResult(result);
-
-  const newDoc = tokensToDoc(tokens);
-
+const handleDebugChangeEvent = (e: CustomEvent<DebugChangeEventDetail>) => {
+  const {
+    detail: { queryStr, queryAst, tokens, doc, error, mapping },
+  } = e;
   debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
     queryAst,
     undefined,
@@ -67,17 +62,17 @@ function updateDebugPanel(query: string) {
 
   debugMappingContainer.innerHTML = `
             <p>Original query: </p>
-            ${getOriginalQueryHTML(query)}
+            ${getOriginalQueryHTML(queryStr)}
             <p>Tokenises to:</p>
-            ${getDebugTokenHTML(result.tokens)}
+            ${getDebugTokenHTML(tokens)}
             ${
-              result.queryAst
+              queryAst
                 ? `<p>AST: </p>
-            ${getDebugASTHTML(result.queryAst)}`
+            ${getDebugASTHTML(queryAst)}`
                 : ""
             }
             <p>Maps to nodes: </p>
-            ${getDebugMappingHTML(query, mapping, newDoc)}
+            ${getDebugMappingHTML(queryStr, mapping, doc)}
           `;
 
   debugErrorContainer.innerHTML = error
@@ -87,7 +82,7 @@ function updateDebugPanel(query: string) {
         <div>Message: ${error.message}</div>
       `
     : "";
-}
+};
 
 const dataSourceMap: Record<string, string> = {
   "content-api": "cql-input-capi",
@@ -112,7 +107,6 @@ function handleQueryChange(queryStr: string, errorMessage?: string) {
   queryEl.innerHTML = queryStr;
   cqlEl.innerHTML = queryStr.replaceAll(" ", "·");
   errorEl.innerHTML = errorMessage ?? "";
-  updateDebugPanel(queryStr);
 }
 
 function handleQueryChangeEvent(e: CustomEvent<QueryChangeEventDetail>) {
@@ -123,12 +117,15 @@ dataSourceSelect.addEventListener("change", (e: Event) => {
   const source = (e.target as HTMLSelectElement).value;
   const inputHtmlTagValue = dataSourceMap[source];
   cqlInputContainer.innerHTML = `<${inputHtmlTagValue} autofocus id="${source}"></${inputHtmlTagValue}>`;
-  const newCqlInput = cqlInputContainer.firstChild as HTMLElement;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- no type for webcomponent, yet
+  const newCqlInput = cqlInputContainer.firstChild as any;
   newCqlInput?.focus();
   handleQueryChange("");
   newCqlInput?.addEventListener("queryChange", handleQueryChangeEvent);
+  newCqlInput?.addEventListener("debugChange", handleDebugChangeEvent);
 });
 cqlInput?.addEventListener("queryChange", handleQueryChangeEvent);
+cqlInput?.addEventListener("debugChange", handleDebugChangeEvent);
 
 const params = new URLSearchParams(window.location.search);
 const endpoint = params.get("endpoint");
@@ -150,6 +147,7 @@ const CqlInputCapi = createCqlInput(capiTypeahead, {
       "#": "tag",
     },
   },
+  enableDebugEvents: true,
 });
 
 const guToolsTypeaheadFields: TypeaheadField[] = [
@@ -164,6 +162,7 @@ const guToolsTypeaheadFields: TypeaheadField[] = [
 const typeaheadGuTools = new Typeahead(guToolsTypeaheadFields);
 const CqlInputGuTools = createCqlInput(typeaheadGuTools, {
   syntaxHighlighting: true,
+  enableDebugEvents: true,
 });
 
 customElements.define("cql-input-gutools", CqlInputGuTools);

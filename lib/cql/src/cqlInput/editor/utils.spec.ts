@@ -198,9 +198,9 @@ describe("utils", () => {
       });
 
       it("with a tag with a quoted value and whitespace", async () => {
-        const text = await getTextFromTokenRanges('+tag:"1 2" 3');
+        const text = await getTextFromTokenRanges('+tag:"1 2" a +tag:"3 4" b');
 
-        expect(text).toEqual(["tag", "1 2", "3", ""]);
+        expect(text).toEqual(["tag", "1 2", "a", "tag", "3 4", "b", ""]);
       });
 
       it("with two queries", async () => {
