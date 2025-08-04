@@ -353,13 +353,15 @@ export const docToCqlStr = (doc: Node): string => {
         return false;
       }
       case "chipKey": {
+        const value = node.textContent;
         const leadingWhitespace =
           str.trim() === "" || str.endsWith(" ") ? "" : " ";
         const polarity = parent?.attrs[POLARITY];
 
+        const maybeQuoteMark = shouldQuoteFieldValue(value) ? '"' : "";
         // Anticipate a chipValue here, adding the colon – if we do not, and a
         // chipValue is not present, we throw the mappings off.
-        str += `${leadingWhitespace}${polarity}${node.textContent}:`;
+        str += `${leadingWhitespace}${polarity}${maybeQuoteMark}${value}${maybeQuoteMark}:`;
         return false;
       }
       case "chipValue": {

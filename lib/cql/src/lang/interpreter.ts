@@ -36,8 +36,14 @@ const strFromBinary = (queryBinary: CqlBinary): string => {
 
 const strFromField = (field: CqlField): string => {
   const polarity = field.key.tokenType === "CHIP_KEY_POSITIVE" ? "" : "-";
-  const literal = field.value?.literal ?? "";
-  const normalisedLiteral = hasWhitespace(literal) ? `"${literal}"` : literal;
+  const keyLiteral = field.key.literal ?? "";
+  const normalisedKey = hasWhitespace(keyLiteral)
+    ? `"${keyLiteral}"`
+    : keyLiteral;
+  const valueLiteral = field.value?.literal ?? "";
+  const normalisedValue = hasWhitespace(valueLiteral)
+    ? `"${valueLiteral}"`
+    : valueLiteral;
 
-  return `${polarity}${field.key.literal ?? ""}:${normalisedLiteral}`;
+  return `${polarity}${normalisedKey ?? ""}:${normalisedValue}`;
 };

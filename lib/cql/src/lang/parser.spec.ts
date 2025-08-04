@@ -138,7 +138,7 @@ describe("parser", () => {
     });
   });
 
-  describe("CqlField", () => {
+  describe("QueryField", () => {
     it("should handle a query field", () => {
       const tokens = [
         queryFieldKeyToken("ta"),

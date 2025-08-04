@@ -68,14 +68,14 @@ export class Scanner {
         if (this.settings.groups) {
           this.addToken(TokenType.LEFT_BRACKET);
         } else {
-          this.handleUnquotedChars();
+          this.handleUnquotedString();
         }
         return;
       case ")":
         if (this.settings.groups) {
           this.addToken(TokenType.RIGHT_BRACKET);
         } else {
-          this.handleUnquotedChars();
+          this.handleUnquotedString();
         }
         return;
       case " ":
@@ -83,7 +83,7 @@ export class Scanner {
       case "\r":
       case "\t":
       case '"':
-        this.addString();
+        this.handleQuotedString();
         return;
       default: {
         const current = this.peek(-1);
@@ -91,7 +91,7 @@ export class Scanner {
           this.addShortcut(this.settings.shortcuts[current]);
           return;
         } else {
-          this.handleUnquotedChars();
+          this.handleUnquotedString();
         }
         return;
       }
@@ -99,8 +99,17 @@ export class Scanner {
   };
 
   private addKey = (tokenType: TokenType) => {
+    const isQuotedKey = this.peek() === '"';
+    if (isQuotedKey) {
+      this.advance();
+      this.consumeQuotedRange();
+      const literal = this.program.substring(this.start + 2, this.current - 1);
+      this.addToken(tokenType, literal === "" ? undefined : literal);
+      return;
+    }
+
     while (
-      this.peek() != ":" &&
+      this.peek() !== ":" &&
       !hasWhitespace(this.peek()) &&
       !this.isAtEnd()
     ) {
@@ -148,7 +157,7 @@ export class Scanner {
    * Unquoted chars could be a reserved word, a field key (if followed by ':'),
    * or an unquoted string.
    */
-  private handleUnquotedChars = () => {
+  private handleUnquotedString = () => {
     while (!hasReservedChar(this.peek()) && !this.isAtEnd()) {
       this.advance();
     }
@@ -186,20 +195,23 @@ export class Scanner {
     );
   };
 
-  private addString = () => {
+  private handleQuotedString = () => {
     this.consumeQuotedRange();
 
-    this.addToken(
-      TokenType.STRING,
-      this.program.substring(this.start + 1, this.current - 1),
-    );
+    const literal = this.program.substring(this.start + 1, this.current - 1);
+
+    if (this.peek() === ":") {
+      return this.addToken(TokenType.CHIP_KEY_POSITIVE, literal);
+    }
+
+    this.addToken(TokenType.STRING, literal);
   };
 
   /**
    * Consumes a quoted range.
    */
   private consumeQuotedRange = () => {
-    while (this.peek() != '"' && !this.isAtEnd()) {
+    while (this.peek() !== '"' && !this.isAtEnd()) {
       this.advance();
     }
 

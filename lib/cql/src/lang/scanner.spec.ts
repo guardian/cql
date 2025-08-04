@@ -93,7 +93,23 @@ describe("scanner", () => {
       ]);
     });
 
-    it("should tokenise key value pairs for fields when the key value is in quotes", () => {
+    it("should tokenise key value pairs for fields when the key is in quotes, with prefix", () => {
+      assertTokens('+"Byline Title":"tone news"', [
+        new Token(TokenType.CHIP_KEY_POSITIVE, `+"Byline Title"`, "Byline Title", 0, 14),
+        new Token(TokenType.CHIP_VALUE, ':"tone news"', "tone news", 15, 26),
+        eofToken(27),
+      ]);
+    });
+
+    it("should tokenise key value pairs for fields when the key is in quotes, without prefix", () => {
+      assertTokens('"Byline Title":"tone news"', [
+        new Token(TokenType.CHIP_KEY_POSITIVE, `"Byline Title"`, "Byline Title", 0, 13),
+        new Token(TokenType.CHIP_VALUE, ':"tone news"', "tone news", 14, 25),
+        eofToken(26),
+      ]);
+    });
+
+    it("should tokenise key value pairs for fields when the value is in quotes", () => {
       assertTokens('+tag:"tone/news"', [
         new Token(TokenType.CHIP_KEY_POSITIVE, "+tag", "tag", 0, 3),
         new Token(TokenType.CHIP_VALUE, ':"tone/news"', "tone/news", 4, 15),
@@ -141,6 +157,19 @@ describe("scanner", () => {
         eofToken(13),
       ]);
     });
+  });
+
+  describe("groups", () => {
+    it("should tokenise groups", () => {
+      assertTokens("(two OR three)", [
+        new Token(TokenType.LEFT_BRACKET, "(", undefined, 0, 0),
+        unquotedStringToken("two", 1),
+        new Token(TokenType.OR, "OR", undefined, 5, 6),
+        unquotedStringToken("three", 8),
+        new Token(TokenType.RIGHT_BRACKET, ")", undefined, 13, 13),
+        eofToken(14),
+      ]);
+    });
 
     it("should tokenise groups and boolean operators - 1", () => {
       assertTokens("one AND (two OR three)", [
@@ -161,17 +190,6 @@ describe("scanner", () => {
         new Token(TokenType.AND, "AND", undefined, 4, 6),
         unquotedStringToken("two", 8),
         eofToken(11),
-      ]);
-    });
-
-    it("should tokenise groups", () => {
-      assertTokens("(two OR three)", [
-        new Token(TokenType.LEFT_BRACKET, "(", undefined, 0, 0),
-        unquotedStringToken("two", 1),
-        new Token(TokenType.OR, "OR", undefined, 5, 6),
-        unquotedStringToken("three", 8),
-        new Token(TokenType.RIGHT_BRACKET, ")", undefined, 13, 13),
-        eofToken(14),
       ]);
     });
   });
