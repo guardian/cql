@@ -65,13 +65,22 @@ const joinQueryStrTokens = (tokens: ProseMirrorToken[]) =>
 
 const getCqlFieldKeyRange = (
   from: number,
+  to: number,
   hasPrefix: boolean,
-): [number, number, number] => {
+  isQuoted: boolean,
+): [number, number, number][] => {
   // optional leading char ('+') (+1)
   // chipKey begin (-1)
   // chip begin (-1)
   const prefixOffset = hasPrefix ? 1 : 0;
-  return [from - 1, -2 + prefixOffset, 0];
+  const quoteOffset = isQuoted ? 1 : 0;
+  return [
+    [from - 1, -2 + prefixOffset, 0],
+    // maybe start quote (+1)
+    [from, quoteOffset, 0],
+    // maybe end quote (+1)
+    [to - 1, quoteOffset, 0],
+  ];
 };
 
 const getQueryValueRanges = (
@@ -158,7 +167,12 @@ export const createProseMirrorTokenToDocumentMap = (
             ...(shouldAddQueryStrMapping
               ? getQueryStrRanges(previousToken?.to, previousToken?.to)
               : []),
-            getCqlFieldKeyRange(from, hasPrefix),
+            getCqlFieldKeyRange(
+              from,
+              to,
+              hasPrefix,
+              shouldQuoteFieldValue(literal ?? ""),
+            ),
           );
         }
         case "CHIP_VALUE": {

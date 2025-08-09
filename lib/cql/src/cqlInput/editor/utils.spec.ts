@@ -191,16 +191,22 @@ describe("utils", () => {
         ]);
       });
 
-      it("with a tag", async () => {
+      it("with a query field", async () => {
         const text = await getTextFromTokenRanges("+tag:test");
 
         expect(text).toEqual(["tag", "test", ""]);
       });
 
-      it("with a tag with a quoted value and whitespace", async () => {
+      it("with a query field with a quoted value and whitespace", async () => {
         const text = await getTextFromTokenRanges('+tag:"1 2" a +tag:"3 4" b');
 
         expect(text).toEqual(["tag", "1 2", "a", "tag", "3 4", "b", ""]);
+      });
+
+      it("with a query field with a quoted key", async () => {
+        const text = await getTextFromTokenRanges('+"ta g":"1 2"');
+
+        expect(text).toEqual(["ta g", "1 2", ""]);
       });
 
       it("with two queries", async () => {

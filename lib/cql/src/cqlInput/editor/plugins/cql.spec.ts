@@ -586,7 +586,7 @@ describe("cql plugin", () => {
 
     it("should move the selection into value position when the user types a shortcut after text", async () => {
       const queryStr = "a ";
-      const { editor, getPosFromQueryPos, waitFor } = createCqlEditor(
+      const { editor, waitFor } = createCqlEditor(
         queryStr,
         {
           lang: {
