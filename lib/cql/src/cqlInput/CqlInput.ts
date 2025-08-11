@@ -33,8 +33,6 @@ export type CqlConfig = {
   enableDebugEvents?: boolean;
 };
 
-
-
 export const createCqlInput = (
   typeahead: Typeahead,
   config: CqlConfig = {

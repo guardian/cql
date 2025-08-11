@@ -20,7 +20,9 @@ export abstract class Popover {
   protected isVisible = false;
   protected updateRenderer = () => {};
 
-  public constructor(protected popoverEl: HTMLElement) {}
+  public constructor(protected popoverEl: HTMLElement) {
+    this.popoverEl.dataset[isVisibleDataAttr] = "false";
+  }
 
   /**
    * Hide the popover. Use the hide/show methods, rather than hiding and showing

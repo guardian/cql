@@ -158,16 +158,21 @@ export const createProseMirrorTokenToDocumentMap = (
           // field value, the editor will add a queryStr node to conform to
           // the schema, so we add a queryStr mapping to account for the
           // additional node.
-          const previousToken = tokens[index - 1];
+          const previousToken = tokens[index - 1] as
+            | ProseMirrorToken
+            | undefined;
           const shouldAddQueryStrMapping =
             previousToken?.tokenType === "CHIP_VALUE" || index === 0;
+          const queryStrFrom = previousToken ? previousToken?.to + 1 : 0;
+          const queryStrMapping = shouldAddQueryStrMapping
+            ? getQueryStrRanges(queryStrFrom, queryStrFrom)
+            : [];
+
           const hasPrefix = lexeme.startsWith("+") || lexeme.startsWith("-");
 
           return accRanges.concat(
-            ...(shouldAddQueryStrMapping
-              ? getQueryStrRanges(previousToken?.to, previousToken?.to)
-              : []),
-            getCqlFieldKeyRange(
+            ...queryStrMapping,
+             getCqlFieldKeyRange(
               from,
               to,
               hasPrefix,

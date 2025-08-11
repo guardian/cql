@@ -92,7 +92,7 @@ const createCqlEditor = (
     return editor.command((state, dispatch) => {
       dispatch?.(
         state.tr.setSelection(
-          TextSelection.near(state.doc.resolve(pos + offset)),
+          TextSelection.create(state.doc, pos + offset),
         ),
       );
 
@@ -185,6 +185,18 @@ const selectPopoverOptionWithEnter = async (
   await editor.press("Enter");
 };
 
+const assertPopoverVisibility = async (
+  container: HTMLElement,
+  isVisible: boolean,
+) => {
+  await tick(); // Sometimes seems to be necessary to permit the popover to update after edit ops
+  const popoverContainer = await findByTestId(container, typeaheadTestId);
+
+  expect(popoverContainer.dataset[isVisibleDataAttr]).toBe(
+    isVisible ? "true" : "false",
+  );
+};
+
 describe("cql plugin", () => {
   beforeEach(() => {
     document.body.innerHTML = "";
@@ -269,11 +281,11 @@ describe("cql plugin", () => {
         await editor.insertText("+");
         await findByText(popoverContainer, "Tag");
 
-        expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("true");
+        await assertPopoverVisibility(container, true);
 
         await editor.press("Escape");
 
-        expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("false");
+        await assertPopoverVisibility(container, false);
       });
 
       ["ArrowUp", "ArrowDown"].forEach((arrowKey) => {
@@ -287,16 +299,15 @@ describe("cql plugin", () => {
           await editor.insertText("+");
           await findByText(popoverContainer, "Tag");
 
-          expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("true");
+          await assertPopoverVisibility(container, true);
 
           await editor.press("Escape");
 
-          expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("false");
+          await assertPopoverVisibility(container, false);
 
           await editor.press(arrowKey);
-          await tick(); // Seems to be necessary to permit the popover to update
 
-          expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("true");
+          await assertPopoverVisibility(container, true);
         });
       });
 
@@ -307,11 +318,11 @@ describe("cql plugin", () => {
         await editor.insertText("+");
         await findByText(popoverContainer, "Tag");
 
-        expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("true");
+        await assertPopoverVisibility(container, true);
 
         await fireEvent.blur(editor.view.dom);
 
-        expect(popoverContainer.dataset[isVisibleDataAttr]).toBe("false");
+        await assertPopoverVisibility(container, false);
       });
 
       it("displays a popover after another chip", async () => {
@@ -396,11 +407,11 @@ describe("cql plugin", () => {
 
       describe("text suggestions", () => {
         it("displays a popover at the start of a value field", async () => {
-          const queryStr = "example +tag";
+          const queryStr = "example +tag:";
           const { editor, container, moveCaretToQueryPos } =
-            createCqlEditor("example +tag");
+            createCqlEditor("example +tag:");
 
-          await moveCaretToQueryPos(queryStr.length);
+          await moveCaretToQueryPos(queryStr.length, -1);
           await editor.insertText("t");
 
           const popoverContainer = await findByTestId(
@@ -412,11 +423,11 @@ describe("cql plugin", () => {
         });
 
         it("applies the given key when a popover option is selected", async () => {
-          const queryStr = "example +tag";
+          const queryStr = "example +tag:";
           const { editor, container, waitFor, moveCaretToQueryPos } =
-            createCqlEditor("example +tag");
+            createCqlEditor("example +tag:");
 
-          await moveCaretToQueryPos(queryStr.length);
+          await moveCaretToQueryPos(queryStr.length, - 1);
           await editor.insertText("t");
           await selectPopoverOptionWithEnter(
             editor,
@@ -428,11 +439,11 @@ describe("cql plugin", () => {
         });
 
         it("applies the given key in quotes when it contains whitespace", async () => {
-          const queryStr = "example +tag";
+          const queryStr = "example +tag:";
           const { editor, container, waitFor, moveCaretToQueryPos } =
-            createCqlEditor("example +tag");
+            createCqlEditor("example +tag:");
 
-          await moveCaretToQueryPos(queryStr.length);
+          await moveCaretToQueryPos(queryStr.length, -1);
           await editor.insertText("t");
           await selectPopoverOptionWithClick(
             container,
@@ -464,6 +475,15 @@ describe("cql plugin", () => {
           );
 
           await waitFor('example tag:"Tag with space"');
+        });
+
+        it("does not show a typeahead menu between two adjacent query fields", async () => {
+          const queryStr = `+tag:a +tag:b`;
+          const { container, moveCaretToQueryPos } =
+            createCqlEditor(queryStr);
+          await moveCaretToQueryPos(queryStr.indexOf(" "));
+
+          await assertPopoverVisibility(container, false);
         });
 
         it("applies a suggestion correctly after adding a field without a prefix", async () => {
@@ -498,7 +518,7 @@ describe("cql plugin", () => {
         const { editor, container, moveCaretToQueryPos } =
           createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length - 1);
+        await moveCaretToQueryPos(queryStr.length, -1);
         await findByText(container, "1 day ago");
 
         await editor.press("Enter");
@@ -509,7 +529,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, container, moveCaretToQueryPos } =
           createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length - 1);
+        await moveCaretToQueryPos(queryStr.length, -1);
         const popoverContainer = await findByTestId(container, typeaheadTestId);
 
         await findByText(popoverContainer, "1 day ago");
@@ -525,7 +545,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, container, moveCaretToQueryPos } =
           createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length - 1);
+        await moveCaretToQueryPos(queryStr.length, -1);
         const popoverContainer = await findByTestId(container, typeaheadTestId);
 
         await findByText(popoverContainer, "1 day ago");
@@ -586,16 +606,13 @@ describe("cql plugin", () => {
 
     it("should move the selection into value position when the user types a shortcut after text", async () => {
       const queryStr = "a ";
-      const { editor, waitFor } = createCqlEditor(
-        queryStr,
-        {
-          lang: {
-            shortcuts: {
-              "#": "tag",
-            },
+      const { editor, waitFor } = createCqlEditor(queryStr, {
+        lang: {
+          shortcuts: {
+            "#": "tag",
           },
         },
-      );
+      });
 
       await editor.insertText("#");
 
