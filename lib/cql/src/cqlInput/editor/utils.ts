@@ -30,8 +30,8 @@ import {
   TypeaheadSuggestion,
 } from "../../lang/types";
 import { CqlResult, createParser } from "../../lang/Cql";
-import { hasReservedChar, hasWhitespace } from "../../lang/utils";
 import { skipSuggestion } from "./commands";
+import { escapeStr, hasReservedChar, hasWhitespace, unescapeStr } from "../../lang/utils";
 
 const tokensToPreserve = [
   TokenType.CHIP_KEY_POSITIVE,
@@ -203,6 +203,8 @@ export const createProseMirrorTokenToDocumentMap = (
 const shouldQuoteFieldValue = (literal: string) =>
   hasReservedChar(literal) || hasWhitespace(literal);
 
+const shouldQuoteStr = (literal: string) => hasReservedChar(literal) || hasWhitespace(literal)
+
 /**
  * Map ProseMirrorTokens to their document positions.
  */
@@ -304,6 +306,8 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             return acc;
           }
 
+          const literal = unescapeStr(token.lexeme ?? "");
+
           // If the next token is further ahead of this token by more than one
           // position, it is separated by whitespace – append the whitespace to
           // this node
@@ -323,7 +327,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
                   undefined,
                   schema.text(
                     previousNode.textContent +
-                      token.lexeme +
+                      literal +
                       trailingWhitespace,
                   ),
                 ),
@@ -333,7 +337,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           return acc.concat(
             queryStr.create(
               undefined,
-              schema.text(token.lexeme + trailingWhitespace),
+              schema.text(literal + trailingWhitespace),
             ),
           );
         }
@@ -368,11 +372,11 @@ export const docToCqlStr = (doc: Node): string => {
   doc.descendants((node, _pos, parent) => {
     switch (node.type.name) {
       case "queryStr": {
-        str += node.textContent;
+        str += shouldQuoteStr(node.textContent) ? `"${escapeStr(node.textContent)}"` : node.textContent;
         return false;
       }
       case "chipKey": {
-        const value = node.textContent;
+        const value = escapeStr(node.textContent);
         const leadingWhitespace =
           str.trim() === "" || str.endsWith(" ") ? "" : " ";
         const polarity = parent?.attrs[POLARITY];
@@ -392,7 +396,7 @@ export const docToCqlStr = (doc: Node): string => {
         }
 
         const maybeQuoteMark = shouldQuoteFieldValue(value) ? '"' : "";
-        str += `${maybeQuoteMark}${value}${maybeQuoteMark} `;
+        str += `${maybeQuoteMark}${escapeStr(value)}${maybeQuoteMark} `;
 
         return false;
       }

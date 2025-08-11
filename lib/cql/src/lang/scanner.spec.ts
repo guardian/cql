@@ -46,6 +46,10 @@ describe("scanner", () => {
       assertTokens('"sausages"', [quotedStringToken("sausages"), eofToken(10)]);
     });
 
+    it("should correctly handle escaped characters", () => {
+      assertTokens(`"\\"sausages\\""`, [quotedStringToken(`\\"sausages\\"`, 0, `"sausages"`), eofToken(14)]);
+    });
+
     it("should give a single token for strings separated with a space", () => {
       assertTokens('"magnificent octopus"', [
         quotedStringToken("magnificent octopus"),
@@ -63,6 +67,22 @@ describe("scanner", () => {
       ]);
     });
 
+    it("should handle escaped characters in keys", () => {
+      assertTokens("+tag\\::", [
+        new Token(TokenType.CHIP_KEY_POSITIVE, "+tag\\:", "tag:", 0, 5),
+        new Token(TokenType.CHIP_VALUE, ":", undefined, 6, 6),
+        eofToken(7),
+      ]);
+    });
+
+    it("should handle escaped characters in values", () => {
+      assertTokens("+tag\\::\\:", [
+        new Token(TokenType.CHIP_KEY_POSITIVE, "+tag\\:", "tag:", 0, 5),
+        new Token(TokenType.CHIP_VALUE, ":\\:", ":", 6, 8),
+        eofToken(9),
+      ]);
+    });
+
     it("should tokenise keys for fields with reversed polarity", () => {
       assertTokens("-tag:", [
         new Token(TokenType.CHIP_KEY_NEGATIVE, "-tag", "tag", 0, 3),
@@ -76,6 +96,16 @@ describe("scanner", () => {
         new Token(TokenType.CHIP_KEY_POSITIVE, "+tag", "tag", 0, 3),
         new Token(TokenType.CHIP_VALUE, ":tone/news", "tone/news", 4, 13),
         eofToken(14),
+      ]);
+    });
+
+    it("should tokenise consecutive fields", () => {
+      assertTokens("+tag:tone/news +tag:tone/news", [
+        new Token(TokenType.CHIP_KEY_POSITIVE, "+tag", "tag", 0, 3),
+        new Token(TokenType.CHIP_VALUE, ":tone/news", "tone/news", 4, 13),
+        new Token(TokenType.CHIP_KEY_POSITIVE, "+tag", "tag", 15, 18),
+        new Token(TokenType.CHIP_VALUE, ":tone/news", "tone/news", 19, 28),
+        eofToken(29),
       ]);
     });
 
