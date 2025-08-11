@@ -1,5 +1,16 @@
 # @guardian/cql
 
+## 1.4.0
+
+### Minor Changes
+
+- c6005f2: Permit quoted keys
+
+### Patch Changes
+
+- ebdce75: Improve mappings for query fields to avoid incorrectly displaying typeahead between adjacent fields
+- 3b4707d: Correct mappings for quoted values
+
 ## 1.3.5
 
 ### Patch Changes
