@@ -1,7 +1,6 @@
 import { Mapping, StepMap } from "prosemirror-transform";
 import { Decoration, EditorView } from "prosemirror-view";
 import {
-  DELETE_CHIP_INTENT,
   IS_READ_ONLY,
   chip,
   chipKey,
@@ -584,36 +583,6 @@ export const getNextPositionAfterTypeaheadSelection = (
   return insertPos;
 };
 
-/**
- * Apply a delete intent to the node at the given range:
- *  - mark the node for deletion if `forceDelete` is not specified, or
- *  - delete the node if already marked for deletion
- */
-export const applyDeleteIntent = (
-  view: EditorView,
-  from: number,
-  to: number,
-  node: Node,
-  forceDelete: boolean = false,
-) => {
-  if (node.type !== chip) {
-    return false;
-  }
-
-  const tr = view.state.tr;
-
-  if (node.attrs[DELETE_CHIP_INTENT] || forceDelete) {
-    // The caret belongs before the deleted chip
-    removeChipCoveringRange(from, to, tr);
-  } else {
-    tr.setNodeAttribute(from, DELETE_CHIP_INTENT, true);
-  }
-
-  view.dispatch(tr);
-
-  return true;
-};
-
 export const errorToDecoration = (position: number): Decoration => {
   const toDOM = () => {
     const el = document.createElement("span");
@@ -760,50 +729,6 @@ export const isSelectionWithinNodesOfType = (
   }
 
   return nodeTypes.includes(fromNode.type) ? fromNode : undefined;
-};
-
-const removeChipCoveringRange = (from: number, to: number, tr: Transaction) => {
-  const insertAt = Math.max(0, from - 1);
-  tr.deleteRange(from - 1, to + 1);
-
-  // If the document has content, ensure whitespace separates the two queryStr
-  // nodes surrounding the chip, which are now joined.
-  if (tr.doc.textContent) {
-    tr.setSelection(
-      TextSelection.near(tr.doc.resolve(insertAt), -1),
-    ).insertText(" ");
-  }
-};
-
-/**
- * Remove the chip at the current selection if:
- *   - the selection is within a key, and the key is empty
- *   - the selection is within a value, and the value is empty
- * @return true if a chip is removed, false if not.
- */
-export const removeChipAtSelectionIfEmpty = (view: EditorView) => {
-  const { doc, selection } = view.state;
-
-  if (isSelectionWithinNodesOfType(doc, selection, [chipKey, chipValue])) {
-    const $pos = doc.resolve(selection.from);
-    const nodeAtSelection = $pos.node();
-    if (!nodeAtSelection.textContent) {
-      const $chipPos = doc.resolve($pos.before(1));
-      const chipNode = $chipPos.nodeAfter;
-      if (!chipNode || chipNode.type !== chip) {
-        return;
-      }
-      const tr = view.state.tr;
-      removeChipCoveringRange(
-        $chipPos.pos,
-        $chipPos.pos + chipNode.nodeSize,
-        tr,
-      );
-      view.dispatch(tr);
-      return true;
-    }
-  }
-  return false;
 };
 
 export const queryToProseMirrorDoc = (

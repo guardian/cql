@@ -7,7 +7,11 @@ import {
 import { chip, chipKey, chipValue } from "./schema";
 import { selectAll } from "prosemirror-commands";
 import { createParser } from "../../lang/Cql";
-import { findNodeAt, queryToProseMirrorDoc } from "./utils";
+import {
+  findNodeAt,
+  isSelectionWithinNodesOfType,
+  queryToProseMirrorDoc,
+} from "./utils";
 import { findDiffEndForContent, findDiffStartForContent } from "./diff";
 import { Node } from "prosemirror-model";
 import { schema } from "prosemirror-test-builder";
@@ -103,6 +107,94 @@ export const insertChip =
     const chipValuePos = findNodeAt(state.selection.from, tr.doc, chipValue);
     const sel = NodeSelection.create(tr.doc, chipValuePos);
     tr.setSelection(sel);
+
+    dispatch?.(tr);
+
+    return true;
+  };
+
+/**
+ * Remove the chip at the current selection if:
+ *   - the selection is within a key, and the key is empty
+ *   - the selection is within a value, and the value is empty
+ * @return true if a chip is removed, false if not.
+ */
+export const removeChipAtSelectionIfEmpty: Command = (state, dispatch) => {
+  const { doc, selection } = state;
+
+  if (isSelectionWithinNodesOfType(doc, selection, [chipKey, chipValue])) {
+    const $pos = doc.resolve(selection.from);
+    const nodeAtSelection = $pos.node();
+    if (!nodeAtSelection.textContent) {
+      const $chipPos = doc.resolve($pos.before(1));
+      const chipNode = $chipPos.nodeAfter;
+      if (!chipNode || chipNode.type !== chip) {
+        return false;
+      }
+      removeChipCoveringRange($chipPos.pos, $chipPos.pos + chipNode.nodeSize)(
+        state,
+        dispatch,
+      );
+      return true;
+    }
+  }
+  return false;
+};
+
+export const removeChipAdjacentToSelection =
+  (searchForward: boolean = false): Command =>
+  (state, dispatch) => {
+    if (state.selection.from !== state.selection.to) {
+      return false;
+    }
+
+    let from: number;
+    let to: number;
+
+    if (searchForward) {
+      // Look forward for a chip to remove
+      const { anchor } = state.selection;
+      const positionAfterSearchText = Math.max(anchor + 1, 0);
+      const $nextPos = state.doc.resolve(positionAfterSearchText);
+      const nodeToRemove = $nextPos.nodeAfter;
+      if (!nodeToRemove || nodeToRemove.type !== chip) {
+        return false;
+      }
+
+      from = $nextPos.pos;
+      to = $nextPos.pos + nodeToRemove.nodeSize;
+    } else {
+      // Look backward for a chip to remove
+      const { anchor } = state.selection;
+      const positionBeforeSearchText = Math.max(anchor - 1, 0);
+      const $prevPos = state.doc.resolve(positionBeforeSearchText);
+      const nodeToRemove = $prevPos.nodeBefore;
+      if (!nodeToRemove || nodeToRemove.type !== chip) {
+        return false;
+      }
+
+      const prevNodePos = $prevPos.pos - nodeToRemove.nodeSize;
+      from = prevNodePos;
+      to = $prevPos.pos;
+    }
+
+    return removeChipCoveringRange(from, to)(state, dispatch);
+  };
+
+export const removeChipCoveringRange =
+  (from: number, to: number): Command =>
+  (state, dispatch) => {
+    const { tr } = state;
+    const insertAt = Math.max(0, from - 1);
+    tr.deleteRange(from - 1, to + 1);
+
+    // If the document has content, ensure whitespace separates the two queryStr
+    // nodes surrounding the chip, which are now joined.
+    if (tr.doc.textContent) {
+      tr.setSelection(
+        TextSelection.near(tr.doc.resolve(insertAt), -1),
+      ).insertText(" ");
+    }
 
     dispatch?.(tr);
 

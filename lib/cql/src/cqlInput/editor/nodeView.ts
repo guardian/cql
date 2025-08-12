@@ -1,10 +1,8 @@
 import { Node } from "prosemirror-model";
 import { NodeViewConstructor } from "prosemirror-view";
-import { applyDeleteIntent } from "./utils";
 import {
   chipKey,
   chipValue,
-  DELETE_CHIP_INTENT,
   IS_READ_ONLY,
   IS_SELECTED,
   POLARITY,
@@ -14,6 +12,7 @@ import {
   TEST_ID_CHIP_VALUE,
   TEST_ID_POLARITY_HANDLE,
 } from "./plugins/cql";
+import { removeChipCoveringRange } from "./commands";
 
 const polarityUIMap: Record<string, string> = {
   "-": "−",
@@ -46,7 +45,7 @@ export const chipNodeView: NodeViewConstructor = (
 
     const { node, pos } = result;
 
-    applyDeleteIntent(view, pos, pos + node.nodeSize + 1, node, true);
+    removeChipCoveringRange(pos, pos + node.nodeSize + 1)(view.state, view.dispatch);
   };
 
   const handlePolarityClickEvent = () => {
@@ -80,19 +79,12 @@ export const chipNodeView: NodeViewConstructor = (
   dom.appendChild(polarityHandle);
   dom.appendChild(contentDOM);
   dom.appendChild(deleteHandle);
-  const pendingDeleteClass = "Cql__ChipWrapper--is-pending-delete";
   return {
     dom,
     contentDOM,
     update(node) {
       if (node.type !== initialNode.type) {
         return false;
-      }
-
-      if (node.attrs[DELETE_CHIP_INTENT] === true) {
-        dom.classList.add(pendingDeleteClass);
-      } else {
-        dom.classList.remove(pendingDeleteClass);
       }
 
       polarityHandle.innerHTML = polarityUIMap[node.attrs[POLARITY]];
