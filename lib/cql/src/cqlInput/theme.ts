@@ -9,6 +9,11 @@ export type CqlTheme = {
       padding: string;
     };
   };
+  placeholder: {
+    color: {
+      text: string;
+    }
+  },
   chipWrapper: {
     color: {
       background: string;
@@ -65,6 +70,11 @@ const defaultTheme: CqlTheme = {
     layout: {
       padding: "5px",
     },
+  },
+  placeholder: {
+    color: {
+      text: "#9d9d9d"
+    }
   },
   chipWrapper: {
     color: {

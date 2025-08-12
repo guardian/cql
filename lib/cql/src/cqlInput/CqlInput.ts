@@ -195,6 +195,7 @@ export const createCqlInput = (
         chipContent,
         chipHandle,
         typeahead,
+        placeholder
       } = applyPartialTheme(partialTheme);
       const template = document.createElement("template");
       template.innerHTML = `
@@ -481,7 +482,7 @@ export const createCqlInput = (
             vertical-align: bottom;
             pointer-events: none;
             cursor: text;
-            opacity: 0.8;
+            color: ${placeholder.color.text}
           }
         </style>
       `;
