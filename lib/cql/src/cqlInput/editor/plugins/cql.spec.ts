@@ -91,9 +91,7 @@ const createCqlEditor = (
     const pos = getPosFromQueryPos(queryPos);
     return editor.command((state, dispatch) => {
       dispatch?.(
-        state.tr.setSelection(
-          TextSelection.create(state.doc, pos + offset),
-        ),
+        state.tr.setSelection(TextSelection.create(state.doc, pos + offset)),
       );
 
       return true;
@@ -427,7 +425,7 @@ describe("cql plugin", () => {
           const { editor, container, waitFor, moveCaretToQueryPos } =
             createCqlEditor("example +tag:");
 
-          await moveCaretToQueryPos(queryStr.length, - 1);
+          await moveCaretToQueryPos(queryStr.length, -1);
           await editor.insertText("t");
           await selectPopoverOptionWithEnter(
             editor,
@@ -479,8 +477,7 @@ describe("cql plugin", () => {
 
         it("does not show a typeahead menu between two adjacent query fields", async () => {
           const queryStr = `+tag:a +tag:b`;
-          const { container, moveCaretToQueryPos } =
-            createCqlEditor(queryStr);
+          const { container, moveCaretToQueryPos } = createCqlEditor(queryStr);
           await moveCaretToQueryPos(queryStr.indexOf(" "));
 
           await assertPopoverVisibility(container, false);
@@ -847,11 +844,25 @@ describe("cql plugin", () => {
     });
 
     it("removes the chip via backspace", async () => {
-      const { editor, waitFor } = createCqlEditor("+tag:a");
+      const query = "+tag:z text";
+      const { editor, waitFor, moveCaretToQueryPos } = createCqlEditor(query);
 
+      await moveCaretToQueryPos(query.indexOf("z") + 1);
       await editor.press("Backspace").press("Backspace");
 
-      await waitFor("");
+      await waitFor("text");
+    });
+
+    it("does not remove the chip via backspace when the selection is not collapsed", async () => {
+      const query = "+tag:z text";
+      const { editor, waitFor, getPosFromQueryPos } = createCqlEditor(query);
+
+      const from = getPosFromQueryPos(query.indexOf("text"));
+      const to = getPosFromQueryPos(query.length - 1);
+      await editor.selectText({ from, to }).press("Backspace");
+
+      // Nothing should happen
+      await waitFor("tag:z text");
     });
 
     it("removes the chip via delete", async () => {

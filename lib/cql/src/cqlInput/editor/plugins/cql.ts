@@ -15,12 +15,15 @@ import { CqlConfig } from "../../CqlInput";
 import { defaultPopoverRenderer } from "../../popover/components/defaultPopoverRenderer";
 import { ErrorPopover } from "../../popover/ErrorPopover";
 import { TypeaheadPopover } from "../../popover/TypeaheadPopover";
-import { insertChip } from "../commands";
+import {
+  insertChip,
+  removeChipAdjacentToSelection,
+  removeChipAtSelectionIfEmpty,
+} from "../commands";
 import {
   chip,
   chipKey,
   chipValue,
-  DELETE_CHIP_INTENT,
   doc,
   IS_READ_ONLY,
   IS_SELECTED,
@@ -28,7 +31,6 @@ import {
 } from "../schema";
 import {
   applyChipLifecycleRules,
-  applyDeleteIntent,
   applySuggestion,
   docToCqlStr,
   errorToDecoration,
@@ -42,7 +44,6 @@ import {
   ProseMirrorToken,
   queryHasChanged,
   queryToProseMirrorDoc,
-  removeChipAtSelectionIfEmpty,
   skipSuggestion,
   tokensToDecorations,
   tokensToDoc,
@@ -280,22 +281,6 @@ export const createCqlPlugin = ({
         tr = newTr;
       }
 
-      // If the selection has changed, reset any chips that are pending delete
-      if (!oldState.selection.eq(newState.selection)) {
-        const posOfChipWrappersToReset: number[] = [];
-        newState.doc.descendants((node, pos) => {
-          if (node.type === chip && node.attrs[DELETE_CHIP_INTENT]) {
-            posOfChipWrappersToReset.push(pos);
-          }
-        });
-        if (posOfChipWrappersToReset.length) {
-          tr = newState.tr;
-          posOfChipWrappersToReset.forEach((pos) => {
-            tr?.setNodeAttribute(pos, DELETE_CHIP_INTENT, false);
-          });
-        }
-      }
-
       applyChipLifecycleRules(tr);
 
       return tr;
@@ -354,49 +339,23 @@ export const createCqlPlugin = ({
             return true;
           }
           case "Delete": {
-            if (removeChipAtSelectionIfEmpty(view)) {
+            if (removeChipAtSelectionIfEmpty(view.state, view.dispatch)) {
               return true;
             }
 
-            // Look forward for a chip to remove
-            const { anchor } = view.state.selection;
-            const positionAfterSearchText = Math.max(anchor + 1, 0);
-            const $nextPos = view.state.doc.resolve(positionAfterSearchText);
-            const nextNode = $nextPos.nodeAfter;
-
-            if (!nextNode) {
-              return false;
-            }
-
-            return applyDeleteIntent(
-              view,
-              $nextPos.pos,
-              $nextPos.pos + nextNode.nodeSize,
-              nextNode,
+            return removeChipAdjacentToSelection(true)(
+              view.state,
+              view.dispatch,
             );
           }
           case "Backspace": {
-            if (removeChipAtSelectionIfEmpty(view)) {
+            if (removeChipAtSelectionIfEmpty(view.state, view.dispatch)) {
               return true;
             }
 
-            // Look backward for a chip to remove
-            const { anchor } = view.state.selection;
-            const positionBeforeSearchText = Math.max(anchor - 1, 0);
-            const $prevPos = view.state.doc.resolve(positionBeforeSearchText);
-            const prevNode = $prevPos.nodeBefore;
-
-            if (!prevNode) {
-              return false;
-            }
-
-            const prevNodePos = $prevPos.pos - prevNode.nodeSize;
-
-            return applyDeleteIntent(
-              view,
-              prevNodePos,
-              $prevPos.pos + 1,
-              prevNode,
+            return removeChipAdjacentToSelection(false)(
+              view.state,
+              view.dispatch,
             );
           }
         }
