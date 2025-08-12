@@ -235,7 +235,8 @@ export const handlePlus: Command = (state, dispatch) => {
  * position.
  */
 export const handleColon: Command = (state, dispatch) => {
-  const selectionIsAtEndOfNode = state.selection.from === state.selection.$from.after() - 1
+  const selectionIsAtEndOfNode =
+    state.selection.from === state.selection.$from.after() - 1;
   if (selectionIsWithinNodeType(state, chipKey) && selectionIsAtEndOfNode) {
     return skipSuggestion(state, dispatch);
   }
