@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 1.5.0
+
+### Minor Changes
+
+- 4ddc14c: Enable placeholder themeing
+
 ## 1.4.0
 
 ### Minor Changes
