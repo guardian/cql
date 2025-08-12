@@ -208,7 +208,7 @@ export const createCqlInput = (
             display: inline-flex;
             align-items: center;
             white-space: pre-wrap;
-            overflow-x: scroll;
+            overflow-x: auto;
             /* Hide scrollbars to emulate input scroll */
             -ms-overflow-style: none;  /* Internet Explorer 10+ */
             scrollbar-width: none;  /* Firefox, Safari 18.2+, Chromium 121+ */
@@ -286,7 +286,7 @@ export const createCqlInput = (
           }
 
           .Cql__PopoverTabContentContainer {
-            overflow-y: scroll;
+            overflow-y: auto;
           }
 
           .Cql__PopoverTabItem:hover,
@@ -416,7 +416,7 @@ export const createCqlInput = (
 
           .Cql__TextSuggestionContainer {
             width: 100%;
-            overflow-y: scroll;
+            overflow-y: auto;
           }
 
           .Cql__ErrorPopover {
