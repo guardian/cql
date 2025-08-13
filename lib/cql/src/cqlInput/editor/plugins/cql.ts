@@ -16,6 +16,7 @@ import { defaultPopoverRenderer } from "../../popover/components/defaultPopoverR
 import { ErrorPopover } from "../../popover/ErrorPopover";
 import { TypeaheadPopover } from "../../popover/TypeaheadPopover";
 import {
+  handlePlus,
   insertChip,
   removeChipAdjacentToSelection,
   removeChipAtSelectionIfEmpty,
@@ -310,29 +311,7 @@ export const createCqlPlugin = ({
       handleKeyDown(view, event) {
         switch (event.key) {
           case "+": {
-            const { doc, selection } = view.state;
-            const suffix = doc.textBetween(
-              selection.from,
-              Math.min(selection.to + 1, doc.nodeSize - 2),
-            );
-            const maybeTrailingWhitespace =
-              selection.from === selection.to &&
-              !["", " "].some((str) => suffix === str)
-                ? " "
-                : "";
-
-            if (!maybeTrailingWhitespace) {
-              return false;
-            }
-
-            event.preventDefault();
-
-            const textToInsert = `+${maybeTrailingWhitespace}`;
-            const tr = view.state.tr.insertText(textToInsert);
-
-            view.dispatch(tr);
-
-            return true;
+            return handlePlus(view.state, view.dispatch);
           }
           case "Escape": {
             typeaheadPopover?.hide();
