@@ -1,5 +1,16 @@
 # @guardian/cql
 
+## 1.6.0
+
+### Minor Changes
+
+- 1b66d8b: Remove delete intent behaviour, as it seems unnecessary in an input where copy & paste is available
+
+### Patch Changes
+
+- 102ebe3: Prioritise typeahead keys when they start with the search string
+- a750fbf: Use overflow: auto to avoid scrollbars when content does not overflow
+
 ## 1.5.0
 
 ### Minor Changes
