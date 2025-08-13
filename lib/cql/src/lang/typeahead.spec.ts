@@ -1,5 +1,5 @@
 import { describe, expect, it } from "bun:test";
-import { Typeahead } from "./typeahead";
+import { Typeahead, TypeaheadField } from "./typeahead";
 import {
   DateSuggestionOption,
   TextSuggestionOption,
@@ -15,8 +15,10 @@ describe("typeahead", () => {
   const typeaheadQueryClient = new TestTypeaheadHelpers();
   const typeahead = new Typeahead(typeaheadQueryClient.typeaheadFields);
 
-  const getSuggestions = async (query: string) =>
-    await typeahead.getSuggestions(createParser()(query).queryAst!);
+  const getSuggestions = async (
+    query: string,
+    _typeahead: Typeahead = typeahead,
+  ) => await _typeahead.getSuggestions(createParser()(query).queryAst!);
 
   it("should give all options for empty queryFields", async () => {
     expect(await getSuggestions("")).toEqual([]);
@@ -276,5 +278,17 @@ describe("typeahead", () => {
         suffix: ":",
       },
     ]);
+  });
+
+  it("should suggest keys that start with the search string first", async () => {
+    const typeahead = new Typeahead(
+      ["tag", "gnat", "stage"].map((id) => new TypeaheadField(id, id, id)),
+    );
+
+    expect(
+      (await getSuggestions("+g", typeahead)).flatMap((a) =>
+        a.suggestions.map((s) => s.value),
+      ),
+    ).toEqual(["gnat", "tag", "stage"]);
   });
 });

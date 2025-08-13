@@ -12,17 +12,37 @@ type TypeaheadResolver =
   | ((str: string, signal?: AbortSignal) => Promise<TextSuggestionOption[]>)
   | TextSuggestionOption[];
 
-function filterTextSuggestionOption(
+const compareValueAndLabel =
+  (compare: string, f: (optionStr: string, compareStr: string) => boolean) =>
+  (option: TextSuggestionOption) =>
+    f(option.value.toLowerCase(), compare) ||
+    f(option.label?.toLowerCase() || "", compare);
+
+const filterAndSortTextSuggestionOption = (
   suggestions: TextSuggestionOption[],
   str: string,
-) {
+) => {
   const lowerCaseStr = str.toLowerCase();
-  return suggestions.filter(
-    (_) =>
-      _.value.toLowerCase().includes(lowerCaseStr) ||
-      _.label?.toLowerCase().includes(lowerCaseStr),
-  );
-}
+  return suggestions
+    .filter(
+      compareValueAndLabel(lowerCaseStr, (str, compare) =>
+        str.includes(compare),
+      ),
+    )
+    .sort((a, b) => {
+      const aStartsWith = compareValueAndLabel(lowerCaseStr, (str, compare) =>
+        str.startsWith(compare),
+      )(a);
+      const bStartsWith = compareValueAndLabel(lowerCaseStr, (str, compare) =>
+        str.startsWith(compare),
+      )(b);
+      if (aStartsWith && bStartsWith) {
+        return 0;
+      } else {
+        return aStartsWith ? -1 : 1;
+      }
+    });
+};
 
 export class TypeaheadField {
   constructor(
@@ -38,7 +58,9 @@ export class TypeaheadField {
     signal?: AbortSignal,
   ): Promise<TextSuggestionOption[]> | undefined {
     if (Array.isArray(this.resolver)) {
-      return Promise.resolve(filterTextSuggestionOption(this.resolver, str));
+      return Promise.resolve(
+        filterAndSortTextSuggestionOption(this.resolver, str),
+      );
     }
 
     return this.resolver?.(str, signal);
@@ -145,7 +167,7 @@ export class Typeahead {
       return this.typeaheadFieldEntries;
     }
 
-    const suggestions = filterTextSuggestionOption(
+    const suggestions = filterAndSortTextSuggestionOption(
       this.typeaheadFieldEntries,
       str,
     );
