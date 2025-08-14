@@ -36,7 +36,7 @@ const filterAndSortTextSuggestionOption = (
       const bStartsWith = compareValueAndLabel(lowerCaseStr, (str, compare) =>
         str.startsWith(compare),
       )(b);
-      if (aStartsWith && bStartsWith) {
+      if (aStartsWith === bStartsWith) {
         return 0;
       } else {
         return aStartsWith ? -1 : 1;
