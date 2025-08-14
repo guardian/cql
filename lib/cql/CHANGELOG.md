@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 1.6.1
+
+### Patch Changes
+
+- 6a1ff48: Fix sort order of suggestions in Firefox
+
 ## 1.6.0
 
 ### Minor Changes
