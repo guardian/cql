@@ -18,7 +18,7 @@ describe("interpreter", () => {
     expect(firstStr).toBe(secondStr);
   });
 
-  it.only("should escape reserved characters in quoted strings", () => {
+  it("should escape reserved characters in quoted strings", () => {
     const queryStr = `"\\"saus\\" \\"age\\""`;
     const query = parser(queryStr).queryAst!;
 
@@ -28,7 +28,7 @@ describe("interpreter", () => {
   });
 
   it("should escape reserved characters in chip keys and values", () => {
-    const queryStr = `"\\"\\(key \\:\\)\\"":"\\"\\(value \\)\\""`;
+    const queryStr = `key:\\"value\\"`;
     const query = parser(queryStr).queryAst!;
 
     const str = cqlQueryStrFromQueryAst(query);

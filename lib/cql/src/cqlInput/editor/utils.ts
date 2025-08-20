@@ -31,7 +31,11 @@ import {
 } from "../../lang/types";
 import { CqlResult, createParser } from "../../lang/Cql";
 import { skipSuggestion } from "./commands";
-import { escapeStr, hasReservedChar, hasWhitespace, unescapeStr } from "../../lang/utils";
+import {
+  escapeQuotes,
+  shouldQuoteFieldValue,
+  unescapeQuotes,
+} from "../../lang/utils";
 
 const tokensToPreserve = [
   TokenType.CHIP_KEY_POSITIVE,
@@ -200,11 +204,6 @@ export const createProseMirrorTokenToDocumentMap = (
   return new Mapping([new StepMap(ranges.flat())]);
 };
 
-const shouldQuoteFieldValue = (literal: string) =>
-  hasReservedChar(literal) || hasWhitespace(literal);
-
-const shouldQuoteStr = (literal: string) => hasReservedChar(literal) || hasWhitespace(literal)
-
 /**
  * Map ProseMirrorTokens to their document positions.
  */
@@ -256,11 +255,13 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
               [
                 chipKey.create(
                   undefined,
-                  tokenKey ? schema.text(tokenKey) : undefined,
+                  tokenKey ? schema.text(unescapeQuotes(tokenKey)) : undefined,
                 ),
                 chipValue.create(
                   undefined,
-                  tokenValue ? schema.text(tokenValue) : undefined,
+                  tokenValue
+                    ? schema.text(unescapeQuotes(tokenValue))
+                    : undefined,
                 ),
               ],
             ),
@@ -306,8 +307,6 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             return acc;
           }
 
-          const literal = unescapeStr(token.lexeme ?? "");
-
           // If the next token is further ahead of this token by more than one
           // position, it is separated by whitespace – append the whitespace to
           // this node
@@ -327,7 +326,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
                   undefined,
                   schema.text(
                     previousNode.textContent +
-                      literal +
+                      token.lexeme +
                       trailingWhitespace,
                   ),
                 ),
@@ -337,7 +336,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           return acc.concat(
             queryStr.create(
               undefined,
-              schema.text(literal + trailingWhitespace),
+              schema.text(token.lexeme + trailingWhitespace),
             ),
           );
         }
@@ -372,11 +371,11 @@ export const docToCqlStr = (doc: Node): string => {
   doc.descendants((node, _pos, parent) => {
     switch (node.type.name) {
       case "queryStr": {
-        str += shouldQuoteStr(node.textContent) ? `"${escapeStr(node.textContent)}"` : node.textContent;
+        str += node.textContent;
         return false;
       }
       case "chipKey": {
-        const value = escapeStr(node.textContent);
+        const value = node.textContent;
         const leadingWhitespace =
           str.trim() === "" || str.endsWith(" ") ? "" : " ";
         const polarity = parent?.attrs[POLARITY];
@@ -384,7 +383,7 @@ export const docToCqlStr = (doc: Node): string => {
         const maybeQuoteMark = shouldQuoteFieldValue(value) ? '"' : "";
         // Anticipate a chipValue here, adding the colon – if we do not, and a
         // chipValue is not present, we throw the mappings off.
-        str += `${leadingWhitespace}${polarity}${maybeQuoteMark}${value}${maybeQuoteMark}:`;
+        str += `${leadingWhitespace}${polarity}${maybeQuoteMark}${escapeQuotes(value)}${maybeQuoteMark}:`;
         return false;
       }
       case "chipValue": {
@@ -396,7 +395,8 @@ export const docToCqlStr = (doc: Node): string => {
         }
 
         const maybeQuoteMark = shouldQuoteFieldValue(value) ? '"' : "";
-        str += `${maybeQuoteMark}${escapeStr(value)}${maybeQuoteMark} `;
+
+        str += `${maybeQuoteMark}${escapeQuotes(value)}${maybeQuoteMark} `;
 
         return false;
       }
@@ -775,7 +775,10 @@ export const getContentFromClipboard = (
   };
 };
 
-export const selectionIsWithinNodeType = (state: EditorState, nodeType: NodeType) => {
+export const selectionIsWithinNodeType = (
+  state: EditorState,
+  nodeType: NodeType,
+) => {
   const { from, to } = state.selection;
   const $from = state.doc.resolve(from);
   const $to = state.doc.resolve(to);
