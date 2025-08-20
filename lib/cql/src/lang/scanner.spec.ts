@@ -47,7 +47,7 @@ describe("scanner", () => {
     });
 
     it("should correctly handle escaped characters", () => {
-      assertTokens(`"\\"sausages\\""`, [quotedStringToken(`\\"sausages\\"`, 0, `"sausages"`), eofToken(14)]);
+      assertTokens(`\\"sausages\\"`, [unquotedStringToken(`\\"sausages\\"`, 0, `\\"sausages\\"`), eofToken(12)]);
     });
 
     it("should give a single token for strings separated with a space", () => {
@@ -263,6 +263,14 @@ describe("scanner", () => {
         new Token(TokenType.CHIP_KEY_POSITIVE, "tag", "tag", 0, 2),
         new Token(TokenType.CHIP_VALUE, ':"tone news:"', "tone news:", 3, 15),
         eofToken(16),
+      ]);
+    });
+
+    it("should tokenise key value pairs for fields when the key value is in quotes, containing an escaped quote", () => {
+      assertTokens('tag:"tone\\"news:"', [
+        new Token(TokenType.CHIP_KEY_POSITIVE, "tag", "tag", 0, 2),
+        new Token(TokenType.CHIP_VALUE, ':"tone\\"news:"', 'tone\\"news:', 3, 16),
+        eofToken(17),
       ]);
     });
 

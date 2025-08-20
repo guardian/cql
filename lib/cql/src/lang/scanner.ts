@@ -1,6 +1,6 @@
 import { mergeDeep } from "../utils/merge";
 import { Token, TokenType } from "./token";
-import { hasReservedChar, hasWhitespace, unescapeStr } from "./utils";
+import { hasReservedChar, hasWhitespace, unescapeQuotes } from "./utils";
 
 export type ScannerSettings = {
   groups: boolean;
@@ -49,7 +49,13 @@ export class Scanner {
     }
 
     return this.tokens.concat(
-      new Token(TokenType.EOF, "", undefined, this.currentIndex, this.currentIndex),
+      new Token(
+        TokenType.EOF,
+        "",
+        undefined,
+        this.currentIndex,
+        this.currentIndex,
+      ),
     );
   };
 
@@ -118,7 +124,9 @@ export class Scanner {
     if (this.currentIndex - this.start === 1) {
       this.addToken(tokenType);
     } else {
-      const key = unescapeStr(this.program.substring(this.start + 1, this.currentIndex));
+      const key = unescapeQuotes(
+        this.program.substring(this.start + 1, this.currentIndex),
+      );
 
       this.addToken(tokenType, key);
     }
@@ -138,7 +146,9 @@ export class Scanner {
       // No content - add an empty token
       this.addToken(TokenType.CHIP_VALUE);
     } else {
-      const value = unescapeStr(this.program.substring(this.start + 1, this.currentIndex));
+      const value = unescapeQuotes(
+        this.program.substring(this.start + 1, this.currentIndex),
+      );
       this.addToken(TokenType.CHIP_VALUE, value);
     }
   };
@@ -156,7 +166,11 @@ export class Scanner {
    * or an unquoted string.
    */
   private handleUnquotedString = () => {
-    while (!hasReservedChar(this.peek()) && !hasWhitespace(this.peek()) && !this.isAtEnd()) {
+    while (
+      !hasReservedChar(this.peek()) &&
+      !hasWhitespace(this.peek()) &&
+      !this.isAtEnd()
+    ) {
       this.advance();
     }
 
@@ -191,7 +205,7 @@ export class Scanner {
 
   private handleQuotedString = () => {
     const literal = this.consumeQuotedRange();
-console.log({literal})
+    console.log({ literal });
     if (this.peek() === ":") {
       return this.addToken(TokenType.CHIP_KEY_POSITIVE, literal);
     }
@@ -216,7 +230,10 @@ console.log({literal})
       this.advance();
     }
 
-    return unescapeStr(this.program.substring(this.start + 1 + offset, this.currentIndex - 1))
+    return this.program.substring(
+      this.start + 1 + offset,
+      this.currentIndex - 1,
+    );
   };
 
   private addToken = (tokenType: TokenType, literal?: string) => {
