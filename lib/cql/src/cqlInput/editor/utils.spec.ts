@@ -137,7 +137,7 @@ describe("utils", () => {
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
-    it.only("should unescape quotes within keys and values", async () => {
+    it("should unescape quotes within keys and values", async () => {
       const tokens = await queryToProseMirrorTokens(
         `+"key\\"":"value\\""`,
       );
