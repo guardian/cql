@@ -196,3 +196,28 @@ How do we represent positive and negative search terms in the lexical grammar?
 3. ⚖️ Just take the first character of the lexeme, which is guaranteed to be `+|-` — trivial to implement, but it feels icky not to have a token representation; what if the symbols change? Every piece of code that makes this assumption will have to change too, without a clear interface to test whether we've caught every case
 
 Probably 2.
+
+## Escaping
+
+Escaping outside of quotes should function as expected, e.g.
+
+```
+"\"" -> `str<">`
+a\"b -> `str<a"b>`
+a\+b -> `str<a+b>`
+```
+
+What must be escaped in an unquoted string? Reserved chars, so `[-+:"]`. If in quotes, only quotes themselves need to be escaped. Should we require escaping anyhow, or change the rules? It's quite convenient to be able to quote escaped chars such that you don't have to read them.
+
+```
+"a+b" -> `str<a+b>`
+```
+
+Same rules can then apply to chip key/value:
+
+```
+"a\"b":c -> `chipKey<a"b>, chipValue<c>`
+"a+b":"d:e" -> `chipKey<a+b>, chipValue<c>`
+```
+
+Interpreter can normalise by quoting values with escapable chars.
