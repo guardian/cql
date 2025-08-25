@@ -28,7 +28,7 @@ describe("interpreter", () => {
   });
 
   it("should escape reserved characters in chip keys and values", () => {
-    const queryStr = `key:\\"value\\"`;
+    const queryStr = `key:"\\"value\\""`;
     const query = parser(queryStr).queryAst!;
 
     const str = cqlQueryStrFromQueryAst(query);

@@ -53,7 +53,6 @@ import {
 } from "../utils";
 import { chipKeyNodeView, chipNodeView, chipValueNodeView } from "../nodeView";
 import { DebugChangeEventDetail } from "../../../types/dom";
-import { logNode } from "../debug";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -149,9 +148,7 @@ export const createCqlPlugin = ({
         }),
       );
     }
-    logNode(originalDoc);
-    console.log({queryBeforeParse, queryAfterParse: docToCqlStr(tr.doc) });
-logNode(tr.doc);
+
     tr.setMeta(ACTION_NEW_STATE, {
       tokens,
       error,

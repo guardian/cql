@@ -10,10 +10,10 @@ const escapedChar = /\\(?<escapedChar>[:()"])/g;
 export const unescapeQuotes = (str: string) =>
   str.replaceAll(escapedChar, "$1");
 
-export const escapeQuotes = (str: string) => str.replaceAll(`"`, '\\"');
+export const escapeQuotes = (str: string) => str.replaceAll(`"`, `\\"`);
 
 export const shouldQuoteFieldValue = (literal: string) =>
-  hasWhitespace(literal);
+  hasWhitespace(literal) || hasReservedChar(literal);
 
 export function* getPermutations<T>(
   permutation: T[],
