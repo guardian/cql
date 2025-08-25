@@ -47,7 +47,6 @@ const strFromField = (field: CqlField): string => {
   const normalisedValue = shouldQuoteFieldValue(valueLiteral)
     ? `"${valueLiteral}"`
     : valueLiteral;
-  console.log({ keyLiteral, normalisedKey, valueLiteral, normalisedValue });
 
   return `${polarity}${normalisedKey ?? ""}:${normalisedValue}`;
 };

@@ -205,7 +205,7 @@ export class Scanner {
 
   private handleQuotedString = () => {
     const literal = this.consumeQuotedRange();
-    console.log({ literal });
+
     if (this.peek() === ":") {
       return this.addToken(TokenType.CHIP_KEY_POSITIVE, literal);
     }
