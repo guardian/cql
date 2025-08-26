@@ -482,7 +482,7 @@ export const createCqlInput = (
             vertical-align: bottom;
             pointer-events: none;
             cursor: text;
-            color: ${placeholder.color.text}
+            color: ${placeholder.color.text};
           }
         </style>
       `;
