@@ -1,5 +1,5 @@
 import { CqlBinary, CqlExpr, CqlField, CqlQuery } from "./ast";
-import { escapeQuotes, hasWhitespace, shouldQuoteFieldValue } from "./utils";
+import { hasWhitespace, shouldQuoteFieldValue } from "./utils";
 
 export const cqlQueryStrFromQueryAst = (query: CqlQuery): string => {
   const { content } = query;
