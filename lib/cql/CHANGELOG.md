@@ -1,5 +1,12 @@
 # @guardian/cql
 
+## 1.7.0
+
+### Minor Changes
+
+- 68a6c1b: Skip to value position when a colon is added to the end of a chipKey
+- eaada6f: Add escaping for query strings, chip keys, and chip values
+
 ## 1.6.1
 
 ### Patch Changes
