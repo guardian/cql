@@ -744,6 +744,26 @@ describe("cql plugin", () => {
       expect(secondChip.attrs[IS_SELECTED]).toBe(true);
     });
 
+    it("should escape chip keys", async () => {
+      const { editor, waitFor } = createCqlEditor();
+
+      editor
+        .insertText("+")
+        .insertText(`"key+"`)
+
+      await waitFor(`"\\"key+\\"":`);
+    });
+
+    it("should escape chip values", async () => {
+         const queryStr = " +key:v";
+        const { editor, moveCaretToQueryPos, waitFor } =
+          createCqlEditor(queryStr);
+
+        await moveCaretToQueryPos(queryStr.indexOf("v"), 1);
+        await editor.insertText(`alue+:"`)
+        await waitFor(`key:"value+:\\""`)
+    });
+
     it.todo(
       "should not remove chip keys when hitting backspace from a chip value",
       async () => {

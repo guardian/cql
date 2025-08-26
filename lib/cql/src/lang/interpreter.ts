@@ -1,8 +1,9 @@
 import { CqlBinary, CqlExpr, CqlField, CqlQuery } from "./ast";
-import { hasWhitespace } from "./utils";
+import { hasWhitespace, shouldQuoteFieldValue } from "./utils";
 
 export const cqlQueryStrFromQueryAst = (query: CqlQuery): string => {
   const { content } = query;
+
   if (!content) {
     return "";
   }
@@ -14,7 +15,9 @@ const strFromContent = (queryContent: CqlExpr): string | undefined => {
   const { content } = queryContent;
   switch (content.type) {
     case "CqlStr":
-      return content.searchExpr;
+      return hasWhitespace(content.searchExpr)
+        ? `"${content.searchExpr}"`
+        : content.searchExpr;
     case "CqlGroup":
       return `(${strFromBinary(content.content).trim()})`;
     case "CqlBinary":
@@ -37,11 +40,11 @@ const strFromBinary = (queryBinary: CqlBinary): string => {
 const strFromField = (field: CqlField): string => {
   const polarity = field.key.tokenType === "CHIP_KEY_POSITIVE" ? "" : "-";
   const keyLiteral = field.key.literal ?? "";
-  const normalisedKey = hasWhitespace(keyLiteral)
+  const normalisedKey = shouldQuoteFieldValue(keyLiteral)
     ? `"${keyLiteral}"`
     : keyLiteral;
   const valueLiteral = field.value?.literal ?? "";
-  const normalisedValue = hasWhitespace(valueLiteral)
+  const normalisedValue = shouldQuoteFieldValue(valueLiteral)
     ? `"${valueLiteral}"`
     : valueLiteral;
 

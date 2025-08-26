@@ -30,8 +30,12 @@ import {
   TypeaheadSuggestion,
 } from "../../lang/types";
 import { CqlResult, createParser } from "../../lang/Cql";
-import { hasReservedChar, hasWhitespace } from "../../lang/utils";
 import { skipSuggestion } from "./commands";
+import {
+  escapeQuotes,
+  shouldQuoteFieldValue,
+  unescapeQuotes,
+} from "../../lang/utils";
 
 const tokensToPreserve = [
   TokenType.CHIP_KEY_POSITIVE,
@@ -200,9 +204,6 @@ export const createProseMirrorTokenToDocumentMap = (
   return new Mapping([new StepMap(ranges.flat())]);
 };
 
-const shouldQuoteFieldValue = (literal: string) =>
-  hasReservedChar(literal) || hasWhitespace(literal);
-
 /**
  * Map ProseMirrorTokens to their document positions.
  */
@@ -254,11 +255,13 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
               [
                 chipKey.create(
                   undefined,
-                  tokenKey ? schema.text(tokenKey) : undefined,
+                  tokenKey ? schema.text(unescapeQuotes(tokenKey)) : undefined,
                 ),
                 chipValue.create(
                   undefined,
-                  tokenValue ? schema.text(tokenValue) : undefined,
+                  tokenValue
+                    ? schema.text(unescapeQuotes(tokenValue))
+                    : undefined,
                 ),
               ],
             ),
@@ -380,7 +383,7 @@ export const docToCqlStr = (doc: Node): string => {
         const maybeQuoteMark = shouldQuoteFieldValue(value) ? '"' : "";
         // Anticipate a chipValue here, adding the colon – if we do not, and a
         // chipValue is not present, we throw the mappings off.
-        str += `${leadingWhitespace}${polarity}${maybeQuoteMark}${value}${maybeQuoteMark}:`;
+        str += `${leadingWhitespace}${polarity}${maybeQuoteMark}${escapeQuotes(value)}${maybeQuoteMark}:`;
         return false;
       }
       case "chipValue": {
@@ -392,7 +395,8 @@ export const docToCqlStr = (doc: Node): string => {
         }
 
         const maybeQuoteMark = shouldQuoteFieldValue(value) ? '"' : "";
-        str += `${maybeQuoteMark}${value}${maybeQuoteMark} `;
+
+        str += `${maybeQuoteMark}${escapeQuotes(value)}${maybeQuoteMark} `;
 
         return false;
       }
@@ -771,7 +775,10 @@ export const getContentFromClipboard = (
   };
 };
 
-export const selectionIsWithinNodeType = (state: EditorState, nodeType: NodeType) => {
+export const selectionIsWithinNodeType = (
+  state: EditorState,
+  nodeType: NodeType,
+) => {
   const { from, to } = state.selection;
   const $from = state.doc.resolve(from);
   const $to = state.doc.resolve(to);
