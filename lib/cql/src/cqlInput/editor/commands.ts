@@ -4,7 +4,7 @@ import {
   Selection,
   TextSelection,
 } from "prosemirror-state";
-import { chip, chipKey, chipValue } from "./schema";
+import { chip, chipKey, chipValue, queryStr } from "./schema";
 import { selectAll } from "prosemirror-commands";
 import { createParser } from "../../lang/Cql";
 import {
@@ -203,12 +203,17 @@ export const removeChipCoveringRange =
   };
 
 /**
- * Inserts whitespace after a `+` is inserted with trailing whitespace, to
- * ensure it's correctly handled as the start of a chip, and not a part of the
- * following query.
+ * Inserts whitespace after a `+` is inserted into a query string with trailing
+ * whitespace, to ensure it's correctly handled as the start of a chip, and not
+ * a part of the following query.
  */
 export const handlePlus: Command = (state, dispatch) => {
   const { doc, selection } = state;
+
+  if (selection.$from.node().type !== queryStr) {
+    return false;
+  }
+
   const suffix = doc.textBetween(
     selection.from,
     Math.min(selection.to + 1, doc.nodeSize - 2),
