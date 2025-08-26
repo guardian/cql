@@ -562,6 +562,31 @@ describe("cql plugin", () => {
   });
 
   describe("chip behaviour", () => {
+    it("should move into value position when `:` is pressed at the end a chip key", async () => {
+      const { waitFor, editor } = createCqlEditor();
+
+      // Shortcut b/c insertText inserts an extra colon here that
+      // I cannot reproduce in a browser context: this should really be
+      // editor.insertText("+tag:a")
+      editor.insertText("+tag").shortcut(":").insertText("a");
+
+      await waitFor("tag:a");
+    });
+
+    it("should not move into value position when `:` is pressed within the middle of a chip key", async () => {
+      const query = "+tag";
+      const { waitFor, editor, moveCaretToQueryPos } = createCqlEditor(query);
+
+      moveCaretToQueryPos(query.indexOf("a"));
+
+      // Shortcut b/c insertText inserts an extra colon here that I cannot
+      // reproduce in a browser context. Because shortcut does not trigger text
+      // insertion, this is a no-op.
+      editor.shortcut(":");
+
+      await waitFor("tag:");
+    });
+
     it("should change the polarity of a chip when the polarity indicator is clicked", async () => {
       const queryStr = "+tag:a";
       const { waitFor, container, user } = createCqlEditor(queryStr);

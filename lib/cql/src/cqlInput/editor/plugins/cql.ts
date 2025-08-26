@@ -16,6 +16,7 @@ import { defaultPopoverRenderer } from "../../popover/components/defaultPopoverR
 import { ErrorPopover } from "../../popover/ErrorPopover";
 import { TypeaheadPopover } from "../../popover/TypeaheadPopover";
 import {
+  handleColon,
   handlePlus,
   insertChip,
   removeChipAdjacentToSelection,
@@ -45,7 +46,7 @@ import {
   ProseMirrorToken,
   queryHasChanged,
   queryToProseMirrorDoc,
-  skipSuggestion,
+  skipSuggestionAndFocus,
   tokensToDecorations,
   tokensToDoc,
   toMappedSuggestions,
@@ -313,6 +314,14 @@ export const createCqlPlugin = ({
           case "+": {
             return handlePlus(view.state, view.dispatch);
           }
+          case ":": {
+            const result =  handleColon(view.state, view.dispatch);
+            if (result) {
+              event.preventDefault();
+              event.stopPropagation()
+            }
+            return result;
+          }
           case "Escape": {
             typeaheadPopover?.hide();
             return true;
@@ -353,7 +362,7 @@ export const createCqlPlugin = ({
         if (!typeaheadPopover?.isRenderingNavigableMenu()) {
           switch (event.key) {
             case "Enter": {
-              return skipSuggestion(view)();
+              return skipSuggestionAndFocus(view)();
             }
             case "ArrowUp":
             case "ArrowDown":
@@ -455,7 +464,7 @@ export const createCqlPlugin = ({
         view,
         typeaheadEl,
         applySuggestion(view),
-        skipSuggestion(view),
+        skipSuggestionAndFocus(view),
         renderPopoverContent,
       );
 

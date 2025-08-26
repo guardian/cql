@@ -9,12 +9,15 @@ import { selectAll } from "prosemirror-commands";
 import { createParser } from "../../lang/Cql";
 import {
   findNodeAt,
+  getNextPositionAfterTypeaheadSelection,
   isSelectionWithinNodesOfType,
+  selectionIsWithinNodeType,
   queryToProseMirrorDoc,
 } from "./utils";
 import { findDiffEndForContent, findDiffStartForContent } from "./diff";
 import { Node } from "prosemirror-model";
 import { schema } from "prosemirror-test-builder";
+import { TRANSACTION_IGNORE_READONLY } from "./plugins/cql";
 
 export const startOfLine: Command = (state, dispatch) => {
   const startSelection = Selection.atStart(state.doc);
@@ -29,19 +32,17 @@ export const endOfLine: Command = (state, dispatch) => {
 };
 
 export const maybeSelectValue: Command = (state, dispatch) => {
-  const { from, to } = state.selection;
+  const { from } = state.selection;
   const $from = state.doc.resolve(from);
-  const $to = state.doc.resolve(to);
   const fromNode = $from.node();
-  const toNode = $to.node();
 
-  const isWithinKey = fromNode.type === chipValue && fromNode === toNode;
+  const isWithinValue = selectionIsWithinNodeType(state, chipValue);
   const selectionContent = state.selection.content().content;
   const selectionSpansWholeText =
     selectionContent.textBetween(0, selectionContent.size) ===
     fromNode.textContent;
 
-  if (isWithinKey && !selectionSpansWholeText) {
+  if (isWithinValue && !selectionSpansWholeText) {
     // Expand selection to key
     const from = $from.start();
     const to = from + fromNode.textContent.length;
@@ -201,8 +202,12 @@ export const removeChipCoveringRange =
     return true;
   };
 
+/**
+ * Inserts whitespace after a `+` is inserted with trailing whitespace, to
+ * ensure it's correctly handled as the start of a chip, and not a part of the
+ * following query.
+ */
 export const handlePlus: Command = (state, dispatch) => {
-  // If there is a
   const { doc, selection } = state;
   const suffix = doc.textBetween(
     selection.from,
@@ -219,6 +224,38 @@ export const handlePlus: Command = (state, dispatch) => {
 
   const textToInsert = `+${maybeTrailingWhitespace}`;
   const tr = state.tr.insertText(textToInsert);
+
+  dispatch?.(tr);
+
+  return true;
+};
+
+/**
+ * If we're inserting a trailing colon in chipKey position, move to chipValue
+ * position.
+ */
+export const handleColon: Command = (state, dispatch) => {
+  const selectionIsAtEndOfNode = state.selection.from === state.selection.$from.after() - 1
+  if (selectionIsWithinNodeType(state, chipKey) && selectionIsAtEndOfNode) {
+    return skipSuggestion(state, dispatch);
+  }
+
+  return false;
+};
+
+export const skipSuggestion: Command = (state, dispatch) => {
+  const tr = state.tr;
+  const insertPos = getNextPositionAfterTypeaheadSelection(
+    tr.doc,
+    tr.selection.from,
+  );
+
+  if (insertPos) {
+    tr.setSelection(TextSelection.create(tr.doc, insertPos)).setMeta(
+      TRANSACTION_IGNORE_READONLY,
+      true,
+    );
+  }
 
   dispatch?.(tr);
 

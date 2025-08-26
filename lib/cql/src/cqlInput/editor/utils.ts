@@ -13,6 +13,7 @@ import {
 } from "./schema";
 import { Fragment, Node, NodeType } from "prosemirror-model";
 import {
+  EditorState,
   NodeSelection,
   Selection,
   TextSelection,
@@ -22,7 +23,6 @@ import {
   CLASS_ERROR,
   CqlError,
   TRANSACTION_IGNORE_READONLY as TRANSACTION_APPLY_SUGGESTION,
-  TRANSACTION_IGNORE_READONLY,
 } from "./plugins/cql";
 import { isChipKey, Token, TokenType } from "../../lang/token";
 import {
@@ -31,6 +31,7 @@ import {
 } from "../../lang/types";
 import { CqlResult, createParser } from "../../lang/Cql";
 import { hasReservedChar, hasWhitespace } from "../../lang/utils";
+import { skipSuggestion } from "./commands";
 
 const tokensToPreserve = [
   TokenType.CHIP_KEY_POSITIVE,
@@ -171,7 +172,7 @@ export const createProseMirrorTokenToDocumentMap = (
 
           return accRanges.concat(
             ...queryStrMapping,
-             getCqlFieldKeyRange(
+            getCqlFieldKeyRange(
               from,
               to,
               hasPrefix,
@@ -681,20 +682,8 @@ export const applySuggestion =
     return true;
   };
 
-export const skipSuggestion = (view: EditorView) => () => {
-  const tr = view.state.tr;
-  const insertPos = getNextPositionAfterTypeaheadSelection(
-    tr.doc,
-    tr.selection.from,
-  );
-
-  if (insertPos) {
-    tr.setSelection(TextSelection.create(tr.doc, insertPos)).setMeta(
-      TRANSACTION_IGNORE_READONLY,
-      true,
-    );
-  }
-  view.dispatch(tr);
+export const skipSuggestionAndFocus = (view: EditorView) => () => {
+  skipSuggestion(view.state, view.dispatch);
   view.focus();
 
   return true;
@@ -780,4 +769,14 @@ export const getContentFromClipboard = (
     type: "TEXT",
     content: maybeText,
   };
+};
+
+export const selectionIsWithinNodeType = (state: EditorState, nodeType: NodeType) => {
+  const { from, to } = state.selection;
+  const $from = state.doc.resolve(from);
+  const $to = state.doc.resolve(to);
+  const fromNode = $from.node();
+  const toNode = $to.node();
+
+  return fromNode.type === nodeType && fromNode === toNode;
 };
