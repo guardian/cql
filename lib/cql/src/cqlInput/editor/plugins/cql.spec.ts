@@ -764,6 +764,18 @@ describe("cql plugin", () => {
         await waitFor(`key:"value+:\\""`)
     });
 
+    it("should not add whitespace after an escaped + in a chip value", async () => {
+         const queryStr = " +key:value";
+        const { editor, moveCaretToQueryPos, waitFor } =
+          createCqlEditor(queryStr);
+
+        await moveCaretToQueryPos(queryStr.indexOf("v"), 1);
+
+        // This should be a no-op.
+        await editor.shortcut(`+"`)
+        await waitFor(`key:value`)
+    });
+
     it.todo(
       "should not remove chip keys when hitting backspace from a chip value",
       async () => {
