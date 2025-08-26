@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 1.7.1
+
+### Patch Changes
+
+- 8fe9429: Do not insert space after a plus if we are not in queryStr position
+
 ## 1.7.0
 
 ### Minor Changes
