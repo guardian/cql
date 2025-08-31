@@ -3,9 +3,11 @@ import {
   CqlConfig,
   errorMsgTestId,
   errorTestId,
+  groupTestId,
   typeaheadTestId,
 } from "../../CqlInput";
 import {
+  findAllByTestId,
   findByTestId,
   findByText,
   fireEvent,
@@ -747,33 +749,31 @@ describe("cql plugin", () => {
     it("should escape chip keys", async () => {
       const { editor, waitFor } = createCqlEditor();
 
-      editor
-        .insertText("+")
-        .insertText(`"key+"`)
+      editor.insertText("+").insertText(`"key+"`);
 
       await waitFor(`"\\"key+\\"":`);
     });
 
     it("should escape chip values", async () => {
-         const queryStr = " +key:v";
-        const { editor, moveCaretToQueryPos, waitFor } =
-          createCqlEditor(queryStr);
+      const queryStr = " +key:v";
+      const { editor, moveCaretToQueryPos, waitFor } =
+        createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.indexOf("v"), 1);
-        await editor.insertText(`alue+:"`)
-        await waitFor(`key:"value+:\\""`)
+      await moveCaretToQueryPos(queryStr.indexOf("v"), 1);
+      await editor.insertText(`alue+:"`);
+      await waitFor(`key:"value+:\\""`);
     });
 
     it("should not add whitespace after an escaped + in a chip value", async () => {
-         const queryStr = " +key:value";
-        const { editor, moveCaretToQueryPos, waitFor } =
-          createCqlEditor(queryStr);
+      const queryStr = " +key:value";
+      const { editor, moveCaretToQueryPos, waitFor } =
+        createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.indexOf("v"), 1);
+      await moveCaretToQueryPos(queryStr.indexOf("v"), 1);
 
-        // This should be a no-op.
-        await editor.shortcut(`+"`)
-        await waitFor(`key:value`)
+      // This should be a no-op.
+      await editor.shortcut(`+"`);
+      await waitFor(`key:value`);
     });
 
     it.todo(
@@ -1047,6 +1047,24 @@ describe("cql plugin", () => {
       ]);
 
       expect(docToCqlStr(editor.state.doc)).toEqual(textPayload);
+    });
+  });
+
+  describe.only("groups", () => {
+    it("should not highlight groups when the selection does not abut a group", async () => {
+      const { container } = createCqlEditor("(a group) not a group");
+      const groupDecorations = (
+        await findAllByTestId(container, groupTestId)
+      ).map((el) => el.textContent);
+      expect(groupDecorations).toEqual(["(", ")"]);
+    });
+
+    it("should highlight groups when the selection abuts a group", async () => {
+      const { container } = createCqlEditor("(a group)");
+      const groupDecorations = (
+        await findAllByTestId(container, groupTestId)
+      ).map((el) => el.textContent);
+      expect(groupDecorations).toEqual([""]);
     });
   });
 });

@@ -1,4 +1,4 @@
-import { CqlBinary, CqlExpr, CqlField } from "./ast";
+import { CqlBinary, CqlExpr, CqlType, CqlTypeMap } from "./ast";
 
 const whitespaceR = /\s/;
 export const hasWhitespace = (str: string) => !!str.match(whitespaceR);
@@ -44,16 +44,27 @@ export function* getPermutations<T>(
   return permutation.slice();
 }
 
-export const getCqlFieldsFromCqlBinary = (queryBinary: CqlBinary): CqlField[] =>
-  getCqlFieldsFromQueryExpr(queryBinary.left).concat(
-    queryBinary.right
-      ? getCqlFieldsFromCqlBinary(queryBinary.right.binary)
-      : [],
-  );
+export const getCqlTermFromCqlBinary = <T extends CqlType>(
+  queryBinary: CqlBinary,
+  type: T,
+): CqlTypeMap[T][] => {
+  const left = getCqlTermFromQueryExpr(
+    queryBinary.left,
+    type,
+  ) as CqlTypeMap[T][];
 
-const getCqlFieldsFromQueryExpr = (queryContent: CqlExpr): CqlField[] => {
+  const right = queryBinary.right
+    ? getCqlTermFromCqlBinary(queryBinary.right.binary, type)
+    : [];
+
+  return left.concat(right);
+};
+const getCqlTermFromQueryExpr = <T extends CqlType>(
+  queryContent: CqlExpr,
+  type: T,
+): CqlTypeMap[CqlExpr["content"]["type"]][] => {
   switch (queryContent.content.type) {
-    case "CqlField":
+    case type:
       return [queryContent.content];
     default:
       return [];

@@ -6,7 +6,7 @@ import {
   TypeaheadSuggestion,
   SuggestionType,
 } from "./types";
-import { getCqlFieldsFromCqlBinary } from "./utils";
+import { getCqlTermFromCqlBinary } from "./utils";
 
 type TypeaheadResolver =
   | ((str: string, signal?: AbortSignal) => Promise<TextSuggestionOption[]>)
@@ -99,8 +99,9 @@ export class Typeahead {
         reject(new DOMException("Aborted", "AbortError"));
       });
 
-      const eventuallySuggestions = getCqlFieldsFromCqlBinary(
+      const eventuallySuggestions = getCqlTermFromCqlBinary(
         program.content,
+        "CqlField"
       ).flatMap((queryField) => this.suggestCqlField(queryField, signal));
 
       return Promise.all(eventuallySuggestions)

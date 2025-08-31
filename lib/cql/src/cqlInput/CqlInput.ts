@@ -22,6 +22,7 @@ import {
 import { applyPartialTheme, CqlTheme } from "./theme";
 
 export const typeaheadTestId = "cql-input-typeahead";
+export const groupTestId = "cql-input-group-deco";
 export const errorTestId = "cql-input-error";
 export const errorMsgTestId = "cql-input-error-message";
 

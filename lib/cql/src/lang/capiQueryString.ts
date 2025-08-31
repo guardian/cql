@@ -1,6 +1,6 @@
 import { err, ok, Result } from "../utils/result";
 import { CqlQuery, CqlBinary, CqlExpr } from "./ast";
-import { getCqlFieldsFromCqlBinary } from "./utils";
+import { getCqlTermFromCqlBinary } from "./utils";
 
 class CapiCqlStringError extends Error {
   public constructor(message: string) {
@@ -54,7 +54,7 @@ export const queryStrFromQueryList = (
   const searchStrs = strFromBinary(content);
 
   try {
-    const otherQueries = getCqlFieldsFromCqlBinary(content).flatMap((expr) => {
+    const otherQueries = getCqlTermFromCqlBinary(content).flatMap((expr) => {
       switch (expr.type) {
         case "CqlField": {
           if (expr.value) {

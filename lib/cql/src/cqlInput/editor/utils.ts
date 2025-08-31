@@ -1,5 +1,5 @@
 import { Mapping, StepMap } from "prosemirror-transform";
-import { Decoration, EditorView } from "prosemirror-view";
+import { EditorView } from "prosemirror-view";
 import {
   IS_READ_ONLY,
   chip,
@@ -20,7 +20,6 @@ import {
   Transaction,
 } from "prosemirror-state";
 import {
-  CLASS_ERROR,
   CqlError,
   TRANSACTION_IGNORE_READONLY as TRANSACTION_APPLY_SUGGESTION,
 } from "./plugins/cql";
@@ -348,23 +347,6 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
   return doc.create(undefined, nodes);
 };
 
-const tokensThatAreNotDecorated = ["CHIP_KEY", "CHIP_VALUE", "EOF"];
-
-export const tokensToDecorations = (
-  tokens: ProseMirrorToken[],
-): Decoration[] => {
-  return mapTokens(tokens)
-    .filter((token) => !tokensThatAreNotDecorated.includes(token.tokenType))
-    .map(({ from, to, tokenType }) =>
-      Decoration.inline(
-        from,
-        to,
-        { class: `CqlToken__${tokenType}` },
-        { key: `${from}-${to}` },
-      ),
-    );
-};
-
 export const docToCqlStr = (doc: Node): string => {
   let str: string = "";
 
@@ -586,16 +568,6 @@ export const getNextPositionAfterTypeaheadSelection = (
   }
 
   return insertPos;
-};
-
-export const errorToDecoration = (position: number): Decoration => {
-  const toDOM = () => {
-    const el = document.createElement("span");
-    el.classList.add(CLASS_ERROR);
-    return el;
-  };
-
-  return Decoration.widget(position, toDOM);
 };
 
 export const queryHasChanged = (

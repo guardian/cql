@@ -35,7 +35,6 @@ import {
   applyChipLifecycleRules,
   applySuggestion,
   docToCqlStr,
-  errorToDecoration,
   findNodeAt,
   getContentFromClipboard,
   getNodeTypeAtSelection,
@@ -47,12 +46,12 @@ import {
   queryHasChanged,
   queryToProseMirrorDoc,
   skipSuggestionAndFocus,
-  tokensToDecorations,
   tokensToDoc,
   toMappedSuggestions,
 } from "../utils";
 import { chipKeyNodeView, chipNodeView, chipValueNodeView } from "../nodeView";
 import { DebugChangeEventDetail } from "../../../types/dom";
+import { createGroupDecorations, errorToDecoration, tokensToDecorations } from "../decorations";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -294,7 +293,8 @@ export const createCqlPlugin = ({
         [chipValue.name]: chipValueNodeView,
       },
       decorations: (state) => {
-        const { tokens, error } = cqlPluginKey.getState(state)!;
+        const { tokens, error, queryAst, mapping } =
+          cqlPluginKey.getState(state)!;
 
         const maybeErrorDeco = error?.position
           ? [errorToDecoration(error.position)]
@@ -304,9 +304,16 @@ export const createCqlPlugin = ({
           ? tokensToDecorations(tokens)
           : [];
 
+        const maybeGroupDecorations = createGroupDecorations(
+          state.selection,
+          queryAst,
+          mapping,
+        );
+
         return DecorationSet.create(state.doc, [
           ...maybeErrorDeco,
           ...maybeTokensToDecorations,
+          ...maybeGroupDecorations,
         ]);
       },
       handleKeyDown(view, event) {
@@ -315,10 +322,10 @@ export const createCqlPlugin = ({
             return handlePlus(view.state, view.dispatch);
           }
           case ":": {
-            const result =  handleColon(view.state, view.dispatch);
+            const result = handleColon(view.state, view.dispatch);
             if (result) {
               event.preventDefault();
-              event.stopPropagation()
+              event.stopPropagation();
             }
             return result;
           }
