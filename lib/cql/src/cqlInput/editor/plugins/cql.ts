@@ -39,6 +39,7 @@ import {
   findNodeAt,
   getContentFromClipboard,
   getNodeTypeAtSelection,
+  handleEnter,
   isChipSelected,
   isSelectionWithinNodesOfType,
   mapResult,
@@ -362,7 +363,7 @@ export const createCqlPlugin = ({
         if (!typeaheadPopover?.isRenderingNavigableMenu()) {
           switch (event.key) {
             case "Enter": {
-              return skipSuggestionAndFocus(view)();
+              return handleEnter(view);
             }
             case "ArrowUp":
             case "ArrowDown":

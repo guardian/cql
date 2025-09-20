@@ -686,7 +686,41 @@ export const applySuggestion =
     return true;
   };
 
-export const skipSuggestionAndFocus = (view: EditorView) => () => {
+export const handleEnter = (view: EditorView) => {
+  const { state } = view;
+  // If we're within a chip key, convert to a queryString
+  if (isSelectionWithinNodesOfType(state.doc, state.selection, [chipKey])) {
+    const { from } = state.selection;
+    const $from = state.doc.resolve(from);
+    const fromNode = $from.node();
+
+    const endOfKey = $from.after();
+    const chipNode = state.doc.resolve($from.before()).node();
+    const maybePolarity = chipNode.attrs[POLARITY] === "-" ? "-" : "";
+    const keyText = `${maybePolarity}${fromNode.textContent}`;
+
+    const chipStart = $from.before() - 1;
+    const chipEnd = endOfKey + 4; // +1 to move to start of value, +1 to move to end of value, +1 to
+    const endOfPrecedingQueryStr = chipStart - 1;
+
+    const tr = state.tr;
+    tr.deleteRange(chipStart, chipEnd)
+
+    tr.insertText(
+      keyText,
+      endOfPrecedingQueryStr,
+      endOfPrecedingQueryStr,
+    );
+
+    view.dispatch(tr);
+  } else {
+    skipSuggestionAndFocus(view);
+  }
+
+  return true;
+};
+
+export const skipSuggestionAndFocus = (view: EditorView) => {
   skipSuggestion(view.state, view.dispatch);
   view.focus();
 

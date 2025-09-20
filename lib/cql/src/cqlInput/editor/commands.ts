@@ -43,7 +43,7 @@ export const maybeSelectValue: Command = (state, dispatch) => {
     fromNode.textContent;
 
   if (isWithinValue && !selectionSpansWholeText) {
-    // Expand selection to key
+    // Expand selection to value
     const from = $from.start();
     const to = from + fromNode.textContent.length;
     dispatch?.(

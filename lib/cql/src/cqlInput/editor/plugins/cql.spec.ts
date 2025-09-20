@@ -611,6 +611,26 @@ describe("cql plugin", () => {
       await waitFor("tag:a tag:c");
     });
 
+    it.only("should de-chip when enter pressed at the end a chip key, and there is no selection", async () => {
+      const { waitFor, editor } = createCqlEditor();
+
+      editor.insertText("notakey").press("Enter");
+
+      await tick();
+
+      await waitFor("notakey");
+    });
+
+    it.only("should de-chip, preserving polarity, when enter pressed at the end a chip key, and there is no selection", async () => {
+      const { waitFor, editor } = createCqlEditor();
+
+      editor.insertText("-notakey").press("Enter");
+
+      await tick();
+
+      await waitFor("-notakey");
+    });
+
     it("should move the selection into value position when the user types a shortcut", async () => {
       const { editor, waitFor } = createCqlEditor("", {
         lang: {
@@ -747,33 +767,31 @@ describe("cql plugin", () => {
     it("should escape chip keys", async () => {
       const { editor, waitFor } = createCqlEditor();
 
-      editor
-        .insertText("+")
-        .insertText(`"key+"`)
+      editor.insertText("+").insertText(`"key+"`);
 
       await waitFor(`"\\"key+\\"":`);
     });
 
     it("should escape chip values", async () => {
-         const queryStr = " +key:v";
-        const { editor, moveCaretToQueryPos, waitFor } =
-          createCqlEditor(queryStr);
+      const queryStr = " +key:v";
+      const { editor, moveCaretToQueryPos, waitFor } =
+        createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.indexOf("v"), 1);
-        await editor.insertText(`alue+:"`)
-        await waitFor(`key:"value+:\\""`)
+      await moveCaretToQueryPos(queryStr.indexOf("v"), 1);
+      await editor.insertText(`alue+:"`);
+      await waitFor(`key:"value+:\\""`);
     });
 
     it("should not add whitespace after an escaped + in a chip value", async () => {
-         const queryStr = " +key:value";
-        const { editor, moveCaretToQueryPos, waitFor } =
-          createCqlEditor(queryStr);
+      const queryStr = " +key:value";
+      const { editor, moveCaretToQueryPos, waitFor } =
+        createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.indexOf("v"), 1);
+      await moveCaretToQueryPos(queryStr.indexOf("v"), 1);
 
-        // This should be a no-op.
-        await editor.shortcut(`+"`)
-        await waitFor(`key:value`)
+      // This should be a no-op.
+      await editor.shortcut(`+"`);
+      await waitFor(`key:value`);
     });
 
     it.todo(
