@@ -229,44 +229,59 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
   // any leading whitespace
   const initialContent = [queryStr.create(null, leadingNodeContent)];
 
-  const nodes = joinQueryStrTokens(_tokens).reduce<Node[]>(
-    (acc, token, index, tokens): Node[] => {
+  const { nodes } = joinQueryStrTokens(_tokens).reduce<{
+    nodes: Node[];
+    inNegatedExpr?: true;
+  }>(
+    (
+      { nodes, inNegatedExpr },
+      token,
+      index,
+      tokens,
+    ): { nodes: Node[]; inNegatedExpr?: true } => {
+      const previousToken = tokens[index - 1];
+
       switch (token.tokenType) {
+        case TokenType.MINUS: {
+          return { nodes, inNegatedExpr: true };
+        }
         case TokenType.CHIP_KEY: {
           const tokenKey = token.literal;
           const nextToken = tokens[index + 1];
           const tokenValue =
             nextToken.tokenType === "CHIP_VALUE" ? nextToken.literal : "";
-          const previousToken = tokens[index - 1];
+
           const isPrecededByChip =
             previousToken?.tokenType === "CHIP_VALUE" ||
             isChipKey(previousToken?.tokenType);
-          return acc.concat(
-            // Insert a string node if two chips are adjacent
-            ...(isPrecededByChip ? [queryStr.create()] : []),
-            chip.create(
-              {
-                [POLARITY]:
-                  token.tokenType === TokenType.CHIP_KEY ? "+" : "-",
-              },
-              [
-                chipKey.create(
-                  undefined,
-                  tokenKey ? schema.text(unescapeQuotes(tokenKey)) : undefined,
-                ),
-                chipValue.create(
-                  undefined,
-                  tokenValue
-                    ? schema.text(unescapeQuotes(tokenValue))
-                    : undefined,
-                ),
-              ],
+          return {
+            nodes: nodes.concat(
+              // Insert a string node if two chips are adjacent
+              ...(isPrecededByChip ? [queryStr.create()] : []),
+              chip.create(
+                {
+                  [POLARITY]: inNegatedExpr ? "-" : "+",
+                },
+                [
+                  chipKey.create(
+                    undefined,
+                    tokenKey
+                      ? schema.text(unescapeQuotes(tokenKey))
+                      : undefined,
+                  ),
+                  chipValue.create(
+                    undefined,
+                    tokenValue
+                      ? schema.text(unescapeQuotes(tokenValue))
+                      : undefined,
+                  ),
+                ],
+              ),
             ),
-          );
+          };
         }
         case "EOF": {
-          const previousToken = tokens[index - 1];
-          const previousNode = acc[acc.length - 1];
+          const previousNode = nodes[nodes.length - 1];
           if (
             previousToken?.to < token.from &&
             previousNode.type === queryStr
@@ -274,34 +289,37 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             // If there is a gap between the previous queryStr token and EOF,
             // there is whitespace at the end of the query – preserve one char
             // to allow users to continue the query
-            return acc
-              .slice(0, acc.length - 1)
-              .concat(
-                queryStr.create(
-                  undefined,
-                  schema.text(previousNode.textContent + " "),
+            return {
+              nodes: nodes
+                .slice(0, nodes.length - 1)
+                .concat(
+                  queryStr.create(
+                    undefined,
+                    schema.text(previousNode.textContent + " "),
+                  ),
                 ),
-              );
+            };
           }
 
           if (previousNode?.type !== queryStr) {
             // Always end with a queryStr node
-            return acc.concat(queryStr.create());
+            return {
+              nodes: nodes.concat(queryStr.create()),
+            };
           }
 
-          return acc;
+          return { nodes };
         }
         // All other tokens become queryStr
         default: {
           // Ignore chip values if they are preceded by keys - they will be
           // taken care of in the "CHIP_KEY" case above. If not, interpret them
           // as queryStr, so we can display them as text in the input.
-          const previousToken = tokens[index - 1];
           if (
             token.tokenType === "CHIP_VALUE" &&
             isChipKey(previousToken?.tokenType)
           ) {
-            return acc;
+            return { nodes };
           }
 
           // If the next token is further ahead of this token by more than one
@@ -313,33 +331,37 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             : 0;
           const trailingWhitespace = " ".repeat(trailingWhitespaceChars);
 
-          const previousNode = acc[acc.length - 1];
+          const previousNode = nodes[nodes.length - 1];
           if (previousNode?.type === queryStr) {
             // Join consecutive queryStr nodes
-            return acc
-              .slice(0, acc.length - 1)
-              .concat(
-                queryStr.create(
-                  undefined,
-                  schema.text(
-                    previousNode.textContent +
-                      token.lexeme +
-                      trailingWhitespace,
+            return {
+              nodes: nodes
+                .slice(0, nodes.length - 1)
+                .concat(
+                  queryStr.create(
+                    undefined,
+                    schema.text(
+                      previousNode.textContent +
+                        token.lexeme +
+                        trailingWhitespace,
+                    ),
                   ),
                 ),
-              );
+            };
           }
 
-          return acc.concat(
-            queryStr.create(
-              undefined,
-              schema.text(token.lexeme + trailingWhitespace),
+          return {
+            nodes: nodes.concat(
+              queryStr.create(
+                undefined,
+                schema.text(token.lexeme + trailingWhitespace),
+              ),
             ),
-          );
+          };
         }
       }
     },
-    initialContent,
+    { nodes: initialContent },
   );
 
   return doc.create(undefined, nodes);
@@ -701,13 +723,9 @@ export const handleEnter = (view: EditorView) => {
     const endOfPrecedingQueryStr = chipStart - 1;
 
     const tr = state.tr;
-    tr.deleteRange(chipStart, chipEnd)
+    tr.deleteRange(chipStart, chipEnd);
 
-    tr.insertText(
-      keyText,
-      endOfPrecedingQueryStr,
-      endOfPrecedingQueryStr,
-    );
+    tr.insertText(keyText, endOfPrecedingQueryStr, endOfPrecedingQueryStr);
 
     view.dispatch(tr);
   } else {

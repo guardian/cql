@@ -38,7 +38,7 @@ describe("utils", () => {
     });
   };
 
-  describe("tokensToNode", () => {
+  describe("tokensToDoc", () => {
     it("should create a node from a list of tokens", async () => {
       const tokens = await queryToProseMirrorTokens("text +key:value text");
       const node = tokensToDoc(tokens);
@@ -61,6 +61,28 @@ describe("utils", () => {
         chip(chipKey("key"), chipValue("value")),
         queryStr(),
       );
+
+      expect(node.toJSON()).toEqual(expected.toJSON());
+    });
+
+    it("should handle negations for fields", async () => {
+      const tokens = await queryToProseMirrorTokens("-key:value");
+      const node = tokensToDoc(tokens);
+
+      const expected = doc(
+        queryStr(),
+        chip({ [POLARITY]: "-" }, chipKey("key"), chipValue("value")),
+        queryStr(),
+      );
+
+      expect(node.toJSON()).toEqual(expected.toJSON());
+    });
+
+    it("should handle negations for string expressions", async () => {
+      const tokens = await queryToProseMirrorTokens("-str");
+      const node = tokensToDoc(tokens);
+
+      const expected = doc(queryStr("-str"));
 
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
@@ -138,9 +160,7 @@ describe("utils", () => {
     });
 
     it("should unescape quotes within keys and values", async () => {
-      const tokens = await queryToProseMirrorTokens(
-        `+"key\\"":"value\\""`,
-      );
+      const tokens = await queryToProseMirrorTokens(`+"key\\"":"value\\""`);
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -152,7 +172,7 @@ describe("utils", () => {
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
-    it("should create chipWrappers for partial tags that precede existing tags", async () => {
+    it("should create chips for partial tags that precede existing tags", async () => {
       const tokens = await queryToProseMirrorTokens("+ +tag");
       const node = tokensToDoc(tokens);
 
@@ -368,6 +388,19 @@ describe("utils", () => {
       );
 
       const query = "+tag:tags-are-magic +tag:tags-are-magic ";
+
+      expect(docToCqlStr(queryDoc)).toBe(query);
+    });
+
+    it("should apply negations to fields and strings", () => {
+      const queryDoc = doc(
+        queryStr("-example "),
+        chip({ [POLARITY]: "-" }, chipKey("tag"), chipValue("tags-are-magic")),
+        chip(chipKey("tag"), chipValue("tags-are-magic")),
+        queryStr(),
+      );
+
+      const query = "-example -tag:tags-are-magic +tag:tags-are-magic ";
 
       expect(docToCqlStr(queryDoc)).toBe(query);
     });
