@@ -39,7 +39,6 @@ import {
 
 const tokensToPreserve = [
   TokenType.CHIP_KEY,
-  TokenType.CHIP_KEY_NEGATIVE,
   TokenType.CHIP_VALUE,
   TokenType.EOF,
 ] as string[];
@@ -156,8 +155,7 @@ export const createProseMirrorTokenToDocumentMap = (
   const ranges = compactedTokenRanges.reduce<[number, number, number][]>(
     (accRanges, { tokenType, from, to, lexeme, literal }, index, tokens) => {
       switch (tokenType) {
-        case TokenType.CHIP_KEY:
-        case TokenType.CHIP_KEY_NEGATIVE: {
+        case TokenType.CHIP_KEY: {
           // If this field is at the start of the document, or preceded by a
           // field value, the editor will add a queryStr node to conform to
           // the schema, so we add a queryStr mapping to account for the
@@ -234,8 +232,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
   const nodes = joinQueryStrTokens(_tokens).reduce<Node[]>(
     (acc, token, index, tokens): Node[] => {
       switch (token.tokenType) {
-        case TokenType.CHIP_KEY:
-        case TokenType.CHIP_KEY_NEGATIVE: {
+        case TokenType.CHIP_KEY: {
           const tokenKey = token.literal;
           const nextToken = tokens[index + 1];
           const tokenValue =

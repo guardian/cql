@@ -11,24 +11,29 @@ export const cqlQueryStrFromQueryAst = (query: CqlQuery): string => {
   return strFromBinary(content);
 };
 
-const strFromContent = (queryContent: CqlExpr): string | undefined => {
-  const { content } = queryContent;
-  switch (content.type) {
-    case "CqlStr":
-      return hasWhitespace(content.searchExpr)
-        ? `"${content.searchExpr}"`
-        : content.searchExpr;
-    case "CqlGroup":
-      return `(${strFromBinary(content.content).trim()})`;
-    case "CqlBinary":
-      return strFromBinary(content);
-    case "CqlField":
-      return strFromField(content);
-  }
+const strFromExpr = (queryExpr: CqlExpr): string | undefined => {
+  const { content, polarity } = queryExpr;
+  const polarityChar = polarity === "NEGATIVE" ? "-" : "";
+  const renderedContent = (() => {
+    switch (content.type) {
+      case "CqlStr":
+        return hasWhitespace(content.searchExpr)
+          ? `"${content.searchExpr}"`
+          : content.searchExpr;
+      case "CqlGroup":
+        return `(${strFromBinary(content.content).trim()})`;
+      case "CqlBinary":
+        return strFromBinary(content);
+      case "CqlField":
+        return strFromField(content);
+    }
+  })();
+
+  return `${polarityChar}${renderedContent}`;
 };
 
 const strFromBinary = (queryBinary: CqlBinary): string => {
-  const leftStr = strFromContent(queryBinary.left);
+  const leftStr = strFromExpr(queryBinary.left);
 
   const rightStr = queryBinary.right
     ? `${queryBinary.right.operator === "AND" ? "AND" : ""} ${strFromBinary(queryBinary.right.binary)}`
@@ -38,7 +43,6 @@ const strFromBinary = (queryBinary: CqlBinary): string => {
 };
 
 const strFromField = (field: CqlField): string => {
-  const polarity = field.key.tokenType === "CHIP_KEY_POSITIVE" ? "" : "-";
   const keyLiteral = field.key.literal ?? "";
   const normalisedKey = shouldQuoteFieldValue(keyLiteral)
     ? `"${keyLiteral}"`
@@ -48,5 +52,5 @@ const strFromField = (field: CqlField): string => {
     ? `"${valueLiteral}"`
     : valueLiteral;
 
-  return `${polarity}${normalisedKey ?? ""}:${normalisedValue}`;
+  return `${normalisedKey ?? ""}:${normalisedValue}`;
 };
