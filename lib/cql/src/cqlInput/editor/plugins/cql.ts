@@ -17,7 +17,7 @@ import { ErrorPopover } from "../../popover/ErrorPopover";
 import { TypeaheadPopover } from "../../popover/TypeaheadPopover";
 import {
   handleColon,
-  handlePlus,
+  maybeAddChipAtPolarityChar,
   insertChip,
   removeChipAdjacentToSelection,
   removeChipAtSelectionIfEmpty,
@@ -312,14 +312,15 @@ export const createCqlPlugin = ({
       },
       handleKeyDown(view, event) {
         switch (event.key) {
-          case "+": {
-            return handlePlus(view.state, view.dispatch);
+          case "+":
+          case "-": {
+            return maybeAddChipAtPolarityChar(event.key)(view.state, view.dispatch);
           }
           case ":": {
-            const result =  handleColon(view.state, view.dispatch);
+            const result = handleColon(view.state, view.dispatch);
             if (result) {
               event.preventDefault();
-              event.stopPropagation()
+              event.stopPropagation();
             }
             return result;
           }
@@ -353,7 +354,7 @@ export const createCqlPlugin = ({
         const $selFrom = view.state.selection.$from;
         const isInQueryStr = $selFrom.node().type === queryStr;
         if (lang?.shortcuts?.[event.key] && isInQueryStr) {
-          return insertChip(lang?.shortcuts?.[event.key])(
+          return insertChip("+", lang?.shortcuts?.[event.key])(
             view.state,
             view.dispatch,
           );

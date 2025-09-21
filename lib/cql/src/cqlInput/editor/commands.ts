@@ -4,7 +4,7 @@ import {
   Selection,
   TextSelection,
 } from "prosemirror-state";
-import { chip, chipKey, chipValue, queryStr } from "./schema";
+import { chip, chipKey, chipValue, POLARITY, queryStr } from "./schema";
 import { selectAll } from "prosemirror-commands";
 import { createParser } from "../../lang/Cql";
 import {
@@ -18,6 +18,7 @@ import { findDiffEndForContent, findDiffStartForContent } from "./diff";
 import { Node } from "prosemirror-model";
 import { schema } from "prosemirror-test-builder";
 import { TRANSACTION_IGNORE_READONLY } from "./plugins/cql";
+import { hasWhitespace } from "../../lang/utils";
 
 export const startOfLine: Command = (state, dispatch) => {
   const startSelection = Selection.atStart(state.doc);
@@ -95,18 +96,19 @@ export const mergeDocs =
   };
 
 export const insertChip =
-  (chipKeyContent: string): Command =>
+  (polarity: "+" | "-", chipKeyContent: string): Command =>
   (state, dispatch) => {
     const tr = state.tr;
-    const node = chip.create(null, [
-      chipKey.create(null, schema.text(chipKeyContent)),
+    const node = chip.create({ [POLARITY]: polarity }, [
+      chipKey.create(null, chipKeyContent ? schema.text(chipKeyContent) : null),
       chipValue.create(),
     ]);
 
     tr.replaceSelectionWith(node);
 
-    const chipValuePos = findNodeAt(state.selection.from, tr.doc, chipValue);
-    const sel = NodeSelection.create(tr.doc, chipValuePos);
+    const caretDestination = !chipKeyContent ? chipKey : chipValue;
+    const caretPos = findNodeAt(state.selection.from, tr.doc, caretDestination);
+    const sel = NodeSelection.create(tr.doc, caretPos);
     tr.setSelection(sel);
 
     dispatch?.(tr);
@@ -207,40 +209,36 @@ export const removeChipCoveringRange =
  * whitespace, to ensure it's correctly handled as the start of a chip, and not
  * a part of the following query.
  */
-export const handlePlus: Command = (state, dispatch) => {
-  const { doc, selection } = state;
+export const maybeAddChipAtPolarityChar =
+  (polarity: "+" | "-"): Command =>
+  (state, dispatch) => {
+    const { doc, selection } = state;
 
-  if (selection.$from.node().type !== queryStr) {
-    return false;
-  }
+    if (selection.$from.node().type !== queryStr) {
+      return false;
+    }
 
-  const suffix = doc.textBetween(
-    selection.from,
-    Math.min(selection.to + 1, doc.nodeSize - 2),
-  );
-  const maybeTrailingWhitespace =
-    selection.from === selection.to && !["", " "].some((str) => suffix === str)
-      ? " "
-      : "";
+    const suffix = doc.textBetween(
+      selection.from,
+      Math.min(selection.to + 1, doc.nodeSize - 2),
+    );
 
-  if (!maybeTrailingWhitespace) {
-    return false;
-  }
+    if (!hasWhitespace(suffix) && suffix !== "") {
+      return false;
+    }
 
-  const textToInsert = `+${maybeTrailingWhitespace}`;
-  const tr = state.tr.insertText(textToInsert);
+    insertChip(polarity, "")(state, dispatch);
 
-  dispatch?.(tr);
-
-  return true;
-};
+    return true;
+  };
 
 /**
  * If we're inserting a trailing colon in chipKey position, move to chipValue
  * position.
  */
 export const handleColon: Command = (state, dispatch) => {
-  const selectionIsAtEndOfNode = state.selection.from === state.selection.$from.after() - 1
+  const selectionIsAtEndOfNode =
+    state.selection.from === state.selection.$from.after() - 1;
   if (selectionIsWithinNodeType(state, chipKey) && selectionIsAtEndOfNode) {
     return skipSuggestion(state, dispatch);
   }
