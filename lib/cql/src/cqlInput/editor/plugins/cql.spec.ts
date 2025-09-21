@@ -611,7 +611,7 @@ describe("cql plugin", () => {
       await waitFor("tag:a tag:c");
     });
 
-    it.only("should de-chip when enter pressed at the end a chip key, and there is no selection", async () => {
+    it("should de-chip when enter pressed at the end a chip key, and there is no selection", async () => {
       const { waitFor, editor } = createCqlEditor();
 
       editor.insertText("notakey").press("Enter");
@@ -621,7 +621,7 @@ describe("cql plugin", () => {
       await waitFor("notakey");
     });
 
-    it.only("should de-chip, preserving polarity, when enter pressed at the end a chip key, and there is no selection", async () => {
+    it("should de-chip, preserving polarity, when enter pressed at the end a chip key, and there is no selection", async () => {
       const { waitFor, editor } = createCqlEditor();
 
       editor.insertText("-notakey").press("Enter");

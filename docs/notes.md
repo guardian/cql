@@ -25,11 +25,12 @@ Grammar:
 
 ```
 query                       -> query_binary?
-query_binary                -> query_content (('AND' | 'OR')? query_binary)*
-query_content               -> query_group | query_str | query_quoted_str
+query_binary                -> query_expr (('AND' | 'OR')? query_binary)*
+query_expr                  -> [MINUS] query_group | query_str | query_field
 query_group                 -> '(' query_binary* ')'
+query_str                   -> query_quoted_str | query_plain_str
 query_quoted_str            -> '"' string '"'
-query_str                   -> /\w/
+query_plain_str             -> /\w/
 query_field                 -> '+' query_field_key ':'? (query_field_value | '"' query_field_value '"')? // Permit incomplete meta queries for typeahead
 query_field_key             -> 'tag' | 'section' | ...etc
 query_field_value           -> /\w/
@@ -221,3 +222,10 @@ Same rules can then apply to chip key/value:
 ```
 
 Interpreter can normalise by quoting values with escapable chars.
+
+# Negations
+
+How do we handle negations? Desired behaviour:
+
+- `+` or `-` creates chip, opens chip key suggestion menu: thus must generate `[+-]:` and move the caret between `[+-]` and `:`
+- a chip key with no suggestions, `-notakey:`, turns back into a queryStr on 'enter': `-notakey`
