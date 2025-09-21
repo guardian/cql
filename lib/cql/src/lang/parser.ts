@@ -95,7 +95,7 @@ export class Parser {
         return new CqlExpr(this.group());
       case TokenType.STRING:
         return new CqlExpr(this.str());
-      case TokenType.CHIP_KEY_POSITIVE:
+      case TokenType.CHIP_KEY:
       case TokenType.CHIP_KEY_NEGATIVE: {
         return new CqlExpr(this.field());
       }
@@ -144,7 +144,7 @@ export class Parser {
 
   private field(): CqlField {
     const key = this.consumeMany(
-      [TokenType.CHIP_KEY_POSITIVE, TokenType.CHIP_KEY_NEGATIVE],
+      [TokenType.CHIP_KEY, TokenType.CHIP_KEY_NEGATIVE],
       "Expected a search key, e.g. `+tag`",
     );
 

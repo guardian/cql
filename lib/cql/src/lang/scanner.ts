@@ -62,10 +62,10 @@ export class Scanner {
   private scanToken = () => {
     switch (this.advance()) {
       case "+":
-        this.addKey(TokenType.CHIP_KEY_POSITIVE);
+        this.addKey(TokenType.CHIP_KEY);
         return;
       case "-":
-        this.addKey(TokenType.CHIP_KEY_NEGATIVE);
+        this.addToken(TokenType.MINUS, "-");
         return;
       case ":":
         this.addValue();
@@ -154,7 +154,7 @@ export class Scanner {
   };
 
   private addShortcut = (shortcut: string) => {
-    this.addToken(TokenType.CHIP_KEY_POSITIVE, shortcut);
+    this.addToken(TokenType.CHIP_KEY, shortcut);
     if (!this.isAtEnd() && !hasWhitespace(this.peek())) {
       this.advance();
       this.addValue();
@@ -183,7 +183,7 @@ export class Scanner {
     }
 
     if (this.peek() === ":") {
-      return this.addToken(TokenType.CHIP_KEY_POSITIVE, literal);
+      return this.addToken(TokenType.CHIP_KEY, literal);
     }
 
     while (
@@ -207,7 +207,7 @@ export class Scanner {
     const literal = this.consumeQuotedRange();
 
     if (this.peek() === ":") {
-      return this.addToken(TokenType.CHIP_KEY_POSITIVE, literal);
+      return this.addToken(TokenType.CHIP_KEY, literal);
     }
 
     this.addToken(TokenType.STRING, literal);

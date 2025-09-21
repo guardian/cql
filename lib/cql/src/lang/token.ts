@@ -4,11 +4,11 @@ export const TokenType = {
   // Single-character tokens.
   LEFT_BRACKET: "LEFT_BRACKET",
   RIGHT_BRACKET: "RIGHT_BRACKET",
+  MINUS: "MINUS",
 
   // Literals.
   STRING: "STRING",
-  CHIP_KEY_POSITIVE: "CHIP_KEY_POSITIVE",
-  CHIP_KEY_NEGATIVE: "CHIP_KEY_NEGATIVE",
+  CHIP_KEY: "CHIP_KEY",
   CHIP_VALUE: "CHIP_VALUE",
 
   // Keywords.
@@ -18,9 +18,7 @@ export const TokenType = {
 } as const;
 
 export const isChipKey = (tokenType?: TokenType) =>
-  tokenType &&
-  (tokenType === TokenType.CHIP_KEY_POSITIVE ||
-    tokenType === TokenType.CHIP_KEY_NEGATIVE);
+  tokenType && tokenType === TokenType.CHIP_KEY;
 
 export class Token {
   public static reservedWordMap = {

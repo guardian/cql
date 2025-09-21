@@ -14,7 +14,7 @@ export const unquotedStringToken = (str: string, start: number = 0, literal: str
 export const quotedStringToken = (str: string, start: number = 0, literal: string | undefined = undefined) =>
   new Token(TokenType.STRING, `"${str}"`, literal ?? str, start, start + str.length + 1);
 export const queryFieldKeyToken = (str: string, start: number = 0) =>
-  new Token(TokenType.CHIP_KEY_POSITIVE, str, str, start, start + str.length);
+  new Token(TokenType.CHIP_KEY, str, str, start, start + str.length);
 
 export const queryValueToken = (str: string, start: number = 0) =>
   new Token(TokenType.CHIP_VALUE, `:${str}`, str, start, start + str.length);
