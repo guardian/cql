@@ -711,13 +711,13 @@ export const handleEnter = (view: EditorView) => {
 
     view.dispatch(tr);
   } else {
-    skipSuggestionAndFocus(view);
+    skipSuggestionAndFocus(view)();
   }
 
   return true;
 };
 
-export const skipSuggestionAndFocus = (view: EditorView) => {
+export const skipSuggestionAndFocus = (view: EditorView) => () => {
   skipSuggestion(view.state, view.dispatch);
   view.focus();
 
