@@ -8,7 +8,7 @@ import {
   CqlStr,
 } from "./ast";
 import { TokenType } from "./token";
-import { either, err, ok, Result } from "../utils/result";
+import { either, err, ok, Result, ResultKind } from "../utils/result";
 
 class ParseError extends Error {
   constructor(
@@ -89,15 +89,18 @@ export class Parser {
   }
 
   private expr(): CqlExpr {
+    const maybeNegation = this.safeConsume(TokenType.MINUS);
+    const polarity =
+      maybeNegation.kind === ResultKind.Ok ? "NEGATIVE" : "POSITIVE";
     const tokenType = this.peek().tokenType;
+
     switch (tokenType) {
       case TokenType.LEFT_BRACKET:
-        return new CqlExpr(this.group());
+        return new CqlExpr(this.group(), polarity);
       case TokenType.STRING:
-        return new CqlExpr(this.str());
-      case TokenType.CHIP_KEY:
-      case TokenType.CHIP_KEY_NEGATIVE: {
-        return new CqlExpr(this.field());
+        return new CqlExpr(this.str(), polarity);
+      case TokenType.CHIP_KEY: {
+        return new CqlExpr(this.field(), polarity);
       }
       case TokenType.AND:
       case TokenType.OR: {
@@ -143,8 +146,8 @@ export class Parser {
   }
 
   private field(): CqlField {
-    const key = this.consumeMany(
-      [TokenType.CHIP_KEY, TokenType.CHIP_KEY_NEGATIVE],
+    const key = this.consume(
+      TokenType.CHIP_KEY,
       "Expected a search key, e.g. `+tag`",
     );
 
@@ -196,17 +199,6 @@ export class Parser {
 
   private consume = (tokenType: TokenType, message: string = ""): Token => {
     if (this.check(tokenType)) {
-      return this.advance();
-    } else {
-      throw this.error(message);
-    }
-  };
-
-  private consumeMany = (
-    tokenTypes: TokenType[],
-    message: string = "",
-  ): Token => {
-    if (tokenTypes.some((tokenType) => this.check(tokenType))) {
       return this.advance();
     } else {
       throw this.error(message);

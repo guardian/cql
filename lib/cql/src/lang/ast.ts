@@ -16,10 +16,13 @@ export class CqlBinary {
   ) {}
 }
 
+export type POLARITY = "POSITIVE" | "NEGATIVE";
+
 export class CqlExpr {
   public readonly type = "QueryExpr";
   constructor(
     public readonly content: CqlStr | CqlBinary | CqlGroup | CqlField,
+    public readonly polarity: POLARITY = "POSITIVE",
   ) {}
 }
 

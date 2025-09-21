@@ -12,9 +12,10 @@ import {
   andToken,
   eofToken,
   leftParenToken,
+  minusToken,
   queryField,
   queryFieldKeyToken,
-  queryValueToken,
+  queryValueToken as queryFieldValueToken,
   quotedStringToken,
   rightParenToken,
   unquotedStringToken,
@@ -142,12 +143,29 @@ describe("parser", () => {
     it("should handle a query field", () => {
       const tokens = [
         queryFieldKeyToken("ta"),
-        queryValueToken("", 3),
+        queryFieldValueToken("", 3),
         eofToken(4),
       ];
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
         ok(new CqlQuery(new CqlBinary(new CqlExpr(queryField("ta", ""))))),
+      );
+    });
+
+    it("should handle a query field with a negation", () => {
+      const tokens = [
+        minusToken(),
+        queryFieldKeyToken("ta"),
+        queryFieldValueToken("", 3),
+        eofToken(4),
+      ];
+      const result = new Parser(tokens).parse();
+      expect(result).toEqual(
+        ok(
+          new CqlQuery(
+            new CqlBinary(new CqlExpr(queryField("ta", ""), "NEGATIVE")),
+          ),
+        ),
       );
     });
 
@@ -169,7 +187,7 @@ describe("parser", () => {
         quotedStringToken("a"),
         andToken(1),
         queryFieldKeyToken("tag", 5),
-        queryValueToken("b", 8),
+        queryFieldValueToken("b", 8),
         eofToken(10),
       ];
       const result = new Parser(tokens).parse();
@@ -199,7 +217,10 @@ describe("parser", () => {
     });
 
     it("should handle a query value with no query key", () => {
-      const tokens = [quotedStringToken("example"), queryValueToken("", 7)];
+      const tokens = [
+        quotedStringToken("example"),
+        queryFieldValueToken("", 7),
+      ];
       const result = new Parser(tokens).parse();
       assertFailure(result, "unexpected `:`");
     });
@@ -208,7 +229,7 @@ describe("parser", () => {
   it("should not crash on arbitrary tokens", () => {
     const tokens = [
       queryFieldKeyToken("tag"),
-      queryValueToken("news"),
+      queryFieldValueToken("news"),
       andToken(1),
       leftParenToken(),
       quotedStringToken("sausages"),

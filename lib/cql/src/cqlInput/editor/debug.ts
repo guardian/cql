@@ -214,7 +214,8 @@ const getContentHTML = (query: CqlExpr) => {
   return `
     <ul>
       <li>
-        <span>${getNodeHTML(query)}</span>
+        <span>${getNodeHTML(query)}<span class="node-content">${query.polarity}</span></span>
+
         ${html}
       </li>
     </ul>`;
