@@ -62,13 +62,13 @@ export class Scanner {
   private scanToken = () => {
     switch (this.advance()) {
       case "+":
-        this.addKey(TokenType.CHIP_KEY);
+        this.addToken(TokenType.PLUS, "+");
         return;
       case "-":
         this.addToken(TokenType.MINUS, "-");
         return;
       case ":":
-        this.addValue();
+        this.addChipValue();
         return;
       case "(":
         if (this.settings.groups) {
@@ -104,70 +104,13 @@ export class Scanner {
     }
   };
 
-  private addKey = (tokenType: TokenType) => {
-    const isQuotedKey = this.peek() === '"';
-    if (isQuotedKey) {
-      this.advance();
-      const literal = this.consumeQuotedRange(1);
-      this.addToken(tokenType, literal === "" ? undefined : literal);
-      return;
-    }
-
-    while (
-      (this.peek() !== ":" || this.peekIsEscaped()) &&
-      !hasWhitespace(this.peek()) &&
-      !this.isAtEnd()
-    ) {
-      this.advance();
-    }
-
-    if (this.currentIndex - this.start === 1) {
-      this.addToken(tokenType);
-    } else {
-      const key = unescapeQuotes(
-        this.program.substring(this.start + 1, this.currentIndex),
-      );
-
-      this.addToken(tokenType, key);
-    }
-  };
-
-  private addValue = () => {
-    if (this.peek() === '"') {
-      this.advance();
-      const literal = this.consumeQuotedRange(1);
-      this.addToken(TokenType.CHIP_VALUE, literal === "" ? undefined : literal);
-      return;
-    }
-
-    while (!hasWhitespace(this.peek()) && !this.isAtEnd()) this.advance();
-
-    if (this.currentIndex - this.start === 1) {
-      // No content - add an empty token
-      this.addToken(TokenType.CHIP_VALUE);
-    } else {
-      const value = unescapeQuotes(
-        this.program.substring(this.start + 1, this.currentIndex),
-      );
-      this.addToken(TokenType.CHIP_VALUE, value);
-    }
-  };
-
-  private addShortcut = (shortcut: string) => {
-    this.addToken(TokenType.CHIP_KEY, shortcut);
-    if (!this.isAtEnd() && !hasWhitespace(this.peek())) {
-      this.advance();
-      this.addValue();
-    }
-  };
-
   /**
    * Unquoted chars could be a reserved word, a field key (if followed by ':'),
    * or an unquoted string.
    */
   private handleUnquotedString = () => {
     while (
-      !hasReservedChar(this.peek()) &&
+      !(hasReservedChar(this.peek()) && !this.peekIsEscaped()) &&
       !hasWhitespace(this.peek()) &&
       !this.isAtEnd()
     ) {
@@ -201,6 +144,35 @@ export class Scanner {
       TokenType.STRING,
       this.program.substring(this.start, this.currentIndex),
     );
+  };
+
+  private addChipValue = () => {
+    if (this.peek() === '"') {
+      this.advance();
+      const literal = this.consumeQuotedRange(1);
+      this.addToken(TokenType.CHIP_VALUE, literal === "" ? undefined : literal);
+      return;
+    }
+
+    while (!hasWhitespace(this.peek()) && !this.isAtEnd()) this.advance();
+
+    if (this.currentIndex - this.start === 1) {
+      // No content - add an empty token
+      this.addToken(TokenType.CHIP_VALUE);
+    } else {
+      const value = unescapeQuotes(
+        this.program.substring(this.start + 1, this.currentIndex),
+      );
+      this.addToken(TokenType.CHIP_VALUE, value);
+    }
+  };
+
+  private addShortcut = (shortcut: string) => {
+    this.addToken(TokenType.CHIP_KEY, shortcut);
+    if (!this.isAtEnd() && !hasWhitespace(this.peek())) {
+      this.advance();
+      this.addChipValue();
+    }
   };
 
   private handleQuotedString = () => {
@@ -238,9 +210,14 @@ export class Scanner {
 
   private addToken = (tokenType: TokenType, literal?: string) => {
     const lexeme = this.program.substring(this.start, this.currentIndex);
-    this.tokens = this.tokens.concat(
-      new Token(tokenType, lexeme, literal, this.start, this.currentIndex - 1),
+    const token = new Token(
+      tokenType,
+      lexeme,
+      literal,
+      this.start,
+      this.currentIndex - 1,
     );
+    this.tokens = this.tokens.concat(token);
   };
 
   private advance = () => {
@@ -249,7 +226,8 @@ export class Scanner {
     return this.program[previous];
   };
 
-  private peekIsEscaped = () => this.current() === "\\";
+  private peekIsEscaped = (offset: number = 0) =>
+    this.peek(offset - 1) === "\\";
 
   private current = () => this.peek(-1);
 

@@ -5,6 +5,7 @@ export const TokenType = {
   LEFT_BRACKET: "LEFT_BRACKET",
   RIGHT_BRACKET: "RIGHT_BRACKET",
   MINUS: "MINUS",
+  PLUS: "PLUS",
 
   // Literals.
   STRING: "STRING",
