@@ -12,19 +12,44 @@ describe("scanner", () => {
     const scanner = new Scanner(query, settings);
     const tokens = scanner.scanTokens();
 
-    expect(tokens).toEqual(expectedTokens);
+    expect(tokens).toEqual([
+      ...expectedTokens,
+      eofToken(tokens.at(-1)?.end ?? 0 + 1),
+    ]);
   };
+
+  const keyValuePair = (
+    keyLexeme: string,
+    keyLiteral: string,
+    valueLexeme: string,
+    valueLiteral: string | undefined,
+    start: number = 1,
+  ) => [
+    new Token(
+      TokenType.CHIP_KEY,
+      keyLexeme,
+      keyLiteral,
+      start,
+      keyLexeme.length + start - 1,
+    ),
+    new Token(
+      TokenType.CHIP_VALUE,
+      valueLexeme,
+      valueLiteral,
+      start + keyLexeme.length,
+      start + keyLexeme.length + valueLexeme.length - 1,
+    ),
+  ];
 
   describe("unquoted strings", () => {
     it("should parse plain strings", () => {
-      assertTokens("sausages", [unquotedStringToken("sausages"), eofToken(8)]);
+      assertTokens("sausages", [unquotedStringToken("sausages")]);
     });
 
     it("should preserve whitespace at the end of the document", () => {
       assertTokens("magnificent octopus ", [
         unquotedStringToken("magnificent"),
         unquotedStringToken("octopus ", 12),
-        eofToken(20),
       ]);
     });
 
@@ -33,105 +58,100 @@ describe("scanner", () => {
         unquotedStringToken("a "),
         new Token(TokenType.PLUS, "+", "+", 3, 3),
         new Token(TokenType.STRING, "tag", "tag", 4, 6),
-        eofToken(7),
       ]);
     });
 
     it("should interpret strings that start with reserved words as strings", () => {
-      assertTokens("ORCOMBE", [unquotedStringToken("ORCOMBE"), eofToken(7)]);
+      assertTokens("ORCOMBE", [unquotedStringToken("ORCOMBE")]);
     });
   });
 
   describe("quoted strings", () => {
     it("should parse plain strings", () => {
-      assertTokens('"sausages"', [quotedStringToken("sausages"), eofToken(10)]);
+      assertTokens('"sausages"', [quotedStringToken("sausages")]);
     });
 
     it("should correctly handle escaped characters", () => {
       assertTokens(`\\"sausages\\"`, [
         unquotedStringToken(`\\"sausages\\"`, 0, `\\"sausages\\"`),
-        eofToken(12),
       ]);
     });
 
     it("should give a single token for strings separated with a space", () => {
       assertTokens('"magnificent octopus"', [
         quotedStringToken("magnificent octopus"),
-        eofToken(21),
       ]);
     });
   });
 
   describe("fields", () => {
+    it("should tokenise a colon as a key", () => {
+      assertTokens("+:", [
+        new Token(TokenType.PLUS, "+", "+", 0, 0),
+        new Token(TokenType.CHIP_KEY, ":", "", 1, 1),
+      ]);
+    });
+
     it("should tokenise keys for fields", () => {
       assertTokens("+tag:", [
         new Token(TokenType.PLUS, "+", "+", 0, 0),
-        new Token(TokenType.CHIP_KEY, "tag", "tag", 1, 3),
-        new Token(TokenType.CHIP_VALUE, ":", undefined, 4, 4),
-        eofToken(5),
+        ...keyValuePair("tag:", "tag", "", undefined),
+      ]);
+    });
+
+    it("should tokenise single-char keys and values", () => {
+      assertTokens("+k:v", [
+        new Token(TokenType.PLUS, "+", "+", 0, 0),
+        ...keyValuePair("k:", "k", "v", "v"),
       ]);
     });
 
     it("should handle escaped characters in keys", () => {
       assertTokens("+tag\\::", [
         new Token(TokenType.PLUS, "+", "+", 0, 0),
-        new Token(TokenType.CHIP_KEY, "tag\\:", "tag\\:", 1, 5),
-        new Token(TokenType.CHIP_VALUE, ":", undefined, 6, 6),
-        eofToken(7),
+        ...keyValuePair("tag\\::", "tag\\:", "", undefined),
       ]);
     });
 
     it("should handle escaped characters in values", () => {
       assertTokens("+tag\\::\\:", [
         new Token(TokenType.PLUS, "+", "+", 0, 0),
-        new Token(TokenType.CHIP_KEY, "tag\\:", "tag\\:", 1, 5),
-        new Token(TokenType.CHIP_VALUE, ":\\:", ":", 6, 8),
-        eofToken(9),
+        ...keyValuePair("tag\\::", "tag\\:", "\\:", ":"),
       ]);
     });
 
     it("should tokenise minus to represent expressions with reversed polarity", () => {
       assertTokens("-tag:", [
         new Token(TokenType.MINUS, "-", "-", 0, 0),
-        new Token(TokenType.CHIP_KEY, "tag", "tag", 1, 3),
-        new Token(TokenType.CHIP_VALUE, ":", undefined, 4, 4),
-        eofToken(5),
+        ...keyValuePair("tag:", "tag", "", undefined),
       ]);
     });
 
     it("should tokenise key value pairs for fields", () => {
       assertTokens("+tag:tone/news", [
         new Token(TokenType.PLUS, "+", "+", 0, 0),
-        new Token(TokenType.CHIP_KEY, "tag", "tag", 1, 3),
-        new Token(TokenType.CHIP_VALUE, ":tone/news", "tone/news", 4, 13),
-        eofToken(14),
+        ...keyValuePair("tag:", "tag", "tone/news", "tone/news"),
       ]);
     });
 
     it("should tokenise consecutive fields", () => {
       assertTokens("+tag:tone/news +tag:tone/news", [
         new Token(TokenType.PLUS, "+", "+", 0, 0),
-        new Token(TokenType.CHIP_KEY, "tag", "tag", 1, 3),
-        new Token(TokenType.CHIP_VALUE, ":tone/news", "tone/news", 4, 13),
+        ...keyValuePair("tag:", "tag", "tone/news", "tone/news"),
         new Token(TokenType.PLUS, "+", "+", 15, 15),
-        new Token(TokenType.CHIP_KEY, "tag", "tag", 16, 18),
-        new Token(TokenType.CHIP_VALUE, ":tone/news", "tone/news", 19, 28),
-        eofToken(29),
+        ...keyValuePair("tag:", "tag", "tone/news", "tone/news", 16),
       ]);
     });
 
     it("should tokenise key value pairs for fields - 2", () => {
       assertTokens("+section:commentisfree", [
         new Token(TokenType.PLUS, "+", "+", 0, 0),
-        new Token(TokenType.CHIP_KEY, "section", "section", 1, 7),
-        new Token(
-          TokenType.CHIP_VALUE,
-          ":commentisfree",
+        ...keyValuePair(
+          "section:",
+          "section",
           "commentisfree",
-          8,
-          21,
+          "commentisfree",
         ),
-        eofToken(22),
       ]);
     });
 
@@ -139,47 +159,38 @@ describe("scanner", () => {
       it("should tokenise key value pairs for fields when the key is in quotes, with prefix", () => {
         assertTokens('+"Byline Title":"tone news"', [
           new Token(TokenType.PLUS, "+", "+", 0, 0),
-          new Token(
-            TokenType.CHIP_KEY,
-            `"Byline Title"`,
+          ...keyValuePair(
+            `"Byline Title":`,
             "Byline Title",
-            1,
-            14,
+            '"tone news"',
+            "tone news",
           ),
-          new Token(TokenType.CHIP_VALUE, ':"tone news"', "tone news", 15, 26),
-          eofToken(27),
         ]);
       });
 
       it("should tokenise key value pairs for fields when the key is in quotes, without prefix", () => {
         assertTokens('"Byline Title":"tone news"', [
-          new Token(
-            TokenType.CHIP_KEY,
-            `"Byline Title"`,
+          ...keyValuePair(
+            `"Byline Title":`,
             "Byline Title",
+            '"tone news"',
+            "tone news",
             0,
-            13,
           ),
-          new Token(TokenType.CHIP_VALUE, ':"tone news"', "tone news", 14, 25),
-          eofToken(26),
         ]);
       });
 
       it("should tokenise key value pairs for fields when the value is in quotes", () => {
         assertTokens('+tag:"tone/news"', [
           new Token(TokenType.PLUS, "+", "+", 0, 0),
-          new Token(TokenType.CHIP_KEY, "tag", "tag", 1, 3),
-          new Token(TokenType.CHIP_VALUE, ':"tone/news"', "tone/news", 4, 15),
-          eofToken(16),
+          ...keyValuePair("tag:", "tag", '"tone/news"', "tone/news"),
         ]);
       });
 
       it("should tokenise key value pairs for fields, and give `undefined` for empty quotes", () => {
         assertTokens('+tag:""', [
           new Token(TokenType.PLUS, "+", "+", 0, 0),
-          new Token(TokenType.CHIP_KEY, "tag", "tag", 1, 3),
-          new Token(TokenType.CHIP_VALUE, ':""', undefined, 4, 6),
-          eofToken(7),
+          ...keyValuePair("tag:", "tag", '""', undefined),
         ]);
       });
     });
@@ -187,25 +198,20 @@ describe("scanner", () => {
     it("should tokenise key value pairs for fields when the key value contains non-word characters", () => {
       assertTokens('+@tag:"tone/news"', [
         new Token(TokenType.PLUS, "+", "+", 0, 0),
-        new Token(TokenType.CHIP_KEY, "@tag", "@tag", 1, 4),
-        new Token(TokenType.CHIP_VALUE, ':"tone/news"', "tone/news", 5, 16),
-        eofToken(17),
+        ...keyValuePair("@tag:", "@tag", '"tone/news"', "tone/news"),
       ]);
     });
 
     it("should tokenise unprefixed key value pairs for fields when the key value contains non-word characters", () => {
       assertTokens('@tag.tag:"tone/news"', [
-        new Token(TokenType.CHIP_KEY, "@tag.tag", "@tag.tag", 0, 7),
-        new Token(TokenType.CHIP_VALUE, ':"tone/news"', "tone/news", 8, 19),
-        eofToken(20),
+        ...keyValuePair("@tag.tag:", "@tag.tag", '"tone/news"', "tone/news", 0),
       ]);
     });
 
-    it("should yield a plus token when a search key is incomplete", () => {
+    it("should yield a plus token", () => {
       assertTokens("example +", [
         unquotedStringToken("example"),
         new Token(TokenType.PLUS, "+", "+", 8, 8),
-        eofToken(9),
       ]);
     });
 
@@ -213,9 +219,7 @@ describe("scanner", () => {
       assertTokens("example +tag:", [
         unquotedStringToken("example"),
         new Token(TokenType.PLUS, "+", "+", 8, 8),
-        new Token(TokenType.CHIP_KEY, "tag", "tag", 9, 11),
-        new Token(TokenType.CHIP_VALUE, ":", undefined, 12, 12),
-        eofToken(13),
+        ...keyValuePair("tag:", "tag", "", undefined, 9),
       ]);
     });
   });
@@ -228,7 +232,6 @@ describe("scanner", () => {
         new Token(TokenType.OR, "OR", undefined, 5, 6),
         unquotedStringToken("three", 8),
         new Token(TokenType.RIGHT_BRACKET, ")", undefined, 13, 13),
-        eofToken(14),
       ]);
     });
 
@@ -241,7 +244,6 @@ describe("scanner", () => {
         new Token(TokenType.OR, "OR", undefined, 13, 14),
         unquotedStringToken("three", 16),
         new Token(TokenType.RIGHT_BRACKET, ")", undefined, 21, 21),
-        eofToken(22),
       ]);
     });
 
@@ -250,72 +252,49 @@ describe("scanner", () => {
         unquotedStringToken("one"),
         new Token(TokenType.AND, "AND", undefined, 4, 6),
         unquotedStringToken("two", 8),
-        eofToken(11),
       ]);
     });
   });
 
   describe("without field prefix", () => {
     it("should tokenise keys for fields", () => {
-      assertTokens("tag:", [
-        new Token(TokenType.CHIP_KEY, "tag", "tag", 0, 2),
-        new Token(TokenType.CHIP_VALUE, ":", undefined, 3, 3),
-        eofToken(4),
-      ]);
+      assertTokens("tag:", [...keyValuePair("tag:", "tag", "", undefined, 0)]);
     });
 
     it("should tokenise key value pairs for fields, and give `undefined` for empty quotes,", () => {
       assertTokens('tag:""', [
-        new Token(TokenType.CHIP_KEY, "tag", "tag", 0, 2),
-        new Token(TokenType.CHIP_VALUE, ':""', undefined, 3, 5),
-        eofToken(6),
+        ...keyValuePair("tag:", "tag", '""', undefined, 0),
       ]);
     });
 
     it("should tokenise key value pairs for fields when the key value contains non-word characters", () => {
       assertTokens('@tag:"tone/news"', [
-        new Token(TokenType.CHIP_KEY, "@tag", "@tag", 0, 3),
-        new Token(TokenType.CHIP_VALUE, ':"tone/news"', "tone/news", 4, 15),
-        eofToken(16),
+        ...keyValuePair("@tag:", "@tag", '"tone/news"', "tone/news", 0),
       ]);
     });
 
     it("should yield a query field value token when a query meta value is incomplete", () => {
       assertTokens("example tag:", [
         unquotedStringToken("example"),
-        new Token(TokenType.CHIP_KEY, "tag", "tag", 8, 10),
-        new Token(TokenType.CHIP_VALUE, ":", undefined, 11, 11),
-        eofToken(12),
+        ...keyValuePair("tag:", "tag", "", undefined, 8),
       ]);
     });
 
     it("should tokenise key value pairs for fields when the key value is in quotes, containing whitespace and colon", () => {
       assertTokens('tag:"tone news:"', [
-        new Token(TokenType.CHIP_KEY, "tag", "tag", 0, 2),
-        new Token(TokenType.CHIP_VALUE, ':"tone news:"', "tone news:", 3, 15),
-        eofToken(16),
+        ...keyValuePair("tag:", "tag", '"tone news:"', "tone news:", 0),
       ]);
     });
 
     it("should tokenise key value pairs for fields when the key value is in quotes, containing an escaped quote", () => {
       assertTokens('tag:"tone\\"news:"', [
-        new Token(TokenType.CHIP_KEY, "tag", "tag", 0, 2),
-        new Token(
-          TokenType.CHIP_VALUE,
-          ':"tone\\"news:"',
-          'tone\\"news:',
-          3,
-          16,
-        ),
-        eofToken(17),
+        ...keyValuePair("tag:", "tag", '"tone\\"news:"', 'tone\\"news:', 0),
       ]);
     });
 
     it("should tokenise key value pairs for fields", () => {
       assertTokens("tag:tone/news", [
-        new Token(TokenType.CHIP_KEY, "tag", "tag", 0, 2),
-        new Token(TokenType.CHIP_VALUE, ":tone/news", "tone/news", 3, 12),
-        eofToken(13),
+        ...keyValuePair("tag:", "tag", "tone/news", "tone/news", 0),
       ]);
     });
   });
@@ -325,11 +304,7 @@ describe("scanner", () => {
       it("should disable groups, interpreting parentheses as strings", () => {
         assertTokens(
           "(two)",
-          [
-            unquotedStringToken("(two", 0),
-            unquotedStringToken(")", 4),
-            eofToken(5),
-          ],
+          [unquotedStringToken("(two", 0), unquotedStringToken(")", 4)],
           { groups: false },
         );
       });
@@ -343,7 +318,6 @@ describe("scanner", () => {
             unquotedStringToken("this", 0),
             unquotedStringToken("AND", 5),
             unquotedStringToken("that", 9),
-            eofToken(13),
           ],
           { operators: false },
         );
@@ -368,11 +342,7 @@ describe("scanner", () => {
       it("parse a shortcut followed by a chip value", () => {
         assertTokens(
           "#tone/news",
-          [
-            new Token(TokenType.CHIP_KEY, "#", "tag", 0, 0),
-            new Token(TokenType.CHIP_VALUE, "#tone/news", "tone/news", 0, 9),
-            eofToken(10),
-          ],
+          [...keyValuePair("#", "tag", "tone/news", "tone/news", 0)],
           { shortcuts: { "#": "tag" } },
         );
       });

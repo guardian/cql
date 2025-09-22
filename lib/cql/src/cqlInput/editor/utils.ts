@@ -40,6 +40,8 @@ import {
 const tokensToPreserve = [
   TokenType.CHIP_KEY,
   TokenType.CHIP_VALUE,
+  TokenType.MINUS,
+  TokenType.PLUS,
   TokenType.EOF,
 ] as string[];
 
@@ -182,7 +184,7 @@ export const createProseMirrorTokenToDocumentMap = (
             ),
           );
         }
-        case "CHIP_VALUE": {
+        case TokenType.CHIP_VALUE: {
           return accRanges.concat(
             ...getQueryValueRanges(
               from,
@@ -240,10 +242,12 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
       tokens,
     ): { nodes: Node[]; inNegatedExpr?: true } => {
       const previousToken = tokens[index - 1];
-
       switch (token.tokenType) {
         case TokenType.MINUS: {
           return { nodes, inNegatedExpr: true };
+        }
+        case TokenType.PLUS: {
+          return { nodes };
         }
         case TokenType.CHIP_KEY: {
           const tokenKey = token.literal;
@@ -322,6 +326,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             return { nodes };
           }
 
+          const precedingNegation = previousToken?.tokenType === TokenType.MINUS ? "-" : ""
           // If the next token is further ahead of this token by more than one
           // position, it is separated by whitespace – append the whitespace to
           // this node
@@ -330,6 +335,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             ? Math.max(nextToken?.from - token.to - 1, 0)
             : 0;
           const trailingWhitespace = " ".repeat(trailingWhitespaceChars);
+          const lexeme = `${precedingNegation}${token.lexeme}`
 
           const previousNode = nodes[nodes.length - 1];
           if (previousNode?.type === queryStr) {
@@ -342,7 +348,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
                     undefined,
                     schema.text(
                       previousNode.textContent +
-                        token.lexeme +
+                        lexeme +
                         trailingWhitespace,
                     ),
                   ),
@@ -354,7 +360,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             nodes: nodes.concat(
               queryStr.create(
                 undefined,
-                schema.text(token.lexeme + trailingWhitespace),
+                schema.text(lexeme + trailingWhitespace),
               ),
             ),
           };

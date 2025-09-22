@@ -91,13 +91,17 @@ describe("utils", () => {
       const tokens = await queryToProseMirrorTokens(":value");
       const node = tokensToDoc(tokens);
 
-      const expected = doc(queryStr(":value"));
+      const expected = doc(
+        queryStr(),
+        chip(chipKey(""), chipValue("")),
+        queryStr("value"),
+      );
 
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
     it("should preserve whitespace at the start of the document", async () => {
-      const tokens = await queryToProseMirrorTokens(" this AND +key");
+      const tokens = await queryToProseMirrorTokens(" this AND +key:");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -110,7 +114,7 @@ describe("utils", () => {
     });
 
     it("should preserve whitespace at the start of the document beginning with a chip", async () => {
-      const tokens = await queryToProseMirrorTokens("  +key");
+      const tokens = await queryToProseMirrorTokens("  +key:");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -123,7 +127,7 @@ describe("utils", () => {
     });
 
     it("should preserve whitespace at end of non-chip tokens", async () => {
-      const tokens = await queryToProseMirrorTokens("this AND  +key");
+      const tokens = await queryToProseMirrorTokens("this AND  +key:");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -172,13 +176,11 @@ describe("utils", () => {
       expect(node.toJSON()).toEqual(expected.toJSON());
     });
 
-    it("should create chips for partial tags that precede existing tags", async () => {
-      const tokens = await queryToProseMirrorTokens("+ +tag");
+    it("should remove isolated plus signs", async () => {
+      const tokens = await queryToProseMirrorTokens("+ +tag:");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
-        queryStr(),
-        chip(chipKey(), chipValue()),
         queryStr(),
         chip(chipKey("tag"), chipValue()),
         queryStr(),

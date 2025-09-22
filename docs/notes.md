@@ -26,11 +26,14 @@ Grammar:
 ```
 query                       -> query_binary?
 query_binary                -> query_expr (('AND' | 'OR')? query_binary)*
+query_expr                  -> [(MINUS | PLUS)] (query_group | query_str query_field)
 query_group                 -> '(' query_binary ')'
 query_str                   -> query_quoted_str | query_plain_str
 query_quoted_str            -> '"' string '"'
 query_plain_str             -> /\w/
-query_field                 -> query_str ':' query_str
+query_field                 -> query_field_key ':' query_field_value
+query_field_key             -> query_str
+query_field_value           -> query_str
 ```
 
 How do we disambiguate search params from strings in the tokeniser?
