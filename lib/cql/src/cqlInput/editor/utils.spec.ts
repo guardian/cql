@@ -201,7 +201,7 @@ describe("utils", () => {
       it("with search text and tag", async () => {
         const text = await getTextFromTokenRanges("text +key:value text");
 
-        expect(text).toEqual(["text", "key", "value", "text", ""]);
+        expect(text).toEqual(["text", "", "key", "value", "text", ""]);
       });
 
       it("with parens and tags", async () => {
@@ -216,6 +216,7 @@ describe("utils", () => {
           "OR",
           "c",
           ")",
+          "",
           "key",
           "value",
           "text",
@@ -231,25 +232,34 @@ describe("utils", () => {
       it("with a query field", async () => {
         const text = await getTextFromTokenRanges("+tag:test");
 
-        expect(text).toEqual(["tag", "test", ""]);
+        expect(text).toEqual(["", "tag", "test", ""]);
       });
 
       it("with a query field with a quoted value and whitespace", async () => {
         const text = await getTextFromTokenRanges('+tag:"1 2" a +tag:"3 4" b');
 
-        expect(text).toEqual(["tag", "1 2", "a", "tag", "3 4", "b", ""]);
+        expect(text).toEqual([
+          "",
+          "tag",
+          "1 2",
+          "a",
+          "",
+          "tag",
+          "3 4",
+          "b",
+          "",
+        ]);
       });
 
       it("with a query field with a quoted key", async () => {
         const text = await getTextFromTokenRanges('+"ta g":"1 2"');
 
-        expect(text).toEqual(["ta g", "1 2", ""]);
+        expect(text).toEqual(["", "ta g", "1 2", ""]);
       });
 
       it("with two queries", async () => {
         const text = await getTextFromTokenRanges("+key:value +key2:value2 ");
-
-        expect(text).toEqual(["key", "value", "key2", "value2", ""]);
+        expect(text).toEqual(["", "key", "value", "", "key2", "value2", ""]);
       });
 
       it("with an incomplete chip", async () => {
@@ -270,6 +280,7 @@ describe("utils", () => {
         );
 
         expect(text).toEqual([
+          "",
           "key",
           "value",
           "(",
@@ -277,6 +288,7 @@ describe("utils", () => {
           "OR",
           "b",
           ")",
+          "",
           "key2",
           "value2",
           "",

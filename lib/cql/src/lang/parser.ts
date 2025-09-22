@@ -89,9 +89,12 @@ export class Parser {
   }
 
   private expr(): CqlExpr {
-    const maybeNegation = this.safeConsume(TokenType.MINUS);
+    const maybeNegation = this.consumeMany([TokenType.MINUS, TokenType.PLUS]);
     const polarity =
-      maybeNegation.kind === ResultKind.Ok ? "NEGATIVE" : "POSITIVE";
+      maybeNegation.kind === ResultKind.Ok &&
+      maybeNegation.value.tokenType === TokenType.MINUS
+        ? "NEGATIVE"
+        : "POSITIVE";
     const tokenType = this.peek().tokenType;
 
     switch (tokenType) {
@@ -202,6 +205,17 @@ export class Parser {
       return this.advance();
     } else {
       throw this.error(message);
+    }
+  };
+
+  private consumeMany = (
+    tokenTypes: TokenType[],
+    message: string = "",
+  ): Result<ParseError, Token> => {
+    if (tokenTypes.some((tokenType) => this.check(tokenType))) {
+      return ok(this.advance());
+    } else {
+      return err(this.error(message));
     }
   };
 

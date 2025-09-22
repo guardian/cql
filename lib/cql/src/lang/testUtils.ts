@@ -37,9 +37,10 @@ export const queryFieldKeyToken = (str: string, start: number = 0) =>
   new Token(TokenType.CHIP_KEY, str, str, start, start + str.length);
 export const minusToken = (start: number = 0) =>
   new Token(TokenType.MINUS, "-", "-", start, start);
+export const plusToken = (start: number = 0) =>
+  new Token(TokenType.PLUS, "+", "+", start, start);
 export const queryValueToken = (str: string, start: number = 0) =>
   new Token(TokenType.CHIP_VALUE, `:${str}`, str, start, start + str.length);
-
 export const queryField = (
   key: string,
   value?: string,

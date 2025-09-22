@@ -228,7 +228,7 @@ export class Scanner {
       lexeme,
       literal,
       this.start,
-      this.currentIndex - 1,
+      Math.max(this.start, this.currentIndex - 1),
     );
     this.tokens = this.tokens.concat(token);
   };

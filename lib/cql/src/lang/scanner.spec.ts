@@ -41,6 +41,10 @@ describe("scanner", () => {
     ),
   ];
 
+  it("should parse an empty program", () => {
+    assertTokens("", []);
+  })
+
   describe("unquoted strings", () => {
     it("should parse plain strings", () => {
       assertTokens("sausages", [unquotedStringToken("sausages")]);

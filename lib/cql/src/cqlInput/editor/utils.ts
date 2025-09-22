@@ -68,40 +68,37 @@ const joinQueryStrTokens = (tokens: ProseMirrorToken[]) =>
     });
   }, [] as ProseMirrorToken[]);
 
-const getCqlFieldKeyRange = (
-  from: number,
-  to: number,
-  hasPrefix: boolean,
-  isQuoted: boolean,
-): [number, number, number][] => {
-  // optional leading char ('+') (+1)
-  // chipKey begin (-1)
-  // chip begin (-1)
-  const prefixOffset = hasPrefix ? 1 : 0;
-  const quoteOffset = isQuoted ? 1 : 0;
-  return [
-    [from - 1, -2 + prefixOffset, 0],
-    // maybe start quote (+1)
-    [from, quoteOffset, 0],
-    // maybe end quote (+1)
-    [to - 1, quoteOffset, 0],
-  ];
-};
-
-const getQueryValueRanges = (
+const getFieldKeyRange = (
   from: number,
   to: number,
   isQuoted: boolean,
 ): [number, number, number][] => {
   const quoteOffset = isQuoted ? 1 : 0;
   return [
-    // chipKey end (-1)
-    // chipValue start (-1)
-    // leading char (':') (+1)
+    // chip begin (-1)
     [from, -1, 0],
     // maybe start quote (+1)
     [from, quoteOffset, 0],
-    // chipValue end(-1) - maybe end quote (+1)
+    // maybe end quote (+1)
+    // `:` (-1)
+    [to - 1, quoteOffset, -1],
+  ];
+};
+
+const getFieldValueRanges = (
+  from: number,
+  to: number,
+  isQuoted: boolean,
+): [number, number, number][] => {
+  const quoteOffset = isQuoted ? 1 : 0;
+
+  return [
+    // chipKey end (-1)
+    // chipValue start (-1)
+    [from, -2, 0],
+    // maybe start quote (+1)
+    [from, quoteOffset, 0],
+    // chipValue end (-1) - maybe end quote (+1)
     [to, -1 + quoteOffset, 0],
   ];
 };
@@ -113,7 +110,7 @@ const getQueryStrRanges = (
   [from, -1, 0], // queryStr begin (+1)
   // If the queryStr node has content, it will begin with whitespace in the
   // query, which pushes subsequent content forward one position. This cancels
-  // out queryStr end (+1), so only add a mapping for the node end if the
+  // out queryStr end (-1), so only add a mapping for the node end if the
   // queryStr node has content.
   //
   // This is a slightly obscure solution to this problem - we could also use the
@@ -121,6 +118,23 @@ const getQueryStrRanges = (
   // for this discrepancy, too.
   ...(from === to ? [[to, -1, 0] as [number, number, number]] : []),
 ];
+
+const maybeQueryStrMapping = (
+  token: ProseMirrorToken | undefined,
+  index: number,
+) => {
+  // If this field is at the start of the document, or preceded by a
+  // field value, the editor will add a queryStr node to conform to
+  // the schema, so we add a queryStr mapping to account for the
+  // additional node.
+
+  const shouldAddQueryStrMapping =
+    token?.tokenType === "CHIP_VALUE" || index === 0;
+  const queryStrFrom = token ? token?.to + 1 : 0;
+  return shouldAddQueryStrMapping
+    ? getQueryStrRanges(queryStrFrom, queryStrFrom)
+    : [];
+};
 
 /**
  * Create a mapping from ProseMirrorToken positions to document positions.
@@ -155,38 +169,29 @@ export const createProseMirrorTokenToDocumentMap = (
   const compactedTokenRanges = joinQueryStrTokens(tokens);
 
   const ranges = compactedTokenRanges.reduce<[number, number, number][]>(
-    (accRanges, { tokenType, from, to, lexeme, literal }, index, tokens) => {
+    (accRanges, { tokenType, from, to, literal }, index, tokens) => {
+      const previousToken = tokens[index - 1] as ProseMirrorToken | undefined;
+
       switch (tokenType) {
+        case TokenType.PLUS:
+        case TokenType.MINUS: {
+          return accRanges.concat([
+            ...maybeQueryStrMapping(previousToken, index)
+          ]);
+        }
         case TokenType.CHIP_KEY: {
-          // If this field is at the start of the document, or preceded by a
-          // field value, the editor will add a queryStr node to conform to
-          // the schema, so we add a queryStr mapping to account for the
-          // additional node.
-          const previousToken = tokens[index - 1] as
-            | ProseMirrorToken
-            | undefined;
-          const shouldAddQueryStrMapping =
-            previousToken?.tokenType === "CHIP_VALUE" || index === 0;
-          const queryStrFrom = previousToken ? previousToken?.to + 1 : 0;
-          const queryStrMapping = shouldAddQueryStrMapping
-            ? getQueryStrRanges(queryStrFrom, queryStrFrom)
-            : [];
-
-          const hasPrefix = lexeme.startsWith("+") || lexeme.startsWith("-");
-
+          const isFollowedByFieldValue = tokens[index + 1]?.tokenType === "CHIP_VALUE";
+          console.log({isFollowedByFieldValue})
           return accRanges.concat(
-            ...queryStrMapping,
-            getCqlFieldKeyRange(
-              from,
-              to,
-              hasPrefix,
-              shouldQuoteFieldValue(literal ?? ""),
-            ),
+            ...maybeQueryStrMapping(previousToken, index),
+            getFieldKeyRange(from, to, shouldQuoteFieldValue(literal ?? "")),
+            // If the chip key is not followed by a value,
+            ...(isFollowedByFieldValue ? [] : getFieldValueRanges(to + 1, to + 1, false))
           );
         }
         case TokenType.CHIP_VALUE: {
           return accRanges.concat(
-            ...getQueryValueRanges(
+            ...getFieldValueRanges(
               from,
               to,
               shouldQuoteFieldValue(literal ?? ""),
@@ -243,47 +248,61 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
     ): { nodes: Node[]; inNegatedExpr?: true } => {
       const previousToken = tokens[index - 1];
       switch (token.tokenType) {
-        case TokenType.MINUS: {
-          return { nodes, inNegatedExpr: true };
-        }
-        case TokenType.PLUS: {
-          return { nodes };
-        }
+        case TokenType.PLUS:
+        case TokenType.MINUS:
         case TokenType.CHIP_KEY: {
-          const tokenKey = token.literal;
-          const nextToken = tokens[index + 1];
-          const tokenValue =
-            nextToken.tokenType === "CHIP_VALUE" ? nextToken.literal : "";
+          const isPrecededByChipValue = previousToken?.tokenType === TokenType.CHIP_VALUE;
 
-          const isPrecededByChip =
-            previousToken?.tokenType === "CHIP_VALUE" ||
-            isChipKey(previousToken?.tokenType);
-          return {
-            nodes: nodes.concat(
-              // Insert a string node if two chips are adjacent
-              ...(isPrecededByChip ? [queryStr.create()] : []),
-              chip.create(
-                {
-                  [POLARITY]: inNegatedExpr ? "-" : "+",
-                },
-                [
-                  chipKey.create(
-                    undefined,
-                    tokenKey
-                      ? schema.text(unescapeQuotes(tokenKey))
-                      : undefined,
+          // Insert a string node if two chips are adjacent
+          const maybePrecedingQueryStr = isPrecededByChipValue
+            ? [queryStr.create()]
+            : [];
+
+          switch (token.tokenType) {
+            case TokenType.MINUS: {
+              return {
+                nodes: nodes.concat(maybePrecedingQueryStr),
+                inNegatedExpr: true,
+              };
+            }
+            case TokenType.PLUS: {
+              return { nodes: nodes.concat(maybePrecedingQueryStr) };
+            }
+            case TokenType.CHIP_KEY: {
+              const tokenKey = token.literal;
+              const nextToken = tokens[index + 1];
+              const tokenValue =
+                nextToken.tokenType === "CHIP_VALUE" ? nextToken.literal : "";
+
+              return {
+                nodes: nodes.concat(
+                  maybePrecedingQueryStr,
+                  chip.create(
+                    {
+                      [POLARITY]: inNegatedExpr ? "-" : "+",
+                    },
+                    [
+                      chipKey.create(
+                        undefined,
+                        tokenKey
+                          ? schema.text(unescapeQuotes(tokenKey))
+                          : undefined,
+                      ),
+                      chipValue.create(
+                        undefined,
+                        tokenValue
+                          ? schema.text(unescapeQuotes(tokenValue))
+                          : undefined,
+                      ),
+                    ],
                   ),
-                  chipValue.create(
-                    undefined,
-                    tokenValue
-                      ? schema.text(unescapeQuotes(tokenValue))
-                      : undefined,
-                  ),
-                ],
-              ),
-            ),
-          };
+                ),
+              };
+            }
+          }
         }
+        // @eslint-ignore no-fallthrough - typescript thinks the above statement
+        // cannot fall through, and I trust Typescript over ESLint
         case "EOF": {
           const previousNode = nodes[nodes.length - 1];
           if (
@@ -326,7 +345,8 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             return { nodes };
           }
 
-          const precedingNegation = previousToken?.tokenType === TokenType.MINUS ? "-" : ""
+          const precedingNegation =
+            previousToken?.tokenType === TokenType.MINUS ? "-" : "";
           // If the next token is further ahead of this token by more than one
           // position, it is separated by whitespace – append the whitespace to
           // this node
@@ -335,7 +355,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             ? Math.max(nextToken?.from - token.to - 1, 0)
             : 0;
           const trailingWhitespace = " ".repeat(trailingWhitespaceChars);
-          const lexeme = `${precedingNegation}${token.lexeme}`
+          const lexeme = `${precedingNegation}${token.lexeme}`;
 
           const previousNode = nodes[nodes.length - 1];
           if (previousNode?.type === queryStr) {
@@ -347,9 +367,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
                   queryStr.create(
                     undefined,
                     schema.text(
-                      previousNode.textContent +
-                        lexeme +
-                        trailingWhitespace,
+                      previousNode.textContent + lexeme + trailingWhitespace,
                     ),
                   ),
                 ),
@@ -538,8 +556,9 @@ export const toMappedSuggestions = (
   mapping: Mapping,
 ) =>
   typeaheadSuggestions.map((suggestion) => {
+    const offset = suggestion.from === suggestion.to ? 0 : 1;
     const from = mapping.map(suggestion.from);
-    const to = mapping.map(suggestion.to + 1, -1);
+    const to = mapping.map(suggestion.to + offset, -1);
     return { ...suggestion, from, to } as MappedTypeaheadSuggestion;
   });
 

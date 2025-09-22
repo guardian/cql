@@ -13,6 +13,7 @@ import {
   eofToken,
   leftParenToken,
   minusToken,
+  plusToken,
   queryField,
   queryFieldKeyToken,
   queryValueToken as queryFieldValueToken,
@@ -140,6 +141,18 @@ describe("parser", () => {
   });
 
   describe("QueryField", () => {
+    it("should handle a query field without a value", () => {
+      const tokens = [
+        plusToken(0),
+        queryFieldKeyToken("", 1),
+        eofToken(4),
+      ];
+      const result = new Parser(tokens).parse();
+      expect(result).toEqual(
+        ok(new CqlQuery(new CqlBinary(new CqlExpr(queryField("", undefined, 1))))),
+      );
+    });
+
     it("should handle a query field", () => {
       const tokens = [
         queryFieldKeyToken("ta"),
