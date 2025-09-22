@@ -10,6 +10,7 @@ import {
   CqlStr,
 } from "../../lang/ast";
 import { IS_READ_ONLY } from "./schema";
+import { Selection } from "prosemirror-state";
 
 // Debugging and visualisation utilities.
 
@@ -31,7 +32,7 @@ export const logNode = (doc: Node) => {
   });
 };
 
-export const getDebugTokenHTML = (tokens: Token[]) => {
+export const getDebugTokenHTML = (tokens: Token[], selection: Selection, mapping: Mapping) => {
   let html = `
     <div class="CqlDebug__queryDiagram CqlDebug__queryDiagramToken">
       <div class="CqlDebug__queryDiagramLabel">
@@ -39,6 +40,10 @@ export const getDebugTokenHTML = (tokens: Token[]) => {
         <div>Literal</div>
       </div>
       <div class="CqlDebug__queryDiagramContent">`;
+  const invertedMapping = mapping.invert();
+  const mappedFrom = invertedMapping.map(selection.from);
+  const mappedTo = invertedMapping.map(selection.to);
+
   tokens.forEach((token, index) => {
     html += `${Array(Math.max(1, token.lexeme.length))
       .fill(undefined)
@@ -49,9 +54,18 @@ export const getDebugTokenHTML = (tokens: Token[]) => {
         );
 
         const literalChar = token.literal?.[index - literalOffset];
+        const globalIndex = token.start + index
         return `
         <div class="CqlDebug__queryBox">
-          <div class="CqlDebug__queryIndex">${token.start + index}</div>
+          <div class="CqlDebug__queryIndex">${globalIndex}</div>
+          ${
+            mappedFrom === globalIndex
+              ? `<div class="CqlDebug__selection">^</div>`
+              : ""
+          }
+          ${
+            mappedTo === globalIndex ? `<div class="CqlDebug__selection">$</div>` : ""
+          }
           ${
             lexemeChar !== undefined
               ? `<div class="CqlDebug__queryChar">${lexemeChar}</div>`

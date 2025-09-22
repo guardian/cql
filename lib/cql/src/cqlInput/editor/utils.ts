@@ -95,11 +95,11 @@ const getFieldValueRanges = (
   return [
     // chipKey end (-1)
     // chipValue start (-1)
-    [from, -2, 0],
+    [from, 0, 2],
     // maybe start quote (+1)
     [from, quoteOffset, 0],
     // chipValue end (-1) - maybe end quote (+1)
-    [to, -1 + quoteOffset, 0],
+    [to, 0, 1 - quoteOffset],
   ];
 };
 
@@ -181,7 +181,6 @@ export const createProseMirrorTokenToDocumentMap = (
         }
         case TokenType.CHIP_KEY: {
           const isFollowedByFieldValue = tokens[index + 1]?.tokenType === "CHIP_VALUE";
-          console.log({isFollowedByFieldValue})
           return accRanges.concat(
             ...maybeQueryStrMapping(previousToken, index),
             getFieldKeyRange(from, to, shouldQuoteFieldValue(literal ?? "")),
@@ -556,9 +555,8 @@ export const toMappedSuggestions = (
   mapping: Mapping,
 ) =>
   typeaheadSuggestions.map((suggestion) => {
-    const offset = suggestion.from === suggestion.to ? 0 : 1;
     const from = mapping.map(suggestion.from);
-    const to = mapping.map(suggestion.to + offset, -1);
+    const to = mapping.map(suggestion.to + 1, -1);
     return { ...suggestion, from, to } as MappedTypeaheadSuggestion;
   });
 

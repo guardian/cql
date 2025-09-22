@@ -54,6 +54,7 @@ import {
 } from "../utils";
 import { chipKeyNodeView, chipNodeView, chipValueNodeView } from "../nodeView";
 import { DebugChangeEventDetail } from "../../../types/dom";
+import { Token } from "../../../lang/token";
 
 const cqlPluginKey = new PluginKey<PluginState>("cql-plugin");
 
@@ -63,7 +64,8 @@ export type CqlError = {
 };
 
 type PluginState = {
-  tokens: ProseMirrorToken[];
+  tokens: Token[];
+  proseMirrorTokens: ProseMirrorToken[];
   queryAst: CqlQuery | undefined;
   error: CqlError | undefined;
   mapping: Mapping;
@@ -136,12 +138,8 @@ export const createCqlPlugin = ({
 
     const queryBeforeParse = docToCqlStr(originalDoc);
 
-    console.log({ queryBeforeParse });
-
     const result = parser(queryBeforeParse);
     const { tokens, queryAst, error, mapping } = mapResult(result);
-
-    console.log({ tokens, queryAst });
 
     const newDoc = tokensToDoc(tokens);
 
@@ -162,23 +160,12 @@ export const createCqlPlugin = ({
     }
 
     tr.setMeta(ACTION_NEW_STATE, {
-      tokens,
+      tokens: result.tokens,
+      proseMirrorTokens: tokens,
       error,
       queryAst,
       mapping,
     });
-
-    if (onDebug) {
-      onDebug({
-        queryStr: docToCqlStr(tr.doc),
-        selection: tr.selection,
-        doc: tr.doc,
-        tokens: result.tokens,
-        mapping,
-        queryAst,
-        error,
-      });
-    }
 
     return { queryAst, tr };
   };
@@ -190,6 +177,7 @@ export const createCqlPlugin = ({
         const queryStr = docToCqlStr(state.doc);
         return {
           tokens: [],
+          proseMirrorTokens: [],
           suggestions: [],
           mapping: new Mapping(),
           queryStr,
@@ -202,7 +190,7 @@ export const createCqlPlugin = ({
         if (maybeError) {
           return {
             ...state,
-            tokens: [],
+            proseMirrorTokens: [],
             error: { message: maybeError },
           };
         }
@@ -306,14 +294,14 @@ export const createCqlPlugin = ({
         [chipValue.name]: chipValueNodeView,
       },
       decorations: (state) => {
-        const { tokens, error } = cqlPluginKey.getState(state)!;
+        const { proseMirrorTokens, error } = cqlPluginKey.getState(state)!;
 
         const maybeErrorDeco = error?.position
           ? [errorToDecoration(error.position)]
           : [];
 
         const maybeTokensToDecorations = syntaxHighlighting
-          ? tokensToDecorations(tokens)
+          ? tokensToDecorations(proseMirrorTokens)
           : [];
 
         return DecorationSet.create(state.doc, [
@@ -325,7 +313,10 @@ export const createCqlPlugin = ({
         switch (event.key) {
           case "+":
           case "-": {
-            return maybeAddChipAtPolarityChar(event.key)(view.state, view.dispatch);
+            return maybeAddChipAtPolarityChar(event.key)(
+              view.state,
+              view.dispatch,
+            );
           }
           case ":": {
             const result = handleColon(view.state, view.dispatch);
@@ -493,9 +484,21 @@ export const createCqlPlugin = ({
 
       return {
         async update(view) {
-          const { error, queryAst, mapping } = cqlPluginKey.getState(
+          const { error, queryAst, mapping, tokens } = cqlPluginKey.getState(
             view.state,
           )!;
+
+          if (onDebug) {
+            onDebug({
+              queryStr: docToCqlStr(tr.doc),
+              selection: view.state.selection,
+              doc: view.state.doc,
+              tokens,
+              mapping,
+              queryAst,
+              error,
+            });
+          }
 
           errorPopover?.updateErrorMessage(error);
 

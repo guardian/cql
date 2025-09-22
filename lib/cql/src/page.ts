@@ -46,7 +46,7 @@ jsonDebugContainer.appendChild(debugErrorContainer);
 
 const handleDebugChangeEvent = (e: CustomEvent<DebugChangeEventDetail>) => {
   const {
-    detail: { queryStr, queryAst, tokens, doc, error, mapping },
+    detail: { queryStr, queryAst, tokens, doc, selection, error, mapping },
   } = e;
   debugASTContainer.innerHTML = `<h2>AST</h2><div>${JSON.stringify(
     queryAst,
@@ -64,7 +64,7 @@ const handleDebugChangeEvent = (e: CustomEvent<DebugChangeEventDetail>) => {
             <p>Original query: </p>
             ${getOriginalQueryHTML(queryStr)}
             <p>Tokenises to:</p>
-            ${getDebugTokenHTML(tokens)}
+            ${getDebugTokenHTML(tokens, selection, mapping)}
             ${
               queryAst
                 ? `<p>AST: </p>

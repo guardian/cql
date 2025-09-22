@@ -22,7 +22,7 @@ export type DebugChangeEventDetail = {
   error?:
     | {
         message: string;
-        position: number | undefined;
+        position?: number;
       }
     | undefined;
 };

@@ -30,7 +30,7 @@ describe("scanner", () => {
       keyLexeme,
       keyLiteral,
       start,
-      keyLexeme.length + start - 1,
+      start + keyLexeme.length - 1,
     ),
     new Token(
       TokenType.CHIP_VALUE,

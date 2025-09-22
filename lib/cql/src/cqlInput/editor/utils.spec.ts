@@ -9,6 +9,7 @@ import {
 import { POLARITY, schema } from "./schema";
 import { builders } from "prosemirror-test-builder";
 import { createParser } from "../../lang/Cql";
+import { logNode } from "./debug";
 
 describe("utils", () => {
   const { chip, chipKey, chipValue, doc, queryStr } = builders(schema);
@@ -32,6 +33,8 @@ describe("utils", () => {
     // the schema, so we know tests downstream are dealing with correct data -
     // node.check() will throw if the node content is not valid
     node.check();
+
+    logNode(node);
 
     return mappedTokens.map(({ from, to, tokenType }) => {
       return tokenType !== "EOF" ? node.textBetween(from, to) : "";

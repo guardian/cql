@@ -108,7 +108,7 @@ export const insertChip =
 
     const caretDestination = !chipKeyContent ? chipKey : chipValue;
     const caretPos = findNodeAt(state.selection.from, tr.doc, caretDestination);
-    const sel = NodeSelection.create(tr.doc, caretPos);
+    const sel = TextSelection.near(tr.doc.resolve(caretPos + 1));
     tr.setSelection(sel);
 
     dispatch?.(tr);

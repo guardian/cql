@@ -409,7 +409,7 @@ describe("cql plugin", () => {
           const { editor, container, moveCaretToQueryPos } =
             createCqlEditor("example +tag:");
 
-          await moveCaretToQueryPos(queryStr.length, -1);
+          await moveCaretToQueryPos(queryStr.length);
           await editor.insertText("t");
 
           const popoverContainer = await findByTestId(
@@ -425,7 +425,7 @@ describe("cql plugin", () => {
           const { editor, container, waitFor, moveCaretToQueryPos } =
             createCqlEditor("example +tag:");
 
-          await moveCaretToQueryPos(queryStr.length, -1);
+          await moveCaretToQueryPos(queryStr.length);
           await editor.insertText("t");
           await selectPopoverOptionWithEnter(
             editor,
@@ -441,7 +441,7 @@ describe("cql plugin", () => {
           const { editor, container, waitFor, moveCaretToQueryPos } =
             createCqlEditor("example +tag:");
 
-          await moveCaretToQueryPos(queryStr.length, -1);
+          await moveCaretToQueryPos(queryStr.length);
           await editor.insertText("t");
           await selectPopoverOptionWithClick(
             container,
@@ -515,7 +515,7 @@ describe("cql plugin", () => {
         const { editor, container, moveCaretToQueryPos } =
           createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length, -1);
+        await moveCaretToQueryPos(queryStr.length);
         await findByText(container, "1 day ago");
 
         await editor.press("Enter");
@@ -526,7 +526,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, container, moveCaretToQueryPos } =
           createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length, -1);
+        await moveCaretToQueryPos(queryStr.length);
         const popoverContainer = await findByTestId(container, typeaheadTestId);
 
         await findByText(popoverContainer, "1 day ago");
@@ -542,7 +542,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, container, moveCaretToQueryPos } =
           createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length, -1);
+        await moveCaretToQueryPos(queryStr.length);
         const popoverContainer = await findByTestId(container, typeaheadTestId);
 
         await findByText(popoverContainer, "1 day ago");
@@ -574,7 +574,7 @@ describe("cql plugin", () => {
     });
 
     it("should not move into value position when `:` is pressed within the middle of a chip key", async () => {
-      const query = "+tag";
+      const query = "+tag:";
       const { waitFor, editor, moveCaretToQueryPos } = createCqlEditor(query);
 
       moveCaretToQueryPos(query.indexOf("a"));
@@ -670,7 +670,7 @@ describe("cql plugin", () => {
         const { getPosFromQueryPos, editor } = createCqlEditor(queryStr);
 
         // +1 to place the selection within the chip key
-        const chipKeyPos = getPosFromQueryPos(queryStr.indexOf("+")) + 1;
+        const chipKeyPos = getPosFromQueryPos(queryStr.indexOf("+"));
         editor.selectText(chipKeyPos);
 
         expect(editor.selection.from).toBe(chipKeyPos);
@@ -835,7 +835,7 @@ describe("cql plugin", () => {
     });
 
     it("permits content before query fields", async () => {
-      const { editor, waitFor } = createCqlEditor("+tag");
+      const { editor, waitFor } = createCqlEditor("+tag:");
 
       await editor.insertText("b").shortcut("Ctrl-a").insertText("a");
 
@@ -843,9 +843,9 @@ describe("cql plugin", () => {
     });
 
     it("permits additional query fields before query fields", async () => {
-      const { editor, waitFor } = createCqlEditor("+2");
+      const { editor, waitFor } = createCqlEditor("+2:");
 
-      await editor.shortcut("Ctrl-a").insertText("+1");
+      await editor.shortcut("Ctrl-a").insertText("+1:");
 
       await waitFor("1: 2:");
     });
@@ -893,7 +893,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, getPosFromQueryPos } =
           createCqlEditor(queryStr);
 
-        editor.selectText(getPosFromQueryPos(queryStr.indexOf(":")));
+        editor.selectText(getPosFromQueryPos(queryStr.indexOf(":") + 1));
 
         await editor.press(key);
 
