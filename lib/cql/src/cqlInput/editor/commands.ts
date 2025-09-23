@@ -1,9 +1,4 @@
-import {
-  Command,
-  NodeSelection,
-  Selection,
-  TextSelection,
-} from "prosemirror-state";
+import { Command, Selection, TextSelection } from "prosemirror-state";
 import { chip, chipKey, chipValue, POLARITY, queryStr } from "./schema";
 import { selectAll } from "prosemirror-commands";
 import { createParser } from "../../lang/Cql";

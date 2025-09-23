@@ -21,8 +21,8 @@ describe("scanner", () => {
   const keyValuePair = (
     keyLexeme: string,
     keyLiteral: string,
-    valueLexeme: string,
-    valueLiteral: string | undefined,
+    valueLexeme: string | undefined = undefined,
+    valueLiteral: string | undefined = undefined,
     start: number = 1,
   ) => [
     new Token(
@@ -32,18 +32,22 @@ describe("scanner", () => {
       start,
       start + keyLexeme.length - 1,
     ),
-    new Token(
-      TokenType.CHIP_VALUE,
-      valueLexeme,
-      valueLiteral,
-      start + keyLexeme.length,
-      start + keyLexeme.length + valueLexeme.length - 1,
-    ),
+    ...(valueLexeme
+      ? [
+          new Token(
+            TokenType.CHIP_VALUE,
+            valueLexeme,
+            valueLiteral,
+            start + keyLexeme.length,
+            start + keyLexeme.length + valueLexeme.length - 1,
+          ),
+        ]
+      : []),
   ];
 
   it("should parse an empty program", () => {
     assertTokens("", []);
-  })
+  });
 
   describe("unquoted strings", () => {
     it("should parse plain strings", () => {
@@ -99,7 +103,7 @@ describe("scanner", () => {
     it("should tokenise keys for fields", () => {
       assertTokens("+tag:", [
         new Token(TokenType.PLUS, "+", "+", 0, 0),
-        ...keyValuePair("tag:", "tag", "", undefined),
+        ...keyValuePair("tag:", "tag", undefined, undefined),
       ]);
     });
 
@@ -113,7 +117,7 @@ describe("scanner", () => {
     it("should handle escaped characters in keys", () => {
       assertTokens("+tag\\::", [
         new Token(TokenType.PLUS, "+", "+", 0, 0),
-        ...keyValuePair("tag\\::", "tag\\:", "", undefined),
+        ...keyValuePair("tag\\::", "tag\\:"),
       ]);
     });
 
@@ -127,7 +131,7 @@ describe("scanner", () => {
     it("should tokenise minus to represent expressions with reversed polarity", () => {
       assertTokens("-tag:", [
         new Token(TokenType.MINUS, "-", "-", 0, 0),
-        ...keyValuePair("tag:", "tag", "", undefined),
+        ...keyValuePair("tag:", "tag"),
       ]);
     });
 
@@ -223,7 +227,7 @@ describe("scanner", () => {
       assertTokens("example +tag:", [
         unquotedStringToken("example"),
         new Token(TokenType.PLUS, "+", "+", 8, 8),
-        ...keyValuePair("tag:", "tag", "", undefined, 9),
+        ...keyValuePair("tag:", "tag", undefined, undefined, 9),
       ]);
     });
   });
@@ -262,7 +266,9 @@ describe("scanner", () => {
 
   describe("without field prefix", () => {
     it("should tokenise keys for fields", () => {
-      assertTokens("tag:", [...keyValuePair("tag:", "tag", "", undefined, 0)]);
+      assertTokens("tag:", [
+        ...keyValuePair("tag:", "tag", undefined, undefined, 0),
+      ]);
     });
 
     it("should tokenise key value pairs for fields, and give `undefined` for empty quotes,", () => {
@@ -280,7 +286,7 @@ describe("scanner", () => {
     it("should yield a query field value token when a query meta value is incomplete", () => {
       assertTokens("example tag:", [
         unquotedStringToken("example"),
-        ...keyValuePair("tag:", "tag", "", undefined, 8),
+        ...keyValuePair("tag:", "tag", undefined, undefined, 8),
       ]);
     });
 

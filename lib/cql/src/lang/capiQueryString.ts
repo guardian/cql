@@ -57,7 +57,7 @@ export const queryStrFromQueryList = (
     const otherQueries = getCqlFieldsFromCqlBinary(content).flatMap((expr) => {
       switch (expr.type) {
         case "CqlField": {
-          if (expr.value) {
+          if (expr.value?.literal) {
             const value = dateFields.includes(expr.key.literal ?? "")
               ? parseDateValue(expr.value?.literal ?? "")
               : expr.value.literal;

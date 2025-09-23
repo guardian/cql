@@ -53,7 +53,7 @@ describe("a query", () => {
   });
 
   it("should provide an error when keys are missing values", () => {
-    const cqlResult = parser("+tag");
+    const cqlResult = parser("+tag:");
     expect(cqlResult.error?.message).toBe(
       "The field 'tag' needs a value after it (e.g. 'tag:tone/news')",
     );

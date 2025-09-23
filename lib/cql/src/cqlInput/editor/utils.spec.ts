@@ -1,6 +1,8 @@
 import { describe, expect, it } from "bun:test";
 import {
+  createProseMirrorTokenToDocumentMap,
   docToCqlStr,
+  findNodeAt,
   getNextPositionAfterTypeaheadSelection,
   mapResult,
   mapTokens,
@@ -9,7 +11,7 @@ import {
 import { POLARITY, schema } from "./schema";
 import { builders } from "prosemirror-test-builder";
 import { createParser } from "../../lang/Cql";
-import { logNode } from "./debug";
+import { Node } from "prosemirror-model";
 
 describe("utils", () => {
   const { chip, chipKey, chipValue, doc, queryStr } = builders(schema);
@@ -34,11 +36,27 @@ describe("utils", () => {
     // node.check() will throw if the node content is not valid
     node.check();
 
-    logNode(node);
-
     return mappedTokens.map(({ from, to, tokenType }) => {
       return tokenType !== "EOF" ? node.textBetween(from, to) : "";
     });
+  };
+
+  /**
+   * Translate a query into tokens, and then map the tokens back on to a ProseMirror document
+   * created with those tokens. The resulting text ranges should match the original tokens.
+   */
+  const assertCqlStrPosFromDocPos = async (
+    query: string,
+    expectedIndexForQuery: number,
+    getPos: (node: Node) => number,
+  ) => {
+    const tokens = await queryToProseMirrorTokens(query);
+    const mapping = createProseMirrorTokenToDocumentMap(tokens);
+    const node = tokensToDoc(tokens);
+
+    node.check();
+
+    expect(mapping.map(expectedIndexForQuery)).toBe(getPos(node));
   };
 
   describe("tokensToDoc", () => {
@@ -296,6 +314,14 @@ describe("utils", () => {
           "value2",
           "",
         ]);
+      });
+
+      it("with selection in an empty chip key", () => {
+        assertCqlStrPosFromDocPos("+:", 1, node => findNodeAt(0, node, schema.nodes.chipKey) + 1)
+      });
+
+      it("with selection in an empty chip value", () => {
+        assertCqlStrPosFromDocPos("+a:", 2, node => findNodeAt(0, node, schema.nodes.chipValue) + 1)
       });
     });
   });

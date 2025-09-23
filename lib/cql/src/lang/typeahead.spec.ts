@@ -69,7 +69,7 @@ describe("typeahead", () => {
     expect(suggestions).toEqual([
       {
         from: 1,
-        to: 3,
+        to: 2,
         position: "chipKey",
         suggestions: [
           new TextSuggestionOption(
@@ -90,7 +90,7 @@ describe("typeahead", () => {
     expect(suggestions).toEqual([
       {
         from: 1,
-        to: 4,
+        to: 3,
         position: "chipKey",
         suggestions: [
           new TextSuggestionOption(
@@ -103,7 +103,7 @@ describe("typeahead", () => {
         suffix: ":",
       },
       {
-        from: 5,
+        from: 4,
         to: 18,
         position: "chipValue",
         suggestions: testTags,
@@ -126,11 +126,11 @@ describe("typeahead", () => {
             "Search synchronous list of tags",
           ),
         ],
-        to: 5,
+        to: 4,
         type: "TEXT",
       },
       {
-        from: 6,
+        from: 5,
         to: 8,
         position: "chipValue",
         suggestions: [
@@ -172,7 +172,7 @@ describe("typeahead", () => {
     expect(suggestions).toEqual([
       {
         from: 1,
-        to: 4,
+        to: 3,
         position: "chipKey",
         suggestions: [
           new TextSuggestionOption(
@@ -185,8 +185,8 @@ describe("typeahead", () => {
         suffix: ":",
       },
       {
-        from: 5,
-        to: 5,
+        from: 4,
+        to: 4,
         position: "chipValue",
         suggestions: testTags,
         type: "TEXT",
@@ -201,7 +201,7 @@ describe("typeahead", () => {
     expect(suggestions).toEqual([
       {
         from: 1,
-        to: 10,
+        to: 9,
         position: "chipKey",
         suggestions: [
           new TextSuggestionOption(
@@ -214,8 +214,8 @@ describe("typeahead", () => {
         suffix: ":",
       },
       {
-        from: 11,
-        to: 11,
+        from: 10,
+        to: 10,
         position: "chipValue",
         suggestions: [
           new DateSuggestionOption("1 day ago", "-1d"),
@@ -236,7 +236,7 @@ describe("typeahead", () => {
     expect(suggestions).toEqual([
       {
         from: 1,
-        to: 4,
+        to: 3,
         position: "chipKey",
         suggestions: [
           new TextSuggestionOption(
@@ -249,7 +249,7 @@ describe("typeahead", () => {
         suffix: ":",
       },
       {
-        from: 5,
+        from: 4,
         to: 5,
         position: "chipValue",
         suggestions: testTags,

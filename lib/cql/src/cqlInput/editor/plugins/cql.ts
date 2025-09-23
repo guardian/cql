@@ -519,7 +519,9 @@ export const createCqlPlugin = ({
 
           try {
             const suggestions = await typeahead.getSuggestions(queryAst);
+            console.log(JSON.stringify(suggestions.map(({from, to}) => ({from, to})), null, "\t"))
             const mappedSuggestions = toMappedSuggestions(suggestions, mapping);
+            console.log(JSON.stringify(mappedSuggestions.map(({from, to}) => ({from, to})), null, "\t"))
             if (view.hasFocus()) {
               typeaheadPopover?.updateSuggestions(mappedSuggestions);
             }

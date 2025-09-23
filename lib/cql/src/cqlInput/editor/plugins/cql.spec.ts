@@ -39,6 +39,7 @@ import { chip, chipValue, IS_SELECTED } from "../schema";
 import { Node, NodeType } from "prosemirror-model";
 import { cqlQueryStrFromQueryAst } from "../../../lang/interpreter";
 import { EditorView } from "prosemirror-view";
+import { logNode } from "../debug";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
@@ -515,7 +516,7 @@ describe("cql plugin", () => {
         const { editor, container, moveCaretToQueryPos } =
           createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length);
+        await moveCaretToQueryPos(queryStr.length - 1);
         await findByText(container, "1 day ago");
 
         await editor.press("Enter");
@@ -526,7 +527,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, container, moveCaretToQueryPos } =
           createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length);
+        await moveCaretToQueryPos(queryStr.length - 1);
         const popoverContainer = await findByTestId(container, typeaheadTestId);
 
         await findByText(popoverContainer, "1 day ago");
@@ -542,7 +543,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, container, moveCaretToQueryPos } =
           createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length);
+        await moveCaretToQueryPos(queryStr.length - 1);
         const popoverContainer = await findByTestId(container, typeaheadTestId);
 
         await findByText(popoverContainer, "1 day ago");
@@ -669,8 +670,7 @@ describe("cql plugin", () => {
         const queryStr = "a +: c";
         const { getPosFromQueryPos, editor } = createCqlEditor(queryStr);
 
-        // +1 to place the selection within the chip key
-        const chipKeyPos = getPosFromQueryPos(queryStr.indexOf("+"));
+        const chipKeyPos = getPosFromQueryPos(queryStr.indexOf(":"));
         editor.selectText(chipKeyPos);
 
         expect(editor.selection.from).toBe(chipKeyPos);
@@ -893,7 +893,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, getPosFromQueryPos } =
           createCqlEditor(queryStr);
 
-        editor.selectText(getPosFromQueryPos(queryStr.indexOf(":") + 1));
+        editor.selectText(getPosFromQueryPos(queryStr.indexOf(":")));
 
         await editor.press(key);
 

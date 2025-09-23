@@ -157,11 +157,11 @@ export class Scanner {
     this.advance();
     this.addToken(TokenType.CHIP_KEY, literal);
     this.nextToken();
-    this.addChipValue();
+    this.maybeAddChipValue();
     return;
   };
 
-  private addChipValue = () => {
+  private maybeAddChipValue = () => {
     if (this.peek() === '"') {
       this.advance();
       const literal = this.consumeQuotedRange();
@@ -173,7 +173,7 @@ export class Scanner {
 
     if (this.currentIndex - this.start === 0) {
       // No content - add an empty token
-      this.addToken(TokenType.CHIP_VALUE);
+      // this.addToken(TokenType.CHIP_VALUE);
     } else {
       const value = unescapeQuotes(
         this.program.substring(this.start, this.currentIndex),
@@ -187,7 +187,7 @@ export class Scanner {
     this.addToken(TokenType.CHIP_KEY, shortcut);
     if (!this.isAtEnd() && !hasWhitespace(this.peek())) {
       this.nextToken();
-      this.addChipValue();
+      this.maybeAddChipValue();
     }
   };
 
@@ -223,6 +223,7 @@ export class Scanner {
 
   private addToken = (tokenType: TokenType, literal?: string) => {
     const lexeme = this.program.substring(this.start, this.currentIndex);
+
     const token = new Token(
       tokenType,
       lexeme,

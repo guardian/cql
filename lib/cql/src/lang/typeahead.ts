@@ -119,7 +119,7 @@ export class Typeahead {
     return [
       {
         from: keyToken.start,
-        to: keyToken.end,
+        to: Math.max(keyToken.start, keyToken.end - 1), // Do not include ':'
         position: "chipKey",
         suggestions,
         type: "TEXT",
@@ -133,15 +133,11 @@ export class Typeahead {
     signal?: AbortSignal,
   ): Promise<TypeaheadSuggestion[]> {
     const { key, value } = q;
-
-    if (!value) {
-      return this.getSuggestionsForKeyToken(key);
-    }
-
     const keySuggestions = this.getSuggestionsForKeyToken(key);
+
     const maybeValueSuggestions = this.suggestFieldValue(
       key.literal ?? "",
-      value.literal ?? "",
+      value?.literal ?? "",
       signal,
     );
 
@@ -152,8 +148,8 @@ export class Typeahead {
     return maybeValueSuggestions.suggestions.then((suggestions) => [
       ...keySuggestions,
       {
-        from: value.start,
-        to: value.end,
+        from: value ? value.start - 1 : key.end, // Extend backwards into chipKey's ':'
+        to: value ? value.end : key.end,
         position: "chipValue",
         suggestions,
         type: maybeValueSuggestions.type,
