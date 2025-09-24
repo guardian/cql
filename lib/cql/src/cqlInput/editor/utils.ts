@@ -72,17 +72,19 @@ const getFieldKeyRange = (
   from: number,
   to: number,
   isQuoted: boolean,
+  isFollowedByEmptyValue: boolean
 ): [number, number, number][] => {
   const quoteOffset = isQuoted ? 1 : 0;
+  const emptyValueOffset = isFollowedByEmptyValue ? 1 : 0
   return [
-    // chipKey begin (+1 to node)
-    [from, 0, 1],
+    // chip begin (-1)
+    // chipKey begin (-1)
+    [from, 0, 2],
     // maybe start quote (+1 to remove from str)
     [from, quoteOffset, 0],
     // maybe end quote (+1 to remove from str)
     // offset `:` into chipValue (+1 to node)
-    // chipKey end (+1 to node)
-    [to - 1, quoteOffset, 1],
+    [to - 1, quoteOffset, 1 + emptyValueOffset],
   ];
 };
 
@@ -94,14 +96,13 @@ const getFieldValueRanges = (
   const quoteOffset = isQuoted ? 1 : 0;
 
   return [
-    // chipKey end (-1)
-    // chipValue start (-1)
+    // chipKey end, chipValue start (-1)
     // remove offset from `:`
-    [from, 0, 0],
-    // maybe start quote (+1)
-    [from, quoteOffset, 0],
-    // chipValue end (-1) - maybe end quote (+1)
-    [to, 0, 1 - quoteOffset],
+    // maybe start quote
+    [from, 1 + quoteOffset, 1],
+    // chipValue end (-1)
+    // maybe end quote (+1)
+    [to, quoteOffset, 1],
   ];
 };
 
@@ -121,7 +122,9 @@ const getQueryStrRanges = (
   ...(from === to ? [[to, -1, 0] as [number, number, number]] : []),
 ];
 
-const maybeQueryStrMapping = (
+const polarityRanges = (from: number): [number, number, number] => ([from - 1, 1, 0])
+
+const maybeQueryStrRanges = (
   token: ProseMirrorToken | undefined,
   index: number,
 ) => {
@@ -177,20 +180,16 @@ export const createProseMirrorTokenToDocumentMap = (
         case TokenType.PLUS:
         case TokenType.MINUS: {
           return accRanges.concat([
-            ...maybeQueryStrMapping(previousToken, index),
+            ...maybeQueryStrRanges(previousToken, index),
+            polarityRanges(from)
           ]);
         }
         case TokenType.CHIP_KEY: {
-          const isFollowedByFieldValue =
+          const isFollowedByFieldValueToken =
             tokens[index + 1]?.tokenType === "CHIP_VALUE";
           return accRanges.concat(
-            ...maybeQueryStrMapping(previousToken, index),
-            getFieldKeyRange(from, to, shouldQuoteFieldValue(literal ?? "")),
-            // If the chip key is not followed by a value, we don't need to
-            // account for the field value mappings
-            ...(isFollowedByFieldValue
-              ? []
-              : getFieldValueRanges(to + 1, to + 1, false)),
+            ...maybeQueryStrRanges(previousToken, index),
+            getFieldKeyRange(from, to, shouldQuoteFieldValue(literal ?? ""), !isFollowedByFieldValueToken),
           );
         }
         case TokenType.CHIP_VALUE: {

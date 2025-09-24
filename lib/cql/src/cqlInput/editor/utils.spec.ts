@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
 import {
-  createProseMirrorTokenToDocumentMap,
+  createProseMirrorTokenToDocumentMap as createProseMirrorTokenToDocumentMapping,
   docToCqlStr,
   findNodeAt,
   getNextPositionAfterTypeaheadSelection,
@@ -51,7 +51,7 @@ describe("utils", () => {
     getPos: (node: Node) => number,
   ) => {
     const tokens = await queryToProseMirrorTokens(query);
-    const mapping = createProseMirrorTokenToDocumentMap(tokens);
+    const mapping = createProseMirrorTokenToDocumentMapping(tokens);
     const node = tokensToDoc(tokens);
 
     node.check();

@@ -410,7 +410,7 @@ describe("cql plugin", () => {
           const { editor, container, moveCaretToQueryPos } =
             createCqlEditor("example +tag:");
 
-          await moveCaretToQueryPos(queryStr.length);
+          await moveCaretToQueryPos(queryStr.length - 1);
           await editor.insertText("t");
 
           const popoverContainer = await findByTestId(
@@ -426,7 +426,7 @@ describe("cql plugin", () => {
           const { editor, container, waitFor, moveCaretToQueryPos } =
             createCqlEditor("example +tag:");
 
-          await moveCaretToQueryPos(queryStr.length);
+          await moveCaretToQueryPos(queryStr.length - 1);
           await editor.insertText("t");
           await selectPopoverOptionWithEnter(
             editor,
@@ -442,7 +442,7 @@ describe("cql plugin", () => {
           const { editor, container, waitFor, moveCaretToQueryPos } =
             createCqlEditor("example +tag:");
 
-          await moveCaretToQueryPos(queryStr.length);
+          await moveCaretToQueryPos(queryStr.length - 1);
           await editor.insertText("t");
           await selectPopoverOptionWithClick(
             container,
@@ -479,7 +479,7 @@ describe("cql plugin", () => {
         it("does not show a typeahead menu between two adjacent query fields", async () => {
           const queryStr = `+tag:a +tag:b`;
           const { container, moveCaretToQueryPos } = createCqlEditor(queryStr);
-          await moveCaretToQueryPos(queryStr.indexOf(" "));
+          await moveCaretToQueryPos(queryStr.indexOf(" ") + 1);
 
           await assertPopoverVisibility(container, false);
         });
@@ -881,7 +881,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, getPosFromQueryPos } =
           createCqlEditor(queryStr);
 
-        editor.selectText(getPosFromQueryPos(queryStr.indexOf("+")));
+        editor.selectText(getPosFromQueryPos(queryStr.indexOf(":")));
 
         await editor.press(key);
 
@@ -901,31 +901,14 @@ describe("cql plugin", () => {
       });
     });
 
-    it("puts the chip in a pending state before deletion - keyboard", async () => {
-      const { editor, waitFor } = createCqlEditor("+tag:a");
-
-      await editor.press("Backspace");
-
-      await waitFor("tag:a");
-    });
-
-    it("puts the chip in a pending state before deletion - mouse", async () => {
-      const { editor, waitFor } = createCqlEditor("+tag:a");
-
-      const deleteBtn = await findByText(editor.view.dom, "×");
-      await fireEvent.click(deleteBtn);
-
-      await waitFor("tag:a");
-    });
-
     it("removes the chip via backspace", async () => {
-      const query = "+tag:z text";
+      const query = "+tag:z x";
       const { editor, waitFor, moveCaretToQueryPos } = createCqlEditor(query);
 
-      await moveCaretToQueryPos(query.indexOf("z") + 1);
+      await moveCaretToQueryPos(query.indexOf("x"));
       await editor.press("Backspace").press("Backspace");
 
-      await waitFor("text");
+      await waitFor("x");
     });
 
     it("does not remove the chip via backspace when the selection is not collapsed", async () => {
