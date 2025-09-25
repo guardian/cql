@@ -396,6 +396,14 @@ describe("cql plugin", () => {
         await waitFor(": a");
       });
 
+      it("does not insert a chip before a string with negative polarity, to preserve the ability to negate existing strings", async () => {
+        const { editor, waitFor } = createCqlEditor("a");
+
+        await editor.selectText(1).insertText("-");
+
+        await waitFor("-a");
+      });
+
       it("inserts a single whitespace between chips", async () => {
         const { editor, waitFor } = createCqlEditor("+tag:tags-are-magic ");
 
@@ -647,8 +655,8 @@ describe("cql plugin", () => {
       expect(editor.selection.$from.node().type).toBe(chipValue);
     });
 
-    it("should move the selection into value position when the user types a shortcut after text", async () => {
-      const queryStr = "a ";
+    it("should move the selection into value position when the user types a shortcut after whitespace", async () => {
+      const queryStr = "a";
       const { editor, waitFor } = createCqlEditor(queryStr, {
         lang: {
           shortcuts: {
@@ -662,6 +670,7 @@ describe("cql plugin", () => {
       await waitFor("a tag:");
       const chipValuePos = findNodeAt(0, editor.doc, chipValue) + 1;
 
+      logNode(editor.doc)
       expect(editor.selection.from).toBe(chipValuePos);
     });
 

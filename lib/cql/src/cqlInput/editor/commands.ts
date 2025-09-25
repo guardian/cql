@@ -1,5 +1,12 @@
 import { Command, Selection, TextSelection } from "prosemirror-state";
-import { chip, chipKey, chipValue, POLARITY, queryStr } from "./schema";
+import {
+  chip,
+  chipKey,
+  chipValue,
+  IS_READ_ONLY,
+  POLARITY,
+  queryStr,
+} from "./schema";
 import { selectAll } from "prosemirror-commands";
 import { createParser } from "../../lang/Cql";
 import {
@@ -14,6 +21,7 @@ import { Node } from "prosemirror-model";
 import { schema } from "prosemirror-test-builder";
 import { TRANSACTION_IGNORE_READONLY } from "./plugins/cql";
 import { hasWhitespace } from "../../lang/utils";
+import { EditorView } from "prosemirror-view";
 
 export const startOfLine: Command = (state, dispatch) => {
   const startSelection = Selection.atStart(state.doc);
@@ -91,22 +99,32 @@ export const mergeDocs =
   };
 
 export const insertChip =
-  (polarity: "+" | "-", chipKeyContent: string): Command =>
-  (state, dispatch) => {
-    const tr = state.tr;
+  (polarity: "+" | "-", chipKeyContent: string) => (view: EditorView) => {
+    const initialFrom = view.state.selection.from;
+    const addChipTr = view.state.tr;
     const node = chip.create({ [POLARITY]: polarity }, [
-      chipKey.create(null, chipKeyContent ? schema.text(chipKeyContent) : null),
-      chipValue.create(),
+      chipKey.create(
+        { [IS_READ_ONLY]: true },
+        chipKeyContent ? schema.text(chipKeyContent) : null,
+      ),
+      chipValue.create({ [IS_READ_ONLY]: false }),
     ]);
 
-    tr.replaceSelectionWith(node);
+    addChipTr.replaceRangeWith(initialFrom, initialFrom, node);
 
+    view.dispatch(addChipTr);
+
+    const positionCaretTr = view.state.tr;
     const caretDestination = !chipKeyContent ? chipKey : chipValue;
-    const caretPos = findNodeAt(state.selection.from, tr.doc, caretDestination);
-    const sel = TextSelection.near(tr.doc.resolve(caretPos + 1));
-    tr.setSelection(sel);
+    const caretPos = findNodeAt(
+      initialFrom,
+      positionCaretTr.doc,
+      caretDestination,
+    );
+    const sel = TextSelection.near(positionCaretTr.doc.resolve(caretPos));
+    positionCaretTr.setSelection(sel);
 
-    dispatch?.(tr);
+    view.dispatch(positionCaretTr);
 
     return true;
   };
@@ -205,9 +223,8 @@ export const removeChipCoveringRange =
  * a part of the following query.
  */
 export const maybeAddChipAtPolarityChar =
-  (polarity: "+" | "-"): Command =>
-  (state, dispatch) => {
-    const { doc, selection } = state;
+  (polarity: "+" | "-") => (view: EditorView) => {
+    const { doc, selection } = view.state;
 
     if (selection.$from.node().type !== queryStr) {
       return false;
@@ -218,11 +235,11 @@ export const maybeAddChipAtPolarityChar =
       Math.min(selection.to + 1, doc.nodeSize - 2),
     );
 
-    if (!hasWhitespace(suffix) && suffix !== "") {
+    if (polarity === "-" && !hasWhitespace(suffix) && suffix !== "") {
       return false;
     }
 
-    insertChip(polarity, "")(state, dispatch);
+    insertChip(polarity, "")(view);
 
     return true;
   };
