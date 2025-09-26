@@ -133,18 +133,12 @@ export const createCqlPlugin = ({
   const applyQueryToTr = (tr: Transaction) => {
     const originalDoc = tr.doc;
 
-    // console.log("Original doc");
-    // logNode(originalDoc);
-
     const queryBeforeParse = docToCqlStr(originalDoc);
 
     const result = parser(queryBeforeParse);
     const { tokens, queryAst, error, mapping } = mapResult(result);
 
     const newDoc = tokensToDoc(tokens);
-
-    // console.log("New doc");
-    // logNode(newDoc);
 
     const docSelection = new AllSelection(tr.doc);
 

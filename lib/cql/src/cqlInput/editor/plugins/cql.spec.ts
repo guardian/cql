@@ -26,6 +26,7 @@ import {
   docToCqlStr,
   findNodeAt,
   getNodeTypeAtSelection,
+  getTokenTestId,
   queryToProseMirrorDoc,
   toProseMirrorTokens,
 } from "../utils";
@@ -39,14 +40,14 @@ import { chip, chipValue, IS_SELECTED } from "../schema";
 import { Node, NodeType } from "prosemirror-model";
 import { cqlQueryStrFromQueryAst } from "../../../lang/interpreter";
 import { EditorView } from "prosemirror-view";
-import { logNode } from "../debug";
+import { TokenType } from "../../../lang/token";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
 
 const createCqlEditor = (
   initialQuery: string = "",
-  config: CqlConfig = { syntaxHighlighting: false },
+  config: CqlConfig = { syntaxHighlighting: true },
 ) => {
   document.body.innerHTML = "";
   const container = document.body;
@@ -640,6 +641,29 @@ describe("cql plugin", () => {
       await waitFor("-notakey");
     });
 
+    it("should de-chip after another string, preserving polarity, when enter pressed at the end a chip key, and there is no selection", async () => {
+      const { waitFor, editor } = createCqlEditor();
+
+      editor.insertText("text -notakey").press("Enter");
+
+      await tick();
+
+      await waitFor("text -notakey");
+    });
+
+    it("should de-chip after a chip, preserving polarity, when enter pressed at the end a chip key, and there is no selection", async () => {
+      const { waitFor, editor, container } = createCqlEditor("tag:example");
+
+      editor.insertText("-notakey").press("Enter");
+
+      await tick();
+
+      await waitFor("tag:example -notakey");
+      const el = await findByTestId(container, getTokenTestId(TokenType.MINUS));
+
+      expect(el.textContent).toBe("-")
+    });
+
     it("should move the selection into value position when the user types a shortcut", async () => {
       const { editor, waitFor } = createCqlEditor("", {
         lang: {
@@ -670,7 +694,6 @@ describe("cql plugin", () => {
       await waitFor("a tag:");
       const chipValuePos = findNodeAt(0, editor.doc, chipValue) + 1;
 
-      logNode(editor.doc)
       expect(editor.selection.from).toBe(chipValuePos);
     });
 
