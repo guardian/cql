@@ -27,7 +27,7 @@ describe("utils", () => {
    * created with those tokens. The resulting text ranges should match the original tokens.
    */
   const getTextFromTokenRanges = async (query: string) => {
-    const tokens = await queryToProseMirrorTokens(query);
+    const tokens = queryToProseMirrorTokens(query);
     const mappedTokens = mapTokens(tokens);
     const node = tokensToDoc(tokens);
 
@@ -50,7 +50,7 @@ describe("utils", () => {
     expectedIndexForQuery: number,
     getPos: (node: Node) => number,
   ) => {
-    const tokens = await queryToProseMirrorTokens(query);
+    const tokens = queryToProseMirrorTokens(query);
     const mapping = createProseMirrorTokenToDocumentMapping(tokens);
     const node = tokensToDoc(tokens);
 
@@ -61,7 +61,7 @@ describe("utils", () => {
 
   describe("tokensToDoc", () => {
     it("should create a node from a list of tokens", async () => {
-      const tokens = await queryToProseMirrorTokens("text +key:value text");
+      const tokens = queryToProseMirrorTokens("text +key:value text");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -74,7 +74,7 @@ describe("utils", () => {
     });
 
     it("should insert a queryStr node if the query starts with a KV pair", async () => {
-      const tokens = await queryToProseMirrorTokens("+key:value");
+      const tokens = queryToProseMirrorTokens("+key:value");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -87,7 +87,7 @@ describe("utils", () => {
     });
 
     it("should handle negations for fields", async () => {
-      const tokens = await queryToProseMirrorTokens("-key:value");
+      const tokens = queryToProseMirrorTokens("-key:value");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -100,7 +100,7 @@ describe("utils", () => {
     });
 
     it("should handle negations for string expressions", async () => {
-      const tokens = await queryToProseMirrorTokens("-str");
+      const tokens = queryToProseMirrorTokens("-str");
       const node = tokensToDoc(tokens);
 
       const expected = doc(queryStr("-str"));
@@ -109,7 +109,7 @@ describe("utils", () => {
     });
 
     it("should insert a queryStr node if the query starts with a KV pair", async () => {
-      const tokens = await queryToProseMirrorTokens(":value");
+      const tokens = queryToProseMirrorTokens(":value");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -122,7 +122,7 @@ describe("utils", () => {
     });
 
     it("should preserve whitespace at the start of the document", async () => {
-      const tokens = await queryToProseMirrorTokens(" this AND +key:");
+      const tokens = queryToProseMirrorTokens(" this AND +key:");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -135,7 +135,7 @@ describe("utils", () => {
     });
 
     it("should preserve whitespace at the start of the document beginning with a chip", async () => {
-      const tokens = await queryToProseMirrorTokens("  +key:");
+      const tokens = queryToProseMirrorTokens("  +key:");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -148,7 +148,7 @@ describe("utils", () => {
     });
 
     it("should preserve whitespace at end of non-chip tokens", async () => {
-      const tokens = await queryToProseMirrorTokens("this AND  +key:");
+      const tokens = queryToProseMirrorTokens("this AND  +key:");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -161,7 +161,7 @@ describe("utils", () => {
     });
 
     it("should preserve whitespace at end of query", async () => {
-      const tokens = await queryToProseMirrorTokens("example   ");
+      const tokens = queryToProseMirrorTokens("example   ");
       const node = tokensToDoc(tokens);
 
       const expected = doc(queryStr("example   "));
@@ -170,7 +170,7 @@ describe("utils", () => {
     });
 
     it("should preserve whitespace within values that have whitespace", async () => {
-      const tokens = await queryToProseMirrorTokens(
+      const tokens = queryToProseMirrorTokens(
         'example +key:"1 2" example',
       );
       const node = tokensToDoc(tokens);
@@ -185,7 +185,7 @@ describe("utils", () => {
     });
 
     it("should unescape quotes within keys and values", async () => {
-      const tokens = await queryToProseMirrorTokens(`+"key\\"":"value\\""`);
+      const tokens = queryToProseMirrorTokens(`+"key\\"":"value\\""`);
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -198,7 +198,7 @@ describe("utils", () => {
     });
 
     it("should remove isolated plus signs", async () => {
-      const tokens = await queryToProseMirrorTokens("+ +tag:");
+      const tokens = queryToProseMirrorTokens("+ +tag:");
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -276,6 +276,12 @@ describe("utils", () => {
         const text = await getTextFromTokenRanges('+"ta g":"1 2"');
 
         expect(text).toEqual(["", "ta g", "1 2", ""]);
+      });
+
+      it("with polarity symbols", async () => {
+        const text = await getTextFromTokenRanges('+example -example');
+
+        expect(text).toEqual(["+", "example", "-", "example", ""]);
       });
 
       it("with two queries", async () => {

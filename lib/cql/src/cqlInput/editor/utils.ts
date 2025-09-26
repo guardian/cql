@@ -40,20 +40,31 @@ import {
 const tokensToPreserve = [
   TokenType.CHIP_KEY,
   TokenType.CHIP_VALUE,
-  TokenType.MINUS,
-  TokenType.PLUS,
   TokenType.EOF,
 ] as string[];
 
-const joinQueryStrTokens = (tokens: ProseMirrorToken[]) =>
-  tokens.reduce((acc, token) => {
+const isPolarityToken = (token: ProseMirrorToken) =>
+  ([TokenType.PLUS, TokenType.MINUS] as string[]).includes(token.tokenType);
+
+const isChipToken = (token: ProseMirrorToken) =>
+  ([TokenType.CHIP_KEY, TokenType.CHIP_VALUE] as string[]).includes(
+    token.tokenType,
+  );
+
+export const joinQueryStrTokens = (tokens: ProseMirrorToken[]) =>
+  tokens.reduce((acc, token, index) => {
     if (tokensToPreserve.includes(token.tokenType)) {
       return acc.concat(token);
     }
 
     const prevToken = acc.at(-1);
+    const nextToken = tokens[index + 1];
 
-    if (!prevToken || tokensToPreserve.includes(prevToken.tokenType)) {
+    const shouldPreserveToken =
+      !!prevToken &&
+      (tokensToPreserve.includes(prevToken?.tokenType) ||
+        (!!nextToken && isPolarityToken(token) && isChipToken(nextToken)));
+    if (!prevToken || shouldPreserveToken) {
       return acc.concat(token);
     }
 
@@ -72,10 +83,10 @@ const getFieldKeyRange = (
   from: number,
   to: number,
   isQuoted: boolean,
-  isFollowedByEmptyValue: boolean
+  isFollowedByEmptyValue: boolean,
 ): [number, number, number][] => {
   const quoteOffset = isQuoted ? 1 : 0;
-  const emptyValueOffset = isFollowedByEmptyValue ? 1 : 0
+  const emptyValueOffset = isFollowedByEmptyValue ? 1 : 0;
   return [
     // chip begin (-1)
     // chipKey begin (-1)
@@ -122,7 +133,11 @@ const getQueryStrRanges = (
   ...(from === to ? [[to, -1, 0] as [number, number, number]] : []),
 ];
 
-const polarityRanges = (from: number): [number, number, number] => ([from - 1, 1, 0])
+const polarityRanges = (from: number): [number, number, number] => [
+  from - 1,
+  1,
+  0,
+];
 
 const maybeQueryStrRanges = (
   token: ProseMirrorToken | undefined,
@@ -181,7 +196,7 @@ export const createProseMirrorTokenToDocumentMap = (
         case TokenType.MINUS: {
           return accRanges.concat([
             ...maybeQueryStrRanges(previousToken, index),
-            polarityRanges(from)
+            polarityRanges(from),
           ]);
         }
         case TokenType.CHIP_KEY: {
@@ -189,7 +204,12 @@ export const createProseMirrorTokenToDocumentMap = (
             tokens[index + 1]?.tokenType === "CHIP_VALUE";
           return accRanges.concat(
             ...maybeQueryStrRanges(previousToken, index),
-            getFieldKeyRange(from, to, shouldQuoteFieldValue(literal ?? ""), !isFollowedByFieldValueToken),
+            getFieldKeyRange(
+              from,
+              to,
+              shouldQuoteFieldValue(literal ?? ""),
+              !isFollowedByFieldValueToken,
+            ),
           );
         }
         case TokenType.CHIP_VALUE: {
@@ -349,12 +369,6 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             return { nodes };
           }
 
-          const precedingNegation =
-            previousToken?.tokenType === TokenType.MINUS
-              ? "-"
-              : previousToken?.tokenType === TokenType.PLUS
-                ? "+"
-                : "";
           // If the next token is further ahead of this token by more than one
           // position, it is separated by whitespace – append the whitespace to
           // this node
@@ -363,7 +377,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
             ? Math.max(nextToken?.from - token.to - 1, 0)
             : 0;
           const trailingWhitespace = " ".repeat(trailingWhitespaceChars);
-          const lexeme = `${precedingNegation}${token.lexeme}`;
+          const lexeme = token.lexeme;
 
           const previousNode = nodes[nodes.length - 1];
           if (previousNode?.type === queryStr) {

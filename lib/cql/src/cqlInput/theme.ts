@@ -12,8 +12,8 @@ export type CqlTheme = {
   placeholder: {
     color: {
       text: string;
-    }
-  },
+    };
+  };
   chipWrapper: {
     color: {
       background: string;
@@ -54,6 +54,8 @@ export type CqlTheme = {
   };
   tokens: {
     color: {
+      PLUS: string;
+      MINUS: string;
       STRING: string;
       AND: string;
       OR: string;
@@ -73,8 +75,8 @@ const defaultTheme: CqlTheme = {
   },
   placeholder: {
     color: {
-      text: "#9d9d9d"
-    }
+      text: "#9d9d9d",
+    },
   },
   chipWrapper: {
     color: {
@@ -106,8 +108,8 @@ const defaultTheme: CqlTheme = {
     },
     option: {
       layout: {
-        padding: "5px"
-      }
+        padding: "5px",
+      },
     },
     selectedOption: {
       color: {
@@ -119,6 +121,8 @@ const defaultTheme: CqlTheme = {
   tokens: {
     color: {
       STRING: "lightblue",
+      PLUS: "lightgreen",
+      MINUS: "lightpink",
       AND: "magenta",
       OR: "magenta",
       RIGHT_BRACKET: "lightpink",
