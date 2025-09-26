@@ -640,6 +640,17 @@ describe("cql plugin", () => {
       await waitFor("-notakey");
     });
 
+    it("should de-chip after another string, preserving polarity, when enter pressed at the end a chip key, and there is no selection", async () => {
+      const { waitFor, editor } = createCqlEditor();
+
+      editor.insertText("text -notakey").press("Enter");
+
+      await tick();
+
+      await waitFor("text -notakey");
+    });
+
+
     it("should move the selection into value position when the user types a shortcut", async () => {
       const { editor, waitFor } = createCqlEditor("", {
         lang: {

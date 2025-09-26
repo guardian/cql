@@ -764,9 +764,13 @@ export const handleEnter = (view: EditorView) => {
     const fromNode = $from.node();
 
     const endOfKey = $from.after();
-    const chipNode = state.doc.resolve($from.before()).node();
+    const before = $from.before();
+    const chipNode = state.doc.resolve(before).node();
+    const nodePrecedingChip = state.doc.resolve(before - 2).node();
     const maybePolarity = chipNode.attrs[POLARITY] === "-" ? "-" : "";
-    const keyText = `${maybePolarity}${fromNode.textContent}`;
+    const maybePrecedingWhitespace =
+      nodePrecedingChip?.type === queryStr ? " " : "";
+    const keyText = `${maybePrecedingWhitespace}${maybePolarity}${fromNode.textContent}`;
 
     const chipStart = $from.before() - 1;
     const chipEnd = endOfKey + 4; // +1 to move to start of value, +1 to move to end of value, +1 to
