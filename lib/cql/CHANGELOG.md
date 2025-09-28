@@ -1,5 +1,15 @@
 # @guardian/cql
 
+## 1.8.1
+
+### Patch Changes
+
+- a27b80f: Determine that the popover menu as unnavigable when it is displayed but does not contain any suggestions
+
+  Preventing the UI from throwing an error on when there are no results for a chip value
+
+- a27b80f: Use `from` to determine insertion node, fixing a bug when inserting small keys
+
 ## 1.8.0
 
 ### Minor Changes
