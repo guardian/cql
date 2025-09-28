@@ -748,7 +748,7 @@ export const applySuggestion =
       true,
     );
 
-    const insertPos = getNextPositionAfterTypeaheadSelection(tr.doc, to);
+    const insertPos = getNextPositionAfterTypeaheadSelection(tr.doc, from);
 
     if (insertPos) {
       tr.setSelection(TextSelection.create(tr.doc, insertPos));

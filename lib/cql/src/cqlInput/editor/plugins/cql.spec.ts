@@ -370,6 +370,19 @@ describe("cql plugin", () => {
         await waitFor("tag:");
       });
 
+      it("applies the given short key when a popover option is selected at the start of the query", async () => {
+        const { editor, container, waitFor } = createCqlEditor();
+        await editor.insertText("+");
+
+        await selectPopoverOptionWithClick(container, "Tag");
+
+        await waitFor("tag:");
+
+        expect(editor.state.selection.from).toBe(
+          findNodeAt(0, editor.doc, chipValue) + 1,
+        );
+      });
+
       it("displays a popover after another chip", async () => {
         const { editor, container, waitFor } = createCqlEditor("+tag:a");
 
@@ -446,7 +459,7 @@ describe("cql plugin", () => {
           await waitFor("example tag:tags-are-magic");
         });
 
-        it("applies the given key in quotes when it contains whitespace", async () => {
+        it("applies the given quoted suggestion in value position when it contains whitespace", async () => {
           const queryStr = "example +tag:";
           const { editor, container, waitFor, moveCaretToQueryPos } =
             createCqlEditor("example +tag:");
@@ -661,7 +674,7 @@ describe("cql plugin", () => {
       await waitFor("tag:example -notakey");
       const el = await findByTestId(container, getTokenTestId(TokenType.MINUS));
 
-      expect(el.textContent).toBe("-")
+      expect(el.textContent).toBe("-");
     });
 
     it("should move the selection into value position when the user types a shortcut", async () => {

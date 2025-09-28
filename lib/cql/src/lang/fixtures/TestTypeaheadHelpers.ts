@@ -42,7 +42,7 @@ export class TestTypeaheadHelpers {
       undefined,
       "DATE",
     ),
-    new TypeaheadField("s", "Short field", "A short field"),
+    new TypeaheadField("id", "ID", "The content ID"),
   ];
 
   private getAsyncTags(): Promise<TextSuggestionOption[]> {

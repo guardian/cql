@@ -95,7 +95,7 @@ export class TypeaheadPopover extends Popover {
     });
   }
 
-  public isRenderingNavigableMenu = () => this.isVisible;
+  public isRenderingNavigableMenu = () => this.isVisible && !!this.currentSuggestion?.suggestions.length;
 
   public updateSuggestions = (
     typeaheadSuggestions: MappedTypeaheadSuggestion[],
