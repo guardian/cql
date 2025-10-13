@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 1.8.2
+
+### Patch Changes
+
+- b8d83a6: Remove happydom to dev dependencies, and bump version, to remove critical vulnerability https://github.com/guardian/cql/security/dependabot/35
+
 ## 1.8.1
 
 ### Patch Changes
