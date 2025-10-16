@@ -136,7 +136,9 @@ export class Typeahead {
     value?: Token,
     signal?: AbortSignal,
   ): Promise<TypeaheadSuggestion | undefined> {
-    const keySuggestions = this.getSuggestionsForKeyToken(key);
+    if (!value) {
+      return this.getSuggestionsForKeyToken(key);
+    }
 
     const maybeValueSuggestions = this.suggestFieldValue(
       key.literal ?? "",
@@ -145,20 +147,19 @@ export class Typeahead {
     );
 
     if (!maybeValueSuggestions) {
-      return Promise.resolve(keySuggestions);
+      return;
     }
 
-    return maybeValueSuggestions.suggestions.then(
-      (suggestions) =>
-        ({
-          from: value ? value.start - 1 : key.end, // Extend backwards into chipKey's ':'
-          to: value ? value.end : key.end,
-          position: "chipValue",
-          suggestions,
-          type: maybeValueSuggestions.type,
-          suffix: " ",
-        }) as TypeaheadSuggestion,
-    );
+    const suggestions = await maybeValueSuggestions.suggestions;
+
+    return {
+      from: value ? value.start - 1 : key.end, // Extend backwards into chipKey's ':'
+      to: value ? value.end : key.end,
+      position: "chipValue",
+      suggestions,
+      type: maybeValueSuggestions.type,
+      suffix: " ",
+    } as TypeaheadSuggestion;
   }
 
   private suggestFieldKey(str: string): TextSuggestionOption[] | undefined {

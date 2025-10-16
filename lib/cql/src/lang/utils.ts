@@ -105,12 +105,10 @@ const isWithinRange = (
   token: Token | undefined,
   position: number,
 ): Token | undefined => {
-
-
-  const isWithinRange = token && position >= token.start && position <= token.end ? token : undefined;
-  console.log({type: token?.tokenType, position, isWithinRange});
-  return isWithinRange;
-}
+  return token && position >= token.start && position <= token.end
+    ? token
+    : undefined;
+};
 export const getCqlFieldsFromCqlBinary = (queryBinary: CqlBinary): CqlField[] =>
   getCqlFieldsFromQueryExpr(queryBinary.left).concat(
     queryBinary.right
