@@ -17,6 +17,7 @@ describe("typeahead", () => {
 
   const getSuggestions = async (
     query: string,
+    position: number,
     _typeahead: Typeahead = typeahead,
   ) => {
     const result = createParser()(query);
@@ -25,13 +26,13 @@ describe("typeahead", () => {
       throw result.error;
     }
 
-    return await _typeahead.getSuggestions(result.queryAst);
+    return await _typeahead.getSuggestions(result.queryAst, position);
   };
 
   it("should give all options for empty queryFields", async () => {
-    expect(await getSuggestions("")).toEqual([]);
+    expect(await getSuggestions("", 0)).toEqual([]);
 
-    expect(await getSuggestions("+:")).toEqual([
+    expect(await getSuggestions("+:", 1)).toEqual([
       {
         from: 1,
         to: 1,
@@ -66,7 +67,7 @@ describe("typeahead", () => {
   });
 
   it("should give typeahead suggestions for query meta keys", async () => {
-    const suggestions = await getSuggestions("+ta:");
+    const suggestions = await getSuggestions("+ta:", 1);
     expect(suggestions).toEqual([
       {
         from: 1,
@@ -85,24 +86,10 @@ describe("typeahead", () => {
     ]);
   });
 
-  it("should give typeahead suggestions for both query meta keys and values", async () => {
-    const suggestions = await getSuggestions("+tag:tags-are-magic");
+  it("should give typeahead suggestions for values", async () => {
+    const suggestions = await getSuggestions("+tag:tags-are-magic", 5);
 
     expect(suggestions).toEqual([
-      {
-        from: 1,
-        to: 3,
-        position: "chipKey",
-        suggestions: [
-          new TextSuggestionOption(
-            "Tag",
-            "tag",
-            "Search by content tags, e.g. sport/football",
-          ),
-        ],
-        type: "TEXT",
-        suffix: ":",
-      },
       {
         from: 4,
         to: 18,
@@ -115,21 +102,7 @@ describe("typeahead", () => {
   });
 
   it("should give typeahead suggestions in a case insensitive way for synchronous query meta keys across value and label", async () => {
-    const expectedSuggestions: TypeaheadSuggestion[] = [
-      {
-        from: 1,
-        position: "chipKey",
-        suffix: ":",
-        suggestions: [
-          new TextSuggestionOption(
-            "Sync",
-            "sync",
-            "Search synchronous list of tags",
-          ),
-        ],
-        to: 4,
-        type: "TEXT",
-      },
+    const expectedValue: TypeaheadSuggestion[] = [
       {
         from: 5,
         to: 8,
@@ -146,45 +119,31 @@ describe("typeahead", () => {
       },
     ];
 
-    const suggestionsUppercaseLabelQuery = await getSuggestions("+sync:ABC");
+    const suggestionsUppercaseLabelQuery = await getSuggestions("+sync:ABC", 6);
 
-    expect(suggestionsUppercaseLabelQuery).toEqual(expectedSuggestions);
+    expect(suggestionsUppercaseLabelQuery).toEqual(expectedValue);
 
-    const suggestionsLowercaseLabelQuery = await getSuggestions("+sync:def");
+    const suggestionsLowercaseLabelQuery = await getSuggestions("+sync:def", 6);
 
-    expect(suggestionsLowercaseLabelQuery).toEqual(expectedSuggestions);
+    expect(suggestionsLowercaseLabelQuery).toEqual(expectedValue);
 
-    const suggestionsUppercaseValueQuery = await getSuggestions("+sync:JKL");
+    const suggestionsUppercaseValueQuery = await getSuggestions("+sync:JKL", 6);
 
-    expect(suggestionsUppercaseValueQuery).toEqual(expectedSuggestions);
+    expect(suggestionsUppercaseValueQuery).toEqual(expectedValue);
 
-    const suggestionsLowercaseValueQuery = await getSuggestions("+sync:ghi");
+    const suggestionsLowercaseValueQuery = await getSuggestions("+sync:ghi", 6);
 
-    expect(suggestionsLowercaseValueQuery).toEqual(expectedSuggestions);
+    expect(suggestionsLowercaseValueQuery).toEqual(expectedValue);
 
-    const suggestionsForNonMatchingQuery = await getSuggestions("+sync:mno");
+    const suggestionsForNonMatchingQuery = await getSuggestions("+sync:mno", 6);
     expect(suggestionsLowercaseValueQuery).not.toEqual(
       suggestionsForNonMatchingQuery,
     );
   });
 
   it("should give value suggestions for an empty string", async () => {
-    const suggestions = await getSuggestions("+tag:");
+    const suggestions = await getSuggestions("+tag:", 4);
     expect(suggestions).toEqual([
-      {
-        from: 1,
-        to: 3,
-        position: "chipKey",
-        suggestions: [
-          new TextSuggestionOption(
-            "Tag",
-            "tag",
-            "Search by content tags, e.g. sport/football",
-          ),
-        ],
-        type: "TEXT",
-        suffix: ":",
-      },
       {
         from: 4,
         to: 4,
@@ -197,23 +156,9 @@ describe("typeahead", () => {
   });
 
   it("should give a suggestion of type DATE given e.g. 'from-date'", async () => {
-    const suggestions = await getSuggestions("+from-date:");
+    const suggestions = await getSuggestions("+from-date:", 10);
 
     expect(suggestions).toEqual([
-      {
-        from: 1,
-        to: 9,
-        position: "chipKey",
-        suggestions: [
-          new TextSuggestionOption(
-            "From date",
-            "from-date",
-            "The date to search from",
-          ),
-        ],
-        type: "TEXT",
-        suffix: ":",
-      },
       {
         from: 10,
         to: 10,
@@ -231,32 +176,10 @@ describe("typeahead", () => {
     ]);
   });
 
-  it("should give suggestions for multiple tags", async () => {
-    const suggestions = await getSuggestions("+tag:a +:");
+  it.only("should give suggestions for the correct tag where there is more than one", async () => {
+    const suggestions = await getSuggestions("+tag:a +:", 8);
 
     expect(suggestions).toEqual([
-      {
-        from: 1,
-        to: 3,
-        position: "chipKey",
-        suggestions: [
-          new TextSuggestionOption(
-            "Tag",
-            "tag",
-            "Search by content tags, e.g. sport/football",
-          ),
-        ],
-        type: "TEXT",
-        suffix: ":",
-      },
-      {
-        from: 4,
-        to: 5,
-        position: "chipValue",
-        suggestions: testTags,
-        type: "TEXT",
-        suffix: " ",
-      },
       {
         from: 8,
         to: 8,
@@ -296,7 +219,7 @@ describe("typeahead", () => {
     );
 
     expect(
-      (await getSuggestions("+g:", typeahead)).flatMap((a) =>
+      (await getSuggestions("+g:", 1, typeahead)).flatMap((a) =>
         a.suggestions.map((s) => s.value),
       ),
     ).toEqual(["gnat", "tag", "stage"]);

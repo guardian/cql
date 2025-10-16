@@ -1,4 +1,4 @@
-import { CqlQuery, CqlField } from "./ast";
+import { CqlQuery } from "./ast";
 import { Token } from "./token";
 import {
   DateSuggestionOption,
@@ -6,7 +6,7 @@ import {
   TypeaheadSuggestion,
   SuggestionType,
 } from "./types";
-import { getCqlFieldsFromCqlBinary } from "./utils";
+import { getAstNodeAtPos } from "./utils";
 
 type TypeaheadResolver =
   | ((str: string, signal?: AbortSignal) => Promise<TextSuggestionOption[]>)
@@ -81,8 +81,9 @@ export class Typeahead {
     );
   }
 
-  public getSuggestions(
+  public async getSuggestions(
     program: CqlQuery,
+    position: number,
     signal?: AbortSignal,
   ): Promise<TypeaheadSuggestion[]> {
     return new Promise((resolve, reject) => {
@@ -99,13 +100,14 @@ export class Typeahead {
         reject(new DOMException("Aborted", "AbortError"));
       });
 
-      const eventuallySuggestions = getCqlFieldsFromCqlBinary(
-        program.content,
-      ).flatMap((queryField) => this.suggestCqlField(queryField, signal));
+      const { key, value } = getAstNodeAtPos(program.content, position);
+      console.log({key, value})
+      if (!key) {
+        return resolve([]);
+      }
 
-      return Promise.all(eventuallySuggestions)
-        .then((suggestions) => resolve(suggestions.flat()))
-        .catch(reject);
+
+      resolve(this.suggestCqlField(key, value, signal));
     });
   }
 
@@ -129,10 +131,10 @@ export class Typeahead {
   }
 
   private async suggestCqlField(
-    q: CqlField,
+    key: Token,
+    value?: Token,
     signal?: AbortSignal,
   ): Promise<TypeaheadSuggestion[]> {
-    const { key, value } = q;
     const keySuggestions = this.getSuggestionsForKeyToken(key);
 
     const maybeValueSuggestions = this.suggestFieldValue(
@@ -146,7 +148,6 @@ export class Typeahead {
     }
 
     return maybeValueSuggestions.suggestions.then((suggestions) => [
-      ...keySuggestions,
       {
         from: value ? value.start - 1 : key.end, // Extend backwards into chipKey's ':'
         to: value ? value.end : key.end,

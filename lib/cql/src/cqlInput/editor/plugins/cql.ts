@@ -505,8 +505,15 @@ export const createCqlPlugin = ({
             typeaheadPopover?.setIsPending();
           }
 
+          if (view.state.selection.from !== view.state.selection.to) {
+            return;
+          }
+
           try {
-            const suggestions = await typeahead.getSuggestions(queryAst);
+            const suggestions = await typeahead.getSuggestions(
+              queryAst,
+              mapping.invert().map(view.state.selection.from),
+            );
             const mappedSuggestions = toMappedSuggestions(suggestions, mapping);
             if (view.hasFocus()) {
               typeaheadPopover?.updateSuggestions(mappedSuggestions);
