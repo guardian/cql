@@ -85,7 +85,6 @@ export const getAstNodeAtPosExpr = (
       const key = isWithinRange(expr.content.key, position);
       const value = isWithinRange(expr.content.value, position);
 
-      console.log(expr.content, position);
       if (!key && !value) {
         return undefined;
       }
@@ -105,9 +104,13 @@ export const getAstNodeAtPosExpr = (
 const isWithinRange = (
   token: Token | undefined,
   position: number,
-): Token | undefined =>
-  token && position >= token.start && position <= token.end ? token : undefined;
+): Token | undefined => {
 
+
+  const isWithinRange = token && position >= token.start && position <= token.end ? token : undefined;
+  console.log({type: token?.tokenType, position, isWithinRange});
+  return isWithinRange;
+}
 export const getCqlFieldsFromCqlBinary = (queryBinary: CqlBinary): CqlField[] =>
   getCqlFieldsFromQueryExpr(queryBinary.left).concat(
     queryBinary.right

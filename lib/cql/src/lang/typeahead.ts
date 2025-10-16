@@ -85,13 +85,13 @@ export class Typeahead {
     program: CqlQuery,
     position: number,
     signal?: AbortSignal,
-  ): Promise<TypeaheadSuggestion[]> {
+  ): Promise<TypeaheadSuggestion | undefined> {
     return new Promise((resolve, reject) => {
       // Abort existing fetch, if it exists
       this.abortController?.abort();
 
       if (!program.content) {
-        return resolve([]);
+        return resolve(undefined);
       }
 
       const abortController = new AbortController();
@@ -100,41 +100,42 @@ export class Typeahead {
         reject(new DOMException("Aborted", "AbortError"));
       });
 
-      const { key, value } = getAstNodeAtPos(program.content, position);
-      console.log({key, value})
-      if (!key) {
-        return resolve([]);
+      const maybeSuggestionAtPos = getAstNodeAtPos(program.content, position);
+
+      if (!maybeSuggestionAtPos) {
+        return resolve(undefined);
       }
 
+      const { key, value } = maybeSuggestionAtPos;
 
       resolve(this.suggestCqlField(key, value, signal));
     });
   }
 
-  private getSuggestionsForKeyToken(keyToken: Token): TypeaheadSuggestion[] {
+  private getSuggestionsForKeyToken(
+    keyToken: Token,
+  ): TypeaheadSuggestion | undefined {
     const suggestions = this.suggestFieldKey(keyToken.literal ?? "");
 
     if (!suggestions) {
-      return [];
+      return undefined;
     }
 
-    return [
-      {
-        from: keyToken.start,
-        to: Math.max(keyToken.start, keyToken.end - 1), // Do not include ':'
-        position: "chipKey",
-        suggestions,
-        type: "TEXT",
-        suffix: ":",
-      },
-    ];
+    return {
+      from: keyToken.start,
+      to: Math.max(keyToken.start, keyToken.end - 1), // Do not include ':'
+      position: "chipKey",
+      suggestions,
+      type: "TEXT",
+      suffix: ":",
+    };
   }
 
   private async suggestCqlField(
     key: Token,
     value?: Token,
     signal?: AbortSignal,
-  ): Promise<TypeaheadSuggestion[]> {
+  ): Promise<TypeaheadSuggestion | undefined> {
     const keySuggestions = this.getSuggestionsForKeyToken(key);
 
     const maybeValueSuggestions = this.suggestFieldValue(
@@ -147,16 +148,17 @@ export class Typeahead {
       return Promise.resolve(keySuggestions);
     }
 
-    return maybeValueSuggestions.suggestions.then((suggestions) => [
-      {
-        from: value ? value.start - 1 : key.end, // Extend backwards into chipKey's ':'
-        to: value ? value.end : key.end,
-        position: "chipValue",
-        suggestions,
-        type: maybeValueSuggestions.type,
-        suffix: " ",
-      } as TypeaheadSuggestion,
-    ]);
+    return maybeValueSuggestions.suggestions.then(
+      (suggestions) =>
+        ({
+          from: value ? value.start - 1 : key.end, // Extend backwards into chipKey's ':'
+          to: value ? value.end : key.end,
+          position: "chipValue",
+          suggestions,
+          type: maybeValueSuggestions.type,
+          suffix: " ",
+        }) as TypeaheadSuggestion,
+    );
   }
 
   private suggestFieldKey(str: string): TextSuggestionOption[] | undefined {

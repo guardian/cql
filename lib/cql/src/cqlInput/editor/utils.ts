@@ -579,18 +579,20 @@ export const toProseMirrorTokens = (tokens: Token[]): ProseMirrorToken[] =>
   }));
 
 export const toMappedSuggestions = (
-  typeaheadSuggestions: TypeaheadSuggestion[],
+  typeaheadSuggestion: TypeaheadSuggestion | undefined,
   mapping: Mapping,
-) =>
-  typeaheadSuggestions.map((suggestion) => {
-    const from = mapping.map(suggestion.from);
-    const to = mapping.map(
-      suggestion.to + 1,
-      suggestion.position === "chipKey" ? -1 : 0,
-    );
+) => {
+  if (!typeaheadSuggestion) {
+    return undefined;
+  }
+  const from = mapping.map(typeaheadSuggestion.from);
+  const to = mapping.map(
+    typeaheadSuggestion.to + 1,
+    typeaheadSuggestion.position === "chipKey" ? -1 : 0,
+  );
 
-    return { ...suggestion, from, to } as MappedTypeaheadSuggestion;
-  });
+  return { ...typeaheadSuggestion, from, to } as MappedTypeaheadSuggestion;
+};
 
 const toMappedError = (error: CqlError, mapping: Mapping) => ({
   message: error.message,
