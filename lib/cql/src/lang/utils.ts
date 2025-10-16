@@ -1,4 +1,5 @@
 import { CqlBinary, CqlExpr, CqlField } from "./ast";
+import { Token } from "./token";
 
 const whitespaceR = /\s/;
 export const hasWhitespace = (str: string) => !!str.match(whitespaceR);
@@ -43,6 +44,69 @@ export function* getPermutations<T>(
 
   return permutation.slice();
 }
+
+type SuggestionPos =
+  | undefined
+  | { key: Token; value: undefined }
+  | { key: Token; value: Token };
+
+export const getAstNodeAtPos = (
+  queryBinary: CqlBinary,
+  position: number,
+): SuggestionPos => {
+  return (
+    getAstNodeAtPosExpr(queryBinary.left, position) ??
+    (queryBinary.right
+      ? getAstNodeAtPos(queryBinary.right.binary, position)
+      : undefined)
+  );
+};
+
+export const getAstNodeAtPosExpr = (
+  expr: CqlExpr,
+  position: number,
+): SuggestionPos => {
+  switch (expr.content.type) {
+    case "CqlStr": {
+      const key = isWithinRange(expr.content.token, position);
+
+      return key
+        ? {
+            key,
+            value: undefined,
+          }
+        : undefined;
+    }
+    case "CqlBinary":
+      return getAstNodeAtPos(expr.content, position);
+    case "CqlGroup":
+      return getAstNodeAtPos(expr.content.content, position);
+    case "CqlField": {
+      const key = isWithinRange(expr.content.key, position);
+      const value = isWithinRange(expr.content.value, position);
+
+      console.log(expr.content, position);
+      if (!key && !value) {
+        return undefined;
+      }
+
+      if (key && !value) {
+        return { key, value: undefined };
+      }
+
+      return {
+        key: expr.content.key,
+        value,
+      };
+    }
+  }
+};
+
+const isWithinRange = (
+  token: Token | undefined,
+  position: number,
+): Token | undefined =>
+  token && position >= token.start && position <= token.end ? token : undefined;
 
 export const getCqlFieldsFromCqlBinary = (queryBinary: CqlBinary): CqlField[] =>
   getCqlFieldsFromQueryExpr(queryBinary.left).concat(
