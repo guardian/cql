@@ -163,7 +163,7 @@ describe("typeahead", () => {
     });
   });
 
-  it.only("should give suggestions for the correct tag where there is more than one", async () => {
+  it("should give suggestions for the correct tag where there is more than one", async () => {
     const suggestions = await getSuggestions("+tag:a +:", 8);
 
     expect(suggestions).toEqual({
