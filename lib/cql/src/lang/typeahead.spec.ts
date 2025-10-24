@@ -34,7 +34,7 @@ describe("typeahead", () => {
 
     expect(await getSuggestions("+:", 1)).toEqual({
       from: 1,
-      to: 1,
+      to: 2,
       position: "chipKey",
       suggestions: [
         new TextSuggestionOption(
@@ -68,7 +68,7 @@ describe("typeahead", () => {
     const suggestions = await getSuggestions("+ta:", 1);
     expect(suggestions).toEqual({
       from: 1,
-      to: 2,
+      to: 4,
       position: "chipKey",
       suggestions: [
         new TextSuggestionOption(
@@ -86,8 +86,8 @@ describe("typeahead", () => {
     const suggestions = await getSuggestions("+tag:tags-are-magic", 5);
 
     expect(suggestions).toEqual({
-      from: 4,
-      to: 18,
+      from: 5,
+      to: 19,
       position: "chipValue",
       suggestions: testTags,
       type: "TEXT",
@@ -97,8 +97,8 @@ describe("typeahead", () => {
 
   it("should give typeahead suggestions in a case insensitive way for synchronous query meta keys across value and label", async () => {
     const expectedValue: TypeaheadSuggestion = {
-      from: 5,
-      to: 8,
+      from: 6,
+      to: 9,
       position: "chipValue",
       suggestions: [
         new TextSuggestionOption(
@@ -133,10 +133,10 @@ describe("typeahead", () => {
   });
 
   it("should give value suggestions for an empty string", async () => {
-    const suggestions = await getSuggestions("+tag:", 4);
+    const suggestions = await getSuggestions("+tag:", 5);
     expect(suggestions).toEqual({
-      from: 4,
-      to: 4,
+      from: 5,
+      to: 6,
       position: "chipValue",
       suggestions: testTags,
       type: "TEXT",
@@ -145,11 +145,11 @@ describe("typeahead", () => {
   });
 
   it("should give a suggestion of type DATE given e.g. 'from-date'", async () => {
-    const suggestions = await getSuggestions("+from-date:", 10);
+    const suggestions = await getSuggestions("+from-date:", 11);
 
     expect(suggestions).toEqual({
-      from: 10,
-      to: 10,
+      from: 11,
+      to: 12,
       position: "chipValue",
       suggestions: [
         new DateSuggestionOption("1 day ago", "-1d"),
@@ -168,7 +168,7 @@ describe("typeahead", () => {
 
     expect(suggestions).toEqual({
       from: 8,
-      to: 8,
+      to: 9,
       position: "chipKey",
       suggestions: [
         new TextSuggestionOption(
