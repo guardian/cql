@@ -1,5 +1,5 @@
+import { ProseMirrorToken } from "../cqlInput/editor/utils";
 import { CqlQuery } from "./ast";
-import { Token } from "./token";
 import {
   DateSuggestionOption,
   TextSuggestionOption,
@@ -113,7 +113,7 @@ export class Typeahead {
   }
 
   private getSuggestionsForKeyToken(
-    keyToken: Token,
+    keyToken: ProseMirrorToken,
   ): TypeaheadSuggestion | undefined {
     const suggestions = this.suggestFieldKey(keyToken.literal ?? "");
 
@@ -122,8 +122,8 @@ export class Typeahead {
     }
 
     return {
-      from: keyToken.start,
-      to: Math.max(keyToken.start, keyToken.end - 1), // Do not include ':'
+      from: keyToken.from,
+      to: Math.max(keyToken.to, keyToken.to - 1), // Do not include ':'
       position: "chipKey",
       suggestions,
       type: "TEXT",
@@ -132,8 +132,8 @@ export class Typeahead {
   }
 
   private async suggestCqlField(
-    key: Token,
-    value?: Token,
+    key: ProseMirrorToken,
+    value?: ProseMirrorToken,
     signal?: AbortSignal,
   ): Promise<TypeaheadSuggestion | undefined> {
     if (!value) {
@@ -153,8 +153,8 @@ export class Typeahead {
     const suggestions = await maybeValueSuggestions.suggestions;
 
     return {
-      from: value ? value.start - 1 : key.end, // Extend backwards into chipKey's ':'
-      to: value ? value.end : key.end,
+      from: value ? value.from : key.from, // Extend backwards into chipKey's ':'
+      to: value ? value.to : key.to,
       position: "chipValue",
       suggestions,
       type: maybeValueSuggestions.type,

@@ -83,19 +83,21 @@ const getFieldKeyRange = (
   from: number,
   to: number,
   isQuoted: boolean,
-  isFollowedByEmptyValue: boolean,
+  isFollowedByChipValue: boolean,
 ): [number, number, number][] => {
   const quoteOffset = isQuoted ? 1 : 0;
-  const emptyValueOffset = isFollowedByEmptyValue ? 1 : 0;
   return [
     // chip begin (-1)
     // chipKey begin (-1)
-    [from, 0, 2],
+    [from, 0, 1],
     // maybe start quote (+1 to remove from str)
     [from, quoteOffset, 0],
     // maybe end quote (+1 to remove from str)
     // offset `:` into chipValue (+1 to node)
-    [to - 1, quoteOffset, 1 + emptyValueOffset],
+    [to - 1, quoteOffset, 1],
+    ...(!isFollowedByChipValue
+      ? getFieldValueRanges(to - 1, to - 1, false)
+      : []),
   ];
 };
 
@@ -130,6 +132,7 @@ const getQueryStrRanges = (
   // This is a slightly obscure solution to this problem - we could also use the
   // gaps between the token positions and the token literal length to account
   // for this discrepancy, too.
+  [to + 1, -1, 0],
   ...(from === to ? [[to, -1, 0] as [number, number, number]] : []),
 ];
 
@@ -190,6 +193,7 @@ export const createProseMirrorTokenToDocumentMap = (
   const ranges = compactedTokenRanges.reduce<[number, number, number][]>(
     (accRanges, { tokenType, from, to, literal }, index, tokens) => {
       const previousToken = tokens[index - 1] as ProseMirrorToken | undefined;
+      const nextToken = tokens[index + 1] as ProseMirrorToken | undefined;
 
       switch (tokenType) {
         case TokenType.PLUS:
@@ -200,15 +204,13 @@ export const createProseMirrorTokenToDocumentMap = (
           ]);
         }
         case TokenType.CHIP_KEY: {
-          const isFollowedByFieldValueToken =
-            tokens[index + 1]?.tokenType === "CHIP_VALUE";
           return accRanges.concat(
             ...maybeQueryStrRanges(previousToken, index),
-            getFieldKeyRange(
+            ...getFieldKeyRange(
               from,
               to,
               shouldQuoteFieldValue(literal ?? ""),
-              !isFollowedByFieldValueToken,
+              nextToken?.tokenType === TokenType.CHIP_VALUE,
             ),
           );
         }
@@ -572,11 +574,13 @@ export type ProseMirrorToken = Omit<Token, "start" | "end"> & {
  * 0 1 2 3
  */
 export const toProseMirrorTokens = (tokens: Token[]): ProseMirrorToken[] =>
-  tokens.map(({ start, end, ...token }) => ({
-    ...token,
-    from: start,
-    to: end + 1,
-  }));
+  tokens.map(toProseMirrorToken);
+
+export const toProseMirrorToken = ({ start, end, ...token }: Token) => ({
+  ...token,
+  from: start,
+  to: end + 1,
+});
 
 export const toMappedSuggestions = (
   typeaheadSuggestion: TypeaheadSuggestion | undefined,

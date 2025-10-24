@@ -162,9 +162,17 @@
         flex-direction: column;
       }
 
-      .CqlDebug__queryDiagramToken,
-      .CqlDebug__queryDiagramNode {
+      .CqlDebug__queryDiagramToken .CqlDebug__queryDiagramNode {
         margin-bottom: 6rem;
+      }
+
+      .CqlDebug__queryDiagramToken .CqlDebug__queryIndex,
+      .CqlDebug__queryDiagramToken .CqlDebug__selection {
+        left: -50%;
+      }
+
+      .CqlDebug__queryDiagramToken .CqlDebug__queryIndex {
+        position: relative;
       }
 
       .CqlDebug__queryDiagramNode > .CqlDebug__queryDiagramLabel {

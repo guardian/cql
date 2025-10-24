@@ -11,6 +11,7 @@ import {
 } from "../../lang/ast";
 import { IS_READ_ONLY } from "./schema";
 import { Selection } from "prosemirror-state";
+import { toProseMirrorTokens } from "./utils";
 
 // Debugging and visualisation utilities.
 
@@ -32,7 +33,11 @@ export const logNode = (doc: Node) => {
   });
 };
 
-export const getDebugTokenHTML = (tokens: Token[], selection: Selection, mapping: Mapping) => {
+export const getDebugTokenHTML = (
+  tokens: Token[],
+  selection: Selection,
+  mapping: Mapping,
+) => {
   let html = `
     <div class="CqlDebug__queryDiagram CqlDebug__queryDiagramToken">
       <div class="CqlDebug__queryDiagramLabel">
@@ -40,11 +45,14 @@ export const getDebugTokenHTML = (tokens: Token[], selection: Selection, mapping
         <div>Literal</div>
       </div>
       <div class="CqlDebug__queryDiagramContent">`;
+
   const invertedMapping = mapping.invert();
   const mappedFrom = invertedMapping.map(selection.from);
   const mappedTo = invertedMapping.map(selection.to);
 
-  tokens.forEach((token, index) => {
+  const pmTokens = toProseMirrorTokens(tokens);
+
+  pmTokens.forEach((token, index) => {
     html += `${Array(Math.max(1, token.lexeme.length))
       .fill(undefined)
       .map((_, index) => {
@@ -54,7 +62,7 @@ export const getDebugTokenHTML = (tokens: Token[], selection: Selection, mapping
         );
 
         const literalChar = token.literal?.[index - literalOffset];
-        const globalIndex = token.start + index
+        const globalIndex = token.from + index;
         return `
         <div class="CqlDebug__queryBox">
           <div class="CqlDebug__queryIndex">${globalIndex}</div>
@@ -64,7 +72,9 @@ export const getDebugTokenHTML = (tokens: Token[], selection: Selection, mapping
               : ""
           }
           ${
-            mappedTo === globalIndex ? `<div class="CqlDebug__selection">$</div>` : ""
+            mappedTo === globalIndex
+              ? `<div class="CqlDebug__selection">$</div>`
+              : ""
           }
           ${
             lexemeChar !== undefined
@@ -85,12 +95,18 @@ export const getDebugTokenHTML = (tokens: Token[], selection: Selection, mapping
       })
       .join("")}
       ${
-        tokens[index + 1]?.start > token.end + 1 &&
-        tokens[index + 1]?.tokenType !== "EOF" &&
-        token.tokenType !== "EOF"
+        pmTokens[index + 1]?.from > token.to && token.tokenType !== "EOF"
           ? `<div class="CqlDebug__queryBox"><div class="CqlDebug__queryIndex">${
-              token.end + 1
-            }</div></div>`
+              token.to
+            }</div>${
+              mappedFrom === token.to
+                ? `<div class="CqlDebug__selection">^</div>`
+                : ""
+            }${
+              mappedTo === token.to
+                ? `<div class="CqlDebug__selection">$</div>`
+                : ""
+            }</div>`
           : ""
       }`;
   });
@@ -173,10 +189,12 @@ export const getDebugMappingHTML = (
         `
                 <div class="CqlDebug__queryBox CqlDebug__queryBox--offset" data-pos="${pos}">
                     <div class="CqlDebug__queryIndex">${pos}</div>
-                    ${(queryPosMap[pos] ?? []).map(
-                      ({ char }) =>
-                        `<div class="CqlDebug__originalChar">${char}</div>`,
-                    ).join(" ")}
+                    ${(queryPosMap[pos] ?? [])
+                      .map(
+                        ({ char }) =>
+                          `<div class="CqlDebug__originalChar">${char}</div>`,
+                      )
+                      .join(" ")}
 
 
                     ${

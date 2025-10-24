@@ -290,10 +290,16 @@ describe("utils", () => {
         expect(text).toEqual(["", "key", "value", "", "key2", "value2", ""]);
       });
 
-      it("with an incomplete chip", async () => {
+      it("with an empty chip key", async () => {
         const text = await getTextFromTokenRanges("+: a b c");
 
         expect(text).toEqual(["", "", "a", "b", "c", ""]);
+      });
+
+      it("with an empty chip value", async () => {
+        const text = await getTextFromTokenRanges("+a: b");
+
+        expect(text).toEqual(["", "a", "b", ""]);
       });
 
       it("with chips without prefixes", async () => {
@@ -335,7 +341,7 @@ describe("utils", () => {
         assertCqlStrPosFromDocPos(
           "+a:",
           (node) => findNodeAt(0, node, schema.nodes.chipValue) + 1,
-          2,
+          3,
         );
       });
 

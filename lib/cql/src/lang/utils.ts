@@ -1,5 +1,10 @@
+import {
+  ProseMirrorToken,
+  toProseMirrorToken,
+  toProseMirrorTokens,
+} from "../cqlInput/editor/utils";
 import { CqlBinary, CqlExpr, CqlField } from "./ast";
-import { Token } from "./token";
+import { Token, TokenType } from "./token";
 
 const whitespaceR = /\s/;
 export const hasWhitespace = (str: string) => !!str.match(whitespaceR);
@@ -47,8 +52,8 @@ export function* getPermutations<T>(
 
 type SuggestionPos =
   | undefined
-  | { key: Token; value: undefined }
-  | { key: Token; value: Token };
+  | { key: ProseMirrorToken; value: undefined }
+  | { key: ProseMirrorToken; value: ProseMirrorToken };
 
 export const getAstNodeAtPos = (
   queryBinary: CqlBinary,
@@ -90,11 +95,25 @@ export const getAstNodeAtPosExpr = (
       }
 
       if (key && !value) {
-        return { key, value: undefined };
+        return position === key.to
+          ? {
+              key,
+              // Add an empty value here to signal that we are in value position
+              value: toProseMirrorToken(
+                new Token(
+                  TokenType.CHIP_VALUE,
+                  "",
+                  undefined,
+                  position,
+                  position,
+                ),
+              ),
+            }
+          : { key, value: undefined };
       }
 
       return {
-        key: expr.content.key,
+        key: toProseMirrorToken(expr.content.key),
         value,
       };
     }
@@ -104,9 +123,14 @@ export const getAstNodeAtPosExpr = (
 const isWithinRange = (
   token: Token | undefined,
   position: number,
-): Token | undefined => {
-  return token && position >= token.start && position <= token.end
-    ? token
+): ProseMirrorToken | undefined => {
+  if (!token) {
+    return undefined;
+  }
+
+  const [pmToken] = toProseMirrorTokens([token]);
+  return position >= pmToken.from && position <= pmToken.to
+    ? pmToken
     : undefined;
 };
 export const getCqlFieldsFromCqlBinary = (queryBinary: CqlBinary): CqlField[] =>
