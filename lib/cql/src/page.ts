@@ -8,7 +8,6 @@ import {
 } from "./cqlInput/editor/debug.ts";
 import { createParser } from "./lang/Cql.ts";
 import { Typeahead, TypeaheadField } from "./lang/typeahead.ts";
-import { CapiTypeaheadProvider } from "./typeahead/CapiTypeaheadHelpers.ts";
 import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
 import { DebugChangeEventDetail, QueryChangeEventDetail } from "./types/dom";
 
