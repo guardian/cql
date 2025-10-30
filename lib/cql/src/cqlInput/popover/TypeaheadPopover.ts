@@ -136,11 +136,14 @@ export class TypeaheadPopover extends Popover {
     }
     const { node } = this.view.domAtPos(this.currentSuggestion.from);
 
-    if (node) {
-      return super.show(node as HTMLElement);
+    // The node given from `domAtPos` may be a text node
+    if (node && node instanceof HTMLElement) {
+      return super.show(node);
     }
 
-    console.warn(`[cql]: Attempted to show popover, but domAtPos did not return an element for ${this.currentSuggestion.from}`)
+    console.warn(
+      `[cql]: Attempted to show popover, but domAtPos did not return an element for ${this.currentSuggestion.from}`,
+    );
   };
 
   public handleAction: ActionHandler = (action) => {
