@@ -135,10 +135,10 @@ export const createCqlPlugin = ({
 
     const queryBeforeParse = docToCqlStr(originalDoc);
 
-    const result = parser(queryBeforeParse);
-    const { tokens, queryAst, error, mapping } = mapResult(result);
-
-    const newDoc = tokensToDoc(tokens);
+    const newDoc = tokensToDoc(mapResult(parser(queryBeforeParse)).tokens);
+    const queryAfterParse = docToCqlStr(newDoc);
+    const result = parser(queryAfterParse);
+    const { mapping, queryAst, tokens, error } = mapResult(result);
 
     const docSelection = new AllSelection(tr.doc);
 
