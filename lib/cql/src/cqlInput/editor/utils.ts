@@ -147,12 +147,12 @@ const maybeQueryStrRanges = (
   index: number,
 ) => {
   // If this field is at the start of the document, or preceded by a
-  // field value, the editor will add a queryStr node to conform to
+  // field key/value, the editor will add a queryStr node to conform to
   // the schema, so we add a queryStr mapping to account for the
   // additional node.
 
   const shouldAddQueryStrMapping =
-    token?.tokenType === "CHIP_VALUE" || index === 0;
+    token?.tokenType === "CHIP_KEY" || token?.tokenType === "CHIP_VALUE" || index === 0;
   const queryStrFrom = token ? token?.to + 1 : 0;
   return shouldAddQueryStrMapping
     ? getQueryStrRanges(queryStrFrom, queryStrFrom)
