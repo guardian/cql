@@ -101,7 +101,7 @@ const getFieldValueRanges = (
 ): [number, number, number][] => {
   return [
     [from, literalOffsetStart, 1 /* <chipKey> end / <chipValue> start */],
-    [to, literalOffsetEnd, 1 /* <chipValue> end */],
+    [to + 1, literalOffsetEnd - 1, 0  /* <chipValue> end */],
   ];
 };
 
@@ -120,7 +120,7 @@ const getQueryStrRanges = (
 ];
 
 const polarityRanges = (from: number): [number, number, number] => [
-  from,
+  from - 1,
   1, // Polarity char (`-`|`+`)
   0,
 ];
