@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { describe, expect, it, test } from "bun:test";
 import {
   createProseMirrorTokenToDocumentMap as createProseMirrorTokenToDocumentMapping,
   docToCqlStr,
@@ -12,7 +12,14 @@ import { POLARITY, schema } from "./schema";
 import { builders } from "prosemirror-test-builder";
 import { createParser } from "../../lang/Cql";
 import { Node } from "prosemirror-model";
-import { getNPermutations, getPermutations } from "../../lang/utils";
+import {
+  escapeQuotes,
+  getNPermutations,
+  getPermutations,
+  shouldQuoteFieldValue,
+} from "../../lang/utils";
+import { pseudoRandom } from "../../utils/test";
+import { logNode } from "./debug";
 
 describe("utils", () => {
   const { chip, chipKey, chipValue, doc, queryStr } = builders(schema);
@@ -347,39 +354,25 @@ describe("utils", () => {
           doc: doc(queryStr("<a1>a<a2>")),
         },
         {
-          name: "a chip",
-          queryAndPositions: "<a>+<b1>b<b2>:<c1>c<c2> <d1>d<d2>",
+          name: "an empty chipKey surrounded by empty queryStrs",
+          queryAndPositions: "<a>+<b>:<c> <d>",
           doc: doc(
             queryStr("<a>"),
             // Empty chipKey
-            chip(chipKey("<b1>b<b2>"), chipValue("<c1>c<c2>")),
+            chip(chipKey("<b>"), chipValue("<c>")),
             // Empty queryStr
-            queryStr("<d1>d<d2>"),
+            queryStr("<d>"),
           ),
         },
         {
-          name: "an empty chipKey",
-          queryAndPositions: "<a>+<b>: <c>",
+          name: "an empty chipKey surrounded by contentful queryStrs ",
+          queryAndPositions: "<a1>a<a2> +<b>:<c> <d1>c<d2>",
           doc: doc(
-            queryStr("<a>"),
+            queryStr("<a1>a<a2>"),
             // Empty chipKey
-            chip(chipKey("<b>"), chipValue()),
+            chip(chipKey("<b>"), chipValue("<c>")),
             // Empty queryStr
-            queryStr("<c>"),
-          ),
-        },
-
-        {
-          name: "abutting empty chipKeys",
-          queryAndPositions: "<a>+<b>: <c>+<d>: ",
-          doc: doc(
-            queryStr("<a>"),
-            // Empty chipKey
-            chip(chipKey("<b>"), chipValue()),
-            // Empty queryStr
-            queryStr("<c>"),
-            // Empty chipKey
-            chip(chipKey("<d>"), chipValue()),
+            queryStr("<d1>c<d2>"),
           ),
         },
         {
@@ -393,48 +386,138 @@ describe("utils", () => {
             queryStr("<d1>d<d2>"),
           ),
         },
+        {
+          name: "a chip",
+          queryAndPositions: "<a>+<b1>b<b2>:<c1>c<c2> <d1>d<d2>",
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey("<b1>b<b2>"), chipValue("<c1>c<c2>")),
+            // Empty queryStr
+            queryStr("<d1>d<d2>"),
+          ),
+        },
+        {
+          name: "abutting empty chipKeys",
+          queryAndPositions: "<a>+<b>: <c>+<d>: ",
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey("<b>"), chipValue()),
+            // Empty queryStr
+            queryStr("<c>"),
+            // Empty chipKey
+            chip(chipKey("<d>"), chipValue()),
+          ),
+        },
       ];
 
-      const smokeTestPrimitives: Array<
-        (key: string, key2: string) => [string, Node]
+      const smokeTestLiterals = [
+        "u",
+        // '"',
+        "unquoted_string",
+        // "quoted string",
+        // 'escaped"string',
+      ];
+
+      const getSmokeTestString = (
+        generator: Generator<number, number, number>,
+      ): string =>
+        smokeTestLiterals[generator.next().value % smokeTestLiterals.length];
+
+      const getQuotedEscapedStr = (str: string) =>
+        shouldQuoteFieldValue(str) ? `"${escapeQuotes(str)}"` : str;
+
+      const smokeTestQueryStrs: Array<
+        (key: string, value: string) => [string, Node]
       > = [
         // Empty queryStr
         () => ["", queryStr()],
         // queryStr w/ content
-        (key) => [
-          `<${key}1>${key}<${key}2> `,
-          queryStr(`<${key}1>${key}<${key}2>`),
+        (key, value) => [
+          `<${key}1>${getQuotedEscapedStr(value)}<${key}2> `,
+          queryStr(`<${key}1>${getQuotedEscapedStr(value)}<${key}2>`),
         ],
+      ];
+
+      const smokeTestChipKeys: Array<
+        (
+          key: string,
+          value: string,
+          key2: string,
+          value2: string,
+        ) => [string, Node]
+      > = [
         // Chip w/ empty chipKey
         (key) => [`+<${key}>: `, chip(chipKey(`<${key}>`), chipValue())],
         // Chip w/ empty chipValue
-        (key) => [
-          `+chipKey:<${key}> `,
-          chip(chipKey(`chipKey`), chipValue(`<${key}>`)),
+        (key, value) => [
+          `+<${key}1>${getQuotedEscapedStr(value)}<${key}2>:<${key}3> `,
+          chip(chipKey(`<${key}1>${value}<${key}2>`), chipValue(`<${key}3>`)),
         ],
         // Chip
-        (key, key2) => [
-          `+<${key}1>${key}<${key}2>:<${key2}1>${key2}<${key2}2>`,
+        (key, value, key2, value2) => [
+          `+<${key}1>${getQuotedEscapedStr(value)}<${key}2>:<${key2}1>${getQuotedEscapedStr(value2)}<${key2}2> `,
           chip(
-            chipKey(`<${key}1>${key}<${key}2>`),
-            chipValue(`<${key2}1>${key2}<${key2}2>`),
+            chipKey(`<${key}1>${value}<${key}2>`),
+            chipValue(`<${key2}1>${value2}<${key2}2>`),
           ),
         ],
       ];
 
-      const smokeTestSpecs = getNPermutations(
-        [...smokeTestPrimitives, ...smokeTestPrimitives],
-        1000,
-      ).map(primitives => {
+      const randomGenerator = pseudoRandom(1);
+      for (let specNo = 0; specNo < 1; specNo++) {
+        let queryAndPositions = "";
+        const docNodes: Node[] = [];
+        const specDocLength = 1 + (randomGenerator.next().value % 5);
+        for (let docIndex = 0; docIndex < specDocLength; docIndex++) {
+          const char = 97 + docIndex * 3;
+          const queryIndex =
+            randomGenerator.next().value % smokeTestQueryStrs.length;
+          const chipKeyIndex =
+            randomGenerator.next().value % smokeTestChipKeys.length;
 
-      })
+          const [queryStrStr, queryStrNode] = smokeTestQueryStrs[queryIndex](
+            String.fromCharCode(char),
+            getSmokeTestString(randomGenerator),
+          );
+
+          const [chipStr, chipNode] = smokeTestChipKeys[chipKeyIndex](
+            String.fromCharCode(char + 1),
+            getSmokeTestString(randomGenerator),
+            String.fromCharCode(char + 2),
+            getSmokeTestString(randomGenerator),
+          );
+
+          queryAndPositions += queryStrStr + chipStr;
+          docNodes.push(queryStrNode, chipNode);
+        }
+
+        const docNode = doc(...docNodes, queryStr());
+        try {
+          docNode.check();
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_) {
+          logNode(docNode);
+          throw new Error(
+            "Property test created an invalid node — the structure is logged above",
+          );
+        }
+
+        mappingSpecs.push({
+          name: `property test ${specNo} (\`${queryAndPositions}\`)`,
+          queryAndPositions,
+          doc: doc(...docNodes, queryStr()),
+        });
+      }
 
       mappingSpecs.forEach(({ queryAndPositions, doc, name }) => {
         it.only(`should map ${name}`, () => {
           const { query, positions } = getCqlStrPositions(queryAndPositions);
           const tokens = queryToProseMirrorTokens(query);
-          const mapping =
-            createProseMirrorTokenToDocumentMapping(tokens).invert();
+          const queryStrToDocMapping =
+            createProseMirrorTokenToDocumentMapping(tokens);
+          const docToQueryStrMapping = queryStrToDocMapping.invert();
 
           // Sanity check that this equals the text string
           expect(
@@ -442,7 +525,7 @@ describe("utils", () => {
             `Expected the doc to match the query spec, minus any position information`,
           ).toBe(query);
 
-          const mappedPositions: Record<string, number> = {};
+          const positionsMappedFromDocToQueryStr: Record<string, number> = {};
           const mappedPositionDebugInfo: Record<
             string,
             { docPos: number; queryPos: number }
@@ -452,14 +535,17 @@ describe("utils", () => {
               throw new Error(`Expected a document position for key ${docKey}`);
             }
 
-            const queryPos = mapping.map(docPos);
-            mappedPositions[docKey] = queryPos;
+            const queryPos = docToQueryStrMapping.map(docPos);
+
+            const remappedDocPos = queryStrToDocMapping.map(queryPos, 1);
+            expect(remappedDocPos, `${queryAndPositions} -> ${queryPos} -> ${docKey}${docPos}`).toBe(docPos);
+            positionsMappedFromDocToQueryStr[docKey] = queryPos;
             mappedPositionDebugInfo[docKey] = { docPos, queryPos };
           });
 
           expect(
-            mappedPositions,
-            `Mapping didn't match - see the diff. The output was: ${JSON.stringify(mappedPositionDebugInfo, null, "  ")}`,
+            positionsMappedFromDocToQueryStr,
+            `Mapping didn't match - see the diff. The output for the query \`${query}\`, with positions at \`${queryAndPositions}\` was: ${JSON.stringify(mappedPositionDebugInfo, null, "  ")}`,
           ).toEqual(positions);
         });
       });
