@@ -963,7 +963,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, getPosFromQueryPos } =
           createCqlEditor(queryStr);
 
-        editor.selectText(getPosFromQueryPos(queryStr.indexOf(":")));
+        editor.selectText(getPosFromQueryPos(queryStr.indexOf("+")));
 
         await editor.press(key);
 
@@ -975,7 +975,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, getPosFromQueryPos } =
           createCqlEditor(queryStr);
 
-        editor.selectText(getPosFromQueryPos(queryStr.indexOf(":")));
+        editor.selectText(getPosFromQueryPos(queryStr.indexOf(":") + 1));
 
         await editor.press(key);
 

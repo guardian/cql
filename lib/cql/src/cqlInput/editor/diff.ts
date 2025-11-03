@@ -1,7 +1,7 @@
 import { Fragment } from "prosemirror-model";
 
 /**
- * These diff functions are vendored to ignore attributes and markup, as we only care about markup.
+ * These diff functions are vendored to ignore attributes, as we only care about markup.
  * Source: https://github.com/ProseMirror/prosemirror-model/blob/c8c7b62645d2a8293fa6b7f52aa2b04a97821f34/src/diff.ts
  */
 
