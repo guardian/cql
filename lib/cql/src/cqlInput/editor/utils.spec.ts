@@ -1,4 +1,4 @@
-import { describe, expect, it, test } from "bun:test";
+import { describe, expect, it } from "bun:test";
 import {
   createProseMirrorTokenToDocumentMap as createProseMirrorTokenToDocumentMapping,
   docToCqlStr,
@@ -12,12 +12,7 @@ import { POLARITY, schema } from "./schema";
 import { builders } from "prosemirror-test-builder";
 import { createParser } from "../../lang/Cql";
 import { Node } from "prosemirror-model";
-import {
-  escapeQuotes,
-  getNPermutations,
-  getPermutations,
-  shouldQuoteFieldValue,
-} from "../../lang/utils";
+import { escapeQuotes, shouldQuoteFieldValue } from "../../lang/utils";
 import { pseudoRandom } from "../../utils/test";
 import { logNode } from "./debug";
 
@@ -466,7 +461,7 @@ describe("utils", () => {
       ];
 
       const randomGenerator = pseudoRandom(1);
-      for (let specNo = 0; specNo < 1; specNo++) {
+      for (let specNo = 0; specNo < 100; specNo++) {
         let queryAndPositions = "";
         const docNodes: Node[] = [];
         const specDocLength = 1 + (randomGenerator.next().value % 5);
@@ -512,7 +507,7 @@ describe("utils", () => {
       }
 
       mappingSpecs.forEach(({ queryAndPositions, doc, name }) => {
-        it.only(`should map ${name}`, () => {
+        it(`should map ${name}`, () => {
           const { query, positions } = getCqlStrPositions(queryAndPositions);
           const tokens = queryToProseMirrorTokens(query);
           const queryStrToDocMapping =
@@ -525,8 +520,36 @@ describe("utils", () => {
             `Expected the doc to match the query spec, minus any position information`,
           ).toBe(query);
 
+          const positionsMappedFromQueryStrToDoc: Record<string, number> = {};
+          const mappedDocPositionDebugInfo: Record<
+            string,
+            { docPos: number; queryPos: number }
+          > = {};
+          Object.entries(positions).forEach(([queryKey, queryPos]) => {
+            if (positions[queryKey] === undefined) {
+              throw new Error(
+                `Expected a document position for key ${queryKey}`,
+              );
+            }
+
+            const docPos = queryStrToDocMapping.map(queryPos);
+
+            const remappedDocPos = queryStrToDocMapping.invert().map(docPos);
+            expect(
+              remappedDocPos,
+              `${queryAndPositions} -> ${queryPos} -> ${queryKey}${docPos}`,
+            ).toBe(queryPos);
+            positionsMappedFromQueryStrToDoc[queryKey] = docPos;
+            mappedDocPositionDebugInfo[queryKey] = { docPos, queryPos };
+          });
+
+          expect(
+            positionsMappedFromQueryStrToDoc,
+            `Mapping didn't match from queryStr to doc - see the diff. The output for the query \`${query}\`, with positions at \`${queryAndPositions}\` was: ${JSON.stringify(mappedDocPositionDebugInfo, null, "  ")}`,
+          ).toEqual(doc.tag);
+
           const positionsMappedFromDocToQueryStr: Record<string, number> = {};
-          const mappedPositionDebugInfo: Record<
+          const mappedQueryPositionDebugInfo: Record<
             string,
             { docPos: number; queryPos: number }
           > = {};
@@ -537,15 +560,13 @@ describe("utils", () => {
 
             const queryPos = docToQueryStrMapping.map(docPos);
 
-            const remappedDocPos = queryStrToDocMapping.map(queryPos, 1);
-            expect(remappedDocPos, `${queryAndPositions} -> ${queryPos} -> ${docKey}${docPos}`).toBe(docPos);
             positionsMappedFromDocToQueryStr[docKey] = queryPos;
-            mappedPositionDebugInfo[docKey] = { docPos, queryPos };
+            mappedQueryPositionDebugInfo[docKey] = { docPos, queryPos };
           });
 
           expect(
             positionsMappedFromDocToQueryStr,
-            `Mapping didn't match - see the diff. The output for the query \`${query}\`, with positions at \`${queryAndPositions}\` was: ${JSON.stringify(mappedPositionDebugInfo, null, "  ")}`,
+            `Mapping didn't match from doc to queryStr - see the diff. The output for the query \`${query}\`, with positions at \`${queryAndPositions}\` was: ${JSON.stringify(mappedQueryPositionDebugInfo, null, "  ")}`,
           ).toEqual(positions);
         });
       });
