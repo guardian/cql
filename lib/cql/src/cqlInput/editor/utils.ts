@@ -89,11 +89,7 @@ const getFieldKeyRange = (
   return [
     [from, 0, 2 /* <chip> start, <chipKey> start */],
     [from, literalOffsetStart, 0],
-    [
-      to - literalOffsetEnd,
-      literalOffsetEnd - 1,
-      0,
-    ],
+    [to - literalOffsetEnd, literalOffsetEnd - 1, 0],
     ...(!isFollowedByChipValue ? getFieldValueRanges(to, to, 0, 0) : []),
   ];
 };
@@ -189,7 +185,9 @@ export const createProseMirrorTokenToDocumentMap = (
       const nextToken = tokens[index + 1] as ProseMirrorToken | undefined;
 
       const unescapedLiteral = unescapeQuotes(literal ?? "");
-      const literalOffsetStart = unescapedLiteral ? lexeme.indexOf(unescapedLiteral) : 0;
+      const literalOffsetStart = unescapedLiteral
+        ? lexeme.indexOf(unescapedLiteral)
+        : 0;
       const literalOffsetEnd =
         lexeme.length - (unescapedLiteral?.length ?? 0) - literalOffsetStart;
 
