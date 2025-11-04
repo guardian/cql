@@ -405,14 +405,36 @@ describe("utils", () => {
             chip(chipKey("<d>"), chipValue()),
           ),
         },
+        {
+          name: "a chip with quoted key",
+          queryAndPositions: '<a>+<b1>"\\""<b2>:<c1>c<c2> <d1>d<d2>',
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey('<b1>"<b2>'), chipValue("<c1>c<c2>")),
+            // Empty queryStr
+            queryStr("<d1>d<d2>"),
+          ),
+        },
+        {
+          name: "a chip with quoted value",
+          queryAndPositions: '<a>+<b1>"\\""<b2>:<c1>"\\""<c2> <d1>d<d2>',
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey('<b1>"<b2>'), chipValue("<c1>\"<c2>")),
+            // Empty queryStr
+            queryStr("<d1>d<d2>"),
+          ),
+        },
       ];
 
       const smokeTestLiterals = [
         "u",
-        // '"',
+        '"',
         "unquoted_string",
-        // "quoted string",
-        // 'escaped"string',
+        "quoted string",
+        'escaped"string',
       ];
 
       const getSmokeTestString = (
@@ -533,12 +555,6 @@ describe("utils", () => {
             }
 
             const docPos = queryStrToDocMapping.map(queryPos);
-
-            const remappedDocPos = queryStrToDocMapping.invert().map(docPos);
-            expect(
-              remappedDocPos,
-              `${queryAndPositions} -> ${queryPos} -> ${queryKey}${docPos}`,
-            ).toBe(queryPos);
             positionsMappedFromQueryStrToDoc[queryKey] = docPos;
             mappedDocPositionDebugInfo[queryKey] = { docPos, queryPos };
           });
@@ -566,7 +582,7 @@ describe("utils", () => {
 
           expect(
             positionsMappedFromDocToQueryStr,
-            `Mapping didn't match from doc to queryStr - see the diff. The output for the query \`${query}\`, with positions at \`${queryAndPositions}\` was: ${JSON.stringify(mappedQueryPositionDebugInfo, null, "  ")}`,
+            `Mapping didn't match from doc to queryStr (inverted mapping) - see the diff. The output for the query \`${query}\`, with positions at \`${queryAndPositions}\` was: ${JSON.stringify(mappedQueryPositionDebugInfo, null, "  ")}`,
           ).toEqual(positions);
         });
       });

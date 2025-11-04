@@ -87,8 +87,13 @@ const getFieldKeyRange = (
   isFollowedByChipValue: boolean,
 ): [number, number, number][] => {
   return [
-    [from, literalOffsetStart, 2 /* <chip> start, <chipKey> start */],
-    [to - 1, literalOffsetEnd - 1 /* -1 to account for the `:` following the key */, 0],
+    [from, 0, 2 /* <chip> start, <chipKey> start */],
+    [from, literalOffsetStart, 0],
+    [
+      to - literalOffsetEnd,
+      literalOffsetEnd - 1,
+      0,
+    ],
     ...(!isFollowedByChipValue ? getFieldValueRanges(to, to, 0, 0) : []),
   ];
 };
@@ -99,9 +104,12 @@ const getFieldValueRanges = (
   literalOffsetStart: number,
   literalOffsetEnd: number,
 ): [number, number, number][] => {
+
   return [
-    [from, literalOffsetStart, 1 /* <chipKey> end / <chipValue> start */],
-    [to + 1, literalOffsetEnd - 1, 0  /* <chipValue> end */],
+    [from, 0, 1 /* <chipKey> end / <chipValue> start */],
+    [from, literalOffsetStart, 0],
+    [to - literalOffsetEnd, literalOffsetEnd, 0],
+    [to, 0, 1 /* <chipValue> end */],
   ];
 };
 
@@ -179,17 +187,19 @@ export const createProseMirrorTokenToDocumentMap = (
     (accRanges, { tokenType, from, to, lexeme, literal }, index, tokens) => {
       const previousToken = tokens[index - 1] as ProseMirrorToken | undefined;
       const nextToken = tokens[index + 1] as ProseMirrorToken | undefined;
-      const literalOffsetStart = literal ? lexeme.indexOf(literal) : 0;
+
+      const unescapedLiteral = unescapeQuotes(literal ?? "");
+      const literalOffsetStart = unescapedLiteral ? lexeme.indexOf(unescapedLiteral) : 0;
       const literalOffsetEnd =
-        lexeme.length - (literal?.length ?? 0) - literalOffsetStart;
+        lexeme.length - (unescapedLiteral?.length ?? 0) - literalOffsetStart;
 
       switch (tokenType) {
         case TokenType.PLUS:
         case TokenType.MINUS: {
-          return accRanges.concat([
+          return accRanges.concat(
             ...maybeQueryStrRanges(previousToken, index),
             polarityRanges(from),
-          ]);
+          );
         }
         case TokenType.CHIP_KEY: {
           return accRanges.concat(
