@@ -112,7 +112,7 @@ export class Typeahead {
     });
   }
 
-  private getSuggestionsForKeyToken(
+  private getSuggestionsForChipKey(
     keyToken: ProseMirrorToken,
   ): TypeaheadSuggestion | undefined {
     const suggestions = this.suggestFieldKey(keyToken.literal ?? "");
@@ -137,7 +137,7 @@ export class Typeahead {
     signal?: AbortSignal,
   ): Promise<TypeaheadSuggestion | undefined> {
     if (!value) {
-      return this.getSuggestionsForKeyToken(key);
+      return this.getSuggestionsForChipKey(key);
     }
 
     const maybeValueSuggestions = this.suggestFieldValue(
@@ -153,7 +153,7 @@ export class Typeahead {
     const suggestions = await maybeValueSuggestions.suggestions;
 
     return {
-      from: value ? value.from : key.from, // Extend backwards into chipKey's ':'
+      from: value ? value.from : key.from,
       to: value ? value.to : key.to,
       position: "chipValue",
       suggestions,
