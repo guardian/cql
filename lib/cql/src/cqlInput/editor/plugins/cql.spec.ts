@@ -16,7 +16,7 @@ import { createParser } from "../../../lang/Cql";
 import { TestTypeaheadHelpers } from "../../../lang/fixtures/TestTypeaheadHelpers";
 import { cqlQueryStrFromQueryAst } from "../../../lang/interpreter";
 import { TokenType } from "../../../lang/token";
-import { Typeahead } from "../../../lang/typeahead";
+import { Typeahead, TypeaheadConfig } from "../../../lang/typeahead";
 import { docToCqlStrWithSelection, tick } from "../../../utils/test";
 import {
   CqlConfig,
@@ -41,7 +41,6 @@ import {
   TEST_ID_CHIP_VALUE,
   TEST_ID_POLARITY_HANDLE,
 } from "./cql";
-import { TypeaheadConfig } from "../../../lang/typeahead";
 
 const createCqlEditor = (
   initialQuery: string = "",
