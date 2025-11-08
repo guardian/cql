@@ -100,7 +100,6 @@ const getFieldValueRanges = (
   literalOffsetStart: number,
   literalOffsetEnd: number,
 ): [number, number, number][] => {
-
   return [
     [from, 0, 1 /* <chipKey> end / <chipValue> start */],
     [from, literalOffsetStart, 0],
@@ -630,18 +629,12 @@ export const getNextPositionAfterTypeaheadSelection = (
   );
 
   if (nodeTypeAfterIndex === -1) {
-    console.warn(
-      `Attempted to find a selection, but the position ${currentPos} w/in node ${suggestionNode.type.name} is not one of ${typeaheadSelectionSequence.map((_) => _.name).join(",")}`,
-    );
     return;
   }
 
   const nodeTypeToSelect = typeaheadSelectionSequence[nodeTypeAfterIndex + 1];
 
   if (!nodeTypeToSelect) {
-    console.warn(
-      `Attempted to find a selection, but the position ${currentPos} w/in node ${suggestionNode.type.name} does not have anything to follow a node of type ${nodeTypeAfterIndex}`,
-    );
     return;
   }
 
@@ -746,8 +739,16 @@ export const applyChipLifecycleRules = (tr: Transaction): void => {
 };
 
 export const applySuggestion =
-  (view: EditorView) => (from: number, to: number, value: string) => {
+  (view: EditorView) =>
+  (
+    from: number,
+    to: number,
+    position: TypeaheadSuggestion["position"],
+    _value: string,
+  ) => {
     const tr = view.state.tr;
+
+    const value = position === "queryStr" ? `${_value}:` : _value;
 
     tr.replaceRangeWith(from, to, schema.text(value)).setMeta(
       TRANSACTION_APPLY_SUGGESTION,

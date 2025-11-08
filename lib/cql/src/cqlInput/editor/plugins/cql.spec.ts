@@ -41,14 +41,19 @@ import {
   TEST_ID_CHIP_VALUE,
   TEST_ID_POLARITY_HANDLE,
 } from "./cql";
-
-const typeheadHelpers = new TestTypeaheadHelpers();
-const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
+import { TypeaheadConfig } from "../../../lang/typeahead";
 
 const createCqlEditor = (
   initialQuery: string = "",
   config: CqlConfig = { syntaxHighlighting: true },
+  typeaheadConfig: Partial<TypeaheadConfig> = {},
 ) => {
+  const typeheadHelpers = new TestTypeaheadHelpers();
+  const testCqlService = new Typeahead(
+    typeheadHelpers.typeaheadFields,
+    typeaheadConfig,
+  );
+
   document.body.innerHTML = "";
   const container = document.body;
   const typeaheadEl = document.createElement("div");
@@ -221,6 +226,39 @@ describe("cql plugin", () => {
   });
 
   describe("typeahead", () => {
+    describe("queryStr", () => {
+      const createCqlEditorWithQueryStrTypeahead = (
+        initialQuery: string = "",
+      ) =>
+        createCqlEditor(
+          initialQuery,
+          {},
+          { showTypeaheadForQueryStr: true, minCharsForQueryStrTypeahead: 2 },
+        );
+      it("does not display a popover at the start of the query when fewer than the minimum chars necessary for a queryStr suggestion are added", async () => {
+        const { container } = createCqlEditorWithQueryStrTypeahead("t");
+
+        await assertPopoverVisibility(container, false);
+      });
+
+      it("does display a popover at the start of the query when the minimum chars necessary for a queryStr suggestion are added", async () => {
+        const { container } = createCqlEditorWithQueryStrTypeahead("ta");
+
+        await assertPopoverVisibility(container, true);
+      });
+
+      it("accepts a suggestion from a popover, and applies a chipKey", async () => {
+        const { editor, container, waitFor } =
+          createCqlEditorWithQueryStrTypeahead("ta");
+
+        await selectPopoverOptionWithEnter(editor, container, "Tag");
+        const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+        expect(nodeAtCaret.name).toBe("chipValue");
+
+        await waitFor("tag:");
+      });
+    });
+
     describe("chip keys", () => {
       it("displays a colon between chip keys and values on first render", async () => {
         const queryStr = "+x:y";
