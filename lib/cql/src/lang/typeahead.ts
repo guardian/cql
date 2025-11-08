@@ -1,4 +1,5 @@
 import { ProseMirrorToken } from "../cqlInput/editor/utils";
+import { mergeDeep } from "../utils/merge";
 import { CqlQuery } from "./ast";
 import {
   DateSuggestionOption,
@@ -71,11 +72,26 @@ export class TypeaheadField {
   }
 }
 
+export type TypeaheadConfig = {
+  showTypeaheadForQueryStr: boolean;
+  minCharsForQueryStrTypeahead: number;
+};
+
+const defaultTypeaheadConfig: TypeaheadConfig = {
+  showTypeaheadForQueryStr: false,
+  minCharsForQueryStrTypeahead: 2,
+};
+
 export class Typeahead {
   private typeaheadFieldEntries: TextSuggestionOption[];
   private abortController: AbortController | undefined;
+  private config: TypeaheadConfig;
 
-  constructor(private typeaheadFields: TypeaheadField[]) {
+  constructor(
+    private typeaheadFields: TypeaheadField[],
+    config: Partial<TypeaheadConfig> = {},
+  ) {
+    this.config = mergeDeep(defaultTypeaheadConfig, config);
     this.typeaheadFieldEntries = this.typeaheadFields.map((field) =>
       field.toSuggestionOption(),
     );
@@ -102,7 +118,13 @@ export class Typeahead {
 
       const maybeSuggestionAtPos = getAstNodeAtPos(program.content, position);
 
-      if (!maybeSuggestionAtPos) {
+      const isValidSuggestionNode =
+        maybeSuggestionAtPos?.key.tokenType !== "STRING" ||
+        (this.config.showTypeaheadForQueryStr &&
+          (maybeSuggestionAtPos?.key.literal?.length ?? 0) >=
+            this.config.minCharsForQueryStrTypeahead);
+
+      if (!maybeSuggestionAtPos || !isValidSuggestionNode) {
         return resolve(undefined);
       }
 
@@ -124,7 +146,7 @@ export class Typeahead {
     return {
       from: keyToken.from,
       to: Math.max(keyToken.to, keyToken.to - 1), // Do not include ':'
-      position: "chipKey",
+      position: keyToken.tokenType === "STRING" ? "queryStr" : "chipKey",
       suggestions,
       type: "TEXT",
       suffix: ":",

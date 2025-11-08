@@ -134,7 +134,10 @@ const typeaheadHelpersCapi = new CapiTypeaheadProvider(
   initialEndpointCapi,
   "test",
 );
-const capiTypeahead = new Typeahead(typeaheadHelpersCapi.typeaheadFields);
+const capiTypeahead = new Typeahead(typeaheadHelpersCapi.typeaheadFields, {
+  showTypeaheadForQueryStr: true,
+  minCharsForQueryStrTypeahead: 2,
+});
 
 const CqlInputCapi = createCqlInput(capiTypeahead, {
   syntaxHighlighting: true,
