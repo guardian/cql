@@ -97,8 +97,24 @@ export class Typeahead {
     );
   }
 
+  /**
+   * Get suggestions for the given query and position.
+   *
+   * `position` is a caret position, 0-indexed from the start of the string,
+   * where every character has a before and after. For example, the query
+   *
+   * `s t r   k : v`
+   * | | | | | | | |
+   * 0 1 2 3 4 5 6 7
+   *
+   * would give suggestions for:
+   *  - keys containing `str` for positions 0-3, if `showTypeaheadForQueryStr`
+   *    was `true`
+   *  - keys containing `k` for positions 4-5
+   *  - keys containing `v` for positions 6-7
+   */
   public async getSuggestions(
-    program: CqlQuery,
+    query: CqlQuery,
     position: number,
     signal?: AbortSignal,
   ): Promise<TypeaheadSuggestion | undefined> {
@@ -106,7 +122,7 @@ export class Typeahead {
       // Abort existing fetch, if it exists
       this.abortController?.abort();
 
-      if (!program.content) {
+      if (!query.content) {
         return resolve(undefined);
       }
 
@@ -116,7 +132,7 @@ export class Typeahead {
         reject(new DOMException("Aborted", "AbortError"));
       });
 
-      const maybeSuggestionAtPos = getAstNodeAtPos(program.content, position);
+      const maybeSuggestionAtPos = getAstNodeAtPos(query.content, position);
 
       const isValidSuggestionNode =
         maybeSuggestionAtPos?.key.tokenType !== "STRING" ||
