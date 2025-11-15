@@ -10,6 +10,7 @@ import { createParser } from "./lang/Cql.ts";
 import { Typeahead, TypeaheadField } from "./lang/typeahead.ts";
 import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
 import { DebugChangeEventDetail, QueryChangeEventDetail } from "./types/dom";
+import { CapiTypeaheadProvider } from "./lib.ts";
 
 const setUrlParam = (key: string, value: string) => {
   const urlParams = new URLSearchParams(window.location.search);
