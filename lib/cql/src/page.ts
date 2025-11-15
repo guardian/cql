@@ -8,9 +8,9 @@ import {
 } from "./cqlInput/editor/debug.ts";
 import { createParser } from "./lang/Cql.ts";
 import { Typeahead, TypeaheadField } from "./lang/typeahead.ts";
+import { CapiTypeaheadProvider } from "./typeahead/CapiTypeaheadHelpers.ts";
 import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
 import { DebugChangeEventDetail, QueryChangeEventDetail } from "./types/dom";
-import { TestTypeaheadHelpers } from "./lang/fixtures/TestTypeaheadHelpers.ts";
 
 const setUrlParam = (key: string, value: string) => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -131,7 +131,10 @@ const params = new URLSearchParams(window.location.search);
 const endpoint = params.get("endpoint");
 
 const initialEndpointCapi = endpoint || "https://content.guardianapis.com";
-const typeaheadHelpersCapi = new TestTypeaheadHelpers();
+const typeaheadHelpersCapi = new CapiTypeaheadProvider(
+  initialEndpointCapi,
+  "test",
+);
 const capiTypeahead = new Typeahead(typeaheadHelpersCapi.typeaheadFields);
 
 const CqlInputCapi = createCqlInput(capiTypeahead, {
