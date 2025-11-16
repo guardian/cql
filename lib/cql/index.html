@@ -118,20 +118,23 @@
         border: 2px solid #333;
         padding: 10px;
         border-radius: 5px;
+        flex-basis: 50%;
+        min-width: 0;
+        overflow-x: scroll;
       }
 
       .Page__InputContent {
-        flex-shrink: 0;
+        flex-basis: 50%;
       }
 
       .Page__Config {
         display: flex;
         flex-direction: column;
         gap: 10px;
-
       }
 
-      .Page__Config input, .Page__Config select {
+      .Page__Config input,
+      .Page__Config select {
         min-width: 300px;
       }
 
