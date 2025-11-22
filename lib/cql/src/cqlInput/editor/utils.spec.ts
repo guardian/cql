@@ -214,113 +214,89 @@ describe("utils", () => {
 
   describe("mapTokens", () => {
     describe("should map tokens to text positions", () => {
-      it("with parens", async () => {
-        const text = await getTextFromTokenRanges("(b OR c)");
-
-        expect(text).toEqual(["(", "b", "OR", "c", ")", ""]);
-      });
-
-      it("with search text and tag", async () => {
-        const text = await getTextFromTokenRanges("text +key:value text");
-
-        expect(text).toEqual(["text", "", "key", "value", "text", ""]);
-      });
-
-      it("with parens and tags", async () => {
-        const text = await getTextFromTokenRanges(
+      const specs: [string, string, string[]][] = [
+        ["with parens", "(b OR c)", ["(", "b", "OR", "c", ")", ""]],
+        [
+          "with search text and tag",
+          "text +key:value text",
+          ["text", "", "key", "value", "text", ""],
+        ],
+        [
+          "with parens and tags",
           "text (b OR c) +key:value text (b OR c)",
-        );
-
-        expect(text).toEqual([
-          "text",
-          "(",
-          "b",
-          "OR",
-          "c",
-          ")",
-          "",
-          "key",
-          "value",
-          "text",
-          "(",
-          "b",
-          "OR",
-          "c",
-          ")",
-          "",
-        ]);
-      });
-
-      it("with a query field", async () => {
-        const text = await getTextFromTokenRanges("+tag:test");
-
-        expect(text).toEqual(["", "tag", "test", ""]);
-      });
-
-      it("with a query field with a quoted value and whitespace", async () => {
-        const text = await getTextFromTokenRanges('+tag:"1 2" a +tag:"3 4" b');
-
-        expect(text).toEqual([
-          "",
-          "tag",
-          "1 2",
-          "a",
-          "",
-          "tag",
-          "3 4",
-          "b",
-          "",
-        ]);
-      });
-
-      it("with a query field with a quoted key", async () => {
-        const text = await getTextFromTokenRanges('+"ta g":"1 2"');
-
-        expect(text).toEqual(["", "ta g", "1 2", ""]);
-      });
-
-      it("with polarity symbols", async () => {
-        const text = await getTextFromTokenRanges("+example -example");
-
-        expect(text).toEqual(["+", "example", "-", "example", ""]);
-      });
-
-      it("with two queries", async () => {
-        const text = await getTextFromTokenRanges("+key:value +key2:value2 ");
-        expect(text).toEqual(["", "key", "value", "", "key2", "value2", ""]);
-      });
-
-      it("with an incomplete chip", async () => {
-        const text = await getTextFromTokenRanges("+: a b c");
-
-        expect(text).toEqual(["", "", "a", "b", "c", ""]);
-      });
-
-      it("with chips without prefixes", async () => {
-        const text = await getTextFromTokenRanges("this:that this:that");
-
-        expect(text).toEqual(["this", "that", "this", "that", ""]);
-      });
-
-      it("with binary queries in the middle of tags", async () => {
-        const text = await getTextFromTokenRanges(
+          [
+            "text",
+            "(",
+            "b",
+            "OR",
+            "c",
+            ")",
+            "",
+            "key",
+            "value",
+            "text",
+            "(",
+            "b",
+            "OR",
+            "c",
+            ")",
+            "",
+          ],
+        ],
+        ["with a query field", "+tag:test", ["", "tag", "test", ""]],
+        [
+          "with a query field with a quoted value and whitespace",
+          '+tag:"1 2" a +tag:"3 4" b',
+          ["", "tag", "1 2", "a", "", "tag", "3 4", "b", ""],
+        ],
+        [
+          "with a query field with a quoted key",
+          '+"ta g":"1 2"',
+          ["", "ta g", "1 2", ""],
+        ],
+        [
+          "with polarity symbols",
+          "+example -example",
+          ["+", "example", "-", "example", ""],
+        ],
+        [
+          "with two queries",
+          "+key:value +key2:value2 ",
+          ["", "key", "value", "", "key2", "value2", ""],
+        ],
+        ["with an empty chip key", "+: a b c", ["", "", "a", "b", "c", ""]],
+        ["with an empty chip value", "+a: b", ["", "a", "b", ""]],
+        [
+          "with chips without prefixes",
+          "this:that this:that",
+          ["this", "that", "this", "that", ""],
+        ],
+        [
+          "with binary queries in the middle of tags",
           "+key:value (a OR b) +key2:value2",
-        );
+          [
+            "",
+            "key",
+            "value",
+            "(",
+            "a",
+            "OR",
+            "b",
+            ")",
+            "",
+            "key2",
+            "value2",
+            "",
+          ],
+        ],
+      ];
 
-        expect(text).toEqual([
-          "",
-          "key",
-          "value",
-          "(",
-          "a",
-          "OR",
-          "b",
-          ")",
-          "",
-          "key2",
-          "value2",
-          "",
-        ]);
+      specs.forEach(([specName, query, expectedTextFromRanges]) => {
+        it(specName, async () => {
+          const text = await getTextFromTokenRanges(query);
+
+          expect(text).toEqual(expectedTextFromRanges);
+        });
       });
 
       it("with selection in an empty chip key", () => {
