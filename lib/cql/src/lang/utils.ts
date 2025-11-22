@@ -15,6 +15,18 @@ export const escapeQuotes = (str: string) => str.replaceAll(`"`, `\\"`);
 export const shouldQuoteFieldValue = (literal: string) =>
   hasWhitespace(literal) || hasReservedChar(literal);
 
+export function getNPermutations<T>(arr: T[], n: number): T[][] {
+  const generator = getPermutations(arr);
+  const permutations: T[][] = [];
+  for (let i = 0; i < n; i++) {
+    const next = generator.next();
+    if (!next.done) {
+      permutations.push(next.value);
+    }
+  }
+  return permutations
+}
+
 export function* getPermutations<T>(
   permutation: T[],
 ): Generator<T[], T[], unknown> {

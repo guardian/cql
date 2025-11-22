@@ -12,6 +12,7 @@ import { POLARITY, schema } from "./schema";
 import { builders } from "prosemirror-test-builder";
 import { createParser } from "../../lang/Cql";
 import { Node } from "prosemirror-model";
+import { getNPermutations, getPermutations } from "../../lang/utils";
 
 describe("utils", () => {
   const { chip, chipKey, chipValue, doc, queryStr } = builders(schema);
@@ -321,6 +322,146 @@ describe("utils", () => {
           (node) => findNodeAt(0, node, schema.nodes.chipValue) + 2,
           4,
         );
+      });
+
+      const getCqlStrPositions = (
+        queryWithPos: string,
+        positions: Record<string, number> = {},
+      ): { query: string; positions: Record<string, number> } => {
+        const regex = new RegExp("<(?<position>.*?)>");
+        const result = regex.exec(queryWithPos);
+        if (!result || !result.groups?.position) {
+          return { query: queryWithPos, positions };
+        }
+
+        return getCqlStrPositions(queryWithPos.replace(regex, ""), {
+          ...positions,
+          [result.groups?.position]: result.index,
+        });
+      };
+
+      const mappingSpecs = [
+        {
+          name: "a query string",
+          queryAndPositions: "<a1>a<a2>",
+          doc: doc(queryStr("<a1>a<a2>")),
+        },
+        {
+          name: "a chip",
+          queryAndPositions: "<a>+<b1>b<b2>:<c1>c<c2> <d1>d<d2>",
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey("<b1>b<b2>"), chipValue("<c1>c<c2>")),
+            // Empty queryStr
+            queryStr("<d1>d<d2>"),
+          ),
+        },
+        {
+          name: "an empty chipKey",
+          queryAndPositions: "<a>+<b>: <c>",
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey("<b>"), chipValue()),
+            // Empty queryStr
+            queryStr("<c>"),
+          ),
+        },
+
+        {
+          name: "abutting empty chipKeys",
+          queryAndPositions: "<a>+<b>: <c>+<d>: ",
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey("<b>"), chipValue()),
+            // Empty queryStr
+            queryStr("<c>"),
+            // Empty chipKey
+            chip(chipKey("<d>"), chipValue()),
+          ),
+        },
+        {
+          name: "an empty chipValue",
+          queryAndPositions: "<a>+<b1>b<b2>:<c> <d1>d<d2>",
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey("<b1>b<b2>"), chipValue("<c>")),
+            // Empty queryStr
+            queryStr("<d1>d<d2>"),
+          ),
+        },
+      ];
+
+      const smokeTestPrimitives: Array<
+        (key: string, key2: string) => [string, Node]
+      > = [
+        // Empty queryStr
+        () => ["", queryStr()],
+        // queryStr w/ content
+        (key) => [
+          `<${key}1>${key}<${key}2> `,
+          queryStr(`<${key}1>${key}<${key}2>`),
+        ],
+        // Chip w/ empty chipKey
+        (key) => [`+<${key}>: `, chip(chipKey(`<${key}>`), chipValue())],
+        // Chip w/ empty chipValue
+        (key) => [
+          `+chipKey:<${key}> `,
+          chip(chipKey(`chipKey`), chipValue(`<${key}>`)),
+        ],
+        // Chip
+        (key, key2) => [
+          `+<${key}1>${key}<${key}2>:<${key2}1>${key2}<${key2}2>`,
+          chip(
+            chipKey(`<${key}1>${key}<${key}2>`),
+            chipValue(`<${key2}1>${key2}<${key2}2>`),
+          ),
+        ],
+      ];
+
+      const smokeTestSpecs = getNPermutations(
+        [...smokeTestPrimitives, ...smokeTestPrimitives],
+        1000,
+      ).map(primitives => {
+
+      })
+
+      mappingSpecs.forEach(({ queryAndPositions, doc, name }) => {
+        it.only(`should map ${name}`, () => {
+          const { query, positions } = getCqlStrPositions(queryAndPositions);
+          const tokens = queryToProseMirrorTokens(query);
+          const mapping =
+            createProseMirrorTokenToDocumentMapping(tokens).invert();
+
+          // Sanity check that this equals the text string
+          expect(
+            docToCqlStr(doc),
+            `Expected the doc to match the query spec, minus any position information`,
+          ).toBe(query);
+
+          const mappedPositions: Record<string, number> = {};
+          const mappedPositionDebugInfo: Record<
+            string,
+            { docPos: number; queryPos: number }
+          > = {};
+          Object.entries(doc.tag).forEach(([docKey, docPos]) => {
+            if (positions[docKey] === undefined) {
+              throw new Error(`Expected a document position for key ${docKey}`);
+            }
+
+            const queryPos = mapping.map(docPos);
+            mappedPositions[docKey] = queryPos;
+            mappedPositionDebugInfo[docKey] = { docPos, queryPos };
+          });
+
+          expect(
+            mappedPositions,
+            `Mapping didn't match - see the diff. The output was: ${JSON.stringify(mappedPositionDebugInfo, null, "  ")}`,
+          ).toEqual(positions);
+        });
       });
     });
   });
