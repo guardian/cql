@@ -104,7 +104,7 @@ describe("typeahead", () => {
         suffix: ":",
       },
       {
-        from: 4,
+        from: 5,
         to: 18,
         position: "chipValue",
         suggestions: testTags,
@@ -131,7 +131,7 @@ describe("typeahead", () => {
         type: "TEXT",
       },
       {
-        from: 5,
+        from: 6,
         to: 8,
         position: "chipValue",
         suggestions: [
@@ -186,8 +186,8 @@ describe("typeahead", () => {
         suffix: ":",
       },
       {
-        from: 4,
-        to: 4,
+        from: 5,
+        to: 5,
         position: "chipValue",
         suggestions: testTags,
         type: "TEXT",
@@ -215,8 +215,8 @@ describe("typeahead", () => {
         suffix: ":",
       },
       {
-        from: 10,
-        to: 10,
+        from: 11,
+        to: 11,
         position: "chipValue",
         suggestions: [
           new DateSuggestionOption("1 day ago", "-1d"),
@@ -250,7 +250,7 @@ describe("typeahead", () => {
         suffix: ":",
       },
       {
-        from: 4,
+        from: 5,
         to: 5,
         position: "chipValue",
         suggestions: testTags,

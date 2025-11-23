@@ -314,7 +314,7 @@ describe("utils", () => {
         assertCqlStrPosFromDocPos(
           "+a:",
           (node) => findNodeAt(0, node, schema.nodes.chipValue) + 1,
-          2,
+          3,
         );
       });
 

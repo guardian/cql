@@ -202,7 +202,7 @@ export const createProseMirrorTokenToDocumentMap = (
         case TokenType.CHIP_KEY: {
           return accRanges.concat(
             ...maybeQueryStrRanges(previousToken, index),
-            getFieldKeyRange(
+            ...getFieldKeyRange(
               from,
               to,
               literalOffsetStart,
