@@ -95,15 +95,16 @@ export class TypeaheadPopover extends Popover {
     });
   }
 
-  public isRenderingNavigableMenu = () => this.isVisible && !!this.currentSuggestion?.suggestions.length;
+  public isRenderingNavigableMenu = () =>
+    this.isVisible && !!this.currentSuggestion?.suggestions.length;
 
   public updateSuggestions = (
-    typeaheadSuggestions: MappedTypeaheadSuggestion[],
+    typeaheadSuggestion?: MappedTypeaheadSuggestion,
   ) => {
     this.isPending = false;
     if (
       this.view.isDestroyed ||
-      !typeaheadSuggestions.length ||
+      !typeaheadSuggestion ||
       this.view.state.selection.from !== this.view.state.selection.to
     ) {
       this.currentSuggestion = undefined;
@@ -112,19 +113,7 @@ export class TypeaheadPopover extends Popover {
       return;
     }
 
-    const { selection: currentSelection } = this.view.state;
-    const suggestionThatCoversSelection = typeaheadSuggestions.find(
-      ({ from, to }) =>
-        currentSelection.from >= from && currentSelection.to <= to,
-    );
-
-    if (!suggestionThatCoversSelection) {
-      this.currentSuggestion = undefined;
-      this.hide();
-      return;
-    }
-
-    this.currentSuggestion = suggestionThatCoversSelection;
+    this.currentSuggestion = typeaheadSuggestion;
     this.show();
   };
 
@@ -141,12 +130,20 @@ export class TypeaheadPopover extends Popover {
     }
   };
 
-  protected show = () => {
+  protected show = async () => {
     if (!this.currentSuggestion) {
       return Promise.resolve();
     }
     const { node } = this.view.domAtPos(this.currentSuggestion.from);
-    return super.show(node as HTMLElement);
+
+    // The node given from `domAtPos` may be a text node
+    if (node && node instanceof HTMLElement) {
+      return super.show(node);
+    }
+
+    console.warn(
+      `[cql]: Attempted to show popover, but domAtPos did not return an element for ${this.currentSuggestion.from}`,
+    );
   };
 
   public handleAction: ActionHandler = (action) => {

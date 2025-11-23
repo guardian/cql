@@ -63,7 +63,7 @@ const handleDebugChangeEvent = (e: CustomEvent<DebugChangeEventDetail>) => {
   debugMappingContainer.innerHTML = `
             <p>Original query: </p>
             ${getOriginalQueryHTML(queryStr)}
-            <p>Tokenises to:</p>
+            <p>Tokenises to (ProseMirror positions):</p>
             ${getDebugTokenHTML(tokens, selection, mapping)}
             ${
               queryAst

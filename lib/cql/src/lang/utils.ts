@@ -1,4 +1,10 @@
+import {
+  ProseMirrorToken,
+  toProseMirrorToken,
+  toProseMirrorTokens,
+} from "../cqlInput/editor/utils";
 import { CqlBinary, CqlExpr, CqlField } from "./ast";
+import { Token, TokenType } from "./token";
 
 const whitespaceR = /\s/;
 export const hasWhitespace = (str: string) => !!str.match(whitespaceR);
@@ -56,6 +62,89 @@ export function* getPermutations<T>(
   return permutation.slice();
 }
 
+type SuggestionPos =
+  | undefined
+  | { key: ProseMirrorToken; value: undefined }
+  | { key: ProseMirrorToken; value: ProseMirrorToken };
+
+export const getAstNodeAtPos = (
+  queryBinary: CqlBinary,
+  position: number,
+): SuggestionPos => {
+  return (
+    getAstNodeAtPosExpr(queryBinary.left, position) ??
+    (queryBinary.right
+      ? getAstNodeAtPos(queryBinary.right.binary, position)
+      : undefined)
+  );
+};
+
+export const getAstNodeAtPosExpr = (
+  expr: CqlExpr,
+  position: number,
+): SuggestionPos => {
+  switch (expr.content.type) {
+    case "CqlStr": {
+      const key = isWithinRange(expr.content.token, position);
+
+      return key
+        ? {
+            key,
+            value: undefined,
+          }
+        : undefined;
+    }
+    case "CqlBinary":
+      return getAstNodeAtPos(expr.content, position);
+    case "CqlGroup":
+      return getAstNodeAtPos(expr.content.content, position);
+    case "CqlField": {
+      const key = isWithinRange(expr.content.key, position);
+      const value = isWithinRange(expr.content.value, position);
+
+      if (!key && !value) {
+        return undefined;
+      }
+
+      if (key && !value) {
+        return position === key.to
+          ? {
+              key,
+              // Add an empty value here to signal that we are in value position
+              value: toProseMirrorToken(
+                new Token(
+                  TokenType.CHIP_VALUE,
+                  "",
+                  undefined,
+                  position,
+                  position,
+                ),
+              ),
+            }
+          : { key, value: undefined };
+      }
+
+      return {
+        key: toProseMirrorToken(expr.content.key),
+        value,
+      };
+    }
+  }
+};
+
+const isWithinRange = (
+  token: Token | undefined,
+  position: number,
+): ProseMirrorToken | undefined => {
+  if (!token) {
+    return undefined;
+  }
+
+  const [pmToken] = toProseMirrorTokens([token]);
+  return position >= pmToken.from && position <= pmToken.to
+    ? pmToken
+    : undefined;
+};
 export const getCqlFieldsFromCqlBinary = (queryBinary: CqlBinary): CqlField[] =>
   getCqlFieldsFromQueryExpr(queryBinary.left).concat(
     queryBinary.right

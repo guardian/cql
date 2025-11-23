@@ -538,7 +538,7 @@ describe("cql plugin", () => {
         const { editor, container, moveCaretToQueryPos } =
           createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length - 1);
+        await moveCaretToQueryPos(queryStr.length);
         await findByText(container, "1 day ago");
 
         await editor.press("Enter");
@@ -549,7 +549,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, container, moveCaretToQueryPos } =
           createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length - 1);
+        await moveCaretToQueryPos(queryStr.length);
         const popoverContainer = await findByTestId(container, typeaheadTestId);
 
         await findByText(popoverContainer, "1 day ago");
@@ -565,7 +565,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, container, moveCaretToQueryPos } =
           createCqlEditor(queryStr);
 
-        await moveCaretToQueryPos(queryStr.length - 1);
+        await moveCaretToQueryPos(queryStr.length);
         const popoverContainer = await findByTestId(container, typeaheadTestId);
 
         await findByText(popoverContainer, "1 day ago");

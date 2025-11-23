@@ -1,12 +1,12 @@
-import { CqlQuery, CqlField } from "./ast";
-import { Token } from "./token";
+import { ProseMirrorToken } from "../cqlInput/editor/utils";
+import { CqlQuery } from "./ast";
 import {
   DateSuggestionOption,
   TextSuggestionOption,
   TypeaheadSuggestion,
   SuggestionType,
 } from "./types";
-import { getCqlFieldsFromCqlBinary } from "./utils";
+import { getAstNodeAtPos } from "./utils";
 
 type TypeaheadResolver =
   | ((str: string, signal?: AbortSignal) => Promise<TextSuggestionOption[]>)
@@ -81,16 +81,17 @@ export class Typeahead {
     );
   }
 
-  public getSuggestions(
+  public async getSuggestions(
     program: CqlQuery,
+    position: number,
     signal?: AbortSignal,
-  ): Promise<TypeaheadSuggestion[]> {
+  ): Promise<TypeaheadSuggestion | undefined> {
     return new Promise((resolve, reject) => {
       // Abort existing fetch, if it exists
       this.abortController?.abort();
 
       if (!program.content) {
-        return resolve([]);
+        return resolve(undefined);
       }
 
       const abortController = new AbortController();
@@ -99,41 +100,45 @@ export class Typeahead {
         reject(new DOMException("Aborted", "AbortError"));
       });
 
-      const eventuallySuggestions = getCqlFieldsFromCqlBinary(
-        program.content,
-      ).flatMap((queryField) => this.suggestCqlField(queryField, signal));
+      const maybeSuggestionAtPos = getAstNodeAtPos(program.content, position);
 
-      return Promise.all(eventuallySuggestions)
-        .then((suggestions) => resolve(suggestions.flat()))
-        .catch(reject);
+      if (!maybeSuggestionAtPos) {
+        return resolve(undefined);
+      }
+
+      const { key, value } = maybeSuggestionAtPos;
+
+      resolve(this.suggestCqlField(key, value, signal));
     });
   }
 
-  private getSuggestionsForKeyToken(keyToken: Token): TypeaheadSuggestion[] {
+  private getSuggestionsForChipKey(
+    keyToken: ProseMirrorToken,
+  ): TypeaheadSuggestion | undefined {
     const suggestions = this.suggestFieldKey(keyToken.literal ?? "");
 
     if (!suggestions) {
-      return [];
+      return undefined;
     }
 
-    return [
-      {
-        from: keyToken.start,
-        to: Math.max(keyToken.start, keyToken.end - 1), // Do not include ':'
-        position: "chipKey",
-        suggestions,
-        type: "TEXT",
-        suffix: ":",
-      },
-    ];
+    return {
+      from: keyToken.from,
+      to: Math.max(keyToken.to, keyToken.to - 1), // Do not include ':'
+      position: "chipKey",
+      suggestions,
+      type: "TEXT",
+      suffix: ":",
+    };
   }
 
   private async suggestCqlField(
-    q: CqlField,
+    key: ProseMirrorToken,
+    value?: ProseMirrorToken,
     signal?: AbortSignal,
-  ): Promise<TypeaheadSuggestion[]> {
-    const { key, value } = q;
-    const keySuggestions = this.getSuggestionsForKeyToken(key);
+  ): Promise<TypeaheadSuggestion | undefined> {
+    if (!value) {
+      return this.getSuggestionsForChipKey(key);
+    }
 
     const maybeValueSuggestions = this.suggestFieldValue(
       key.literal ?? "",
@@ -142,20 +147,19 @@ export class Typeahead {
     );
 
     if (!maybeValueSuggestions) {
-      return Promise.resolve(keySuggestions);
+      return;
     }
 
-    return maybeValueSuggestions.suggestions.then((suggestions) => [
-      ...keySuggestions,
-      {
-        from: value ? value.start : key.end + 1,
-        to: value ? value.end : key.end + 1,
-        position: "chipValue",
-        suggestions,
-        type: maybeValueSuggestions.type,
-        suffix: " ",
-      } as TypeaheadSuggestion,
-    ]);
+    const suggestions = await maybeValueSuggestions.suggestions;
+
+    return {
+      from: value ? value.from : key.from,
+      to: value ? value.to : key.to,
+      position: "chipValue",
+      suggestions,
+      type: maybeValueSuggestions.type,
+      suffix: " ",
+    } as TypeaheadSuggestion;
   }
 
   private suggestFieldKey(str: string): TextSuggestionOption[] | undefined {
