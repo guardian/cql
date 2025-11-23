@@ -82,38 +82,30 @@ export const joinQueryStrTokens = (tokens: ProseMirrorToken[]) =>
 const getFieldKeyRange = (
   from: number,
   to: number,
-  isQuoted: boolean,
-  isFollowedByEmptyValue: boolean,
+  literalOffsetStart: number,
+  literalOffsetEnd: number,
+  isFollowedByChipValue: boolean,
 ): [number, number, number][] => {
-  const quoteOffset = isQuoted ? 1 : 0;
-  const emptyValueOffset = isFollowedByEmptyValue ? 1 : 0;
   return [
-    // chip begin (-1)
-    // chipKey begin (-1)
-    [from, 0, 2],
-    // maybe start quote (+1 to remove from str)
-    [from, quoteOffset, 0],
-    // maybe end quote (+1 to remove from str)
-    // offset `:` into chipValue (+1 to node)
-    [to - 1, quoteOffset, 1 + emptyValueOffset],
+    [from, 0, 2 /* <chip> start, <chipKey> start */],
+    [from, literalOffsetStart, 0],
+    [to - literalOffsetEnd, literalOffsetEnd - 1, 0],
+    ...(!isFollowedByChipValue ? getFieldValueRanges(to, to, 0, 0) : []),
   ];
 };
 
 const getFieldValueRanges = (
   from: number,
   to: number,
-  isQuoted: boolean,
+  literalOffsetStart: number,
+  literalOffsetEnd: number,
 ): [number, number, number][] => {
-  const quoteOffset = isQuoted ? 1 : 0;
 
   return [
-    // chipKey end, chipValue start (-1)
-    // remove offset from `:`
-    // maybe start quote
-    [from, 1 + quoteOffset, 1],
-    // chipValue end (-1)
-    // maybe end quote (+1)
-    [to, quoteOffset, 1],
+    [from, 0, 1 /* <chipKey> end / <chipValue> start */],
+    [from, literalOffsetStart, 0],
+    [to - literalOffsetEnd, literalOffsetEnd, 0],
+    [to, 0, 1 /* <chipValue> end */],
   ];
 };
 
@@ -121,21 +113,19 @@ const getQueryStrRanges = (
   from: number,
   to: number,
 ): [number, number, number][] => [
-  [from, -1, 0], // queryStr begin (+1)
-  // If the queryStr node has content, it will begin with whitespace in the
-  // query, which pushes subsequent content forward one position. This cancels
-  // out queryStr end (-1), so only add a mapping for the node end if the
-  // queryStr node has content.
-  //
-  // This is a slightly obscure solution to this problem - we could also use the
-  // gaps between the token positions and the token literal length to account
-  // for this discrepancy, too.
-  ...(from === to ? [[to, -1, 0] as [number, number, number]] : []),
+  [from, 0, 1 /* <queryStr> node begin */],
+  [
+    to,
+    from !== to
+      ? 1
+      : 0 /* whitespace after queryStr when queryStr has content */,
+    1 /* <queryStr> node end */,
+  ],
 ];
 
 const polarityRanges = (from: number): [number, number, number] => [
   from - 1,
-  1,
+  1, // Polarity char (`-`|`+`)
   0,
 ];
 
@@ -144,12 +134,14 @@ const maybeQueryStrRanges = (
   index: number,
 ) => {
   // If this field is at the start of the document, or preceded by a
-  // field value, the editor will add a queryStr node to conform to
+  // field key/value, the editor will add a queryStr node to conform to
   // the schema, so we add a queryStr mapping to account for the
   // additional node.
 
   const shouldAddQueryStrMapping =
-    token?.tokenType === "CHIP_VALUE" || index === 0;
+    token?.tokenType === "CHIP_KEY" ||
+    token?.tokenType === "CHIP_VALUE" ||
+    index === 0;
   const queryStrFrom = token ? token?.to + 1 : 0;
   return shouldAddQueryStrMapping
     ? getQueryStrRanges(queryStrFrom, queryStrFrom)
@@ -188,27 +180,34 @@ export const createProseMirrorTokenToDocumentMap = (
   const compactedTokenRanges = joinQueryStrTokens(tokens);
 
   const ranges = compactedTokenRanges.reduce<[number, number, number][]>(
-    (accRanges, { tokenType, from, to, literal }, index, tokens) => {
+    (accRanges, { tokenType, from, to, lexeme, literal }, index, tokens) => {
       const previousToken = tokens[index - 1] as ProseMirrorToken | undefined;
+      const nextToken = tokens[index + 1] as ProseMirrorToken | undefined;
+
+      const unescapedLiteral = unescapeQuotes(literal ?? "");
+      const literalOffsetStart = unescapedLiteral
+        ? lexeme.indexOf(unescapedLiteral)
+        : 0;
+      const literalOffsetEnd =
+        lexeme.length - (unescapedLiteral?.length ?? 0) - literalOffsetStart;
 
       switch (tokenType) {
         case TokenType.PLUS:
         case TokenType.MINUS: {
-          return accRanges.concat([
-            ...maybeQueryStrRanges(previousToken, index),
-            polarityRanges(from),
-          ]);
-        }
-        case TokenType.CHIP_KEY: {
-          const isFollowedByFieldValueToken =
-            tokens[index + 1]?.tokenType === "CHIP_VALUE";
           return accRanges.concat(
             ...maybeQueryStrRanges(previousToken, index),
-            getFieldKeyRange(
+            polarityRanges(from),
+          );
+        }
+        case TokenType.CHIP_KEY: {
+          return accRanges.concat(
+            ...maybeQueryStrRanges(previousToken, index),
+            ...getFieldKeyRange(
               from,
               to,
-              shouldQuoteFieldValue(literal ?? ""),
-              !isFollowedByFieldValueToken,
+              literalOffsetStart,
+              literalOffsetEnd,
+              nextToken?.tokenType === TokenType.CHIP_VALUE,
             ),
           );
         }
@@ -217,7 +216,8 @@ export const createProseMirrorTokenToDocumentMap = (
             ...getFieldValueRanges(
               from,
               to,
-              shouldQuoteFieldValue(literal ?? ""),
+              literalOffsetStart,
+              literalOffsetEnd,
             ),
           );
         }

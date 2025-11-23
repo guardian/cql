@@ -432,7 +432,7 @@ describe("cql plugin", () => {
           const { editor, container, moveCaretToQueryPos } =
             createCqlEditor("example +tag:");
 
-          await moveCaretToQueryPos(queryStr.length - 1);
+          await moveCaretToQueryPos(queryStr.length);
           await editor.insertText("t");
 
           const popoverContainer = await findByTestId(
@@ -448,7 +448,7 @@ describe("cql plugin", () => {
           const { editor, container, waitFor, moveCaretToQueryPos } =
             createCqlEditor("example +tag:");
 
-          await moveCaretToQueryPos(queryStr.length - 1);
+          await moveCaretToQueryPos(queryStr.length);
           await editor.insertText("t");
           await selectPopoverOptionWithEnter(
             editor,
@@ -464,7 +464,7 @@ describe("cql plugin", () => {
           const { editor, container, waitFor, moveCaretToQueryPos } =
             createCqlEditor("example +tag:");
 
-          await moveCaretToQueryPos(queryStr.length - 1);
+          await moveCaretToQueryPos(queryStr.length);
           await editor.insertText("t");
           await selectPopoverOptionWithClick(
             container,
@@ -926,7 +926,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, getPosFromQueryPos } =
           createCqlEditor(queryStr);
 
-        editor.selectText(getPosFromQueryPos(queryStr.indexOf(":")));
+        editor.selectText(getPosFromQueryPos(queryStr.indexOf("+")));
 
         await editor.press(key);
 
@@ -938,7 +938,7 @@ describe("cql plugin", () => {
         const { editor, waitFor, getPosFromQueryPos } =
           createCqlEditor(queryStr);
 
-        editor.selectText(getPosFromQueryPos(queryStr.indexOf(":")));
+        editor.selectText(getPosFromQueryPos(queryStr.indexOf(":") + 1));
 
         await editor.press(key);
 

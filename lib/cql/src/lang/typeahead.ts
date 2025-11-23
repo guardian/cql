@@ -148,8 +148,8 @@ export class Typeahead {
     return maybeValueSuggestions.suggestions.then((suggestions) => [
       ...keySuggestions,
       {
-        from: value ? value.start - 1 : key.end, // Extend backwards into chipKey's ':'
-        to: value ? value.end : key.end,
+        from: value ? value.start : key.end + 1,
+        to: value ? value.end : key.end + 1,
         position: "chipValue",
         suggestions,
         type: maybeValueSuggestions.type,

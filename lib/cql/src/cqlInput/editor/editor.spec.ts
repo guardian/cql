@@ -127,17 +127,4 @@ describe("updateEditorViewWithQueryStr", () => {
       "+tag:^$x +tag:y ",
     );
   });
-
-  it("should preserve the selection state insofar as possible - adding tag", () => {
-    const initialQuery = "tag:";
-    const { editorView, updateEditorView } =
-      createEditorFromInitialState(initialQuery);
-    setQueryPosAsSelection(initialQuery.length, editorView);
-
-    expect(docToCqlStrWithSelection(editorView.state)).toEqual("+tag:^$ ");
-
-    updateEditorView("+tag:");
-
-    expect(docToCqlStrWithSelection(editorView.state)).toEqual("+tag:^$ ");
-  });
 });

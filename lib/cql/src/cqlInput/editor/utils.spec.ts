@@ -12,6 +12,9 @@ import { POLARITY, schema } from "./schema";
 import { builders } from "prosemirror-test-builder";
 import { createParser } from "../../lang/Cql";
 import { Node } from "prosemirror-model";
+import { escapeQuotes, shouldQuoteFieldValue } from "../../lang/utils";
+import { pseudoRandom } from "../../utils/test";
+import { logNode } from "./debug";
 
 describe("utils", () => {
   const { chip, chipKey, chipValue, doc, queryStr } = builders(schema);
@@ -311,7 +314,7 @@ describe("utils", () => {
         assertCqlStrPosFromDocPos(
           "+a:",
           (node) => findNodeAt(0, node, schema.nodes.chipValue) + 1,
-          2,
+          3,
         );
       });
 
@@ -321,6 +324,267 @@ describe("utils", () => {
           (node) => findNodeAt(0, node, schema.nodes.chipValue) + 2,
           4,
         );
+      });
+
+      const getCqlStrPositions = (
+        queryWithPos: string,
+        positions: Record<string, number> = {},
+      ): { query: string; positions: Record<string, number> } => {
+        const regex = new RegExp("<(?<position>.*?)>");
+        const result = regex.exec(queryWithPos);
+        if (!result || !result.groups?.position) {
+          return { query: queryWithPos, positions };
+        }
+
+        return getCqlStrPositions(queryWithPos.replace(regex, ""), {
+          ...positions,
+          [result.groups?.position]: result.index,
+        });
+      };
+
+      const mappingSpecs = [
+        {
+          name: "a query string",
+          queryAndPositions: "<a1>a<a2>",
+          doc: doc(queryStr("<a1>a<a2>")),
+        },
+        {
+          name: "an empty chipKey surrounded by empty queryStrs",
+          queryAndPositions: "<a>+<b>:<c> <d>",
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey("<b>"), chipValue("<c>")),
+            // Empty queryStr
+            queryStr("<d>"),
+          ),
+        },
+        {
+          name: "an empty chipKey surrounded by contentful queryStrs ",
+          queryAndPositions: "<a1>a<a2> +<b>:<c> <d1>c<d2>",
+          doc: doc(
+            queryStr("<a1>a<a2>"),
+            // Empty chipKey
+            chip(chipKey("<b>"), chipValue("<c>")),
+            // Empty queryStr
+            queryStr("<d1>c<d2>"),
+          ),
+        },
+        {
+          name: "an empty chipValue",
+          queryAndPositions: "<a>+<b1>b<b2>:<c> <d1>d<d2>",
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey("<b1>b<b2>"), chipValue("<c>")),
+            // Empty queryStr
+            queryStr("<d1>d<d2>"),
+          ),
+        },
+        {
+          name: "a chip",
+          queryAndPositions: "<a>+<b1>b<b2>:<c1>c<c2> <d1>d<d2>",
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey("<b1>b<b2>"), chipValue("<c1>c<c2>")),
+            // Empty queryStr
+            queryStr("<d1>d<d2>"),
+          ),
+        },
+        {
+          name: "abutting empty chipKeys",
+          queryAndPositions: "<a>+<b>: <c>+<d>: ",
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey("<b>"), chipValue()),
+            // Empty queryStr
+            queryStr("<c>"),
+            // Empty chipKey
+            chip(chipKey("<d>"), chipValue()),
+          ),
+        },
+        {
+          name: "a chip with quoted key",
+          queryAndPositions: '<a>+<b1>"\\""<b2>:<c1>c<c2> <d1>d<d2>',
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey('<b1>"<b2>'), chipValue("<c1>c<c2>")),
+            // Empty queryStr
+            queryStr("<d1>d<d2>"),
+          ),
+        },
+        {
+          name: "a chip with quoted value",
+          queryAndPositions: '<a>+<b1>"\\""<b2>:<c1>"\\""<c2> <d1>d<d2>',
+          doc: doc(
+            queryStr("<a>"),
+            // Empty chipKey
+            chip(chipKey('<b1>"<b2>'), chipValue("<c1>\"<c2>")),
+            // Empty queryStr
+            queryStr("<d1>d<d2>"),
+          ),
+        },
+      ];
+
+      const smokeTestLiterals = [
+        "u",
+        '"',
+        "unquoted_string",
+        "quoted string",
+        'escaped"string',
+      ];
+
+      const getSmokeTestString = (
+        generator: Generator<number, number, number>,
+      ): string =>
+        smokeTestLiterals[generator.next().value % smokeTestLiterals.length];
+
+      const getQuotedEscapedStr = (str: string) =>
+        shouldQuoteFieldValue(str) ? `"${escapeQuotes(str)}"` : str;
+
+      const smokeTestQueryStrs: Array<
+        (key: string, value: string) => [string, Node]
+      > = [
+        // Empty queryStr
+        () => ["", queryStr()],
+        // queryStr w/ content
+        (key, value) => [
+          `<${key}1>${getQuotedEscapedStr(value)}<${key}2> `,
+          queryStr(`<${key}1>${getQuotedEscapedStr(value)}<${key}2>`),
+        ],
+      ];
+
+      const smokeTestChipKeys: Array<
+        (
+          key: string,
+          value: string,
+          key2: string,
+          value2: string,
+        ) => [string, Node]
+      > = [
+        // Chip w/ empty chipKey
+        (key) => [`+<${key}>: `, chip(chipKey(`<${key}>`), chipValue())],
+        // Chip w/ empty chipValue
+        (key, value) => [
+          `+<${key}1>${getQuotedEscapedStr(value)}<${key}2>:<${key}3> `,
+          chip(chipKey(`<${key}1>${value}<${key}2>`), chipValue(`<${key}3>`)),
+        ],
+        // Chip
+        (key, value, key2, value2) => [
+          `+<${key}1>${getQuotedEscapedStr(value)}<${key}2>:<${key2}1>${getQuotedEscapedStr(value2)}<${key2}2> `,
+          chip(
+            chipKey(`<${key}1>${value}<${key}2>`),
+            chipValue(`<${key2}1>${value2}<${key2}2>`),
+          ),
+        ],
+      ];
+
+      const randomGenerator = pseudoRandom(1);
+      for (let specNo = 0; specNo < 100; specNo++) {
+        let queryAndPositions = "";
+        const docNodes: Node[] = [];
+        const specDocLength = 1 + (randomGenerator.next().value % 5);
+        for (let docIndex = 0; docIndex < specDocLength; docIndex++) {
+          const char = 97 + docIndex * 3;
+          const queryIndex =
+            randomGenerator.next().value % smokeTestQueryStrs.length;
+          const chipKeyIndex =
+            randomGenerator.next().value % smokeTestChipKeys.length;
+
+          const [queryStrStr, queryStrNode] = smokeTestQueryStrs[queryIndex](
+            String.fromCharCode(char),
+            getSmokeTestString(randomGenerator),
+          );
+
+          const [chipStr, chipNode] = smokeTestChipKeys[chipKeyIndex](
+            String.fromCharCode(char + 1),
+            getSmokeTestString(randomGenerator),
+            String.fromCharCode(char + 2),
+            getSmokeTestString(randomGenerator),
+          );
+
+          queryAndPositions += queryStrStr + chipStr;
+          docNodes.push(queryStrNode, chipNode);
+        }
+
+        const docNode = doc(...docNodes, queryStr());
+        try {
+          docNode.check();
+          // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_) {
+          logNode(docNode);
+          throw new Error(
+            "Property test created an invalid node — the structure is logged above",
+          );
+        }
+
+        mappingSpecs.push({
+          name: `property test ${specNo} (\`${queryAndPositions}\`)`,
+          queryAndPositions,
+          doc: doc(...docNodes, queryStr()),
+        });
+      }
+
+      mappingSpecs.forEach(({ queryAndPositions, doc, name }) => {
+        it(`should map ${name}`, () => {
+          const { query, positions } = getCqlStrPositions(queryAndPositions);
+          const tokens = queryToProseMirrorTokens(query);
+          const queryStrToDocMapping =
+            createProseMirrorTokenToDocumentMapping(tokens);
+          const docToQueryStrMapping = queryStrToDocMapping.invert();
+
+          // Sanity check that this equals the text string
+          expect(
+            docToCqlStr(doc),
+            `Expected the doc to match the query spec, minus any position information`,
+          ).toBe(query);
+
+          const positionsMappedFromQueryStrToDoc: Record<string, number> = {};
+          const mappedDocPositionDebugInfo: Record<
+            string,
+            { docPos: number; queryPos: number }
+          > = {};
+          Object.entries(positions).forEach(([queryKey, queryPos]) => {
+            if (positions[queryKey] === undefined) {
+              throw new Error(
+                `Expected a document position for key ${queryKey}`,
+              );
+            }
+
+            const docPos = queryStrToDocMapping.map(queryPos);
+            positionsMappedFromQueryStrToDoc[queryKey] = docPos;
+            mappedDocPositionDebugInfo[queryKey] = { docPos, queryPos };
+          });
+
+          expect(
+            positionsMappedFromQueryStrToDoc,
+            `Mapping didn't match from queryStr to doc - see the diff. The output for the query \`${query}\`, with positions at \`${queryAndPositions}\` was: ${JSON.stringify(mappedDocPositionDebugInfo, null, "  ")}`,
+          ).toEqual(doc.tag);
+
+          const positionsMappedFromDocToQueryStr: Record<string, number> = {};
+          const mappedQueryPositionDebugInfo: Record<
+            string,
+            { docPos: number; queryPos: number }
+          > = {};
+          Object.entries(doc.tag).forEach(([docKey, docPos]) => {
+            if (positions[docKey] === undefined) {
+              throw new Error(`Expected a document position for key ${docKey}`);
+            }
+
+            const queryPos = docToQueryStrMapping.map(docPos);
+
+            positionsMappedFromDocToQueryStr[docKey] = queryPos;
+            mappedQueryPositionDebugInfo[docKey] = { docPos, queryPos };
+          });
+
+          expect(
+            positionsMappedFromDocToQueryStr,
+            `Mapping didn't match from doc to queryStr (inverted mapping) - see the diff. The output for the query \`${query}\`, with positions at \`${queryAndPositions}\` was: ${JSON.stringify(mappedQueryPositionDebugInfo, null, "  ")}`,
+          ).toEqual(positions);
+        });
       });
     });
   });
