@@ -244,11 +244,11 @@ export const maybeAddChipAtPolarityChar =
       return !hasWhitespace(str) && str !== "";
     }
 
-    if (
-      polarity === "-" &&
-      (isNonEmptyNonWhitespace(characterBeforeCaret) ||
-        isNonEmptyNonWhitespace(characterAfterCaret))
-    ) {
+    if (isNonEmptyNonWhitespace(characterBeforeCaret)) {
+      return false;
+    }
+
+    if (polarity === "-" && isNonEmptyNonWhitespace(characterAfterCaret)) {
       return false;
     }
 

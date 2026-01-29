@@ -426,7 +426,7 @@ describe("cql plugin", () => {
         await waitFor("e-waste");
       });
 
-      it("does not interpret a '+' as negation if it immediately follows from a non-whitespace character", async () => {
+      it("does not interpret a '+' as starting a new chip if it immediately follows from a non-whitespace character", async () => {
         const { editor, waitFor } = createCqlEditor("c");
 
         await editor.insertText("++");
