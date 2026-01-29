@@ -2,6 +2,10 @@
   "name": "@guardian/cql",
   "version": "1.8.3",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "github:guardian/cql"
+  },
   "scripts": {
     "dev": "vite",
     "build:page": "tsc && vite build",
