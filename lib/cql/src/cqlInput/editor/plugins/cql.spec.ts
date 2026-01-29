@@ -402,7 +402,7 @@ describe("cql plugin", () => {
     });
 
     describe("chip values", () => {
-      it("inserts a chip before a string", async () => {
+      it("inserts a chip before a string when a '+' is added", async () => {
         const { editor, waitFor } = createCqlEditor("a");
 
         await editor.selectText(1).insertText("+");
@@ -424,6 +424,14 @@ describe("cql plugin", () => {
         await editor.insertText("-waste");
 
         await waitFor("e-waste");
+      });
+
+      it("does not interpret a '+' as negation if it immediately follows from a non-whitespace character", async () => {
+        const { editor, waitFor } = createCqlEditor("c");
+
+        await editor.insertText("++");
+
+        await waitFor("c++");
       });
 
       it("inserts a single whitespace between chips", async () => {
