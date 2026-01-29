@@ -230,12 +230,25 @@ export const maybeAddChipAtPolarityChar =
       return false;
     }
 
-    const suffix = doc.textBetween(
+    const characterAfterCaret = doc.textBetween(
       selection.from,
       Math.min(selection.to + 1, doc.nodeSize - 2),
     );
 
-    if (polarity === "-" && !hasWhitespace(suffix) && suffix !== "") {
+    const characterBeforeCaret = doc.textBetween(
+      Math.max(selection.from - 1, 0),
+      selection.from,
+    );
+
+    function isNonEmptyNonWhitespace(str: string) {
+      return !hasWhitespace(str) && str !== "";
+    }
+
+    if (isNonEmptyNonWhitespace(characterBeforeCaret)) {
+      return false;
+    }
+
+    if (polarity === "-" && isNonEmptyNonWhitespace(characterAfterCaret)) {
       return false;
     }
 

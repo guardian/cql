@@ -1,10 +1,3 @@
-import { describe, it, beforeEach, expect } from "bun:test";
-import {
-  CqlConfig,
-  errorMsgTestId,
-  errorTestId,
-  typeaheadTestId,
-} from "../../CqlInput";
 import {
   findByTestId,
   findByText,
@@ -12,15 +5,28 @@ import {
   getByTestId,
 } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
+import { beforeEach, describe, expect, it } from "bun:test";
 import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
-import {
-  createCqlPlugin,
-  TEST_ID_CHIP_VALUE,
-  TEST_ID_POLARITY_HANDLE,
-} from "./cql";
 import { redo, undo } from "prosemirror-history";
-import { endOfLine, maybeSelectValue, startOfLine } from "../commands";
 import { keymap } from "prosemirror-keymap";
+import { Node, NodeType } from "prosemirror-model";
+import { AllSelection, TextSelection } from "prosemirror-state";
+import { EditorView } from "prosemirror-view";
+import { createParser } from "../../../lang/Cql";
+import { TestTypeaheadHelpers } from "../../../lang/fixtures/TestTypeaheadHelpers";
+import { cqlQueryStrFromQueryAst } from "../../../lang/interpreter";
+import { TokenType } from "../../../lang/token";
+import { Typeahead } from "../../../lang/typeahead";
+import { docToCqlStrWithSelection, tick } from "../../../utils/test";
+import {
+  CqlConfig,
+  errorMsgTestId,
+  errorTestId,
+  typeaheadTestId,
+} from "../../CqlInput";
+import { isVisibleDataAttr } from "../../popover/Popover";
+import { endOfLine, maybeSelectValue, startOfLine } from "../commands";
+import { chip, chipValue, IS_SELECTED } from "../schema";
 import {
   createProseMirrorTokenToDocumentMap,
   docToCqlStr,
@@ -30,17 +36,11 @@ import {
   queryToProseMirrorDoc,
   toProseMirrorTokens,
 } from "../utils";
-import { AllSelection, TextSelection } from "prosemirror-state";
-import { TestTypeaheadHelpers } from "../../../lang/fixtures/TestTypeaheadHelpers";
-import { isVisibleDataAttr } from "../../popover/Popover";
-import { docToCqlStrWithSelection, tick } from "../../../utils/test";
-import { createParser } from "../../../lang/Cql";
-import { Typeahead } from "../../../lang/typeahead";
-import { chip, chipValue, IS_SELECTED } from "../schema";
-import { Node, NodeType } from "prosemirror-model";
-import { cqlQueryStrFromQueryAst } from "../../../lang/interpreter";
-import { EditorView } from "prosemirror-view";
-import { TokenType } from "../../../lang/token";
+import {
+  createCqlPlugin,
+  TEST_ID_CHIP_VALUE,
+  TEST_ID_POLARITY_HANDLE,
+} from "./cql";
 
 const typeheadHelpers = new TestTypeaheadHelpers();
 const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
@@ -402,7 +402,7 @@ describe("cql plugin", () => {
     });
 
     describe("chip values", () => {
-      it("inserts a chip before a string", async () => {
+      it("inserts a chip before a string when a '+' is added", async () => {
         const { editor, waitFor } = createCqlEditor("a");
 
         await editor.selectText(1).insertText("+");
@@ -410,12 +410,28 @@ describe("cql plugin", () => {
         await waitFor(": a");
       });
 
-      it("does not insert a chip before a string with negative polarity, to preserve the ability to negate existing strings", async () => {
+      it("does not interpret a hyphen as negation if it immediately precedes a non-whitespace character", async () => {
         const { editor, waitFor } = createCqlEditor("a");
 
         await editor.selectText(1).insertText("-");
 
         await waitFor("-a");
+      });
+
+      it("does not interpret a hyphen as negation if it immediately follows from a non-whitespace character", async () => {
+        const { editor, waitFor } = createCqlEditor("e");
+
+        await editor.insertText("-waste");
+
+        await waitFor("e-waste");
+      });
+
+      it("does not interpret a '+' as starting a new chip if it immediately follows from a non-whitespace character", async () => {
+        const { editor, waitFor } = createCqlEditor("c");
+
+        await editor.insertText("++");
+
+        await waitFor("c++");
       });
 
       it("inserts a single whitespace between chips", async () => {
