@@ -23,6 +23,11 @@ jobs:
     - name: Setup bun
       uses: oven-sh/setup-bun@v1
 
+    - name: Setup npm
+      uses: actions/setup-node@v6
+      with:
+          node-version: 24
+
     - name: Build library
       working-directory: lib/cql
       run: |
