@@ -6,6 +6,10 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "engines": {
+    "npm": "11.7.0",
+    "node": "24.13.0"
+  },
   "dependencies": {
     "@changesets/cli": "^2.29.5"
   },
