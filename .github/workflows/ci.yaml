@@ -23,6 +23,11 @@ jobs:
     - name: Setup bun
       uses: oven-sh/setup-bun@v1
 
+    - name: Setup npm
+      uses: actions/setup-node@v6
+      with:
+          node-version: 24
+
     - name: Build library
       working-directory: lib/cql
       run: |
@@ -34,7 +39,7 @@ jobs:
       run: |
         bun install --frozen-lockfile
 
-    - name: Create Release Pull Request or Publish to npm
+    - name: Create PR for release, or publish to npm
       id: changesets
       uses: changesets/action@v1
       if: github.ref == 'refs/heads/main'
@@ -44,7 +49,6 @@ jobs:
         publish: bun changeset publish
       env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   static-site:
     runs-on: ubuntu-latest
