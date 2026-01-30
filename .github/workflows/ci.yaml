@@ -23,6 +23,11 @@ jobs:
     - name: Setup bun
       uses: oven-sh/setup-bun@v1
 
+    - name: Setup npm
+      uses: actions/setup-node@v6
+      with:
+          node-version: 24
+
     - name: Build library
       working-directory: lib/cql
       run: |
@@ -33,6 +38,7 @@ jobs:
     - name: Install root dependencies
       run: |
         bun install --frozen-lockfile
+        npm -v
 
     - name: Create Release Pull Request or Publish to npm
       id: changesets
