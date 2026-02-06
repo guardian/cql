@@ -737,6 +737,17 @@ describe("cql plugin", () => {
         expect(editor.selection.from).toBe(chipKeyPos);
       });
 
+      it("should not make chip keys read only when they have content, but the editor is not focused", async () => {
+        const queryStr = "+example:";
+        const { container } = createCqlEditor(queryStr);
+
+        document.body.focus();
+
+         const chipKey = await findByText(container, "example");
+
+        expect(chipKey.isContentEditable).toBe(true);
+      });
+
       it("should make chip keys read only when the selection does not fall within their content and they are not empty", async () => {
         const queryStr = "a +tag:b c";
         const { container } = createCqlEditor(queryStr);
