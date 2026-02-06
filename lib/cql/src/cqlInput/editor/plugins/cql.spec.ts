@@ -743,7 +743,17 @@ describe("cql plugin", () => {
 
         document.body.focus();
 
-         const chipKey = await findByText(container, "example");
+        const chipKey = await findByText(container, "example");
+
+        expect(chipKey.isContentEditable).toBe(true);
+      });
+
+      it("should not make chip keys read only when they have content, and the selection moves out of the chip key", async () => {
+        const queryStr = "+example: text";
+        const { container, editor } = createCqlEditor(queryStr);
+
+        editor.selectText("end");
+        const chipKey = await findByText(container, "example");
 
         expect(chipKey.isContentEditable).toBe(true);
       });
