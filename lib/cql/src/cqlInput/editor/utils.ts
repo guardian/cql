@@ -701,7 +701,7 @@ export const getNodeTypeAtSelection = (view: EditorView) => {
  * - chip values are readonly until their sibling chip key has a value
  * - chips that do not contain any values, nor a selection, are removed
  */
-export const applyChipLifecycleRules = (tr: Transaction): void => {
+export const applyChipLifecycleRules = (tr: Transaction, hasFocus: boolean): void => {
   const { from, to } = tr.selection;
   tr.doc.descendants((node, pos) => {
     switch (node.type) {
@@ -724,8 +724,9 @@ export const applyChipLifecycleRules = (tr: Transaction): void => {
         }
 
         const valueNodeStart = pos + offset + 1;
+        const valueNodeContent = !!valueNode.textContent;
 
-        if (!selectionCoversChipKey && chipKeyHasContent) {
+        if ((hasFocus && !selectionCoversChipKey && chipKeyHasContent) || valueNodeContent) {
           tr.setNodeAttribute(
             keyNodeStart,
             IS_READ_ONLY,

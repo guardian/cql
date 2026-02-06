@@ -7,7 +7,7 @@ import {
   Transaction,
 } from "prosemirror-state";
 import { Mapping } from "prosemirror-transform";
-import { DecorationSet } from "prosemirror-view";
+import { DecorationSet, EditorView } from "prosemirror-view";
 import { CqlQuery } from "../../../lang/ast";
 import { createParser } from "../../../lang/Cql";
 import { Typeahead } from "../../../lang/typeahead";
@@ -124,6 +124,7 @@ export const createCqlPlugin = ({
 }) => {
   let typeaheadPopover: TypeaheadPopover | undefined;
   let errorPopover: ErrorPopover | undefined;
+  let editorView: EditorView | undefined;
 
   /**
    * Replaces the current document with the query it produces on parse.
@@ -277,7 +278,7 @@ export const createCqlPlugin = ({
         tr = newTr;
       }
 
-      applyChipLifecycleRules(tr);
+      applyChipLifecycleRules(tr, !!editorView?.hasFocus());
 
       return tr;
     },
@@ -452,6 +453,7 @@ export const createCqlPlugin = ({
       },
     },
     view(view) {
+      editorView = view;
       typeaheadPopover = new TypeaheadPopover(
         view,
         typeaheadEl,
