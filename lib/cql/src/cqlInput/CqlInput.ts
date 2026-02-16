@@ -243,6 +243,9 @@ export const createCqlInput = (
 
           chip-value {
             flex-shrink: 0;
+          }
+
+          chip-value[contenteditable="true"] {
             padding-right: 5px;
           }
 

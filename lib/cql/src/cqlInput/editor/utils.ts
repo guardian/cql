@@ -712,20 +712,22 @@ export const applyChipLifecycleRules = (tr: Transaction): void => {
           return;
         }
 
-        const keyNodeStart = pos + 1;
-        const keyNodeEnd = keyNodeStart + keyNode.nodeSize;
-        const selectionCoversChipKey = from >= keyNodeStart && to <= keyNodeEnd;
-        const chipKeyHasContent = !!keyNode.textContent;
-
         const { node: valueNode, offset } = node.childBefore(node.nodeSize - 2);
 
         if (!valueNode) {
           return;
         }
 
-        const valueNodeStart = pos + offset + 1;
+        const keyNodeStart = pos + 1;
 
-        if (!selectionCoversChipKey && chipKeyHasContent) {
+        const valueNodeStart = pos + offset + 1;
+        const valueNodeEnd = valueNodeStart + valueNode.nodeSize;
+        const valueNodeContent = !!valueNode.textContent;
+
+        const selectionCoversChipValue =
+          from >= valueNodeStart && to <= valueNodeEnd;
+
+        if (selectionCoversChipValue || valueNodeContent) {
           tr.setNodeAttribute(
             keyNodeStart,
             IS_READ_ONLY,
