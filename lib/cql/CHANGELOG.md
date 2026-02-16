@@ -1,5 +1,11 @@
 # @guardian/cql
 
+## 1.8.4
+
+### Patch Changes
+
+- 955aead: Ensure that the chip separator is removed if the chip key is marked as editable again
+
 ## 1.8.3
 
 ### Patch Changes
