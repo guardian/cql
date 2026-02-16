@@ -137,6 +137,9 @@ export const chipKeyNodeView: NodeViewConstructor = (node) => {
       } else {
         dom.classList.remove(CLASS_CHIP_KEY_READONLY);
         dom.setAttribute("contenteditable", "true");
+        if (separator.parentNode === dom) {
+          dom.removeChild(separator);
+        }
       }
 
       return true;
