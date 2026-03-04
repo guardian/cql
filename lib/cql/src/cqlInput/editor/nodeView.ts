@@ -45,7 +45,7 @@ export const chipNodeView: NodeViewConstructor = (
 
     const { node, pos } = result;
 
-    removeChipCoveringRange(pos, pos + node.nodeSize + 1)(view.state, view.dispatch);
+    removeChipCoveringRange(pos, pos + node.nodeSize)(view.state, view.dispatch);
   };
 
   const handlePolarityClickEvent = () => {
