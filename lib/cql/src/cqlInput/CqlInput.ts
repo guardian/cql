@@ -20,6 +20,7 @@ import {
   RenderPopoverContent,
 } from "./popover/TypeaheadPopover";
 import { applyPartialTheme, CqlTheme } from "./theme";
+import { insertChip } from "./editor/commands";
 
 export const typeaheadTestId = "cql-input-typeahead";
 export const errorTestId = "cql-input-error";
@@ -186,14 +187,13 @@ export const createCqlInput = (
     }
 
     /**
-     * Append the query fragment at the caret.
-     *
-     * Moves the selection immediately after the appended fragment.
+     * Inserts a chip at the caret.
      */
-    public appendAtCaret(queryFragment: string) {
-      // Naive: always appends to the end of the string.
-      // Should always work from the cursor.
-      this.updateEditorView?.(`${this.value} ${queryFragment}`);
+    public insertChip(chipKey: string, chipValue?: string) {
+      if (this.editorView) {
+        insertChip("+", chipKey)(this.editorView);
+        this.editorView.focus();
+      }
     }
 
     public createTemplate(partialTheme: DeepPartial<CqlTheme>) {

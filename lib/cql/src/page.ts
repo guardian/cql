@@ -312,7 +312,7 @@ Array.from(
   document.getElementsByClassName("btn-apply-chip-suggestion"),
 ).forEach((btn) => {
   btn.addEventListener("click", () => {
-    cqlInput?.appendAtCaret(btn.dataset.value);
+    cqlInput?.insertChip(btn.dataset.value);
   });
 });
 
