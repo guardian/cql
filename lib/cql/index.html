@@ -88,7 +88,7 @@
       /* End reset */
 
       #cql-input-container {
-        margin: 0 0 20px 0;
+        margin: 0 0 5px 0;
         border-radius: 5px;
         background-color: #333;
       }
@@ -425,6 +425,20 @@
       .Cql__ContentEditable.ProseMirror-focused {
         outline: 2px solid lightblue;
       }
+
+      .cql-search-container {
+        padding: 5px;
+        border: 2px solid #333;
+        border-radius: 3px;
+      }
+
+      .cql-field-suggestions-heading {
+        color: #bbb
+      }
+
+      .btn-apply-chip-suggestion {
+        cursor: pointer;
+      }
     </style>
   </head>
   <body>
@@ -454,12 +468,22 @@
       </div>
       <div class="Page__InputLayout">
         <div class="Page__InputContent">
-          <div id="cql-input-container">
-            <cql-input-capi
-              placeholder="Search for content"
-              id="cql-input"
-              autofocus="true"
-            ></cql-input-capi>
+          <div class="cql-search-container">
+            <div id="cql-input-container">
+              <cql-input-capi
+                placeholder="Search for content"
+                id="cql-input"
+                autofocus="true"
+              ></cql-input-capi>
+            </div>
+            <div class="cql-field-suggestions-container">
+              <div class="cql-field-suggestions-heading">Filter by:</div>
+              <div class="cql-field-suggestions">
+                <button data-value="tag:" class="btn-apply-chip-suggestion">Tag</button>
+                <button data-value="section:" class="btn-apply-chip-suggestion">Section</button>
+                <button data-value="production-office:" class="btn-apply-chip-suggestion">Production office</button>
+              </div>
+            </div>
           </div>
           <div id="error"></div>
           <p>Press <tt>+</tt> to select a specific field to search.</p>

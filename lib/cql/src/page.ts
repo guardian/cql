@@ -308,4 +308,12 @@ class CqlInputSimple extends HTMLElement {
   };
 }
 
+Array.from(
+  document.getElementsByClassName("btn-apply-chip-suggestion"),
+).forEach((btn) => {
+  btn.addEventListener("click", () => {
+    cqlInput?.appendAtCaret(btn.dataset.value);
+  });
+});
+
 customElements.define("cql-input-simple-capi", CqlInputSimple);

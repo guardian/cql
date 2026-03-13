@@ -185,6 +185,17 @@ export const createCqlInput = (
       this.editorView?.focus();
     }
 
+    /**
+     * Append the query fragment at the caret.
+     *
+     * Moves the selection immediately after the appended fragment.
+     */
+    public appendAtCaret(queryFragment: string) {
+      // Naive: always appends to the end of the string.
+      // Should always work from the cursor.
+      this.updateEditorView?.(`${this.value} ${queryFragment}`);
+    }
+
     public createTemplate(partialTheme: DeepPartial<CqlTheme>) {
       const {
         input,
@@ -195,7 +206,7 @@ export const createCqlInput = (
         chipContent,
         chipHandle,
         typeahead,
-        placeholder
+        placeholder,
       } = applyPartialTheme(partialTheme);
       const template = document.createElement("template");
       template.innerHTML = `
