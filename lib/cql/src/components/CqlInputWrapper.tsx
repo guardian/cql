@@ -13,7 +13,6 @@ const dataSourceTagMap: Record<DataSource, string> = {
 interface CqlInputWrapperProps {
   dataSource: DataSource;
   value: string;
-  initialQuery: string;
   onQueryChange: (queryStr: string, error?: string) => void;
   onDebugChange: (detail: DebugChangeEventDetail) => void;
   inputRef: preact.RefObject<HTMLElement | null>;
@@ -22,7 +21,6 @@ interface CqlInputWrapperProps {
 export const CqlInputWrapper = ({
   dataSource,
   value,
-  initialQuery,
   onQueryChange,
   onDebugChange,
   inputRef,
@@ -40,8 +38,8 @@ export const CqlInputWrapper = ({
     el.setAttribute("autofocus", "true");
     el.id = "cql-input";
 
-    if (initialQuery) {
-      el.setAttribute("value", initialQuery);
+    if (value) {
+      el.setAttribute("value", value);
     }
 
     container.appendChild(el);
@@ -60,7 +58,6 @@ export const CqlInputWrapper = ({
     el.addEventListener("queryChange", handleQueryChange);
     el.addEventListener("debugChange", handleDebugChange);
 
-    // Focus the new element
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     (el as any).focus?.();
 
@@ -70,7 +67,6 @@ export const CqlInputWrapper = ({
     };
   }, [dataSource]);
 
-  // Sync programmatic value
   useEffect(() => {
     if (inputRef.current && value !== undefined) {
       inputRef.current.setAttribute("value", value);

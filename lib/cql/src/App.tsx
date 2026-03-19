@@ -1,5 +1,5 @@
 import { h } from "preact";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import { useCallback, useEffect, useState } from "preact/hooks";
 import applyDevTools from "prosemirror-dev-tools";
 import { createCqlInput } from "./cqlInput/CqlInput";
 import { Typeahead, TypeaheadField } from "./lang/typeahead.ts";
@@ -14,8 +14,6 @@ import { SearchContainer } from "./components/SearchContainer";
 import { DebugPanel } from "./components/DebugPanel";
 
 type DataSource = "content-api" | "tools-index" | "content-api-simple-input";
-
-// --- Custom element registration (run once at module scope) ---
 
 const params = new URLSearchParams(window.location.search);
 const initialEndpoint =
@@ -154,8 +152,6 @@ if (!customElements.get("cql-input-simple-capi")) {
   customElements.define("cql-input-simple-capi", CqlInputSimple);
 }
 
-// --- Helpers ---
-
 const setUrlParam = (key: string, value: string) => {
   const urlParams = new URLSearchParams(window.location.search);
   urlParams.set(key, value);
@@ -166,8 +162,6 @@ const setUrlParam = (key: string, value: string) => {
   );
 };
 
-// --- App component ---
-
 export const App = () => {
   const [dataSource, setDataSource] = useState<DataSource>("content-api");
   const [queryStr, setQueryStr] = useState(initialQuery);
@@ -176,9 +170,6 @@ export const App = () => {
     null,
   );
   const [endpoint, setEndpoint] = useState(initialEndpoint);
-  const [value, setvalue] = useState("");
-
-  const cqlInputRef = useRef<HTMLElement | null>(null);
 
   const handleQueryChange = useCallback(
     (newQueryStr: string, error?: string) => {
@@ -236,11 +227,9 @@ export const App = () => {
         <div class="Page__InputContent">
           <SearchContainer
             dataSource={dataSource}
-            value={value}
-            initialQuery={initialQuery}
+            value={queryStr}
             onQueryChange={handleQueryChange}
             onDebugChange={handleDebugChange}
-            inputRef={cqlInputRef}
           />
           <div id="error">{queryError}</div>
           <HelpText />
@@ -249,8 +238,8 @@ export const App = () => {
             onDataSourceChange={handleDataSourceChange}
             endpoint={endpoint}
             onEndpointChange={handleEndpointChange}
-            value={value}
-            onValueChange={setvalue}
+            value={queryStr}
+            onValueChange={setQueryStr}
           />
         </div>
         <DebugPanel
