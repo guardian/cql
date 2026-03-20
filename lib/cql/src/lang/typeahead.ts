@@ -1,4 +1,5 @@
 import { ProseMirrorToken } from "../cqlInput/editor/utils";
+import { mergeDeep } from "../utils/merge";
 import { CqlQuery } from "./ast";
 import {
   DateSuggestionOption,
@@ -21,12 +22,13 @@ const compareValueAndLabel =
 const filterAndSortTextSuggestionOption = (
   suggestions: TextSuggestionOption[],
   str: string,
+  onlyIncludeStartsWith: boolean = false
 ) => {
   const lowerCaseStr = str.toLowerCase();
   return suggestions
     .filter(
       compareValueAndLabel(lowerCaseStr, (str, compare) =>
-        str.includes(compare),
+        onlyIncludeStartsWith ? str.startsWith(compare) : str.includes(compare),
       ),
     )
     .sort((a, b) => {
@@ -71,18 +73,49 @@ export class TypeaheadField {
   }
 }
 
+export type TypeaheadConfig = {
+  showTypeaheadForQueryStr: boolean;
+  minCharsForQueryStrTypeahead: number;
+};
+
+const defaultTypeaheadConfig: TypeaheadConfig = {
+  showTypeaheadForQueryStr: false,
+  minCharsForQueryStrTypeahead: 2,
+};
+
 export class Typeahead {
   private typeaheadFieldEntries: TextSuggestionOption[];
   private abortController: AbortController | undefined;
+  private config: TypeaheadConfig;
 
-  constructor(private typeaheadFields: TypeaheadField[]) {
+  constructor(
+    private typeaheadFields: TypeaheadField[],
+    config: Partial<TypeaheadConfig> = {},
+  ) {
+    this.config = mergeDeep(defaultTypeaheadConfig, config);
     this.typeaheadFieldEntries = this.typeaheadFields.map((field) =>
       field.toSuggestionOption(),
     );
   }
 
+  /**
+   * Get suggestions for the given query and position.
+   *
+   * `position` is a caret position, 0-indexed from the start of the string,
+   * where every character has a before and after. For example, the query
+   *
+   * `s t r   k : v`
+   * | | | | | | | |
+   * 0 1 2 3 4 5 6 7
+   *
+   * would give suggestions for:
+   *  - keys containing `str` for positions 0-3, if `showTypeaheadForQueryStr`
+   *    was `true`
+   *  - keys containing `k` for positions 4-5
+   *  - keys containing `v` for positions 6-7
+   */
   public async getSuggestions(
-    program: CqlQuery,
+    query: CqlQuery,
     position: number,
     signal?: AbortSignal,
   ): Promise<TypeaheadSuggestion | undefined> {
@@ -90,7 +123,7 @@ export class Typeahead {
       // Abort existing fetch, if it exists
       this.abortController?.abort();
 
-      if (!program.content) {
+      if (!query.content) {
         return resolve(undefined);
       }
 
@@ -100,9 +133,15 @@ export class Typeahead {
         reject(new DOMException("Aborted", "AbortError"));
       });
 
-      const maybeSuggestionAtPos = getAstNodeAtPos(program.content, position);
+      const maybeSuggestionAtPos = getAstNodeAtPos(query.content, position);
 
-      if (!maybeSuggestionAtPos) {
+      const isValidSuggestionNode =
+        maybeSuggestionAtPos?.key.tokenType !== "STRING" ||
+        (this.config.showTypeaheadForQueryStr &&
+          (maybeSuggestionAtPos?.key.literal?.length ?? 0) >=
+            this.config.minCharsForQueryStrTypeahead);
+
+      if (!maybeSuggestionAtPos || !isValidSuggestionNode) {
         return resolve(undefined);
       }
 
@@ -124,7 +163,7 @@ export class Typeahead {
     return {
       from: keyToken.from,
       to: Math.max(keyToken.to, keyToken.to - 1), // Do not include ':'
-      position: "chipKey",
+      position: keyToken.tokenType === "STRING" ? "queryStr" : "chipKey",
       suggestions,
       type: "TEXT",
       suffix: ":",
@@ -153,8 +192,8 @@ export class Typeahead {
     const suggestions = await maybeValueSuggestions.suggestions;
 
     return {
-      from: value ? value.from : key.from,
-      to: value ? value.to : key.to,
+      from: value.from,
+      to: value.to,
       position: "chipValue",
       suggestions,
       type: maybeValueSuggestions.type,
@@ -170,6 +209,7 @@ export class Typeahead {
     const suggestions = filterAndSortTextSuggestionOption(
       this.typeaheadFieldEntries,
       str,
+      this.config.showTypeaheadForQueryStr
     );
 
     if (suggestions.length) {

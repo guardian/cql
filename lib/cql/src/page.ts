@@ -8,9 +8,9 @@ import {
 } from "./cqlInput/editor/debug.ts";
 import { createParser } from "./lang/Cql.ts";
 import { Typeahead, TypeaheadField } from "./lang/typeahead.ts";
-import { CapiTypeaheadProvider } from "./typeahead/CapiTypeaheadHelpers.ts";
 import { toolsSuggestionOptionResolvers } from "./typeahead/tools-index/config";
 import { DebugChangeEventDetail, QueryChangeEventDetail } from "./types/dom";
+import { CapiTypeaheadProvider } from "./lib.ts";
 
 const setUrlParam = (key: string, value: string) => {
   const urlParams = new URLSearchParams(window.location.search);
@@ -135,7 +135,10 @@ const typeaheadHelpersCapi = new CapiTypeaheadProvider(
   initialEndpointCapi,
   "test",
 );
-const capiTypeahead = new Typeahead(typeaheadHelpersCapi.typeaheadFields);
+const capiTypeahead = new Typeahead(typeaheadHelpersCapi.typeaheadFields, {
+  showTypeaheadForQueryStr: true,
+  minCharsForQueryStrTypeahead: 2,
+});
 
 const CqlInputCapi = createCqlInput(capiTypeahead, {
   syntaxHighlighting: true,

@@ -35,20 +35,24 @@ import { TestTypeaheadHelpers } from "../../../lang/fixtures/TestTypeaheadHelper
 import { isVisibleDataAttr } from "../../popover/Popover";
 import { docToCqlStrWithSelection, tick } from "../../../utils/test";
 import { createParser } from "../../../lang/Cql";
-import { Typeahead } from "../../../lang/typeahead";
+import { Typeahead, TypeaheadConfig } from "../../../lang/typeahead";
 import { chip, chipValue, IS_SELECTED } from "../schema";
 import { Node, NodeType } from "prosemirror-model";
 import { cqlQueryStrFromQueryAst } from "../../../lang/interpreter";
 import { EditorView } from "prosemirror-view";
 import { TokenType } from "../../../lang/token";
 
-const typeheadHelpers = new TestTypeaheadHelpers();
-const testCqlService = new Typeahead(typeheadHelpers.typeaheadFields);
-
 const createCqlEditor = (
   initialQuery: string = "",
   config: CqlConfig = { syntaxHighlighting: true },
+  typeaheadConfig: Partial<TypeaheadConfig> = {},
 ) => {
+  const typeheadHelpers = new TestTypeaheadHelpers();
+  const testCqlService = new Typeahead(
+    typeheadHelpers.typeaheadFields,
+    typeaheadConfig,
+  );
+
   document.body.innerHTML = "";
   const container = document.body;
   const typeaheadEl = document.createElement("div");
@@ -221,6 +225,39 @@ describe("cql plugin", () => {
   });
 
   describe("typeahead", () => {
+    describe("queryStr", () => {
+      const createCqlEditorWithQueryStrTypeahead = (
+        initialQuery: string = "",
+      ) =>
+        createCqlEditor(
+          initialQuery,
+          {},
+          { showTypeaheadForQueryStr: true, minCharsForQueryStrTypeahead: 2 },
+        );
+      it("does not display a popover at the start of the query when fewer than the minimum chars necessary for a queryStr suggestion are added", async () => {
+        const { container } = createCqlEditorWithQueryStrTypeahead("t");
+
+        await assertPopoverVisibility(container, false);
+      });
+
+      it("does display a popover at the start of the query when the minimum chars necessary for a queryStr suggestion are added", async () => {
+        const { container } = createCqlEditorWithQueryStrTypeahead("ta");
+
+        await assertPopoverVisibility(container, true);
+      });
+
+      it("accepts a suggestion from a popover, and applies a chipKey", async () => {
+        const { editor, container, waitFor } =
+          createCqlEditorWithQueryStrTypeahead("ta");
+
+        await selectPopoverOptionWithEnter(editor, container, "Tag");
+        const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+        expect(nodeAtCaret.name).toBe("chipValue");
+
+        await waitFor("tag:");
+      });
+    });
+
     describe("chip keys", () => {
       it("displays a colon between chip keys and values on first render", async () => {
         const queryStr = "+x:y";
@@ -443,10 +480,10 @@ describe("cql plugin", () => {
           await findByText(popoverContainer, "Tags are magic");
         });
 
-        it("applies the given key when a popover option is selected", async () => {
+        it("applies the given value when a popover option is selected", async () => {
           const queryStr = "example +tag:";
           const { editor, container, waitFor, moveCaretToQueryPos } =
-            createCqlEditor("example +tag:");
+            createCqlEditor(queryStr);
 
           await moveCaretToQueryPos(queryStr.length);
           await editor.insertText("t");
@@ -457,6 +494,23 @@ describe("cql plugin", () => {
           );
 
           await waitFor("example tag:tags-are-magic");
+        });
+
+        it("respects the whitespace after the value after applying", async () => {
+          const queryStr = "+tag: example";
+          const { editor, container, waitFor, moveCaretToQueryPos } =
+            createCqlEditor(queryStr);
+
+          await moveCaretToQueryPos(queryStr.indexOf(" "));
+          await editor.insertText("t");
+
+          await selectPopoverOptionWithEnter(
+            editor,
+            container,
+            "Tags are magic",
+          );
+
+          await waitFor("tag:tags-are-magic example");
         });
 
         it("applies the given quoted suggestion in value position when it contains whitespace", async () => {

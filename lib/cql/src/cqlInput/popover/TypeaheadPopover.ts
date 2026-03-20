@@ -48,7 +48,12 @@ export class TypeaheadPopover extends Popover {
   private updateRendererState: (state: PopoverRendererState) => void =
     noopUpdateRendererState;
 
-  private _applySuggestion: (from: number, to: number, value: string) => void;
+  private _applySuggestion: (
+    from: number,
+    to: number,
+    position: TypeaheadSuggestion["position"],
+    value: string,
+  ) => void;
   private _skipSuggestion: () => void;
   private currentSuggestion: TypeaheadSuggestion | undefined;
   private currentOptionIndex = 0;
@@ -58,7 +63,12 @@ export class TypeaheadPopover extends Popover {
     private view: EditorView,
     protected popoverEl: HTMLElement,
     // Apply a suggestion to the input, replacing the given range
-    applySuggestion: (from: number, to: number, value: string) => void,
+    applySuggestion: (
+      from: number,
+      to: number,
+      position: TypeaheadSuggestion["position"],
+      value: string,
+    ) => void,
     // Skip a suggestion, and move on to the next valid field
     skipSuggestion: () => void,
     // A callback that receives everything necessary to render popover content
@@ -201,7 +211,7 @@ export class TypeaheadPopover extends Popover {
       this.hide();
     }
 
-    this._applySuggestion(from, to, value);
+    this._applySuggestion(from, to, position, value);
   };
 
   private skipSuggestion = () => {

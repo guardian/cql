@@ -1,4 +1,5 @@
 type BaseSuggestion = {
+  // These are ProseMirror positions
   readonly from: number;
   readonly to: number;
   readonly position: "queryStr" | "chipKey" | "chipValue";
