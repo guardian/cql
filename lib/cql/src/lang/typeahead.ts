@@ -191,8 +191,8 @@ export class Typeahead {
     const suggestions = await maybeValueSuggestions.suggestions;
 
     return {
-      from: value ? value.from : key.from,
-      to: value ? value.to : key.to,
+      from: value.from,
+      to: value.to,
       position: "chipValue",
       suggestions,
       type: maybeValueSuggestions.type,
