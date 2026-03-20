@@ -30,7 +30,7 @@ export function getNPermutations<T>(arr: T[], n: number): T[][] {
       permutations.push(next.value);
     }
   }
-  return permutations
+  return permutations;
 }
 
 export function* getPermutations<T>(
@@ -111,15 +111,17 @@ export const getAstNodeAtPosExpr = (
           ? {
               key,
               // Add an empty value here to signal that we are in value position
-              value: toProseMirrorToken(
-                new Token(
+              value: {
+                ...new Token(
                   TokenType.CHIP_VALUE,
                   "",
                   undefined,
                   position,
                   position,
                 ),
-              ),
+                from: position,
+                to: position,
+              },
             }
           : { key, value: undefined };
       }
