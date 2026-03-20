@@ -497,10 +497,10 @@ describe("cql plugin", () => {
           await findByText(popoverContainer, "Tags are magic");
         });
 
-        it("applies the given key when a popover option is selected", async () => {
+        it("applies the given value when a popover option is selected", async () => {
           const queryStr = "example +tag:";
           const { editor, container, waitFor, moveCaretToQueryPos } =
-            createCqlEditor("example +tag:");
+            createCqlEditor(queryStr);
 
           await moveCaretToQueryPos(queryStr.length);
           await editor.insertText("t");
@@ -511,6 +511,23 @@ describe("cql plugin", () => {
           );
 
           await waitFor("example tag:tags-are-magic");
+        });
+
+        it("respects the whitespace after the value after applying", async () => {
+          const queryStr = "+tag: example";
+          const { editor, container, waitFor, moveCaretToQueryPos } =
+            createCqlEditor(queryStr);
+
+          await moveCaretToQueryPos(queryStr.indexOf(" "));
+          await editor.insertText("t");
+
+          await selectPopoverOptionWithEnter(
+            editor,
+            container,
+            "Tags are magic",
+          );
+
+          await waitFor("tag:tags-are-magic example");
         });
 
         it("applies the given quoted suggestion in value position when it contains whitespace", async () => {
