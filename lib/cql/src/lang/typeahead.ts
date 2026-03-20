@@ -22,12 +22,13 @@ const compareValueAndLabel =
 const filterAndSortTextSuggestionOption = (
   suggestions: TextSuggestionOption[],
   str: string,
+  onlyIncludeStartsWith: boolean = false
 ) => {
   const lowerCaseStr = str.toLowerCase();
   return suggestions
     .filter(
       compareValueAndLabel(lowerCaseStr, (str, compare) =>
-        str.includes(compare),
+        onlyIncludeStartsWith ? str.startsWith(compare) : str.includes(compare),
       ),
     )
     .sort((a, b) => {
@@ -208,6 +209,7 @@ export class Typeahead {
     const suggestions = filterAndSortTextSuggestionOption(
       this.typeaheadFieldEntries,
       str,
+      this.config.showTypeaheadForQueryStr
     );
 
     if (suggestions.length) {
