@@ -588,7 +588,7 @@ export const toMappedSuggestions = (
   }
   const from = mapping.map(typeaheadSuggestion.from);
   const to = mapping.map(
-    typeaheadSuggestion.to + 1,
+    typeaheadSuggestion.to,
     typeaheadSuggestion.position === "chipKey" ? -1 : 0,
   );
 
@@ -788,7 +788,7 @@ export const handleEnter = (view: EditorView) => {
     const keyText = `${maybePrecedingWhitespace}${maybePolarity}${fromNode.textContent}`;
 
     const chipStart = $from.before() - 1;
-    const chipEnd = endOfKey + 4; // +1 to move to start of value, +1 to move to end of value, +1 to
+    const chipEnd = endOfKey + 4; // +1 to move to start of value, +1 to move to end of value
     const endOfPrecedingQueryStr = chipStart - 1;
 
     const tr = state.tr;
