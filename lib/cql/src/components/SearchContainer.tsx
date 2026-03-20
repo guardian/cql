@@ -4,6 +4,7 @@ import { FilterButtons } from "./FilterButtons";
 import { DebugChangeEventDetail } from "../types/dom";
 import { DataSource } from "./ConfigPanel";
 import { useRef } from "preact/hooks";
+import { Debounce } from "../cqlInput/popover/components/Debounce";
 
 interface SearchContainerProps {
   dataSource: DataSource;
@@ -27,7 +28,11 @@ export const SearchContainer = ({
 
   return (
     <div class="cql-search-container">
-      <CqlInputWrapper
+      <Debounce
+        // Debouncing ensures we do not attempt to update the component's value while another
+        // update is in flight within React.
+        throttleInMs={1}
+        component={CqlInputWrapper}
         dataSource={dataSource}
         value={value}
         onQueryChange={onQueryChange}

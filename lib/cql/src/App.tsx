@@ -20,10 +20,7 @@ const initialEndpoint =
   params.get("endpoint") || "https://content.guardianapis.com";
 const initialQuery = params.get("query") ?? "";
 
-const typeaheadHelpersCapi = new CapiTypeaheadProvider(
-  initialEndpoint,
-  "test",
-);
+const typeaheadHelpersCapi = new CapiTypeaheadProvider(initialEndpoint, "test");
 const capiTypeahead = new Typeahead(typeaheadHelpersCapi.typeaheadFields, {
   showTypeaheadForQueryStr: true,
   minCharsForQueryStrTypeahead: 2,
@@ -173,19 +170,20 @@ export const App = () => {
 
   const handleQueryChange = useCallback(
     (newQueryStr: string, error?: string) => {
-      setQueryStr(newQueryStr);
       setQueryError(error);
-      setUrlParam("query", newQueryStr);
+      if (newQueryStr !== queryStr) {
+        console.log("New str to handle", { newQueryStr });
+        setQueryStr(newQueryStr);
+        console.log({ newQueryStr });
+        setUrlParam("query", newQueryStr);
+      }
     },
-    [],
+    [queryStr],
   );
 
-  const handleDebugChange = useCallback(
-    (detail: DebugChangeEventDetail) => {
-      setDebugInfo(detail);
-    },
-    [],
-  );
+  const handleDebugChange = useCallback((detail: DebugChangeEventDetail) => {
+    setDebugInfo(detail);
+  }, []);
 
   const handleEndpointChange = useCallback((newEndpoint: string) => {
     setEndpoint(newEndpoint);
@@ -193,31 +191,18 @@ export const App = () => {
     typeaheadHelpersCapi.setBaseUrl(newEndpoint);
   }, []);
 
-  const handleDataSourceChange = useCallback(
-    (source: DataSource) => {
-      setDataSource(source);
-      setQueryStr("");
-      setQueryError(undefined);
-      setDebugInfo(null);
-    },
-    [],
-  );
+  const handleDataSourceChange = useCallback((source: DataSource) => {
+    setDataSource(source);
+    setQueryStr("");
+    setQueryError(undefined);
+    setDebugInfo(null);
+  }, []);
 
   // Apply ProseMirror dev tools
   useEffect(() => {
     if (window.CQL_VIEW) {
       applyDevTools(window.CQL_VIEW);
     }
-  }, []);
-
-  // Listen for popstate to sync endpoint from URL
-  useEffect(() => {
-    const handlePopState = () => {
-      const params = new URLSearchParams(window.location.search);
-      setEndpoint(params.get("endpoint") ?? "");
-    };
-    window.addEventListener("popstate", handlePopState);
-    return () => window.removeEventListener("popstate", handlePopState);
   }, []);
 
   return (
@@ -242,10 +227,7 @@ export const App = () => {
             onValueChange={setQueryStr}
           />
         </div>
-        <DebugPanel
-          queryStr={queryStr}
-          debugInfo={debugInfo}
-        />
+        <DebugPanel queryStr={queryStr} debugInfo={debugInfo} />
       </div>
     </div>
   );

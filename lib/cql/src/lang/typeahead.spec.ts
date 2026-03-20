@@ -136,7 +136,7 @@ describe("typeahead", () => {
     const suggestions = await getSuggestions("+tag:", 5);
     expect(suggestions).toEqual({
       from: 5,
-      to: 6,
+      to: 5,
       position: "chipValue",
       suggestions: testTags,
       type: "TEXT",
@@ -149,7 +149,7 @@ describe("typeahead", () => {
 
     expect(suggestions).toEqual({
       from: 11,
-      to: 12,
+      to: 11,
       position: "chipValue",
       suggestions: [
         new DateSuggestionOption("1 day ago", "-1d"),
