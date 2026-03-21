@@ -1,4 +1,3 @@
-import React from "react";
 import {
 	Menu,
 	MenuToggle,
@@ -6,12 +5,13 @@ import {
 	MenuItem,
 	MenuSeparator,
 } from '@guardian/stand/menu';
+import { Button } from "@guardian/stand/button"
 import { IconButton } from '@guardian/stand/icon-button';
 
 export const Component = () => (
 	<Menu>
 		<MenuToggle>
-			<IconButton symbol="settings" ariaLabel="Open menu" />
+			<Button>Tag</Button>
 		</MenuToggle>
 		<MenuSection name="File actions">
 			<MenuItem

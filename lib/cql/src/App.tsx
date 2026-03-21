@@ -11,6 +11,7 @@ import { HelpText } from "./components/HelpText";
 import { ConfigPanel } from "./components/ConfigPanel";
 import { SearchContainer } from "./components/SearchContainer";
 import { DebugPanel } from "./components/DebugPanel";
+import '@guardian/stand/fonts/OpenSans.css';
 
 type DataSource = "content-api" | "tools-index" | "content-api-simple-input";
 
