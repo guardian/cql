@@ -1,4 +1,4 @@
-import { h } from "preact";
+import React from "react";
 
 export type DataSource = "content-api" | "tools-index" | "content-api-simple-input";
 
@@ -21,7 +21,7 @@ export const ConfigPanel = ({
 }: ConfigPanelProps) => (
   <div>
     <h2>Config</h2>
-    <div class="Page__Config">
+    <div className="Page__Config">
       <div>
         <select
           id="data-source"
@@ -50,7 +50,7 @@ export const ConfigPanel = ({
           }
         />
       </div>
-      <div class="CqlSandbox__input-container">
+      <div className="CqlSandbox__input-container">
         <input
           type="text"
           id="endpoint"

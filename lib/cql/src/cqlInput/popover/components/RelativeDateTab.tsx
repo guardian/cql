@@ -1,4 +1,4 @@
-import { h, RefObject } from "preact";
+import React, { RefObject } from "react";
 import { DateSuggestion } from "../../../lang/types";
 
 export const RelativeDateTab = ({
@@ -20,11 +20,11 @@ export const RelativeDateTab = ({
 
     return (
       <div
-        class={`Cql__Option ${selectedClass}`}
+        className={`Cql__Option ${selectedClass}`}
         ref={isSelected ? currentItemRef : null}
         onClick={() => onSelect(value)}
       >
-        <div class="Cql__OptionLabel">{label}</div>
+        <div className="Cql__OptionLabel">{label}</div>
       </div>
     );
   });

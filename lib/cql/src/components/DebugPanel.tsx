@@ -1,4 +1,4 @@
-import { h } from "preact";
+import React from "react";
 import {
   getDebugASTHTML,
   getDebugMappingHTML,
@@ -49,8 +49,8 @@ export const DebugPanel = ({
   }
 
   return (
-    <div id="cql-sandbox" class="Page__InputDebug CqlSandbox">
-      <div class="CqlSandbox__query-results">
+    <div id="cql-sandbox" className="Page__InputDebug CqlSandbox">
+      <div className="CqlSandbox__query-results">
         <div>
           <h2>CQL</h2>
           <div id="cql">{cqlDisplay}</div>
@@ -60,12 +60,12 @@ export const DebugPanel = ({
           <div id="query">{queryStr}</div>
         </div>
       </div>
-      <div class="CqlSandbox__debug-container">
+      <div className="CqlSandbox__debug-container">
         <div
-          class="CqlDebug__mapping"
+          className="CqlDebug__mapping"
           dangerouslySetInnerHTML={{ __html: mappingHTML }}
         />
-        <div class="CqlDebug__json">
+        <div className="CqlDebug__json">
           <div dangerouslySetInnerHTML={{ __html: tokensHTML }} />
           <div dangerouslySetInnerHTML={{ __html: astJSON }} />
           <div dangerouslySetInnerHTML={{ __html: errorHTML }} />

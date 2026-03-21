@@ -1,5 +1,4 @@
-import { h } from "preact";
-import { useCallback, useEffect, useRef, useState } from "preact/hooks";
+import React, { useCallback, useEffect, useRef, useState }  from "react";
 import { DateSuggestion } from "../../../lang/types";
 import { wrapSelection } from "./utils";
 import { RelativeDateTab } from "./RelativeDateTab";
@@ -122,19 +121,19 @@ export const DateSuggestionContent = ({
   ];
 
   return (
-    <div class="Cql__PopoverTabs">
-      <div class="Cql__PopoverTabHeader">
+    <div className="Cql__PopoverTabs">
+      <div className="Cql__PopoverTabHeader">
         {tabs.map(({ label }, index) => (
           <div
-            class={`Cql__PopoverTabItem ${index === tabIndex && "Cql__PopoverTabItem--active"}`}
+            className={`Cql__PopoverTabItem ${index === tabIndex && "Cql__PopoverTabItem--active"}`}
             onClick={() => setTabIndex(index)}
           >
             {label}
           </div>
         ))}
       </div>
-      <div class="Cql__PopoverTabContentContainer">
-        <div class="Cql__PopoverTabContent">{tabs[tabIndex].content()}</div>
+      <div className="Cql__PopoverTabContentContainer">
+        <div className="Cql__PopoverTabContent">{tabs[tabIndex].content()}</div>
       </div>
     </div>
   );

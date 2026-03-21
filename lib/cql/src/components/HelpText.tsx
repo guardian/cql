@@ -1,4 +1,4 @@
-import { h } from "preact";
+import React from "react";
 
 export const HelpText = () => (
   <div>
@@ -6,17 +6,17 @@ export const HelpText = () => (
       Press <code>+</code> to select a specific field to search.
     </p>
     <p>
-      Join search terms with <code class="CqlToken__AND">OR</code> and{" "}
-      <code class="CqlToken__AND">AND</code>. Consecutive search terms, e.g.{" "}
-      <code class="CqlToken__STRING">this that</code>, are implicitly joined with{" "}
-      <code class="CqlToken__OR">OR</code>.
+      Join search terms with <code className="CqlToken__AND">OR</code> and{" "}
+      <code className="CqlToken__AND">AND</code>. Consecutive search terms, e.g.{" "}
+      <code className="CqlToken__STRING">this that</code>, are implicitly joined with{" "}
+      <code className="CqlToken__OR">OR</code>.
     </p>
     <p>
       Group expressions with parenthesis, e.g.{" "}
-      <code class="CqlToken__STRING">
-        one <code class="CqlToken__LEFT_BRACKET">(</code>two{" "}
-        <code class="CqlToken__AND">AND</code> three
-        <code class="CqlToken__RIGHT_BRACKET">)</code>
+      <code className="CqlToken__STRING">
+        one <code className="CqlToken__LEFT_BRACKET">(</code>two{" "}
+        <code className="CqlToken__AND">AND</code> three
+        <code className="CqlToken__RIGHT_BRACKET">)</code>
       </code>
     </p>
   </div>

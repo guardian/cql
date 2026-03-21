@@ -1,7 +1,6 @@
-import { h, FunctionComponent } from "preact";
+import React, { FunctionComponent, useEffect, useState } from "react";
 import { DateSuggestionContent } from "./DateSuggestionContent";
 import { TextSuggestionContent } from "./TextSuggestionContent";
-import { useEffect, useState } from "preact/hooks";
 import {
   CLASS_NO_RESULTS,
   CLASS_PENDING,
@@ -61,16 +60,16 @@ export const PopoverContainer: FunctionComponent<
   const getPopoverContent = () => {
     if (displayLoading) {
       return (
-        <div class={`Cql__Option ${CLASS_PENDING}`}>
-          <div class="Cql__OptionLabel">Loading</div>
+        <div className={`Cql__Option ${CLASS_PENDING}`}>
+          <div className="Cql__OptionLabel">Loading</div>
         </div>
       );
     }
 
     if (!state.suggestion) {
       return (
-        <div class={`Cql__Option ${CLASS_NO_RESULTS}`}>
-          <div class="Cql__OptionLabel">No results</div>
+        <div className={`Cql__Option ${CLASS_NO_RESULTS}`}>
+          <div className="Cql__OptionLabel">No results</div>
         </div>
       );
     }
@@ -101,5 +100,5 @@ export const PopoverContainer: FunctionComponent<
     }
   };
 
-  return <div class="Cql__TypeaheadPopover">{getPopoverContent()}</div>;
+  return <div className="Cql__TypeaheadPopover">{getPopoverContent()}</div>;
 };

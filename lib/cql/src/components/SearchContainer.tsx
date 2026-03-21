@@ -1,9 +1,8 @@
-import { h } from "preact";
+import React , {useRef} from "react";
 import { CqlInputWrapper } from "./CqlInputWrapper";
 import { FilterButtons } from "./FilterButtons";
 import { DebugChangeEventDetail } from "../types/dom";
 import { DataSource } from "./ConfigPanel";
-import { useRef } from "preact/hooks";
 import { Debounce } from "../cqlInput/popover/components/Debounce";
 
 interface SearchContainerProps {
@@ -27,7 +26,7 @@ export const SearchContainer = ({
   };
 
   return (
-    <div class="cql-search-container">
+    <div className="cql-search-container">
       <Debounce
         // Debouncing ensures we do not attempt to update the component's value while another
         // update is in flight within React.

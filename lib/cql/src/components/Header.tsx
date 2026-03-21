@@ -1,10 +1,10 @@
-import { h } from "preact";
+import React from "react";
 
 export const Header = () => (
-  <div class="Page__header">
+  <div className="Page__header">
     <h1>Rich query sandbox</h1>
     <a
-      class="Page__repo-link"
+      className="Page__repo-link"
       href="https://github.com/guardian/cql"
       target="_blank"
     >

@@ -1,5 +1,4 @@
-import { h, RefObject } from "preact";
-import { useState } from "preact/hooks";
+import React, { RefObject, useState } from "react";
 
 export const AbsoluteDateTab = ({
   dateInputRef,
@@ -12,9 +11,9 @@ export const AbsoluteDateTab = ({
 }) => {
   const [absoluteDate, setAbsoluteDate] = useState("");
   return (
-    <div class="Cql__Option Cql__AbsoluteDateOption">
+    <div className="Cql__Option Cql__AbsoluteDateOption">
       <input
-        class="Cql__Input"
+        className="Cql__Input"
         ref={dateInputRef}
         type="date"
         value={absoluteDate}
@@ -33,7 +32,7 @@ export const AbsoluteDateTab = ({
         }}
       />
       <button
-        class="Cql__Button"
+        className="Cql__Button"
         onClick={() =>
           dateInputRef.current && onSelect(dateInputRef.current?.value)
         }

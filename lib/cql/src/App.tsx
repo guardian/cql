@@ -1,5 +1,4 @@
-import { h } from "preact";
-import { useCallback, useEffect, useState } from "preact/hooks";
+import React, {useCallback, useEffect, useState} from "react";
 import applyDevTools from "prosemirror-dev-tools";
 import { createCqlInput } from "./cqlInput/CqlInput";
 import { Typeahead, TypeaheadField } from "./lang/typeahead.ts";
@@ -118,7 +117,7 @@ class CqlInputSimple extends HTMLElement {
         return (
           acc +
           `<span> </span>`.repeat(Math.max(whitespaceCount, 0)) +
-          `<span class="${tokenType}" data-prev-end=${prevEnd} data-start=${start} data-end=${end}>${lexeme ?? ""}</span>`
+          `<span className="${tokenType}" data-prev-end=${prevEnd} data-start=${start} data-end=${end}>${lexeme ?? ""}</span>`
         );
       },
       "",
@@ -208,8 +207,8 @@ export const App = () => {
   return (
     <div>
       <Header />
-      <div class="Page__InputLayout">
-        <div class="Page__InputContent">
+      <div className="Page__InputLayout">
+        <div className="Page__InputContent">
           <SearchContainer
             dataSource={dataSource}
             value={queryStr}

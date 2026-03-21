@@ -19,10 +19,8 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
 
-    /* Preact */
-    "jsx": "react",
-    "jsxFactory": "h",
-    "jsxFragmentFactory": "Fragment"
+    /* React/emotion */
+    "jsxImportSource": "@emotion/react"
   },
   "include": ["src"]
 }

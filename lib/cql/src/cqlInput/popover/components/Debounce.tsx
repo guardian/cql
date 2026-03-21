@@ -1,5 +1,4 @@
-import { h, FunctionComponent } from "preact";
-import { useEffect, useMemo, useState } from "preact/hooks";
+import React, { FunctionComponent, useEffect, useMemo, useState } from "react";
 
 type Props<ComponentProps> = {
   component: FunctionComponent<ComponentProps>;

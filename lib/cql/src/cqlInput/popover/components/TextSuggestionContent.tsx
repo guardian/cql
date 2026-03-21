@@ -1,5 +1,4 @@
-import { h } from "preact";
-import { useEffect, useRef, useState } from "preact/hooks";
+import React, { useEffect, useRef, useState } from "react";
 import { TextSuggestion } from "../../../lang/types";
 import { wrapSelection } from "./utils";
 import {
@@ -69,8 +68,8 @@ export const TextSuggestionContent = ({
 
   if (!suggestion.suggestions.length) {
     return (
-      <div class={`Cql__Option ${CLASS_NO_RESULTS}`}>
-        <div class="Cql__OptionLabel">No results</div>
+      <div className={`Cql__Option ${CLASS_NO_RESULTS}`}>
+        <div className="Cql__OptionLabel">No results</div>
       </div>
     );
   }
@@ -80,33 +79,33 @@ export const TextSuggestionContent = ({
     : "";
 
   return (
-    <div class="Cql__TextSuggestionContainer">
-      <div class="Cql__TextSuggestionContent">
+    <div className="Cql__TextSuggestionContainer">
+      <div className="Cql__TextSuggestionContent">
         {suggestion.suggestions.map(
           ({ label, description, value, count }, index) => {
             const isSelected = index === currentOptionIndex;
             const selectedClass = isSelected ? "Cql__Option--is-selected" : "";
             return (
               <div
-                class={`Cql__Option ${selectedClass} ${disabledClass}`}
+                className={`Cql__Option ${selectedClass} ${disabledClass}`}
                 data-index={index}
                 ref={isSelected ? currentItemRef : null}
                 onClick={() => onSelect(value)}
                 onMouseEnter={() => setCurrentOptionIndex(index)}
               >
-                <div class="Cql__OptionLabel">
+                <div className="Cql__OptionLabel">
                   {label ?? value}
                   {showCount && count !== undefined && (
-                    <div class="Cql__OptionCount">
+                    <div className="Cql__OptionCount">
                       {numberFormat.format(count)}
                     </div>
                   )}
                 </div>
                 {showValue && label !== undefined && (
-                  <div class="Cql__OptionValue">{value}</div>
+                  <div className="Cql__OptionValue">{value}</div>
                 )}
                 {showDescription && description && (
-                  <div class="Cql__OptionDescription">{description}</div>
+                  <div className="Cql__OptionDescription">{description}</div>
                 )}
               </div>
             );

@@ -1,5 +1,4 @@
-import { h } from "preact";
-import { useEffect, useRef } from "preact/hooks";
+import React,  { RefObject, useEffect, useRef }  from "react";
 import { DebugChangeEventDetail, QueryChangeEventDetail } from "../types/dom";
 
 type DataSource = "content-api" | "tools-index" | "content-api-simple-input";
@@ -15,7 +14,7 @@ interface CqlInputWrapperProps {
   value: string;
   onQueryChange: (queryStr: string, error?: string) => void;
   onDebugChange: (detail: DebugChangeEventDetail) => void;
-  inputRef: preact.RefObject<HTMLElement | null>;
+  inputRef: RefObject<HTMLElement | null>;
 }
 
 export const CqlInputWrapper = ({
