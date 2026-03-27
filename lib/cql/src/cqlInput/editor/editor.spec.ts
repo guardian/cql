@@ -140,4 +140,15 @@ describe("updateEditorViewWithQueryStr", () => {
 
     expect(docToCqlStrWithSelection(editorView.state)).toEqual("+tag:^$ ");
   });
+
+  it("should update the document when only the polarity of a chip changes", () => {
+    const { editorView, updateEditorView } =
+      createEditorFromInitialState("+tag:a");
+
+    expect(docToCqlStr(editorView.state.doc)).toEqual("+tag:a ");
+
+    updateEditorView("-tag:a");
+
+    expect(docToCqlStr(editorView.state.doc)).toEqual("-tag:a ");
+  });
 });

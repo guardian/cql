@@ -78,4 +78,15 @@ describe("CqlInput", () => {
       "This event should be propagated to the input's container, as it is not handled by the editor",
     ).toBe(true);
   });
+
+  it("should update the rendered value when only the polarity changes", () => {
+    const { cqlInput } = createCqlInputContainer("+tag:one");
+    let callbackValue = "";
+    cqlInput.addEventListener(
+      "queryChange",
+      (e) => (callbackValue = e.detail.queryStr),
+    );
+    cqlInput.setAttribute("value", "-tag:one");
+    expect(callbackValue).toBe("-tag:one");
+  });
 });
