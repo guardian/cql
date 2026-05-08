@@ -81,7 +81,7 @@ jobs:
         uses: guardian/actions-static-site@v3
         with:
           app: cql-sandbox
-          domain: cql-sandbox.gutools.co.uk
+          domain: cql-sandbox.guexperiments.co.uk
           roleArn: ${{ secrets.GU_RIFF_RAFF_ROLE_ARN }}
           githubToken: ${{ secrets.GITHUB_TOKEN }}
 

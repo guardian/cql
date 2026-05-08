@@ -4,7 +4,7 @@ An experiment to see if a query DSL, coupled with first-class typeahead and synt
 
 ![intro](https://github.com/guardian/cql/assets/7767575/22d3dba7-ace6-4c3a-8dcf-9755728fa98b)
 
-Play in the sandbox at https://cql-sandbox.gutools.co.uk/.
+Play in the sandbox at https://cql-sandbox.guexperiments.co.uk/.
 
 ## Why?
 
