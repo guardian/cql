@@ -379,6 +379,12 @@ export const createCqlPlugin = ({
           }
         }
       },
+      handleTextInput(view, _from, _to, text) {
+        if (text === "+" || text === "-") {
+          return maybeAddChipAtPolarityChar(text)(view);
+        }
+        return false;
+      },
       handleDOMEvents: {
         blur: (view) => {
           view.dispatch(
