@@ -405,6 +405,10 @@ export const createCqlInput = (
             pointer-events: none;
           }
 
+          .Cql__TypeaheadPopoverContainer > * {
+            pointer-events: auto;
+          }
+
           .Cql__TypeaheadPopover {
             display: flex;
             pointer-events: auto;
