@@ -442,6 +442,35 @@ describe("cql plugin", () => {
         await waitFor("tag:tags-are-magic :");
       });
 
+      describe("modifier keys do not trigger chip creation", () => {
+        // Cmd+- and Cmd++ are browser zoom shortcuts. Without this guard they
+        // would fall into the +/- switch cases and create chips.
+
+        it("does not create a chip when Cmd+- is pressed", () => {
+          const { editor } = createCqlEditor();
+
+          editor.shortcut("Cmd--");
+
+          expect(getNodeTypeAtSelection(editor.view).name).toBe("queryStr");
+        });
+
+        it("does not create a chip when Cmd++ is pressed", () => {
+          const { editor } = createCqlEditor();
+
+          editor.shortcut("Cmd-+");
+
+          expect(getNodeTypeAtSelection(editor.view).name).toBe("queryStr");
+        });
+
+        it("does not create a chip when Ctrl+- is pressed", () => {
+          const { editor } = createCqlEditor();
+
+          editor.shortcut("Ctrl--");
+
+          expect(getNodeTypeAtSelection(editor.view).name).toBe("queryStr");
+        });
+      });
+
       describe("text suggestions", () => {
         it("displays a popover at the start of a value field", async () => {
           const queryStr = "example +tag:";
@@ -1018,6 +1047,18 @@ describe("cql plugin", () => {
 
       const deleteBtn = await findByText(editor.view.dom, "×");
       await fireEvent.click(deleteBtn);
+
+      await waitFor("");
+    });
+
+    it("removes a chip via Cmd+Backspace", async () => {
+      // Regression guard: the modifier-key guard must only apply to + and -,
+      // not to Backspace — otherwise Cmd+Backspace stops deleting chips.
+      // Uses fireEvent to dispatch a real DOM event with metaKey set, since
+      // editor.shortcut() does not propagate modifier keys correctly here.
+      const { editor, waitFor } = createCqlEditor("+tag:a");
+
+      fireEvent.keyDown(editor.view.dom, { key: "Backspace", metaKey: true });
 
       await waitFor("");
     });
