@@ -304,8 +304,12 @@ export const createCqlPlugin = ({
         ]);
       },
       handleKeyDown(view, event) {
-        // Allow browser/OS shortcuts (e.g. Cmd+- for zoom) to pass through
-        if (event.metaKey || event.ctrlKey) {
+        // Allow browser/OS shortcuts using + or - (e.g. Cmd+- to zoom out,
+        // Cmd++ to zoom in) to pass through without triggering chip creation.
+        if (
+          (event.metaKey || event.ctrlKey) &&
+          (event.key === "+" || event.key === "-")
+        ) {
           return false;
         }
 
