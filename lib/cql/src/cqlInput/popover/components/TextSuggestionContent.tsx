@@ -92,12 +92,15 @@ export const TextSuggestionContent = ({
       const hoveredOption = event
         .composedPath()
         .find(
-          (node): node is Element =>
-            node instanceof Element && node.hasAttribute("data-index"),
+          (node): node is HTMLElement =>
+            node instanceof HTMLElement &&
+            node.classList.contains("Cql__Option") &&
+            node.hasAttribute("data-index"),
         );
-      const hoveredIndex = hoveredOption?.getAttribute("data-index");
-      if (hoveredIndex !== null && hoveredIndex !== undefined) {
-        setCurrentOptionIndex(Number(hoveredIndex));
+      const hoveredIndexAttr = hoveredOption?.getAttribute("data-index");
+      const hoveredIndex = hoveredIndexAttr === null ? NaN : Number(hoveredIndexAttr);
+      if (Number.isFinite(hoveredIndex)) {
+        setCurrentOptionIndex(hoveredIndex);
       }
     };
     document.addEventListener("mousemove", handleMouseMove);

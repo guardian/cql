@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
 import { h, render } from "preact";
 import { TextSuggestionContent } from "./TextSuggestionContent";
 import { TextSuggestionOption } from "../../../lang/types";
@@ -18,6 +18,14 @@ describe("TextSuggestionContent", () => {
     ),
   });
 
+  let cleanup: (() => void) | undefined;
+
+  afterEach(() => {
+    cleanup?.();
+    cleanup = undefined;
+    document.body.innerHTML = "";
+  });
+
   const setup = async (count = 5) => {
     // The component is always rendered inside a shadow root in production
     // (see CqlInput.ts). A document-level listener sees events dispatched
@@ -28,6 +36,11 @@ describe("TextSuggestionContent", () => {
     const shadowRoot = host.attachShadow({ mode: "open" });
     const container = document.createElement("div");
     shadowRoot.appendChild(container);
+
+    cleanup = () => {
+      render(null, container);
+      host.remove();
+    };
 
     let actionHandler: ActionHandler | undefined;
     const subscribeToAction: ActionSubscriber = (handler) => {
