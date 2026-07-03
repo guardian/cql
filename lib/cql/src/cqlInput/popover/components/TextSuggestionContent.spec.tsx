@@ -65,8 +65,12 @@ describe("TextSuggestionContent", () => {
       await tick();
     };
 
-    const moveMouse = async () => {
-      document.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+    const moveMouse = async (overOptionIndex?: number) => {
+      const target =
+        overOptionIndex === undefined
+          ? document
+          : getOptions()[overOptionIndex];
+      target.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
       await tick();
     };
 
@@ -112,5 +116,22 @@ describe("TextSuggestionContent", () => {
     await hover(3);
 
     expect(getSelectedIndex()).toBe(3);
+  });
+
+  it("re-selects the still-hovered option on the first genuine movement, without needing to leave and re-enter it", async () => {
+    const { getSelectedIndex, hover, sendAction, moveMouse } = await setup();
+
+    // The mouse is hovering over option 1 when the user starts navigating
+    // with the keyboard, ending up on option 2.
+    await hover(1);
+    await sendAction("down");
+    expect(getSelectedIndex()).toBe(2);
+
+    // The mouse then genuinely moves, but without leaving option 1 - so no
+    // new "mouseenter" fires there. Selection should still snap back to
+    // option 1, since that's where the pointer actually is.
+    await moveMouse(1);
+
+    expect(getSelectedIndex()).toBe(1);
   });
 });

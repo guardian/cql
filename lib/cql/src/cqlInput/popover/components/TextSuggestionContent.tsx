@@ -75,8 +75,25 @@ export const TextSuggestionContent = ({
   }, [currentOptionIndex]);
 
   useEffect(() => {
-    const handleMouseMove = () => {
+    const handleMouseMove = (event: MouseEvent) => {
+      if (!ignoreHoverRef.current) {
+        return;
+      }
       ignoreHoverRef.current = false;
+
+      // The mouse may not have left the option it was already over since
+      // keyboard navigation began, in which case no further "mouseenter"
+      // will fire to select it. Select whatever option is under the pointer
+      // on this first genuine movement, so the mouse doesn't have to leave
+      // and re-enter the option to regain control.
+      const hoveredOption =
+        event.target instanceof Element
+          ? event.target.closest("[data-index]")
+          : null;
+      const hoveredIndex = hoveredOption?.getAttribute("data-index");
+      if (hoveredIndex !== null && hoveredIndex !== undefined) {
+        setCurrentOptionIndex(Number(hoveredIndex));
+      }
     };
     document.addEventListener("mousemove", handleMouseMove);
     return () => document.removeEventListener("mousemove", handleMouseMove);
