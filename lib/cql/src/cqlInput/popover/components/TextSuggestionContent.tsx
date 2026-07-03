@@ -26,11 +26,20 @@ export const TextSuggestionContent = ({
   const showDescription = suggestion.position === "chipKey";
   const currentItemRef = useRef<HTMLDivElement | null>(null);
   const [currentOptionIndex, setCurrentOptionIndex] = useState(0);
+  // Programmatically scrolling the list to keep the keyboard-selected item in
+  // view (see the effect below) moves the options underneath a stationary
+  // mouse cursor. Browsers respond to that by firing a "mouseenter" on
+  // whichever option ends up under the pointer, which would otherwise hijack
+  // keyboard navigation. We ignore hover-driven selection until the mouse
+  // physically moves again, so hovering only takes effect after a genuine
+  // mouse movement.
+  const ignoreHoverRef = useRef(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToAction((action) => {
       switch (action) {
         case "up":
+          ignoreHoverRef.current = true;
           setCurrentOptionIndex(
             wrapSelection(
               currentOptionIndex,
@@ -40,6 +49,7 @@ export const TextSuggestionContent = ({
           );
           return true;
         case "down": {
+          ignoreHoverRef.current = true;
           setCurrentOptionIndex(
             wrapSelection(currentOptionIndex, 1, suggestion.suggestions.length),
           );
@@ -63,6 +73,14 @@ export const TextSuggestionContent = ({
       currentItemRef.current?.scrollIntoView({ block: "nearest" });
     }
   }, [currentOptionIndex]);
+
+  useEffect(() => {
+    const handleMouseMove = () => {
+      ignoreHoverRef.current = false;
+    };
+    document.addEventListener("mousemove", handleMouseMove);
+    return () => document.removeEventListener("mousemove", handleMouseMove);
+  }, []);
 
   // Reset the current option if the suggestions change
   useEffect(() => setCurrentOptionIndex(0), [suggestion]);
@@ -92,7 +110,11 @@ export const TextSuggestionContent = ({
                 data-index={index}
                 ref={isSelected ? currentItemRef : null}
                 onClick={() => onSelect(value)}
-                onMouseEnter={() => setCurrentOptionIndex(index)}
+                onMouseEnter={() => {
+                  if (!ignoreHoverRef.current) {
+                    setCurrentOptionIndex(index);
+                  }
+                }}
               >
                 <div class="Cql__OptionLabel">
                   {label ?? value}
