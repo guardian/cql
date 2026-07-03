@@ -86,10 +86,15 @@ export const TextSuggestionContent = ({
       // will fire to select it. Select whatever option is under the pointer
       // on this first genuine movement, so the mouse doesn't have to leave
       // and re-enter the option to regain control.
-      const hoveredOption =
-        event.target instanceof Element
-          ? event.target.closest("[data-index]")
-          : null;
+      // The popover is rendered inside a shadow root, so `event.target` here
+      // would be retargeted to the shadow host - we need `composedPath()` to
+      // see the actual option element the pointer is over.
+      const hoveredOption = event
+        .composedPath()
+        .find(
+          (node): node is Element =>
+            node instanceof Element && node.hasAttribute("data-index"),
+        );
       const hoveredIndex = hoveredOption?.getAttribute("data-index");
       if (hoveredIndex !== null && hoveredIndex !== undefined) {
         setCurrentOptionIndex(Number(hoveredIndex));

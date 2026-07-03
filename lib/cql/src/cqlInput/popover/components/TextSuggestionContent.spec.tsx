@@ -19,8 +19,15 @@ describe("TextSuggestionContent", () => {
   });
 
   const setup = async (count = 5) => {
+    // The component is always rendered inside a shadow root in production
+    // (see CqlInput.ts). A document-level listener sees events dispatched
+    // from within an open shadow root differently to plain DOM (`target` is
+    // retargeted to the shadow host), so we replicate that topology here.
+    const host = document.createElement("div");
+    document.body.appendChild(host);
+    const shadowRoot = host.attachShadow({ mode: "open" });
     const container = document.createElement("div");
-    document.body.appendChild(container);
+    shadowRoot.appendChild(container);
 
     let actionHandler: ActionHandler | undefined;
     const subscribeToAction: ActionSubscriber = (handler) => {
@@ -70,7 +77,11 @@ describe("TextSuggestionContent", () => {
         overOptionIndex === undefined
           ? document
           : getOptions()[overOptionIndex];
-      target.dispatchEvent(new MouseEvent("mousemove", { bubbles: true }));
+      // `composed: true` matches real UI events, which cross shadow
+      // boundaries so a document-level listener can observe them at all.
+      target.dispatchEvent(
+        new MouseEvent("mousemove", { bubbles: true, composed: true }),
+      );
       await tick();
     };
 
