@@ -5,6 +5,7 @@ import { TextSuggestionOption } from "../../../lang/types";
 import type { TextSuggestion } from "../../../lang/types";
 import type { ActionHandler, ActionSubscriber } from "../TypeaheadPopover";
 import { tick } from "../../../utils/test";
+import { fireEvent } from "@testing-library/dom";
 
 describe("TextSuggestionContent", () => {
   const createSuggestion = (count: number): TextSuggestion => ({
@@ -26,7 +27,7 @@ describe("TextSuggestionContent", () => {
     document.body.innerHTML = "";
   });
 
-  const setup = async (count = 5) => {
+  const renderTextSuggestions = async (suggestionCount = 5) => {
     // The component is always rendered inside a shadow root in production
     // (see CqlInput.ts). A document-level listener sees events dispatched
     // from within an open shadow root differently to plain DOM (`target` is
@@ -51,12 +52,12 @@ describe("TextSuggestionContent", () => {
     };
 
     render(
-      h(TextSuggestionContent, {
-        suggestion: createSuggestion(count),
-        isPending: false,
-        onSelect: () => {},
-        subscribeToAction,
-      }),
+      <TextSuggestionContent
+        suggestion={createSuggestion(5)}
+        isPending={false}
+        onSelect={() => {}}
+        subscribeToAction={subscribeToAction}
+      />,
       container,
     );
 
@@ -82,7 +83,6 @@ describe("TextSuggestionContent", () => {
 
     const sendAction = async (action: "up" | "down") => {
       actionHandler?.(action);
-      await tick();
     };
 
     const moveMouse = async (overOptionIndex?: number) => {
@@ -90,19 +90,15 @@ describe("TextSuggestionContent", () => {
         overOptionIndex === undefined
           ? document
           : getOptions()[overOptionIndex];
-      // `composed: true` matches real UI events, which cross shadow
-      // boundaries so a document-level listener can observe them at all.
-      target.dispatchEvent(
-        new MouseEvent("mousemove", { bubbles: true, composed: true }),
-      );
-      await tick();
+
+      fireEvent.mouseMove(target);
     };
 
     return { getOptions, getSelectedIndex, hover, sendAction, moveMouse };
   };
 
   it("selects the hovered option when the mouse moves over it", async () => {
-    const { getSelectedIndex, hover } = await setup();
+    const { getSelectedIndex, hover } = await renderTextSuggestions();
 
     await hover(2);
 
@@ -110,7 +106,7 @@ describe("TextSuggestionContent", () => {
   });
 
   it("does not let a hover-only mouseenter (no mousemove) override keyboard navigation", async () => {
-    const { getSelectedIndex, hover, sendAction } = await setup();
+    const { getSelectedIndex, hover, sendAction } = await renderTextSuggestions();
 
     // The user is hovering over option 1 when they start pressing arrow keys.
     await hover(1);
@@ -130,7 +126,7 @@ describe("TextSuggestionContent", () => {
   });
 
   it("resumes tracking hover once the mouse genuinely moves again", async () => {
-    const { getSelectedIndex, hover, sendAction, moveMouse } = await setup();
+    const { getSelectedIndex, hover, sendAction, moveMouse } = await renderTextSuggestions();
 
     await hover(1);
     await sendAction("down");
@@ -143,7 +139,7 @@ describe("TextSuggestionContent", () => {
   });
 
   it("re-selects the still-hovered option on the first genuine movement, without needing to leave and re-enter it", async () => {
-    const { getSelectedIndex, hover, sendAction, moveMouse } = await setup();
+    const { getSelectedIndex, hover, sendAction, moveMouse } = await renderTextSuggestions();
 
     // The mouse is hovering over option 1 when the user starts navigating
     // with the keyboard, ending up on option 2.
