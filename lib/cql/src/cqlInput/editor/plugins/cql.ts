@@ -307,6 +307,9 @@ export const createCqlPlugin = ({
         switch (event.key) {
           case "+":
           case "-": {
+            if (event.metaKey || event.ctrlKey) {
+              return false;
+            }
             return maybeAddChipAtPolarityChar(event.key)(view);
           }
           case ":": {
