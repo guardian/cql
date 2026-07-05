@@ -27,19 +27,19 @@ export const TextSuggestionContent = ({
   const currentItemRef = useRef<HTMLDivElement | null>(null);
   const [currentOptionIndex, setCurrentOptionIndex] = useState(0);
   // Programmatically scrolling the list to keep the keyboard-selected item in
-  // view (see the effect below) moves the options underneath a stationary
-  // mouse cursor. Browsers respond to that by firing a "mouseenter" on
-  // whichever option ends up under the pointer, which would otherwise hijack
-  // keyboard navigation. We ignore hover-driven selection until the mouse
-  // physically moves again, so hovering only takes effect after a genuine
-  // mouse movement.
-  const ignoreHoverRef = useRef(false);
+  // view (see the effect below) moves the options underneath a stationary mouse
+  // cursor. Browsers respond to that by firing a "mouseenter" on whichever
+  // option ends up under the pointer, which would otherwise hijack keyboard
+  // navigation. Thus, we track our traversal mode to ignore hover-driven
+  // selection until the mouse physically moves again, so hovering only takes
+  // effect after a genuine mouse movement.
+  const isTraversingWithArrowKeys = useRef(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToAction((action) => {
       switch (action) {
         case "up":
-          ignoreHoverRef.current = true;
+          isTraversingWithArrowKeys.current = true;
           setCurrentOptionIndex(
             wrapSelection(
               currentOptionIndex,
@@ -49,7 +49,7 @@ export const TextSuggestionContent = ({
           );
           return true;
         case "down": {
-          ignoreHoverRef.current = true;
+          isTraversingWithArrowKeys.current = true;
           setCurrentOptionIndex(
             wrapSelection(currentOptionIndex, 1, suggestion.suggestions.length),
           );
@@ -76,10 +76,11 @@ export const TextSuggestionContent = ({
 
   useEffect(() => {
     const handleMouseMove = (event: MouseEvent) => {
-      if (!ignoreHoverRef.current) {
+      if (!isTraversingWithArrowKeys.current) {
+        // Only run this once
         return;
       }
-      ignoreHoverRef.current = false;
+      isTraversingWithArrowKeys.current = false;
 
       // The mouse may not have left the option it was already over since
       // keyboard navigation began, in which case no further "mouseenter"
@@ -136,7 +137,7 @@ export const TextSuggestionContent = ({
                 ref={isSelected ? currentItemRef : null}
                 onClick={() => onSelect(value)}
                 onMouseEnter={() => {
-                  if (!ignoreHoverRef.current) {
+                  if (!isTraversingWithArrowKeys.current) {
                     setCurrentOptionIndex(index);
                   }
                 }}
