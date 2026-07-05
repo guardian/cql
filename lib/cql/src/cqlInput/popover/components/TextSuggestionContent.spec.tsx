@@ -53,7 +53,7 @@ describe("TextSuggestionContent", () => {
 
     render(
       <TextSuggestionContent
-        suggestion={createSuggestion(5)}
+        suggestion={createSuggestion(suggestionCount)}
         isPending={false}
         onSelect={() => {}}
         subscribeToAction={subscribeToAction}
