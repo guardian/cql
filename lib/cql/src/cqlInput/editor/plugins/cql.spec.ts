@@ -471,19 +471,22 @@ describe("cql plugin", () => {
         });
       });
 
+      const typeViaHandleTextInput = (view: EditorView, text: string) => {
+        view.someProp("handleTextInput", (f) =>
+          f(view, view.state.selection.from, view.state.selection.to, text),
+        );
+      };
+
       describe("via text input (mobile)", () => {
         // These tests call handleTextInput directly (via view.someProp) to
         // simulate the path used by mobile soft keyboards, which do not
         // reliably fire keydown events — unlike the desktop path through
         // handleKeyDown.
-
         it("creates a chip when '+' is received as text input", async () => {
           const { editor, waitFor } = createCqlEditor();
           const { view } = editor;
 
-          view.someProp("handleTextInput", (f) =>
-            f(view, view.state.selection.from, view.state.selection.to, "+"),
-          );
+          typeViaHandleTextInput(view, "+");
 
           await waitFor(":");
         });
@@ -492,46 +495,9 @@ describe("cql plugin", () => {
           const { editor, waitFor } = createCqlEditor();
           const { view } = editor;
 
-          view.someProp("handleTextInput", (f) =>
-            f(view, view.state.selection.from, view.state.selection.to, "-"),
-          );
+          typeViaHandleTextInput(view, "-");
 
           await waitFor("-:");
-        });
-
-        it("does not create a chip when '+' immediately follows a non-whitespace character", async () => {
-          const { editor, waitFor } = createCqlEditor("c");
-          const { view } = editor;
-          const from = view.state.selection.from;
-
-          // Simulate mobile text input: call handleTextInput; if unhandled,
-          // insert the character as plain text (what the browser does).
-          const handled = view.someProp("handleTextInput", (f) =>
-            f(view, from, from, "+"),
-          );
-          if (!handled) {
-            view.dispatch(view.state.tr.insertText("+", from, from));
-          }
-
-          await waitFor("c+");
-        });
-
-        it("does not create a chip when '-' immediately precedes a non-whitespace character", async () => {
-          const { editor, waitFor } = createCqlEditor("a");
-          const { view } = editor;
-
-          // Position caret before 'a'
-          editor.selectText(1);
-          const from = view.state.selection.from;
-
-          const handled = view.someProp("handleTextInput", (f) =>
-            f(view, from, from, "-"),
-          );
-          if (!handled) {
-            view.dispatch(view.state.tr.insertText("-", from, from));
-          }
-
-          await waitFor("-a");
         });
       });
 

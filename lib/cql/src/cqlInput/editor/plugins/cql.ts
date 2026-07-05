@@ -380,8 +380,10 @@ export const createCqlPlugin = ({
         }
       },
       handleTextInput(view, _from, _to, text) {
-        if (text === "+" || text === "-") {
-          return maybeAddChipAtPolarityChar(text)(view);
+        switch (text) {
+          case "+":
+          case "-":
+            return maybeAddChipAtPolarityChar(text)(view);
         }
         return false;
       },
