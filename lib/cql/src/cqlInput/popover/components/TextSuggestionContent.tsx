@@ -26,11 +26,20 @@ export const TextSuggestionContent = ({
   const showDescription = suggestion.position === "chipKey";
   const currentItemRef = useRef<HTMLDivElement | null>(null);
   const [currentOptionIndex, setCurrentOptionIndex] = useState(0);
+  // Programmatically scrolling the list to keep the keyboard-selected item in
+  // view (see the effect below) moves the options underneath a stationary mouse
+  // cursor. Browsers respond to that by firing a "mouseenter" on whichever
+  // option ends up under the pointer, which would otherwise hijack keyboard
+  // navigation. Thus, we track our traversal mode to ignore hover-driven
+  // selection until the mouse physically moves again, so hovering only takes
+  // effect after a genuine mouse movement.
+  const isTraversingWithArrowKeys = useRef(false);
 
   useEffect(() => {
     const unsubscribe = subscribeToAction((action) => {
       switch (action) {
         case "up":
+          isTraversingWithArrowKeys.current = true;
           setCurrentOptionIndex(
             wrapSelection(
               currentOptionIndex,
@@ -40,6 +49,7 @@ export const TextSuggestionContent = ({
           );
           return true;
         case "down": {
+          isTraversingWithArrowKeys.current = true;
           setCurrentOptionIndex(
             wrapSelection(currentOptionIndex, 1, suggestion.suggestions.length),
           );
@@ -63,6 +73,40 @@ export const TextSuggestionContent = ({
       currentItemRef.current?.scrollIntoView({ block: "nearest" });
     }
   }, [currentOptionIndex]);
+
+  useEffect(() => {
+    const handleMouseMove = (event: MouseEvent) => {
+      if (!isTraversingWithArrowKeys.current) {
+        // Only run this once
+        return;
+      }
+      isTraversingWithArrowKeys.current = false;
+
+      // The mouse may not have left the option it was already over since
+      // keyboard navigation began, in which case no further "mouseenter"
+      // will fire to select it. Select whatever option is under the pointer
+      // on this first genuine movement, so the mouse doesn't have to leave
+      // and re-enter the option to regain control.
+      // The popover is rendered inside a shadow root, so `event.target` here
+      // would be retargeted to the shadow host - we need `composedPath()` to
+      // see the actual option element the pointer is over.
+      const hoveredOption = event
+        .composedPath()
+        .find(
+          (node): node is HTMLElement =>
+            node instanceof HTMLElement &&
+            node.classList.contains("Cql__Option") &&
+            node.hasAttribute("data-index"),
+        );
+      const hoveredIndexAttr = hoveredOption?.getAttribute("data-index");
+      const hoveredIndex = hoveredIndexAttr === null ? NaN : Number(hoveredIndexAttr);
+      if (Number.isFinite(hoveredIndex)) {
+        setCurrentOptionIndex(hoveredIndex);
+      }
+    };
+    document.addEventListener("mousemove", handleMouseMove);
+    return () => document.removeEventListener("mousemove", handleMouseMove);
+  }, []);
 
   // Reset the current option if the suggestions change
   useEffect(() => setCurrentOptionIndex(0), [suggestion]);
@@ -92,7 +136,11 @@ export const TextSuggestionContent = ({
                 data-index={index}
                 ref={isSelected ? currentItemRef : null}
                 onClick={() => onSelect(value)}
-                onMouseEnter={() => setCurrentOptionIndex(index)}
+                onMouseEnter={() => {
+                  if (!isTraversingWithArrowKeys.current) {
+                    setCurrentOptionIndex(index);
+                  }
+                }}
               >
                 <div class="Cql__OptionLabel">
                   {label ?? value}
