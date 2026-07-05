@@ -471,6 +471,36 @@ describe("cql plugin", () => {
         });
       });
 
+      const typeViaHandleTextInput = (view: EditorView, text: string) => {
+        view.someProp("handleTextInput", (f) =>
+          f(view, view.state.selection.from, view.state.selection.to, text),
+        );
+      };
+
+      describe("via text input (mobile)", () => {
+        // These tests call handleTextInput directly (via view.someProp) to
+        // simulate the path used by mobile soft keyboards, which do not
+        // reliably fire keydown events — unlike the desktop path through
+        // handleKeyDown.
+        it("creates a chip when '+' is received as text input", async () => {
+          const { editor, waitFor } = createCqlEditor();
+          const { view } = editor;
+
+          typeViaHandleTextInput(view, "+");
+
+          await waitFor(":");
+        });
+
+        it("creates a negative chip when '-' is received as text input", async () => {
+          const { editor, waitFor } = createCqlEditor();
+          const { view } = editor;
+
+          typeViaHandleTextInput(view, "-");
+
+          await waitFor("-:");
+        });
+      });
+
       describe("text suggestions", () => {
         it("displays a popover at the start of a value field", async () => {
           const queryStr = "example +tag:";
