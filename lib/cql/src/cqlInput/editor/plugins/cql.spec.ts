@@ -1073,12 +1073,12 @@ describe("cql plugin", () => {
     });
 
     it("removes the chip via click", async () => {
-      const { editor, waitFor } = createCqlEditor("+tag:a");
+      const { editor, waitFor } = createCqlEditor("before +tag:a after");
 
       const deleteBtn = await findByText(editor.view.dom, "×");
       await fireEvent.click(deleteBtn);
 
-      await waitFor("");
+      await waitFor("before after");
     });
 
     it("removes a chip via Cmd+Backspace", async () => {
