@@ -1,5 +1,14 @@
 # @guardian/cql
 
+## 1.8.5
+
+### Patch Changes
+
+- d7ab4f7: Allow +/- to initiate chips on mobile
+- 3d949f6: Do not add or remove chips when modifier keys are pressed alongside + or -
+- 8e28872: Fix dropdown keyboard traversal when item on hover
+- c318b75: Remove magic number causing succeeding text to be removedwhen chips are deleted with a click
+
 ## 1.8.4
 
 ### Patch Changes
