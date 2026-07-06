@@ -1,0 +1,12 @@
+{
+  "mode": "pre",
+  "tag": "next",
+  "initialVersions": {
+    "@guardian/cql": "1.8.4"
+  },
+  "changesets": [
+    "famous-bars-brake",
+    "loose-berries-scream",
+    "red-pets-work"
+  ]
+}
