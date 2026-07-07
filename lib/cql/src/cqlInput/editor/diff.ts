@@ -2,18 +2,20 @@ import { Fragment, Mark, Node } from "prosemirror-model";
 import { IS_READ_ONLY, IS_SELECTED } from "./schema";
 
 /**
+/**
  * These diff functions are vendored from ProseMirror's Fragment.findDiffStart /
  * findDiffEnd to customise attribute comparison.
  *
- * The originals use Node.sameMarkup, which compares ALL attributes. That
+ * The originals use Node.sameMarkup, which compares all attributes. That
  * causes false positives for transient editor-state attributes (IS_SELECTED,
- * IS_READ_ONLY) that differ between the live document and an incoming document
- * built by queryToProseMirrorDoc — see #52.
+ * IS_READ_ONLY).
  *
  * We replace sameMarkup with sameContentMarkup, which skips transient attrs
  * so the diff is blind to decorative state but still detects semantically
  * meaningful changes like POLARITY.
  *
+ * Source: https://github.com/ProseMirror/prosemirror-model/blob/c8c7b62645d2a8293fa6b7f52aa2b04a97821f34/src/diff.ts
+ */
  * Source: https://github.com/ProseMirror/prosemirror-model/blob/c8c7b62645d2a8293fa6b7f52aa2b04a97821f34/src/diff.ts
  */
 
