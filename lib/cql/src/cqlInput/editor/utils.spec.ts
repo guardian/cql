@@ -8,14 +8,12 @@ import {
   mapTokens,
   tokensToDoc,
 } from "./utils";
-import { POLARITY, schema } from "./schema";
-import { builders } from "prosemirror-test-builder";
+import { POLARITY, chipKeyTag, chipValueTag } from "./schema";
+import { chip, chipKey, chipValue, doc, queryStr } from "./testBuilders";
 import { createParser } from "../../lang/Cql";
-import { Node } from "prosemirror-model";
+import { Plot } from "wordgard/doc";
 
 describe("utils", () => {
-  const { chip, chipKey, chipValue, doc, queryStr } = builders(schema);
-
   const queryToProseMirrorTokens = (query: string) => {
     const result = createParser()(query);
     const { tokens } = mapResult(result);
@@ -31,13 +29,10 @@ describe("utils", () => {
     const mappedTokens = mapTokens(tokens);
     const node = tokensToDoc(tokens);
 
-    // Implicitly check that the document created by these functions conforms to
-    // the schema, so we know tests downstream are dealing with correct data -
-    // node.check() will throw if the node content is not valid
-    node.check();
-
     return mappedTokens.map(({ from, to, tokenType }) => {
-      return tokenType !== "EOF" ? node.textBetween(from, to) : "";
+      return tokenType !== "EOF"
+        ? node.textContent({ from, to, blockSeparator: "" })
+        : "";
     });
   };
 
@@ -48,13 +43,11 @@ describe("utils", () => {
   const assertCqlStrPosFromDocPos = async (
     query: string,
     expectedIndexForQuery: number,
-    getPos: (node: Node) => number,
+    getPos: (node: Plot.Doc) => number,
   ) => {
     const tokens = queryToProseMirrorTokens(query);
     const mapping = createProseMirrorTokenToDocumentMapping(tokens);
     const node = tokensToDoc(tokens);
-
-    node.check();
 
     expect(mapping.map(expectedIndexForQuery)).toBe(getPos(node));
   };
@@ -323,11 +316,11 @@ describe("utils", () => {
       });
 
       it("with selection in an empty chip key", () => {
-        assertCqlStrPosFromDocPos("+:", 1, node => findNodeAt(0, node, schema.nodes.chipKey) + 1)
+        assertCqlStrPosFromDocPos("+:", 1, node => findNodeAt(0, node, chipKeyTag.type) + 1)
       });
 
       it("with selection in an empty chip value", () => {
-        assertCqlStrPosFromDocPos("+a:", 2, node => findNodeAt(0, node, schema.nodes.chipValue) + 1)
+        assertCqlStrPosFromDocPos("+a:", 2, node => findNodeAt(0, node, chipValueTag.type) + 1)
       });
     });
   });
@@ -342,10 +335,10 @@ describe("utils", () => {
 
       const insertPos = getNextPositionAfterTypeaheadSelection(
         currentDoc,
-        currentDoc.tag.fromPos,
+        currentDoc.positions.fromPos,
       );
 
-      expect(insertPos).toBe(currentDoc.tag.toPos);
+      expect(insertPos).toBe(currentDoc.positions.toPos);
     });
 
     it("should move to queryStr position from the end of a value", () => {
@@ -357,10 +350,10 @@ describe("utils", () => {
 
       const insertPos = getNextPositionAfterTypeaheadSelection(
         currentDoc,
-        currentDoc.tag.fromPos,
+        currentDoc.positions.fromPos,
       );
 
-      expect(insertPos).toBe(currentDoc.tag.toPos);
+      expect(insertPos).toBe(currentDoc.positions.toPos);
     });
 
     it("should move to queryStr position from the end of a value that contains whitespace", () => {
@@ -372,10 +365,10 @@ describe("utils", () => {
 
       const insertPos = getNextPositionAfterTypeaheadSelection(
         currentDoc,
-        currentDoc.tag.fromPos,
+        currentDoc.positions.fromPos,
       );
 
-      expect(insertPos).toBe(currentDoc.tag.toPos);
+      expect(insertPos).toBe(currentDoc.positions.toPos);
     });
   });
 

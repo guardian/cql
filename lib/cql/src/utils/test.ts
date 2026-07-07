@@ -1,6 +1,7 @@
 import { getByText } from "@testing-library/dom";
 import type { GetByText } from "@testing-library/dom";
-import { EditorState } from "prosemirror-state";
+import { GardState } from "wordgard/state";
+import { Leaf } from "wordgard/doc";
 import { docToCqlStr } from "../cqlInput/editor/utils";
 
 export const tick = async () => new Promise<void>((res) => setTimeout(res));
@@ -94,13 +95,18 @@ export function getByTextShadowed<T extends HTMLElement>(
 /**
  * Adds the current selection anchor (^) and head ($) to the document, and
  * returns the CQL str the document represents. For example, a document
- * `+tag:a` with the selection `AllSelection` would return `^+tag:a$`.
+ * `+tag:a` with the selection covering the whole document would return
+ * `^+tag:a$`.
  */
-export const docToCqlStrWithSelection = (_state: EditorState) => {
-  const state = _state.reconfigure({ plugins: [] });
-  const tr = state.tr;
-  const newState = state.apply(
-    tr.insertText("^", tr.selection.from).insertText("$", tr.selection.to),
-  );
-  return docToCqlStr(newState.doc);
+export const docToCqlStrWithSelection = (state: GardState) => {
+  const { from, to } = state.selection;
+  // Insert the markers back-to-front so the earlier insertion position is not
+  // shifted by the later one.
+  const stateWithHead = state.update({
+    changes: { from: to, to, insert: [Leaf.text("$")] },
+  }).state;
+  const withAnchor = stateWithHead.update({
+    changes: { from, to: from, insert: [Leaf.text("^")] },
+  });
+  return docToCqlStr(withAnchor.newDoc);
 };

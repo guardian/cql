@@ -1,9 +1,6 @@
-import { EditorView } from "prosemirror-view";
-import { Command, EditorState, Plugin } from "prosemirror-state";
-import { schema } from "./schema";
-import { baseKeymap } from "prosemirror-commands";
-import { undo, redo, history } from "prosemirror-history";
-import { keymap } from "prosemirror-keymap";
+import { KeyBinding, Wordgard } from "wordgard/editor";
+import { GardState } from "wordgard/state";
+import { history, redo, undo } from "wordgard/history";
 import {
   applyQueryStr,
   endOfLine,
@@ -23,56 +20,56 @@ export const createEditorView = ({
 }: {
   initialValue: string;
   mountEl: HTMLElement;
-  plugins: Plugin[];
+  plugins: GardState.Extension[];
   placeholder?: string;
   parser: ReturnType<typeof createParser>;
 }) => {
   const isMac = window.navigator.platform.toLowerCase().indexOf("mac") !== -1;
-  const platformKeys: {
-    [key: string]: Command;
-  } = isMac
-    ? {
+  const platformKeyBindings: KeyBinding[] = isMac
+    ? [
         // Ctrl-a/e move to start/end of para on Mac; as we have no paragraphs
         // here, start/end of line is sufficient
-        "Ctrl-a": startOfLine,
-        "Ctrl-e": endOfLine,
-        "Mod-ArrowLeft": startOfLine,
-        "Mod-ArrowRight": endOfLine,
+        KeyBinding.of({ key: "Ctrl-a", run: startOfLine }),
+        KeyBinding.of({ key: "Ctrl-e", run: endOfLine }),
+        KeyBinding.of({ key: "Mod-ArrowLeft", run: startOfLine }),
+        KeyBinding.of({ key: "Mod-ArrowRight", run: endOfLine }),
         // This doesn't seem to be listed on https://support.apple.com/en-euro/102650,
         // but does work in other text editing contexts on Mac
-        "Ctrl-ArrowLeft": startOfLine,
-        "Ctrl-ArrowRight": endOfLine,
-      }
-    : {
-        Home: startOfLine,
-        End: endOfLine,
-      };
+        KeyBinding.of({ key: "Ctrl-ArrowLeft", run: startOfLine }),
+        KeyBinding.of({ key: "Ctrl-ArrowRight", run: endOfLine }),
+      ]
+    : [
+        KeyBinding.of({ key: "Home", run: startOfLine }),
+        KeyBinding.of({ key: "End", run: endOfLine }),
+      ];
 
-  const editorView = new EditorView(mountEl, {
-    state: EditorState.create({
-      doc: queryToProseMirrorDoc(initialValue, parser),
-      schema,
-      plugins: [
-        ...plugins,
-        ...(placeholder ? [createPlaceholderPlugin(placeholder)] : []),
-        keymap({
-          ...baseKeymap,
-          ...platformKeys,
-          "Mod-z": undo,
-          "Mod-Shift-z": redo,
-          "Mod-a": maybeSelectValue,
-        }),
-        history(),
-      ],
-    }),
+  const editorView = Wordgard.create({
+    parent: mountEl,
+    doc: queryToProseMirrorDoc(initialValue, parser),
+    config: [
+      ...plugins,
+      ...(placeholder ? [createPlaceholderPlugin(placeholder)] : []),
+      ...platformKeyBindings,
+      KeyBinding.of({ key: "Mod-z", run: undo }),
+      KeyBinding.of({ key: "Mod-Shift-z", run: redo }),
+      KeyBinding.of({ key: "Mod-a", run: maybeSelectValue }),
+      history(),
+    ],
   });
 
   window.CQL_VIEW = editorView;
 
-  const updateEditorView = (str: string) =>
-    applyQueryStr(str, parser)(editorView.state, editorView.dispatch);
+  const updateEditorView = (str: string) => {
+    const spec = applyQueryStr(str, parser)(editorView, null);
+    if (spec) {
+      editorView.dispatch(spec);
+    }
+  };
 
-  endOfLine(editorView.state, editorView.dispatch);
+  const endSpec = endOfLine(editorView, null);
+  if (endSpec) {
+    editorView.dispatch(endSpec);
+  }
 
   return { editorView: editorView, updateEditorView };
 };

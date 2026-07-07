@@ -1,63 +1,87 @@
-import { Fragment } from "prosemirror-model";
+import { Leaf, Node } from "wordgard/doc";
 
 /**
  * These diff functions are vendored to ignore attributes and markup, as we only care about markup.
  * Source: https://github.com/ProseMirror/prosemirror-model/blob/c8c7b62645d2a8293fa6b7f52aa2b04a97821f34/src/diff.ts
+ *
+ * Adapted for wordgard: ProseMirror `Fragment`s are represented here as the
+ * `readonly Node[]` content arrays of a plot. `nodeSize` becomes `length`,
+ * `content.size` becomes the summed content length, and structural equality
+ * (`eq`) replaces ProseMirror's identity fast-path.
  */
 
+type Content = readonly Node[];
+
+const contentSize = (content: Content): number =>
+  content.reduce((size, node) => size + node.length, 0);
+
+const childContent = (node: Node): Content => (node.isPlot ? node.content : []);
+
+const isTextNode = (node: Node): node is Leaf<string> => node.isText;
+
 export function findDiffStartForContent(
-  a: Fragment,
-  b: Fragment,
+  a: Content,
+  b: Content,
   pos = 0,
 ): number | null {
   for (let i = 0; ; i++) {
-    if (i == a.childCount || i == b.childCount)
-      return a.childCount == b.childCount ? null : pos;
+    if (i == a.length || i == b.length)
+      return a.length == b.length ? null : pos;
 
-    const childA = a.child(i),
-      childB = b.child(i);
-    if (childA == childB) {
-      pos += childA.nodeSize;
+    const childA = a[i],
+      childB = b[i];
+    if (childA.eq(childB)) {
+      pos += childA.length;
       continue;
     }
 
-    if (childA.isText && childA.text != childB.text) {
-      for (let j = 0; childA.text![j] == childB.text![j]; j++) pos++;
+    if (
+      isTextNode(childA) &&
+      isTextNode(childB) &&
+      childA.param != childB.param
+    ) {
+      for (let j = 0; childA.param[j] == childB.param[j]; j++) pos++;
       return pos;
     }
-    if (childA.content.size || childB.content.size) {
-      const inner = findDiffStartForContent(childA.content, childB.content, pos + 1);
+    const contentA = childContent(childA);
+    const contentB = childContent(childB);
+    if (contentA.length || contentB.length) {
+      const inner = findDiffStartForContent(contentA, contentB, pos + 1);
       if (inner != null) return inner;
     }
-    pos += childA.nodeSize;
+    pos += childA.length;
   }
 }
 
 export function findDiffEndForContent(
-  a: Fragment,
-  b: Fragment,
-  posA: number = a.size,
-  posB: number = b.size,
+  a: Content,
+  b: Content,
+  posA: number = contentSize(a),
+  posB: number = contentSize(b),
 ): { a: number; b: number } | null {
-  for (let iA = a.childCount, iB = b.childCount; ; ) {
+  for (let iA = a.length, iB = b.length; ; ) {
     if (iA == 0 || iB == 0) return iA == iB ? null : { a: posA, b: posB };
 
-    const childA = a.child(--iA),
-      childB = b.child(--iB),
-      size = childA.nodeSize;
-    if (childA == childB) {
+    const childA = a[--iA],
+      childB = b[--iB],
+      size = childA.length;
+    if (childA.eq(childB)) {
       posA -= size;
       posB -= size;
       continue;
     }
 
-    if (childA.isText && childA.text != childB.text) {
+    if (
+      isTextNode(childA) &&
+      isTextNode(childB) &&
+      childA.param != childB.param
+    ) {
       let same = 0;
-      const minSize = Math.min(childA.text!.length, childB.text!.length);
+      const minSize = Math.min(childA.param.length, childB.param.length);
       while (
         same < minSize &&
-        childA.text![childA.text!.length - same - 1] ==
-          childB.text![childB.text!.length - same - 1]
+        childA.param[childA.param.length - same - 1] ==
+          childB.param[childB.param.length - same - 1]
       ) {
         same++;
         posA--;
@@ -65,10 +89,12 @@ export function findDiffEndForContent(
       }
       return { a: posA, b: posB };
     }
-    if (childA.content.size || childB.content.size) {
+    const contentA = childContent(childA);
+    const contentB = childContent(childB);
+    if (contentA.length || contentB.length) {
       const inner = findDiffEndForContent(
-        childA.content,
-        childB.content,
+        contentA,
+        contentB,
         posA - 1,
         posB - 1,
       );

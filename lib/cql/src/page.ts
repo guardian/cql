@@ -1,4 +1,3 @@
-import applyDevTools from "prosemirror-dev-tools";
 import { createCqlInput } from "./cqlInput/CqlInput";
 import {
   getDebugASTHTML,
@@ -167,10 +166,6 @@ const CqlInputGuTools = createCqlInput(typeaheadGuTools, {
 
 customElements.define("cql-input-gutools", CqlInputGuTools);
 customElements.define("cql-input-capi", CqlInputCapi);
-
-if (window.CQL_VIEW) {
-  applyDevTools(window.CQL_VIEW);
-}
 
 const endpointInput = document.getElementById("endpoint") as HTMLInputElement;
 endpointInput?.addEventListener("input", (event) => {

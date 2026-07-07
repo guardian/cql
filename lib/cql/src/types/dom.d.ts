@@ -1,10 +1,12 @@
-import { Node } from "prosemirror-model";
+import { Plot } from "wordgard/doc";
 import {
   QueryChangeEventDetail,
   DebugChangeEventDetail,
 } from "../cqlInput/CqlInput";
 import { CqlQuery } from "../lang/ast";
-import { Selection } from "prosemirror-state";
+import { GardSelection } from "wordgard/state";
+import { Token } from "../lang/token";
+import { PosMapper } from "../cqlInput/editor/utils";
 
 export type QueryChangeEventDetail = {
   queryStr: string;
@@ -13,12 +15,12 @@ export type QueryChangeEventDetail = {
 };
 
 export type DebugChangeEventDetail = {
-  selection: Selection;
+  selection: GardSelection;
   queryStr: string;
   tokens: Token[];
-  doc: Node;
+  doc: Plot.Doc;
   queryAst?: CqlQuery;
-  mapping: Mapping;
+  mapping: PosMapper;
   error?:
     | {
         message: string;

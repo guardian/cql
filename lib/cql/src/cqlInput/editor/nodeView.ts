@@ -1,180 +1,137 @@
-import { Node } from "prosemirror-model";
-import { NodeViewConstructor } from "prosemirror-view";
-import {
-  chipKey,
-  chipValue,
-  IS_READ_ONLY,
-  IS_SELECTED,
-  POLARITY,
-} from "./schema";
-import {
-  CLASS_CHIP_KEY_READONLY,
-  TEST_ID_CHIP_VALUE,
-  TEST_ID_POLARITY_HANDLE,
-} from "./plugins/cql";
+import { Decoration, Widget, Wordgard } from "wordgard/editor";
+import { GardState } from "wordgard/state";
+import { Plot } from "wordgard/doc";
+import { chipKeyTag, chipType, chipValueTag } from "./schema";
 import { removeChipCoveringRange } from "./commands";
+
+export const TEST_ID_POLARITY_HANDLE = "polarity-handle";
+export const TEST_ID_CHIP_VALUE = "chip-value";
 
 const polarityUIMap: Record<string, string> = {
   "-": "−",
   "+": "+",
 };
 
-export const chipNodeView: NodeViewConstructor = (
-  initialNode,
-  view,
-  getPos,
-) => {
-  const getNodeAtPos = (): { node: Node; pos: number } | undefined => {
-    const pos = getPos();
-    if (!pos) {
-      return;
+/**
+ * Resolve the `<chip>` element an event originated from, and return its
+ * document position and node, if any.
+ */
+const getChipFromEvent = (
+  event: Event,
+  wg: Wordgard,
+): { pos: number; node: Plot; el: HTMLElement } | undefined => {
+  const target = event.target as HTMLElement | null;
+  const chipEl = target?.closest("chip") as HTMLElement | null;
+  if (!chipEl) {
+    return;
+  }
+
+  const pos = wg.posAtDOM(chipEl);
+  const node = wg.state.doc.resolve(pos).nodeAfter;
+  if (!node || node.type !== chipType) {
+    return;
+  }
+
+  return { pos, node: node as Plot, el: chipEl };
+};
+
+/**
+ * The polarity handle. Clicking it toggles the chip's polarity (its plot
+ * parameter) between "+" (include) and "-" (exclude).
+ */
+const polarityWidget = Widget.define<string>({
+  render: (polarity) => {
+    const el = document.createElement("span");
+    el.classList.add("Cql__ChipWrapperPolarityHandle");
+    el.setAttribute("data-testid", TEST_ID_POLARITY_HANDLE);
+    el.setAttribute("contentEditable", "false");
+    el.innerHTML = polarityUIMap[polarity] ?? polarityUIMap["+"];
+    return el;
+  },
+  handleEvent: (event, wg) => {
+    if (event.type !== "click") {
+      return false;
     }
 
-    const $pos = view.state.doc.resolve(pos);
-    const node = $pos.nodeAfter;
-
-    return node ? { node, pos } : undefined;
-  };
-
-  const handleDeleteClickEvent = () => {
-    const result = getNodeAtPos();
-
-    if (!result) {
-      return;
+    const chip = getChipFromEvent(event, wg);
+    if (!chip) {
+      return false;
     }
 
-    const { node, pos } = result;
+    const currentPolarity = chip.el.getAttribute("data-polarity") ?? "+";
+    const newPolarity = currentPolarity === "+" ? "-" : "+";
 
-    removeChipCoveringRange(pos, pos + node.nodeSize)(view.state, view.dispatch);
-  };
+    wg.dispatch({
+      changes: {
+        from: chip.pos,
+        to: chip.pos + chip.node.length,
+        insert: [chipType.of(newPolarity).create(chip.node.content)],
+        fit: true,
+      },
+    });
 
-  const handlePolarityClickEvent = () => {
-    const result = getNodeAtPos();
+    return true;
+  },
+});
 
-    if (!result) {
-      return;
+/**
+ * The delete handle. Clicking it removes the whole chip.
+ */
+const deleteWidget = Widget.create({
+  render: () => {
+    const el = document.createElement("span");
+    el.classList.add("Cql__ChipWrapperDeleteHandle");
+    el.setAttribute("contentEditable", "false");
+    el.innerHTML = "×";
+    return el;
+  },
+  handleEvent: (event, wg) => {
+    if (event.type !== "click") {
+      return false;
     }
-    const newPolarity = result.node.attrs[POLARITY] === "+" ? "-" : "+";
-    view.dispatch(
-      view.state.tr.setNodeAttribute(result.pos, POLARITY, newPolarity),
+
+    const chip = getChipFromEvent(event, wg);
+    if (!chip) {
+      return false;
+    }
+
+    const spec = removeChipCoveringRange(chip.pos, chip.pos + chip.node.length)(
+      wg,
+      null,
     );
-  };
-
-  const dom = document.createElement("chip-wrapper");
-  const contentDOM = document.createElement("span");
-  contentDOM.classList.add("Cql__ChipWrapperContent");
-  const polarityHandle = document.createElement("span");
-  polarityHandle.classList.add("Cql__ChipWrapperPolarityHandle");
-  polarityHandle.setAttribute("data-testid", TEST_ID_POLARITY_HANDLE);
-  polarityHandle.setAttribute("contentEditable", "false");
-  polarityHandle.innerHTML = polarityUIMap[initialNode.attrs[POLARITY]];
-  polarityHandle.addEventListener("click", handlePolarityClickEvent);
-
-  const deleteHandle = document.createElement("span");
-  deleteHandle.classList.add("Cql__ChipWrapperDeleteHandle");
-  deleteHandle.setAttribute("contentEditable", "false");
-  deleteHandle.innerHTML = "×";
-  deleteHandle.addEventListener("click", handleDeleteClickEvent);
-
-  dom.appendChild(polarityHandle);
-  dom.appendChild(contentDOM);
-  dom.appendChild(deleteHandle);
-  return {
-    dom,
-    contentDOM,
-    update(node) {
-      if (node.type !== initialNode.type) {
-        return false;
-      }
-
-      polarityHandle.innerHTML = polarityUIMap[node.attrs[POLARITY]];
-
-      if (node.attrs[IS_SELECTED]) {
-        dom.classList.add("Cql__ChipWrapper--is-selected");
-      } else {
-        dom.classList.remove("Cql__ChipWrapper--is-selected");
-      }
-
-      return true;
-    },
-  };
-};
-
-export const chipKeyNodeView: NodeViewConstructor = (node) => {
-  const separator = document.createElement("span");
-  separator.classList.add("Cql__ChipKeySeparator");
-  separator.setAttribute("contentEditable", "false");
-  separator.innerText = ":";
-
-  const addSeparator = () => {
-    if (!dom.contains(separator)) {
-      dom.appendChild(separator);
+    if (spec) {
+      wg.dispatch(spec);
     }
-  };
 
-  const dom = document.createElement("chip-key");
+    return true;
+  },
+});
 
-  const contentDOM = document.createElement("span");
-  dom.appendChild(contentDOM);
-
-  if (node.attrs[IS_READ_ONLY]) {
-    dom.classList.add(CLASS_CHIP_KEY_READONLY);
-    dom.setAttribute("contenteditable", "false");
-    addSeparator();
+const colonWidget = Widget.create({
+  render: () => {
+    const el = document.createElement("span");
+    el.setAttribute("contentEditable", "false");
+    el.innerHTML = ":";
+    return el;
   }
+})
 
-  return {
-    dom,
-    contentDOM,
-    update(node) {
-      if (node.type !== chipKey) {
-        return false;
-      }
-      if (node.attrs[IS_READ_ONLY]) {
-        dom.classList.add(CLASS_CHIP_KEY_READONLY);
-        dom.setAttribute("contenteditable", "false");
-        addSeparator();
-      } else {
-        dom.classList.remove(CLASS_CHIP_KEY_READONLY);
-        dom.setAttribute("contenteditable", "true");
-        if (separator.parentNode === dom) {
-          dom.removeChild(separator);
-        }
-      }
-
-      return true;
-    },
-  };
-};
-
-export const chipValueNodeView: NodeViewConstructor = (node) => {
-  const dom = document.createElement("chip-value");
-  dom.setAttribute("data-testid", TEST_ID_CHIP_VALUE);
-
-  const contentDOM = document.createElement("span");
-  dom.appendChild(contentDOM);
-  if (node.attrs[IS_READ_ONLY]) {
-    dom.classList.add(CLASS_CHIP_KEY_READONLY);
-    dom.setAttribute("contenteditable", "false");
-  }
-
-  return {
-    dom,
-    contentDOM,
-    update(node) {
-      if (node.type !== chipValue) {
-        return false;
-      }
-
-      if (node.attrs[IS_READ_ONLY]) {
-        dom.classList.add(CLASS_CHIP_KEY_READONLY);
-        dom.setAttribute("contenteditable", "false");
-      } else {
-        dom.classList.remove(CLASS_CHIP_KEY_READONLY);
-        dom.setAttribute("contenteditable", "true");
-      }
-
-      return true;
-    },
-  };
-};
+/**
+ * Extensions that render the interactive parts of a chip: the polarity handle
+ * (at the chip's start) and the delete handle (at the chip's end), plus the
+ * chip value's test id. Read-only styling and the `:` separator on read-only
+ * chip keys are handled via CSS keyed off the `data-readonly` attribute added
+ * by `readOnlyMark`.
+ */
+export const chipViewExtensions: GardState.Extension = [
+  Decoration.Tag.widget(chipType, "start", (tag) =>
+    polarityWidget.of(tag.param),
+  ),
+  Decoration.Tag.widget(chipType, "end", deleteWidget),
+  Decoration.Tag.widget(chipKeyTag, "end", colonWidget),
+  Decoration.Tag.attribute(
+    chipValueTag.type,
+    "data-testid",
+    TEST_ID_CHIP_VALUE,
+  ),
+];

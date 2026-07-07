@@ -6,8 +6,8 @@ import {
   toProseMirrorTokens,
 } from "./utils";
 import { createEditorView } from "./editor";
-import { EditorView } from "prosemirror-view";
-import { TextSelection } from "prosemirror-state";
+import { Wordgard } from "wordgard/editor";
+import { GardSelection } from "wordgard/state";
 import { createCqlPlugin } from "./plugins/cql";
 import { TestTypeaheadHelpers } from "../../lang/fixtures/TestTypeaheadHelpers";
 import { Typeahead } from "../../lib";
@@ -39,7 +39,7 @@ const createEditorFromInitialState = (query: string) => {
   });
 };
 
-const getPosFromQueryPos = (pos: number, editor: EditorView) => {
+const getPosFromQueryPos = (pos: number, editor: Wordgard) => {
   const query = docToCqlStr(editor.state.doc);
   const result = parser(query);
   const tokens = toProseMirrorTokens(result.tokens);
@@ -47,13 +47,11 @@ const getPosFromQueryPos = (pos: number, editor: EditorView) => {
   return mapping.map(pos);
 };
 
-const setQueryPosAsSelection = (pos: number, editorView: EditorView) => {
+const setQueryPosAsSelection = (pos: number, editorView: Wordgard) => {
   const docPos = getPosFromQueryPos(pos, editorView);
-  editorView.dispatch(
-    editorView.state.tr.setSelection(
-      TextSelection.near(editorView.state.doc.resolve(docPos)),
-    ),
-  );
+  editorView.dispatch({
+    selection: GardSelection.near(editorView.state, docPos),
+  });
 };
 
 describe("updateEditorViewWithQueryStr", () => {

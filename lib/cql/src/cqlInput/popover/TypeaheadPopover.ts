@@ -3,7 +3,7 @@ import {
   MappedTypeaheadSuggestion,
   TypeaheadSuggestion,
 } from "../../lang/types";
-import { EditorView } from "prosemirror-view";
+import { Wordgard } from "wordgard/editor";
 
 export const CLASS_PENDING = "Cql__Typeahead--pending";
 export const CLASS_NO_RESULTS = "Cql__Typeahead--no-results";
@@ -55,7 +55,7 @@ export class TypeaheadPopover extends Popover {
   private isPending = false;
 
   public constructor(
-    private view: EditorView,
+    private view: Wordgard,
     protected popoverEl: HTMLElement,
     // Apply a suggestion to the input, replacing the given range
     applySuggestion: (from: number, to: number, value: string) => void,
@@ -88,7 +88,7 @@ export class TypeaheadPopover extends Popover {
 
     // Close the popover when the input loses focus, unless we are focusing
     // on an element within the popover
-    view.dom.addEventListener("blur", (e) => {
+    view.contentDOM.addEventListener("blur", (e) => {
       if (!popoverEl.contains(e.relatedTarget as HTMLElement)) {
         this.hide();
       }
@@ -102,7 +102,6 @@ export class TypeaheadPopover extends Popover {
   ) => {
     this.isPending = false;
     if (
-      this.view.isDestroyed ||
       !typeaheadSuggestions.length ||
       this.view.state.selection.from !== this.view.state.selection.to
     ) {

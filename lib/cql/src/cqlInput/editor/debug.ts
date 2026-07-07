@@ -1,5 +1,5 @@
-import { Node } from "prosemirror-model";
-import { Mapping } from "prosemirror-transform";
+import { Plot } from "wordgard/doc";
+import { GardSelection } from "wordgard/state";
 import { Token } from "../../lang/token";
 import {
   CqlQuery,
@@ -9,30 +9,26 @@ import {
   CqlGroup,
   CqlStr,
 } from "../../lang/ast";
-import { IS_READ_ONLY } from "./schema";
-import { Selection } from "prosemirror-state";
+import { PosMapper } from "./utils";
 
 // Debugging and visualisation utilities.
 
 /**
  * Utility function to log node structure to console.
  */
-export const logNode = (doc: Node) => {
-  console.log(`Log node ${doc.type.name}:`);
+export const logNode = (doc: Plot.Doc) => {
+  console.log("Log node:");
 
-  doc.nodesBetween(0, doc.content.size, (node, pos) => {
-    const indent = doc.resolve(pos).depth * 4;
-    const content =
-      node.type.name === "text" ? `'${node.textContent}'` : undefined;
-    console.log(
-      `${" ".repeat(indent)} ${node.type.name} ${node.attrs[IS_READ_ONLY] ? "(readonly)" : ""} ${pos}-${pos + node.nodeSize} ${
-        content ? content : ""
-      }`,
-    );
+  doc.iterate((node, pos) => {
+    console.log(`${node.type.name} ${pos}-${pos + node.length}`);
   });
 };
 
-export const getDebugTokenHTML = (tokens: Token[], selection: Selection, mapping: Mapping) => {
+export const getDebugTokenHTML = (
+  tokens: Token[],
+  selection: GardSelection,
+  mapping: PosMapper,
+) => {
   let html = `
     <div class="CqlDebug__queryDiagram CqlDebug__queryDiagramToken">
       <div class="CqlDebug__queryDiagramLabel">
@@ -117,8 +113,8 @@ export const getOriginalQueryHTML = (query: string) => `
 
 export const getDebugMappingHTML = (
   query: string,
-  mapping: Mapping,
-  doc: Node,
+  mapping: PosMapper,
+  doc: Plot.Doc,
 ) => {
   const queryPosMap: Record<string, { char: string; originalPos: number }[]> =
     {};
@@ -138,10 +134,12 @@ export const getDebugMappingHTML = (
       </div>
       <div class="CqlDebug__nodeDiagram">`;
   const posMap: Record<string, { char?: string; node?: string }> = {};
-  doc.nodesBetween(0, doc.content.size, (node, pos) => {
-    const content =
-      node.type.name === "text" ? `${node.textContent}` : undefined;
+  doc.iterate((node, pos) => {
     const { name } = node.type;
+    const content =
+      name === "queryStr" || name === "chipKey" || name === "chipValue"
+        ? (node as Plot).textContent()
+        : undefined;
 
     posMap[pos] = {
       node: posMap[pos]?.node?.length
@@ -149,8 +147,8 @@ export const getDebugMappingHTML = (
         : name,
     };
 
-    posMap[pos + node.nodeSize] = posMap[pos + node.nodeSize]?.node
-      ? { node: `${posMap[pos + node.nodeSize].node} ${name} end` }
+    posMap[pos + node.length] = posMap[pos + node.length]?.node
+      ? { node: `${posMap[pos + node.length].node} ${name} end` }
       : { node: `${name} end` };
 
     if (!content) {
@@ -165,6 +163,10 @@ export const getDebugMappingHTML = (
             ? { char, ...posMap[index + pos + 1] }
             : { char }),
       );
+
+    // Do not descend into the text of leaf-bearing nodes; their content is
+    // already accounted for above.
+    return content ? false : undefined;
   });
 
   nodeDiagram += Object.entries(posMap)

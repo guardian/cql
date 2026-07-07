@@ -1,41 +1,93 @@
-import { Mapping, StepMap } from "prosemirror-transform";
-import { Decoration, EditorView } from "prosemirror-view";
+import { Leaf, Node, Plot } from "wordgard/doc";
+import { GardSelection, GardState } from "wordgard/state";
 import {
-  IS_READ_ONLY,
-  chip,
   chipKey,
   chipValue,
-  doc,
-  schema,
+  chipType,
+  chipKeyTag,
+  chipValueTag,
   queryStr,
-  POLARITY,
-  IS_SELECTED,
+  queryStrTag,
+  schema,
+  selectedMark,
 } from "./schema";
-import { Fragment, Node, NodeType } from "prosemirror-model";
-import {
-  EditorState,
-  NodeSelection,
-  Selection,
-  TextSelection,
-  Transaction,
-} from "prosemirror-state";
-import {
-  CLASS_ERROR,
-  CqlError,
-  TRANSACTION_IGNORE_READONLY as TRANSACTION_APPLY_SUGGESTION,
-} from "./plugins/cql";
+import { CqlError } from "./plugins/cql";
 import { isChipKey, Token, TokenType } from "../../lang/token";
 import {
   MappedTypeaheadSuggestion,
   TypeaheadSuggestion,
 } from "../../lang/types";
 import { CqlResult, createParser } from "../../lang/Cql";
-import { skipSuggestion } from "./commands";
 import {
   escapeQuotes,
   shouldQuoteFieldValue,
   unescapeQuotes,
 } from "../../lang/utils";
+
+/**
+ * A lightweight position map from CQL-query-string coordinates to editor
+ * document coordinates.
+ *
+ * ProseMirror shipped `StepMap`/`Mapping` primitives that could be used as a
+ * standalone coordinate transform, independent of any real document change.
+ * Wordgard's only position-mapping primitive, `ChangeSet`, is bound to a
+ * concrete document (it validates against the document length and must
+ * describe a well-formed edit), so it cannot represent the synthetic
+ * string -> tree mapping this module relies on.
+ *
+ * `PosMapper` therefore reimplements ProseMirror's `StepMap.map` semantics
+ * over a flat array of `[start, oldSize, newSize]` triples, preserving the
+ * exact mapping behaviour the previous implementation depended on.
+ */
+export class PosMapper {
+  constructor(private readonly ranges: readonly number[]) {}
+
+  /**
+   * Map a position. `assoc` (defaulting to `1`) decides which way the position
+   * sticks when content is inserted exactly at it: `-1` stays before the
+   * inserted content, `1` moves after it.
+   */
+  map(pos: number, assoc: number = 1): number {
+    let diff = 0;
+    for (let i = 0; i < this.ranges.length; i += 3) {
+      const start = this.ranges[i];
+      if (start > pos) break;
+      const oldSize = this.ranges[i + 1];
+      const newSize = this.ranges[i + 2];
+      const end = start + oldSize;
+      if (pos <= end) {
+        const side = !oldSize
+          ? assoc
+          : pos === start
+            ? -1
+            : pos === end
+              ? 1
+              : assoc;
+        return start + diff + (side < 0 ? 0 : newSize);
+      }
+      diff += newSize - oldSize;
+    }
+    return pos + diff;
+  }
+
+  /**
+   * Return a `PosMapper` that maps positions in the opposite direction, i.e.
+   * from the mapped (document) coordinate space back to the original (query)
+   * coordinate space. Mirrors ProseMirror's `StepMap.invert`.
+   */
+  invert(): PosMapper {
+    const inverted: number[] = [];
+    let diff = 0;
+    for (let i = 0; i < this.ranges.length; i += 3) {
+      const start = this.ranges[i];
+      const oldSize = this.ranges[i + 1];
+      const newSize = this.ranges[i + 2];
+      inverted.push(start + diff, newSize, oldSize);
+      diff += newSize - oldSize;
+    }
+    return new PosMapper(inverted);
+  }
+}
 
 const tokensToPreserve = [
   TokenType.CHIP_KEY,
@@ -229,7 +281,7 @@ export const createProseMirrorTokenToDocumentMap = (
     [],
   );
 
-  return new Mapping([new StepMap(ranges.flat())]);
+  return new PosMapper(ranges.flat());
 };
 
 /**
@@ -248,16 +300,18 @@ export const mapTokens = (tokens: ProseMirrorToken[]): ProseMirrorToken[] => {
 /**
  * Create a ProseMirror document from an array of ProseMirrorTokens.
  */
-export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
+export const tokensToDoc = (_tokens: ProseMirrorToken[]): Plot.Doc => {
   const leadingWhitespaceCount = _tokens[0]?.from ?? 0;
   const leadingNodeContent =
     leadingWhitespaceCount > 0
-      ? schema.text(" ".repeat(leadingWhitespaceCount))
+      ? Leaf.text(" ".repeat(leadingWhitespaceCount))
       : null;
 
   // Our document always starts with an empty queryStr node that accounts for
   // any leading whitespace
-  const initialContent = [queryStr.create(null, leadingNodeContent)];
+  const initialContent = [
+    queryStrTag.create(leadingNodeContent ? [leadingNodeContent] : []),
+  ];
 
   const { nodes } = joinQueryStrTokens(_tokens).reduce<{
     nodes: Node[];
@@ -279,7 +333,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
 
           // Insert a string node if two chips are adjacent
           const maybePrecedingQueryStr = isPrecededByChipValue
-            ? [queryStr.create()]
+            ? [queryStrTag.create()]
             : [];
 
           switch (token.tokenType) {
@@ -301,25 +355,16 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
               return {
                 nodes: nodes.concat(
                   maybePrecedingQueryStr,
-                  chip.create(
-                    {
-                      [POLARITY]: inNegatedExpr ? "-" : "+",
-                    },
-                    [
-                      chipKey.create(
-                        undefined,
-                        tokenKey
-                          ? schema.text(unescapeQuotes(tokenKey))
-                          : undefined,
-                      ),
-                      chipValue.create(
-                        undefined,
-                        tokenValue
-                          ? schema.text(unescapeQuotes(tokenValue))
-                          : undefined,
-                      ),
-                    ],
-                  ),
+                  chipType.of(inNegatedExpr ? "-" : "+").create([
+                    chipKeyTag.create(
+                      tokenKey ? [Leaf.text(unescapeQuotes(tokenKey))] : [],
+                    ),
+                    chipValueTag.create(
+                      tokenValue
+                        ? [Leaf.text(unescapeQuotes(tokenValue))]
+                        : [],
+                    ),
+                  ]),
                 ),
               };
             }
@@ -340,10 +385,9 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
               nodes: nodes
                 .slice(0, nodes.length - 1)
                 .concat(
-                  queryStr.create(
-                    undefined,
-                    schema.text(previousNode.textContent + " "),
-                  ),
+                  queryStrTag.create([
+                    Leaf.text((previousNode as Plot).textContent() + " "),
+                  ]),
                 ),
             };
           }
@@ -351,7 +395,7 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
           if (previousNode?.type !== queryStr) {
             // Always end with a queryStr node
             return {
-              nodes: nodes.concat(queryStr.create()),
+              nodes: nodes.concat(queryStrTag.create()),
             };
           }
 
@@ -386,22 +430,20 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
               nodes: nodes
                 .slice(0, nodes.length - 1)
                 .concat(
-                  queryStr.create(
-                    undefined,
-                    schema.text(
-                      previousNode.textContent + lexeme + trailingWhitespace,
+                  queryStrTag.create([
+                    Leaf.text(
+                      (previousNode as Plot).textContent() +
+                        lexeme +
+                        trailingWhitespace,
                     ),
-                  ),
+                  ]),
                 ),
             };
           }
 
           return {
             nodes: nodes.concat(
-              queryStr.create(
-                undefined,
-                schema.text(lexeme + trailingWhitespace),
-              ),
+              queryStrTag.create([Leaf.text(lexeme + trailingWhitespace)]),
             ),
           };
         }
@@ -410,45 +452,50 @@ export const tokensToDoc = (_tokens: ProseMirrorToken[]): Node => {
     { nodes: initialContent },
   );
 
-  return doc.create(undefined, nodes);
+  return schema.doc(nodes);
 };
 
 const tokensThatAreNotDecorated = ["CHIP_KEY", "CHIP_VALUE", "EOF"];
 export const getTokenTestId = (tokenType: ProseMirrorToken["tokenType"]) =>
   `token-${tokenType}`;
 
-export const tokensToDecorations = (
-  tokens: ProseMirrorToken[],
-): Decoration[] => {
-  return mapTokens(tokens)
-    .filter((token) => !tokensThatAreNotDecorated.includes(token.tokenType))
-    .map(({ from, to, tokenType }) =>
-      Decoration.inline(
-        from,
-        to,
-        {
-          class: `CqlToken__${tokenType}`,
-          "data-testid": getTokenTestId(tokenType),
-        },
-        { key: `${from}-${to}` },
-      ),
-    );
+export type TokenDecoration = {
+  from: number;
+  to: number;
+  tokenType: ProseMirrorToken["tokenType"];
 };
 
-export const docToCqlStr = (doc: Node): string => {
+/**
+ * Produce the positioned syntax-highlight decorations for a set of tokens.
+ *
+ * Unlike ProseMirror, wordgard decorations are supplied to the editor through
+ * range/point decoration *source* facets (see `Decoration.Range.source`), and
+ * the position of a range decoration lives in the `RangeSet` that holds it,
+ * not on the decoration itself. This helper therefore returns positioned,
+ * plugin-agnostic data; the CQL plugin builds the `RangeSet` from it.
+ */
+export const tokensToDecorations = (
+  tokens: ProseMirrorToken[],
+): TokenDecoration[] => {
+  return mapTokens(tokens)
+    .filter((token) => !tokensThatAreNotDecorated.includes(token.tokenType))
+    .map(({ from, to, tokenType }) => ({ from, to, tokenType }));
+};
+
+export const docToCqlStr = (doc: Plot.Doc): string => {
   let str: string = "";
 
-  doc.descendants((node, _pos, parent) => {
+  doc.iterate((node, _pos, parent) => {
     switch (node.type.name) {
       case "queryStr": {
-        str += node.textContent;
+        str += (node as Plot).textContent();
         return false;
       }
       case "chipKey": {
-        const value = node.textContent;
+        const value = (node as Plot).textContent();
         const leadingWhitespace =
           str.trim() === "" || str.endsWith(" ") ? "" : " ";
-        const polarity = parent?.attrs[POLARITY];
+        const polarity = parent?.tag.param as string | undefined;
 
         const maybeQuoteMark = shouldQuoteFieldValue(value) ? '"' : "";
         // Anticipate a chipValue here, adding the colon – if we do not, and a
@@ -457,7 +504,7 @@ export const docToCqlStr = (doc: Node): string => {
         return false;
       }
       case "chipValue": {
-        const value = node.textContent;
+        const value = (node as Plot).textContent();
 
         if (value.trim().length === 0) {
           str += " ";
@@ -485,76 +532,24 @@ export const docToCqlStr = (doc: Node): string => {
  */
 export const findNodeAt = (
   pos: number,
-  doc: Node | Fragment,
-  type: NodeType,
+  doc: Plot.Doc,
+  type: Node.Type,
 ): number => {
   let found = -1;
-  const size = doc instanceof Node ? doc.content.size : doc.size;
 
-  doc.nodesBetween(pos - 1, size, (node, pos) => {
+  doc.iterate(Math.max(pos - 1, 0), doc.length, (node, nodePos) => {
     if (found > -1) return false;
 
     if (node.type === type) {
-      found = pos;
+      found = nodePos;
     }
   });
   return found;
 };
 
-/**
- * Return a selection pointing into a chipKey if the current selection precedes
- * or is just within a chip.
- */
-export const maybeMoveSelectionIntoChipKey = ({
-  selection,
-  prevDoc,
-  currentDoc,
-}: {
-  selection: Selection;
-  prevDoc: Node;
-  currentDoc: Node;
-}): Selection => {
-  const defaultSelection = TextSelection.near(
-    currentDoc.resolve(Math.min(selection.from, currentDoc.nodeSize - 2)),
-  );
-
-  if (selection.from > currentDoc.nodeSize || selection.from !== selection.to) {
-    return defaultSelection;
-  }
-
-  let nodeTypeToMoveTo: NodeType | undefined;
-  if (
-    selection.from === selection.to &&
-    selection.$from.node().type === queryStr &&
-    prevDoc.textBetween(selection.from - 1, selection.from) === ":"
-  ) {
-    nodeTypeToMoveTo = chipValue;
-  } else {
-    const $from = currentDoc.resolve(selection.from);
-    const nodeAtCurrentSelection = $from.node().type;
-    const nodeTypeAfterCurrentSelection = $from.nodeAfter?.type;
-    const shouldWrapSelectionInKey =
-      // Is the selection just before the start of a chip?
-      nodeAtCurrentSelection === chip || nodeTypeAfterCurrentSelection === chip;
-    if (shouldWrapSelectionInKey) {
-      nodeTypeToMoveTo = chipKey;
-    }
-  }
-
-  if (nodeTypeToMoveTo) {
-    const nodePos = findNodeAt(selection.from, currentDoc, nodeTypeToMoveTo);
-
-    if (nodePos !== -1) {
-      const $pos = currentDoc.resolve(nodePos);
-      const selection = TextSelection.near($pos, 1);
-      if (selection) {
-        return selection;
-      }
-    }
-  }
-
-  return defaultSelection;
-};
+// TODO(wordgard): `maybeMoveSelectionIntoChipKey` is migrated with the CQL
+// plugin, where a `GardSelection.Context` (from the editor state) is available
+// to normalise a raw position into a valid cursor via `GardSelection.near`.
 
 export type ProseMirrorToken = Omit<Token, "start" | "end"> & {
   from: number;
@@ -580,7 +575,7 @@ export const toProseMirrorTokens = (tokens: Token[]): ProseMirrorToken[] =>
 
 export const toMappedSuggestions = (
   typeaheadSuggestions: TypeaheadSuggestion[],
-  mapping: Mapping,
+  mapping: PosMapper,
 ) =>
   typeaheadSuggestions.map((suggestion) => {
     const from = mapping.map(suggestion.from);
@@ -592,7 +587,7 @@ export const toMappedSuggestions = (
     return { ...suggestion, from, to } as MappedTypeaheadSuggestion;
   });
 
-const toMappedError = (error: CqlError, mapping: Mapping) => ({
+const toMappedError = (error: CqlError, mapping: PosMapper) => ({
   message: error.message,
   position: error?.position ? mapping.map(error.position) : undefined,
 });
@@ -613,14 +608,14 @@ export const mapResult = (result: CqlResult) => {
 // The sequences of nodes to move the caret to after a typeahead selection is
 // made, e.g. when a typeahead value is inserted for a chipKey, move the caret
 // to the next chipValue.
-const typeaheadSelectionSequence = [chipKey, chipValue, queryStr];
+const typeaheadSelectionSequence: Node.Type[] = [chipKey, chipValue, queryStr];
 
 export const getNextPositionAfterTypeaheadSelection = (
-  currentDoc: Node,
+  currentDoc: Plot.Doc,
   currentPos: number,
 ) => {
   const $pos = currentDoc.resolve(currentPos);
-  const suggestionNode = $pos.node();
+  const suggestionNode = $pos.parent.node;
   const nodeTypeAfterIndex = typeaheadSelectionSequence.indexOf(
     suggestionNode.type,
   );
@@ -642,7 +637,7 @@ export const getNextPositionAfterTypeaheadSelection = (
   }
 
   let insertPos: number | undefined;
-  currentDoc.nodesBetween(currentPos, currentDoc.nodeSize - 2, (node, pos) => {
+  currentDoc.iterate(currentPos, currentDoc.length, (node, pos) => {
     if (insertPos !== undefined) {
       return false;
     }
@@ -662,19 +657,12 @@ export const getNextPositionAfterTypeaheadSelection = (
   return insertPos;
 };
 
-export const errorToDecoration = (position: number): Decoration => {
-  const toDOM = () => {
-    const el = document.createElement("span");
-    el.classList.add(CLASS_ERROR);
-    return el;
-  };
-
-  return Decoration.widget(position, toDOM);
-};
+// TODO(wordgard): `errorToDecoration` is migrated with the CQL plugin, where
+// error markers are provided through the `Decoration.Point.source` facet.
 
 export const queryHasChanged = (
-  oldDoc: Node,
-  newDoc: Node,
+  oldDoc: Plot.Doc,
+  newDoc: Plot.Doc,
 ): { prevQuery: string; currentQuery: string } | undefined => {
   if (oldDoc === newDoc) {
     return;
@@ -686,139 +674,41 @@ export const queryHasChanged = (
   return prevQuery !== currentQuery ? { prevQuery, currentQuery } : undefined;
 };
 
-export const getNodeTypeAtSelection = (view: EditorView) => {
+export const getNodeTypeAtSelection = (state: GardState) => {
   const {
     doc,
     selection: { from },
-  } = view.state;
-  return doc.resolve(from).node().type;
+  } = state;
+  return doc.resolve(from).parent.node.type;
 };
 
-/**
- * Applies chip lifecycle rules:
- *
- * - chip keys are readonly unless a selection points into them explicitly
- * - chip values are readonly until their sibling chip key has a value
- * - chips that do not contain any values, nor a selection, are removed
- */
-export const applyChipLifecycleRules = (tr: Transaction): void => {
-  const { from, to } = tr.selection;
-  tr.doc.descendants((node, pos) => {
-    switch (node.type) {
-      case chip: {
-        const keyNode = node.maybeChild(0);
+// TODO(wordgard): `applyChipLifecycleRules` is migrated with the CQL plugin as
+// a `Transaction.appender`. Read-only state is now the `readOnlyMark`, and
+// empty chips are removed, via a returned `Transaction.Spec` rather than by
+// mutating a transaction in place.
+//   - chip keys are readonly unless a selection points into them explicitly
+//   - chip values are readonly until their sibling chip key has a value
+//   - chips that contain no value, nor a selection, are removed
 
-        if (!keyNode) {
-          return;
-        }
+// TODO(wordgard): `applySuggestion`, `handleEnter` and `skipSuggestionAndFocus`
+// dispatch transactions and move the selection. In wordgard these become
+// commands returning a `Transaction.Spec` dispatched via the `Wordgard`
+// instance; migrated with the CQL plugin/commands.
 
-        const { node: valueNode, offset } = node.childBefore(node.nodeSize - 2);
-
-        if (!valueNode) {
-          return;
-        }
-
-        const keyNodeStart = pos + 1;
-
-        const valueNodeStart = pos + offset + 1;
-        const valueNodeEnd = valueNodeStart + valueNode.nodeSize;
-        const valueNodeContent = !!valueNode.textContent;
-
-        const selectionCoversChipValue =
-          from >= valueNodeStart && to <= valueNodeEnd;
-
-        if (selectionCoversChipValue || valueNodeContent) {
-          tr.setNodeAttribute(
-            keyNodeStart,
-            IS_READ_ONLY,
-            true,
-          ).setNodeAttribute(valueNodeStart, IS_READ_ONLY, false);
-        }
-
-        return false;
-      }
-    }
-  });
-};
-
-export const applySuggestion =
-  (view: EditorView) => (from: number, to: number, value: string) => {
-    const tr = view.state.tr;
-
-    tr.replaceRangeWith(from, to, schema.text(value)).setMeta(
-      TRANSACTION_APPLY_SUGGESTION,
-      true,
-    );
-
-    const insertPos = getNextPositionAfterTypeaheadSelection(tr.doc, from);
-
-    if (insertPos) {
-      tr.setSelection(TextSelection.create(tr.doc, insertPos));
-    }
-
-    view.dispatch(tr);
-    view.focus();
-
-    return true;
-  };
-
-export const handleEnter = (view: EditorView) => {
-  const { state } = view;
-  // If we're within a chip key, convert to a queryString
-  if (isSelectionWithinNodesOfType(state.doc, state.selection, [chipKey])) {
-    const { from } = state.selection;
-    const $from = state.doc.resolve(from);
-    const fromNode = $from.node();
-
-    const endOfKey = $from.after();
-    const before = $from.before();
-    const chipNode = state.doc.resolve(before).node();
-    const nodePrecedingChip = state.doc.resolve(before - 2).node();
-    const precedingChipIsNonEmptyQueryStr =
-      nodePrecedingChip?.type === queryStr &&
-      nodePrecedingChip.textContent !== "";
-    const maybePrecedingWhitespace = precedingChipIsNonEmptyQueryStr ? " " : "";
-
-    const maybePolarity = chipNode.attrs[POLARITY] === "-" ? "-" : "";
-    const keyText = `${maybePrecedingWhitespace}${maybePolarity}${fromNode.textContent}`;
-
-    const chipStart = $from.before() - 1;
-    const chipEnd = endOfKey + 4; // +1 to move to start of value, +1 to move to end of value, +1 to
-    const endOfPrecedingQueryStr = chipStart - 1;
-
-    const tr = state.tr;
-    tr.deleteRange(chipStart, chipEnd);
-
-    tr.insertText(keyText, endOfPrecedingQueryStr, endOfPrecedingQueryStr);
-
-    view.dispatch(tr);
-  } else {
-    skipSuggestionAndFocus(view)();
-  }
-
-  return true;
-};
-
-export const skipSuggestionAndFocus = (view: EditorView) => () => {
-  skipSuggestion(view.state, view.dispatch);
-  view.focus();
-
-  return true;
-};
-
-export const isChipSelected = (node: Node) => node.attrs[IS_SELECTED] === true;
+export const isChipSelected = (node: Node) =>
+  node.mark(selectedMark.type) !== undefined;
 
 /**
  * If the selection is entirely within the node(s) of the given type, return the
  * node.
  */
 export const isSelectionWithinNodesOfType = (
-  doc: Node,
-  selection: Selection,
-  nodeTypes: NodeType[],
+  doc: Plot.Doc,
+  selection: GardSelection,
+  nodeTypes: Node.Type[],
 ): Node | undefined => {
   if (
-    selection instanceof NodeSelection &&
+    selection instanceof GardSelection.Node &&
     nodeTypes.includes(selection.node.type)
   ) {
     return selection.node;
@@ -826,10 +716,8 @@ export const isSelectionWithinNodesOfType = (
 
   const { from, to } = selection;
 
-  const $from = doc.resolve(from);
-  const $to = doc.resolve(to);
-  const fromNode = $from.node();
-  const toNode = $to.node();
+  const fromNode = doc.resolve(from).parent.node;
+  const toNode = doc.resolve(to).parent.node;
   if (fromNode !== toNode) {
     return;
   }
@@ -889,14 +777,12 @@ export const getContentFromClipboard = (
 };
 
 export const selectionIsWithinNodeType = (
-  state: EditorState,
-  nodeType: NodeType,
+  state: GardState,
+  nodeType: Node.Type,
 ) => {
   const { from, to } = state.selection;
-  const $from = state.doc.resolve(from);
-  const $to = state.doc.resolve(to);
-  const fromNode = $from.node();
-  const toNode = $to.node();
+  const fromNode = state.doc.resolve(from).parent.node;
+  const toNode = state.doc.resolve(to).parent.node;
 
   return fromNode.type === nodeType && fromNode === toNode;
 };

@@ -1,4 +1,4 @@
-import { EditorView } from "prosemirror-view";
+import { Wordgard } from "wordgard/editor";
 import { createParser } from "../lang/Cql";
 import { cqlQueryStrFromQueryAst } from "../lang/interpreter";
 import { ScannerSettings } from "../lang/scanner";
@@ -7,12 +7,7 @@ import { CqlQuery } from "../lib";
 import { DebugChangeEventDetail, QueryChangeEventDetail } from "../types/dom";
 import { DeepPartial } from "../types/utils";
 import { createEditorView } from "./editor/editor";
-import {
-  CLASS_CHIP_KEY_READONLY,
-  CLASS_CHIP_SELECTED,
-  CLASS_VISIBLE,
-  createCqlPlugin,
-} from "./editor/plugins/cql";
+import { CLASS_VISIBLE, createCqlPlugin } from "./editor/plugins/cql";
 import { CLASSNAME_PLACEHOLDER } from "./editor/plugins/placeholder";
 import {
   CLASS_NO_RESULTS,
@@ -42,7 +37,7 @@ export const createCqlInput = (
   class CqlInput extends HTMLElement {
     static observedAttributes = ["value", "placeholder"];
 
-    public editorView: EditorView | undefined;
+    public editorView: Wordgard | undefined;
     public value = "";
     public updateEditorView: ((str: string) => void) | undefined = undefined;
     public parseCqlStr: ReturnType<typeof createParser> | undefined = undefined;
@@ -127,7 +122,7 @@ export const createCqlInput = (
         parser: this.parseCqlStr,
       });
 
-      editorView.dom.classList.add("Cql__ContentEditable");
+      editorView.contentDOM.classList.add("Cql__ContentEditable");
 
       this.updateEditorView = updateEditorView;
       this.editorView = editorView;
@@ -138,7 +133,7 @@ export const createCqlInput = (
     }
 
     public disconnectedCallback() {
-      this.editorView?.destroy();
+      this.editorView?.dom.remove();
     }
 
     public attributeChangedCallback(
@@ -227,12 +222,16 @@ export const createCqlInput = (
             flex-shrink: 0;
           }
 
-          chip-wrapper {
+          chip {
             display: inline-flex;
             flex-shrink: 0;
             background-color: ${chipWrapper.color.background};
             margin: 0 5px;
             border-radius: ${baseBorderRadius};
+          }
+
+          chip[data-selected="true"] {
+            background-color: #334fa3;
           }
 
           chip-key {
@@ -245,7 +244,7 @@ export const createCqlInput = (
             flex-shrink: 0;
           }
 
-          chip-value[contenteditable="true"] {
+          chip-value:not([data-readonly="true"]) {
             padding-right: 5px;
           }
 
@@ -337,8 +336,14 @@ export const createCqlInput = (
             font-size: calc(${baseFontSize} * 0.8);
           }
 
-          .Cql__ChipKey--readonly {
+          chip-key[data-readonly="true"] {
             color: ${chipContent.color.readonly};
+          }
+
+          /* The ':' separator is only shown once the chip key becomes read-only
+             (i.e. the chip has progressed to editing its value). */
+          chip-key[data-readonly="true"]::after {
+            content: ":";
           }
 
           .Cql__ChipWrapperContent {
@@ -349,10 +354,6 @@ export const createCqlInput = (
           .Cql__ChipWrapper--is-pending-delete {
             box-shadow: 0 0 0 1px #c52b2b;
             overflow: hidden;
-          }
-
-          .${CLASS_CHIP_SELECTED} {
-            background-color: #334fa3;
           }
 
           .Cql__ChipWrapperDeleteHandle, .Cql__ChipWrapperPolarityHandle {
@@ -447,7 +448,7 @@ export const createCqlInput = (
             }
           }
 
-          .${CLASS_CHIP_KEY_READONLY} {
+          chip-key[data-readonly="true"] {
             pointer-events: none;
           }
 

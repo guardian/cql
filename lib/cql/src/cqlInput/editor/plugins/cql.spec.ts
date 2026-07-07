@@ -6,12 +6,10 @@ import {
 } from "@testing-library/dom";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it } from "bun:test";
-import { createEditor, ProsemirrorTestChain } from "jest-prosemirror";
-import { redo, undo } from "prosemirror-history";
-import { keymap } from "prosemirror-keymap";
-import { Node, NodeType } from "prosemirror-model";
-import { AllSelection, TextSelection } from "prosemirror-state";
-import { EditorView } from "prosemirror-view";
+import { Node, Plot } from "wordgard/doc";
+import { history, redo, undo } from "wordgard/history";
+import { KeyBinding, Wordgard } from "wordgard/editor";
+import { GardSelection } from "wordgard/state";
 import { createParser } from "../../../lang/Cql";
 import { TestTypeaheadHelpers } from "../../../lang/fixtures/TestTypeaheadHelpers";
 import { cqlQueryStrFromQueryAst } from "../../../lang/interpreter";
@@ -26,16 +24,18 @@ import {
 } from "../../CqlInput";
 import { isVisibleDataAttr } from "../../popover/Popover";
 import { endOfLine, maybeSelectValue, startOfLine } from "../commands";
-import { chip, chipValue, IS_SELECTED } from "../schema";
+import { chip, chipValue } from "../schema";
 import {
   createProseMirrorTokenToDocumentMap,
   docToCqlStr,
   findNodeAt,
   getNodeTypeAtSelection,
   getTokenTestId,
+  isChipSelected,
   queryToProseMirrorDoc,
   toProseMirrorTokens,
 } from "../utils";
+import { WordgardTestChain } from "../wordgardTestChain";
 import {
   createCqlPlugin,
   TEST_ID_CHIP_VALUE,
@@ -91,33 +91,36 @@ const createCqlEditor = (
 
   const moveCaretToQueryPos = (queryPos: number, offset: number = 0) => {
     const pos = getPosFromQueryPos(queryPos);
-    return editor.command((state, dispatch) => {
-      dispatch?.(
-        state.tr.setSelection(TextSelection.create(state.doc, pos + offset)),
-      );
-
-      return true;
-    });
+    editor.view.dispatch({ selection: GardSelection.cursor(pos + offset) });
+    return editor;
   };
 
   const doc = queryToProseMirrorDoc(initialQuery, parser);
 
-  const editor = createEditor(doc, {
-    plugins: [
+  // happy-dom initialises `document.getSelection()` with a non-null anchor
+  // node. Wordgard's `DOMObserver` reads that selection during construction —
+  // before `docTile` is assigned — which throws. Clearing the selection first
+  // makes the initial read a no-op.
+  document.getSelection()?.removeAllRanges();
+
+  const view = Wordgard.create({
+    parent: container,
+    doc,
+    config: [
       plugin,
-      keymap({
-        "Cmd-a": maybeSelectValue,
-        "Mod-z": undo,
-        "Mod-y": redo,
-        "Ctrl-a": startOfLine,
-        "Ctrl-e": endOfLine,
-      }),
+      KeyBinding.of({ key: "Cmd-a", run: maybeSelectValue }),
+      KeyBinding.of({ key: "Mod-z", run: undo }),
+      KeyBinding.of({ key: "Mod-y", run: redo }),
+      KeyBinding.of({ key: "Ctrl-a", run: startOfLine }),
+      KeyBinding.of({ key: "Ctrl-e", run: endOfLine }),
+      history(),
     ],
   });
 
+  const editor = new WordgardTestChain(view);
+
   editor.selectText("end");
 
-  container.appendChild(editor.view.dom);
   editor.view.focus();
 
   /**
@@ -177,7 +180,7 @@ const selectPopoverOptionWithClick = async (
 };
 
 const selectPopoverOptionWithEnter = async (
-  editor: ProsemirrorTestChain,
+  editor: WordgardTestChain,
   container: HTMLElement,
   optionLabel: string,
 ) => {
@@ -246,7 +249,7 @@ describe("cql plugin", () => {
         await editor.shortcut("Cmd-a");
 
         expect(editor.selection.from).toBe(0);
-        expect(editor.selection.to).toBe(editor.state.doc.content.size);
+        expect(editor.selection.to).toBe(editor.state.doc.length);
       });
 
       it("displays a popover at the start of a query", async () => {
@@ -265,7 +268,7 @@ describe("cql plugin", () => {
 
         await editor.insertText("+");
 
-        const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+        const nodeAtCaret = getNodeTypeAtSelection(editor.state);
         expect(nodeAtCaret.name).toBe("chipKey");
 
         const popoverContainer = await findByTestId(container, typeaheadTestId);
@@ -320,7 +323,7 @@ describe("cql plugin", () => {
 
         await assertPopoverVisibility(container, true);
 
-        await fireEvent.blur(editor.view.dom);
+        await fireEvent.blur(editor.view.contentDOM);
 
         await assertPopoverVisibility(container, false);
       });
@@ -330,7 +333,7 @@ describe("cql plugin", () => {
 
         editor.insertText("+");
 
-        const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+        const nodeAtCaret = getNodeTypeAtSelection(editor.state);
         expect(nodeAtCaret.name).toBe("chipKey");
 
         const popoverContainer = await findByTestId(container, typeaheadTestId);
@@ -344,7 +347,7 @@ describe("cql plugin", () => {
         await editor.insertText("example +");
 
         await selectPopoverOptionWithEnter(editor, container, "Tag");
-        const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+        const nodeAtCaret = getNodeTypeAtSelection(editor.state);
         expect(nodeAtCaret.name).toBe("chipValue");
 
         await waitFor("example tag:");
@@ -355,7 +358,7 @@ describe("cql plugin", () => {
         await editor.insertText("example +");
 
         await selectPopoverOptionWithClick(container, "Section");
-        const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+        const nodeAtCaret = getNodeTypeAtSelection(editor.state);
         expect(nodeAtCaret.name).toBe("chipValue");
 
         await waitFor("example section:");
@@ -388,7 +391,7 @@ describe("cql plugin", () => {
 
         editor.insertText("+");
 
-        const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+        const nodeAtCaret = getNodeTypeAtSelection(editor.state);
         expect(nodeAtCaret.name).toBe("chipKey");
 
         const popoverContainer = await findByTestId(container, typeaheadTestId);
@@ -451,7 +454,7 @@ describe("cql plugin", () => {
 
           editor.shortcut("Cmd--");
 
-          expect(getNodeTypeAtSelection(editor.view).name).toBe("queryStr");
+          expect(getNodeTypeAtSelection(editor.state).name).toBe("queryStr");
         });
 
         it("does not create a chip when Cmd++ is pressed", () => {
@@ -459,7 +462,7 @@ describe("cql plugin", () => {
 
           editor.shortcut("Cmd-+");
 
-          expect(getNodeTypeAtSelection(editor.view).name).toBe("queryStr");
+          expect(getNodeTypeAtSelection(editor.state).name).toBe("queryStr");
         });
 
         it("does not create a chip when Ctrl+- is pressed", () => {
@@ -467,14 +470,18 @@ describe("cql plugin", () => {
 
           editor.shortcut("Ctrl--");
 
-          expect(getNodeTypeAtSelection(editor.view).name).toBe("queryStr");
+          expect(getNodeTypeAtSelection(editor.state).name).toBe("queryStr");
         });
       });
 
-      const typeViaHandleTextInput = (view: EditorView, text: string) => {
-        view.someProp("handleTextInput", (f) =>
-          f(view, view.state.selection.from, view.state.selection.to, text),
-        );
+      const typeViaHandleTextInput = (view: Wordgard, text: string) => {
+        const event = new InputEvent("beforeinput", {
+          inputType: "insertText",
+          data: text,
+          bubbles: true,
+          cancelable: true,
+        });
+        view.contentDOM.dispatchEvent(event);
       };
 
       describe("via text input (mobile)", () => {
@@ -586,7 +593,7 @@ describe("cql plugin", () => {
 
           await editor.insertText("tag:");
 
-          const nodeAtCaret = getNodeTypeAtSelection(editor.view);
+          const nodeAtCaret = getNodeTypeAtSelection(editor.state);
           expect(nodeAtCaret.name).toBe("chipValue");
 
           const popoverContainer = await findByTestId(
@@ -764,7 +771,7 @@ describe("cql plugin", () => {
       await editor.insertText("#");
 
       await waitFor("tag:");
-      expect(editor.selection.$from.node().type).toBe(chipValue);
+      expect(getNodeTypeAtSelection(editor.state)).toBe(chipValue);
     });
 
     it("should move the selection into value position when the user types a shortcut after whitespace", async () => {
@@ -870,9 +877,9 @@ describe("cql plugin", () => {
       );
     });
 
-    const findNodesByType = (doc: Node, type: NodeType) => {
+    const findNodesByType = (doc: Plot.Doc, type: Node.Type) => {
       const nodes: Node[] = [];
-      doc.descendants((node) => {
+      doc.iterate((node: Node) => {
         if (node.type === type) {
           nodes.push(node);
         }
@@ -890,8 +897,8 @@ describe("cql plugin", () => {
       });
 
       const [firstChip, secondChip] = findNodesByType(editor.doc, chip);
-      expect(firstChip.attrs[IS_SELECTED]).toBe(true);
-      expect(secondChip.attrs[IS_SELECTED]).toBe(false);
+      expect(isChipSelected(firstChip)).toBe(true);
+      expect(isChipSelected(secondChip)).toBe(false);
     });
 
     it("should mark chips as selected when they are entirely covered by a selection", async () => {
@@ -901,8 +908,8 @@ describe("cql plugin", () => {
       editor.selectText("all");
 
       const [firstChip, secondChip] = findNodesByType(editor.doc, chip);
-      expect(firstChip.attrs[IS_SELECTED]).toBe(true);
-      expect(secondChip.attrs[IS_SELECTED]).toBe(true);
+      expect(isChipSelected(firstChip)).toBe(true);
+      expect(isChipSelected(secondChip)).toBe(true);
     });
 
     it("should escape chip keys", async () => {
@@ -1008,9 +1015,8 @@ describe("cql plugin", () => {
 
         await user.dblClick(editor.view.dom);
 
-        expect(
-          editor.state.selection.eq(new AllSelection(editor.view.state.doc)),
-        ).toBe(true);
+        expect(editor.selection.from).toBe(0);
+        expect(editor.selection.to).toBe(editor.state.doc.length);
       },
     );
   });
@@ -1088,7 +1094,10 @@ describe("cql plugin", () => {
       // editor.shortcut() does not propagate modifier keys correctly here.
       const { editor, waitFor } = createCqlEditor("+tag:a");
 
-      fireEvent.keyDown(editor.view.dom, { key: "Backspace", metaKey: true });
+      fireEvent.keyDown(editor.view.contentDOM, {
+        key: "Backspace",
+        metaKey: true,
+      });
 
       await waitFor("");
     });
@@ -1096,16 +1105,24 @@ describe("cql plugin", () => {
 
   describe("paste behaviour", () => {
     const pasteContent = (
-      view: EditorView,
+      view: Wordgard,
       data: { payload: string; type: string }[],
     ) => {
       const clipboardData = new DataTransfer();
       data.forEach(({ payload, type }) => {
         clipboardData.setData(type, payload);
       });
-      const event = new ClipboardEvent("paste", { clipboardData });
+      const event = new ClipboardEvent("paste", {
+        clipboardData,
+        bubbles: true,
+        cancelable: true,
+      });
+      // happy-dom does not always wire `clipboardData` through the constructor.
+      if (!event.clipboardData) {
+        Object.defineProperty(event, "clipboardData", { value: clipboardData });
+      }
 
-      view.pasteHTML(data[0].payload, event);
+      view.contentDOM.dispatchEvent(event);
     };
 
     describe("chip values", () => {
@@ -1137,11 +1154,9 @@ describe("cql plugin", () => {
 
       it(`should preserve the selection state on paste for data type "text/plain" before text`, () => {
         const { editor } = createCqlEditor("text");
-        editor.view.dispatch(
-          editor.state.tr.setSelection(
-            TextSelection.near(editor.state.doc.resolve(0)),
-          ),
-        );
+        editor.view.dispatch({
+          selection: GardSelection.near(editor.state, 0),
+        });
         const payload = "+tag:example";
 
         pasteContent(editor.view, [{ payload, type: "text/plain" }]);
@@ -1153,11 +1168,9 @@ describe("cql plugin", () => {
 
       it(`should preserve the selection state on paste for data type "text/plain" in middle of text`, () => {
         const { editor } = createCqlEditor("a  b");
-        editor.view.dispatch(
-          editor.state.tr.setSelection(
-            TextSelection.near(editor.state.doc.resolve(3)),
-          ),
-        );
+        editor.view.dispatch({
+          selection: GardSelection.near(editor.state, 3),
+        });
         const payload = "start +tag:example end";
 
         pasteContent(editor.view, [{ payload, type: "text/plain" }]);

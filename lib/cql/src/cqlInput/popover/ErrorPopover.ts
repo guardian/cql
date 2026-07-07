@@ -1,4 +1,4 @@
-import { EditorView } from "prosemirror-view";
+import { Wordgard } from "wordgard/editor";
 import { CLASS_ERROR, CLASS_VISIBLE, CqlError } from "../editor/plugins/cql";
 import { Popover } from "./Popover";
 
@@ -7,7 +7,7 @@ export class ErrorPopover extends Popover {
   private visibilityTimeout: ReturnType<typeof setTimeout> | undefined;
 
   public constructor(
-    protected view: EditorView,
+    protected view: Wordgard,
     protected popoverEl: HTMLElement,
     private debounceTime = 500,
   ) {

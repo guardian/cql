@@ -1,7 +1,7 @@
-import { EditorView } from "prosemirror-view";
+import { Wordgard } from "wordgard/editor";
 
 declare global {
   interface Window {
-    CQL_VIEW: EditorView | undefined;
+    CQL_VIEW: Wordgard | undefined;
   }
 }

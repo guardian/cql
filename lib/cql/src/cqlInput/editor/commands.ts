@@ -1,13 +1,15 @@
-import { Command, Selection, TextSelection } from "prosemirror-state";
+import { Command, selectAll } from "wordgard/command";
+import { GardSelection } from "wordgard/state";
+import { Leaf, Plot } from "wordgard/doc";
 import {
   chip,
   chipKey,
   chipValue,
-  IS_READ_ONLY,
-  POLARITY,
+  chipKeyTag,
+  chipType,
+  chipValueTag,
   queryStr,
 } from "./schema";
-import { selectAll } from "prosemirror-commands";
 import { createParser } from "../../lang/Cql";
 import {
   findNodeAt,
@@ -17,46 +19,37 @@ import {
   queryToProseMirrorDoc,
 } from "./utils";
 import { findDiffEndForContent, findDiffStartForContent } from "./diff";
-import { Node } from "prosemirror-model";
-import { schema } from "prosemirror-test-builder";
 import { TRANSACTION_IGNORE_READONLY } from "./plugins/cql";
 import { hasWhitespace } from "../../lang/utils";
-import { EditorView } from "prosemirror-view";
 
-export const startOfLine: Command = (state, dispatch) => {
-  const startSelection = Selection.atStart(state.doc);
-  dispatch?.(state.tr.setSelection(startSelection).scrollIntoView());
-  return true;
-};
+export const startOfLine: Command.Pure = ({ state }) => ({
+  selection: GardSelection.atStart(state),
+  scrollIntoView: true,
+});
 
-export const endOfLine: Command = (state, dispatch) => {
-  const endSelection = Selection.atEnd(state.doc);
-  dispatch?.(state.tr.setSelection(endSelection).scrollIntoView());
-  return true;
-};
+export const endOfLine: Command.Pure = ({ state }) => ({
+  selection: GardSelection.atEnd(state),
+  scrollIntoView: true,
+});
 
-export const maybeSelectValue: Command = (state, dispatch) => {
-  const { from } = state.selection;
+export const maybeSelectValue: Command.Pure = (target) => {
+  const { state } = target;
+  const { from, to } = state.selection;
   const $from = state.doc.resolve(from);
-  const fromNode = $from.node();
+  const fromNode = $from.parent.node;
 
   const isWithinValue = selectionIsWithinNodeType(state, chipValue);
-  const selectionContent = state.selection.content().content;
-  const selectionSpansWholeText =
-    selectionContent.textBetween(0, selectionContent.size) ===
-    fromNode.textContent;
+  const selectionText = state.doc.slice(from, to).textContent();
+  const selectionSpansWholeText = selectionText === fromNode.textContent();
 
   if (isWithinValue && !selectionSpansWholeText) {
     // Expand selection to value
-    const from = $from.start();
-    const to = from + fromNode.textContent.length;
-    dispatch?.(
-      state.tr.setSelection(TextSelection.create(state.doc, from, to)),
-    );
-    return true;
+    const start = $from.parent.start;
+    const end = start + fromNode.textContent().length;
+    return { selection: GardSelection.range(start, end) };
   }
 
-  return selectAll(state, dispatch);
+  return selectAll(target, null);
 };
 
 /**
@@ -65,9 +58,9 @@ export const maybeSelectValue: Command = (state, dispatch) => {
  * possible, to help preserve selection state.
  */
 export const applyQueryStr =
-  (query: string, parser: ReturnType<typeof createParser>): Command =>
-  (state, dispatch) =>
-    mergeDocs(queryToProseMirrorDoc(query, parser))(state, dispatch);
+  (query: string, parser: ReturnType<typeof createParser>): Command.Pure =>
+  (target) =>
+    mergeDocs(queryToProseMirrorDoc(query, parser))(target, null);
 
 /**
  * Update the editor state with the document. Diffs to ensure that the update
@@ -75,91 +68,102 @@ export const applyQueryStr =
  * state.
  */
 export const mergeDocs =
-  (newDoc: Node): Command =>
-  (state, dispatch) => {
+  (newDoc: Plot.Doc): Command.Pure =>
+  ({ state }) => {
     const start = findDiffStartForContent(newDoc.content, state.doc.content);
-    if (start !== null) {
-      // We can assert here because we know that the docs differ
-      let { a: endA, b: endB } = findDiffEndForContent(
-        newDoc.content,
-        state.doc.content,
-      )!;
-      const overlap = start - Math.min(endA, endB);
-      if (overlap > 0) {
-        endA += overlap;
-        endB += overlap;
-      }
-
-      const tr = state.tr.replace(start, endB, newDoc.slice(start, endA));
-
-      dispatch?.(tr);
+    if (start === null) {
+      return false;
     }
 
-    return true;
+    // We can assert here because we know that the docs differ
+    let { a: endA, b: endB } = findDiffEndForContent(
+      newDoc.content,
+      state.doc.content,
+    )!;
+    const overlap = start - Math.min(endA, endB);
+    if (overlap > 0) {
+      endA += overlap;
+      endB += overlap;
+    }
+
+    return {
+      changes: {
+        from: start,
+        to: endB,
+        insert: newDoc.slice(start, endA),
+        fit: true,
+      },
+      // Map the existing selection forward through the change (assoc +1) to
+      // match ProseMirror's default mapping bias, so a caret sitting exactly at
+      // the start of an inserted region moves to the right of the insertion.
+      selection: (cx, changes) => state.selection.map(changes, cx, 1),
+    };
   };
 
 export const insertChip =
-  (polarity: "+" | "-", chipKeyContent: string) => (view: EditorView) => {
-    const initialFrom = view.state.selection.from;
-    const addChipTr = view.state.tr;
-    const node = chip.create({ [POLARITY]: polarity }, [
-      chipKey.create(
-        { [IS_READ_ONLY]: true },
-        chipKeyContent ? schema.text(chipKeyContent) : null,
-      ),
-      chipValue.create({ [IS_READ_ONLY]: false }),
+  (polarity: "+" | "-", chipKeyContent: string): Command.Pure =>
+  ({ state }) => {
+    const initialFrom = state.selection.from;
+    const chipNode = chipType.of(polarity).create([
+      chipKeyTag.create(chipKeyContent ? [Leaf.text(chipKeyContent)] : []),
+      chipValueTag.create([]),
     ]);
 
-    addChipTr.replaceRangeWith(initialFrom, initialFrom, node);
+    // If there's no chip key content, place the caret in the key. Otherwise,
+    // move on to the value.
+    const caretDestination = chipKeyContent ? chipValue : chipKey;
 
-    view.dispatch(addChipTr);
+    return {
+      changes: {
+        from: initialFrom,
+        to: initialFrom,
+        insert: [chipNode],
+        fit: true,
+      },
+      selection: (cx, changes) => {
+        const nodePos = findNodeAt(
+          changes.mapPos(initialFrom, -1),
+          cx.doc,
+          caretDestination,
+        );
 
-    const positionCaretTr = view.state.tr;
-    const caretDestination = !chipKeyContent ? chipKey : chipValue;
-    const caretPos = findNodeAt(
-      initialFrom,
-      positionCaretTr.doc,
-      caretDestination,
-    );
-    const sel = TextSelection.near(positionCaretTr.doc.resolve(caretPos));
-    positionCaretTr.setSelection(sel);
-
-    view.dispatch(positionCaretTr);
-
-    return true;
+        return nodePos === -1 ? null : GardSelection.near(cx, nodePos + 1);
+      },
+    };
   };
 
 /**
  * Remove the chip at the current selection if:
  *   - the selection is within a key, and the key is empty
  *   - the selection is within a value, and the value is empty
- * @return true if a chip is removed, false if not.
+ * @return the transaction spec that removes the chip, or false if no chip is
+ * removed.
  */
-export const removeChipAtSelectionIfEmpty: Command = (state, dispatch) => {
+export const removeChipAtSelectionIfEmpty: Command.Pure = (target) => {
+  const { state } = target;
   const { doc, selection } = state;
 
   if (isSelectionWithinNodesOfType(doc, selection, [chipKey, chipValue])) {
     const $pos = doc.resolve(selection.from);
-    const nodeAtSelection = $pos.node();
-    if (!nodeAtSelection.textContent) {
-      const $chipPos = doc.resolve($pos.before(1));
-      const chipNode = $chipPos.nodeAfter;
-      if (!chipNode || chipNode.type !== chip) {
+    const nodeAtSelection = $pos.parent.node;
+    if (!nodeAtSelection.textContent()) {
+      const chipPos = $pos.matchingParent((plot) => plot.type === chip);
+      if (!chipPos) {
         return false;
       }
-      removeChipCoveringRange($chipPos.pos, $chipPos.pos + chipNode.nodeSize)(
-        state,
-        dispatch,
+      return removeChipCoveringRange(chipPos.before, chipPos.after)(
+        target,
+        null,
       );
-      return true;
     }
   }
   return false;
 };
 
 export const removeChipAdjacentToSelection =
-  (searchForward: boolean = false): Command =>
-  (state, dispatch) => {
+  (searchForward: boolean = false): Command.Pure =>
+  (target) => {
+    const { state } = target;
     if (state.selection.from !== state.selection.to) {
       return false;
     }
@@ -178,7 +182,7 @@ export const removeChipAdjacentToSelection =
       }
 
       from = $nextPos.pos;
-      to = $nextPos.pos + nodeToRemove.nodeSize;
+      to = $nextPos.pos + nodeToRemove.length;
     } else {
       // Look backward for a chip to remove
       const { anchor } = state.selection;
@@ -189,32 +193,33 @@ export const removeChipAdjacentToSelection =
         return false;
       }
 
-      const prevNodePos = $prevPos.pos - nodeToRemove.nodeSize;
+      const prevNodePos = $prevPos.pos - nodeToRemove.length;
       from = prevNodePos;
       to = $prevPos.pos;
     }
 
-    return removeChipCoveringRange(from, to)(state, dispatch);
+    return removeChipCoveringRange(from, to)(target, null);
   };
 
 export const removeChipCoveringRange =
-  (from: number, to: number): Command =>
-  (state, dispatch) => {
-    const { tr } = state;
-    const insertAt = Math.max(0, from - 1);
-    tr.deleteRange(from - 1, to + 1);
+  (from: number, to: number): Command.Pure =>
+  ({ state }) => {
+    const { doc } = state;
+    const removedText = doc.slice(from, to).textContent();
 
-    // If the document has content, ensure whitespace separates the two queryStr
-    // nodes surrounding the chip, which are now joined.
-    if (tr.doc.textContent) {
-      tr.setSelection(
-        TextSelection.near(tr.doc.resolve(insertAt), -1),
-      ).insertText(" ");
-    }
+    // If the document has content beyond the chip we're removing, ensure
+    // whitespace separates the two queryStr nodes surrounding the chip, which
+    // are now joined.
+    const docHasOtherText = doc.textContent().length > removedText.length;
+    const insert = docHasOtherText ? [Leaf.text(" ")] : [];
 
-    dispatch?.(tr);
+    const deleteFrom = Math.max(0, from - 1);
 
-    return true;
+    return {
+      changes: { from: deleteFrom, to: to + 1, insert, fit: true },
+      selection: (cx, changes) =>
+        GardSelection.near(cx, changes.mapPos(deleteFrom)),
+    };
   };
 
 /**
@@ -223,22 +228,23 @@ export const removeChipCoveringRange =
  * a part of the following query.
  */
 export const maybeAddChipAtPolarityChar =
-  (polarity: "+" | "-") => (view: EditorView) => {
-    const { doc, selection } = view.state;
+  (polarity: "+" | "-"): Command.Pure =>
+  (target) => {
+    const { state } = target;
+    const { doc, selection } = state;
+    const $from = doc.resolve(selection.from);
 
-    if (selection.$from.node().type !== queryStr) {
+    if ($from.parent.node.type !== queryStr) {
       return false;
     }
 
-    const characterAfterCaret = doc.textBetween(
-      selection.from,
-      Math.min(selection.to + 1, doc.nodeSize - 2),
-    );
+    const characterAfterCaret = doc
+      .slice(selection.from, Math.min(selection.to + 1, doc.length))
+      .textContent();
 
-    const characterBeforeCaret = doc.textBetween(
-      Math.max(selection.from - 1, 0),
-      selection.from,
-    );
+    const characterBeforeCaret = doc
+      .slice(Math.max(selection.from - 1, 0), selection.from)
+      .textContent();
 
     function isNonEmptyNonWhitespace(str: string) {
       return !hasWhitespace(str) && str !== "";
@@ -252,40 +258,37 @@ export const maybeAddChipAtPolarityChar =
       return false;
     }
 
-    insertChip(polarity, "")(view);
-
-    return true;
+    return insertChip(polarity, "")(target, null);
   };
 
 /**
  * If we're inserting a trailing colon in chipKey position, move to chipValue
  * position.
  */
-export const handleColon: Command = (state, dispatch) => {
+export const handleColon: Command.Pure = (target) => {
+  const { state } = target;
+  const $from = state.doc.resolve(state.selection.from);
   const selectionIsAtEndOfNode =
-    state.selection.from === state.selection.$from.after() - 1;
+    state.selection.from === $from.parent.after - 1;
   if (selectionIsWithinNodeType(state, chipKey) && selectionIsAtEndOfNode) {
-    return skipSuggestion(state, dispatch);
+    return skipSuggestion(target, null);
   }
 
   return false;
 };
 
-export const skipSuggestion: Command = (state, dispatch) => {
-  const tr = state.tr;
+export const skipSuggestion: Command.Pure = ({ state }) => {
   const insertPos = getNextPositionAfterTypeaheadSelection(
-    tr.doc,
-    tr.selection.from,
+    state.doc,
+    state.selection.from,
   );
 
-  if (insertPos) {
-    tr.setSelection(TextSelection.create(tr.doc, insertPos)).setMeta(
-      TRANSACTION_IGNORE_READONLY,
-      true,
-    );
+  if (insertPos === undefined) {
+    return {};
   }
 
-  dispatch?.(tr);
-
-  return true;
+  return {
+    selection: GardSelection.cursor(insertPos),
+    annotations: TRANSACTION_IGNORE_READONLY.of(true),
+  };
 };
