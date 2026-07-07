@@ -402,7 +402,6 @@ export const createCqlInput = (
             padding: 0;
             background: none;
             border: none;
-            pointer-events: none;
           }
 
           .Cql__TypeaheadPopoverContainer > * {
@@ -411,7 +410,6 @@ export const createCqlInput = (
 
           .Cql__TypeaheadPopover {
             display: flex;
-            pointer-events: auto;
             width: 100%;
             max-height: 100%;
             padding: ${typeahead.layout.padding};
