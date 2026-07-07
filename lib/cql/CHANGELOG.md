@@ -1,5 +1,12 @@
 # @guardian/cql
 
+## 1.8.6
+
+### Patch Changes
+
+- 4bcde93: Allow clicks below CQL dropdown
+- 36b43cd: Detect polarity changes in programmatic value updates
+
 ## 1.8.5
 
 ### Patch Changes
