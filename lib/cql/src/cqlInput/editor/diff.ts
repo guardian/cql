@@ -16,8 +16,6 @@ import { IS_READ_ONLY, IS_SELECTED } from "./schema";
  *
  * Source: https://github.com/ProseMirror/prosemirror-model/blob/c8c7b62645d2a8293fa6b7f52aa2b04a97821f34/src/diff.ts
  */
- * Source: https://github.com/ProseMirror/prosemirror-model/blob/c8c7b62645d2a8293fa6b7f52aa2b04a97821f34/src/diff.ts
- */
 
 /** Attrs that are transient editor state, not query content. */
 const TRANSIENT_ATTRS: ReadonlySet<string> = new Set([IS_SELECTED, IS_READ_ONLY]);
