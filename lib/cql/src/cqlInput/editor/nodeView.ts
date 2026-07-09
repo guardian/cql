@@ -26,53 +26,62 @@ const getChipFromEvent = (
     return;
   }
 
+  // `posAtDOM` on the chip element resolves to a position inside the chip
+  // (its content start), not the chip's own boundary. Walk up to the
+  // enclosing chip plot to find the chip node and its document position.
   const pos = wg.posAtDOM(chipEl);
-  const node = wg.state.doc.resolve(pos).nodeAfter;
-  if (!node || node.type !== chipType) {
+  const $pos = wg.state.doc.resolve(pos);
+  const chipPos = $pos.matchingParent((plot) => plot.type === chipType);
+  if (!chipPos) {
     return;
   }
 
-  return { pos, node: node as Plot, el: chipEl };
+  return { pos: chipPos.before, node: chipPos.node as Plot, el: chipEl };
 };
 
 /**
  * The polarity handle. Clicking it toggles the chip's polarity (its plot
  * parameter) between "+" (include) and "-" (exclude).
+ *
+ * The click itself is handled by a `Wordgard.domEventHandler` (see
+ * `chipViewExtensions`) rather than the widget's own `handleEvent`, because a
+ * widget's `handleEvent` only runs for DOM events wordgard itself processes,
+ * and `click` is not one of them.
  */
+const POLARITY_HANDLE_CLASS = "Cql__ChipWrapperPolarityHandle";
+const DELETE_HANDLE_CLASS = "Cql__ChipWrapperDeleteHandle";
+
 const polarityWidget = Widget.define<string>({
   render: (polarity) => {
     const el = document.createElement("span");
-    el.classList.add("Cql__ChipWrapperPolarityHandle");
+    el.classList.add(POLARITY_HANDLE_CLASS);
     el.setAttribute("data-testid", TEST_ID_POLARITY_HANDLE);
     el.setAttribute("contentEditable", "false");
     el.innerHTML = polarityUIMap[polarity] ?? polarityUIMap["+"];
     return el;
   },
-  handleEvent: (event, wg) => {
-    if (event.type !== "click") {
-      return false;
-    }
-
-    const chip = getChipFromEvent(event, wg);
-    if (!chip) {
-      return false;
-    }
-
-    const currentPolarity = chip.el.getAttribute("data-polarity") ?? "+";
-    const newPolarity = currentPolarity === "+" ? "-" : "+";
-
-    wg.dispatch({
-      changes: {
-        from: chip.pos,
-        to: chip.pos + chip.node.length,
-        insert: [chipType.of(newPolarity).create(chip.node.content)],
-        fit: true,
-      },
-    });
-
-    return true;
-  },
 });
+
+const togglePolarityAtEvent = (event: Event, wg: Wordgard): boolean => {
+  const chip = getChipFromEvent(event, wg);
+  if (!chip) {
+    return false;
+  }
+
+  const currentPolarity = chip.el.getAttribute("data-polarity") ?? "+";
+  const newPolarity = currentPolarity === "+" ? "-" : "+";
+
+  wg.dispatch({
+    changes: {
+      from: chip.pos,
+      to: chip.pos + chip.node.length,
+      insert: [chipType.of(newPolarity).create(chip.node.content)],
+      fit: true,
+    },
+  });
+
+  return true;
+};
 
 /**
  * The delete handle. Clicking it removes the whole chip.
@@ -80,32 +89,29 @@ const polarityWidget = Widget.define<string>({
 const deleteWidget = Widget.create({
   render: () => {
     const el = document.createElement("span");
-    el.classList.add("Cql__ChipWrapperDeleteHandle");
+    el.classList.add(DELETE_HANDLE_CLASS);
     el.setAttribute("contentEditable", "false");
     el.innerHTML = "×";
     return el;
   },
-  handleEvent: (event, wg) => {
-    if (event.type !== "click") {
-      return false;
-    }
-
-    const chip = getChipFromEvent(event, wg);
-    if (!chip) {
-      return false;
-    }
-
-    const spec = removeChipCoveringRange(chip.pos, chip.pos + chip.node.length)(
-      wg,
-      null,
-    );
-    if (spec) {
-      wg.dispatch(spec);
-    }
-
-    return true;
-  },
 });
+
+const removeChipAtEvent = (event: Event, wg: Wordgard): boolean => {
+  const chip = getChipFromEvent(event, wg);
+  if (!chip) {
+    return false;
+  }
+
+  const spec = removeChipCoveringRange(chip.pos, chip.pos + chip.node.length)(
+    wg,
+    null,
+  );
+  if (spec) {
+    wg.dispatch(spec);
+  }
+
+  return true;
+};
 
 const colonWidget = Widget.create({
   render: () => {
@@ -134,4 +140,19 @@ export const chipViewExtensions: GardState.Extension = [
     "data-testid",
     TEST_ID_CHIP_VALUE,
   ),
+  // Clicks on the chip handles are dispatched here rather than via each
+  // widget's `handleEvent`, which only runs for events wordgard itself
+  // processes (`click` is not one of them).
+  Wordgard.domEventHandler("click", (event, wg) => {
+    const target = event.target as HTMLElement | null;
+    if (target?.closest(`.${POLARITY_HANDLE_CLASS}`)) {
+      event.preventDefault();
+      return togglePolarityAtEvent(event, wg);
+    }
+    if (target?.closest(`.${DELETE_HANDLE_CLASS}`)) {
+      event.preventDefault();
+      return removeChipAtEvent(event, wg);
+    }
+    return false;
+  }),
 ];

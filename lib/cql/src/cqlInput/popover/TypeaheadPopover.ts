@@ -154,6 +154,10 @@ export class TypeaheadPopover extends Popover {
       case "down": {
         if (this.currentSuggestion && !this.isVisible) {
           this.show();
+          // Signal that the key was handled so the caller prevents the default
+          // caret movement; otherwise the arrow key moves the selection, which
+          // reparses the document and immediately hides the popover again.
+          return true;
         }
       }
     }

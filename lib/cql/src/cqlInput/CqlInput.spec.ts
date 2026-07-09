@@ -1,4 +1,4 @@
-import { describe, expect, it } from "bun:test";
+import { afterEach, describe, expect, it } from "bun:test";
 import { userEvent } from "@testing-library/user-event";
 import { TestTypeaheadHelpers } from "../lang/fixtures/TestTypeaheadHelpers";
 import { createCqlInput, Typeahead } from "../lib";
@@ -9,6 +9,22 @@ describe("CqlInput", () => {
   const typeahead = new Typeahead(typeheadHelpers.typeaheadFields);
   const CqlInput = createCqlInput(typeahead);
   customElements.define("cql-input", CqlInput);
+
+  // Explicitly remove each instance so its `disconnectedCallback` fires,
+  // tearing down wordgard's DOM observer and pending animation-frame flush.
+  // Clearing `innerHTML` alone does not reliably fire `disconnectedCallback`
+  // for the shadow-DOM editor under happy-dom, which would otherwise leak an
+  // observer that crashes a later test file when it flushes. We also clear any
+  // leftover document selection: wordgard's DOM observer reads the selection
+  // during construction (before its document tile exists), so a stale range
+  // pointing outside the editor would crash the next editor that is created.
+  afterEach(async () => {
+    document.body
+      .querySelectorAll("cql-input")
+      .forEach((el) => el.remove());
+    document.getSelection()?.removeAllRanges();
+    await tick();
+  });
 
   const createCqlInputContainer = (value?: string) => {
     const container = document.body;
@@ -22,6 +38,7 @@ describe("CqlInput", () => {
 
   it("should render the given value when first instantiated", async () => {
     const { container } = createCqlInputContainer("one");
+    await tick();
     const result = await getByTextShadowed(container, "one");
     expect(result).toBeTruthy();
   });
@@ -35,6 +52,7 @@ describe("CqlInput", () => {
       (e) => (callbackValue = e.detail.queryStr),
     );
     cqlInput.setAttribute("value", "two");
+    await tick();
     const result = await getByTextShadowed(container, "two");
     expect(result).toBeTruthy();
     expect(callbackValue).toBe("two");

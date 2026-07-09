@@ -163,6 +163,90 @@ export const createCqlPlugin = ({
   };
 
   /**
+   * Describe a caret that sits inside a chip's key or value: which chip (by
+   * index among the document's chips), which sub-node, and the offset into
+   * that sub-node's text content. This semantic location survives the reparse
+   * even when it fully rewrites the document (e.g. `fit` dropped an empty
+   * wrapper `queryStr`, so position mapping collapses), because
+   * canonicalisation never adds or removes chips.
+   */
+  const locateCaretInChip = (
+    doc: Plot.Doc,
+    pos: number,
+  ):
+    | { chipIndex: number; subType: Node.Type; offset: number }
+    | undefined => {
+    const $pos = doc.resolve(pos);
+    const chip = $pos.matchingParent((plot) => plot.type === chipType);
+    if (!chip) {
+      return;
+    }
+    const sub = $pos.matchingParent(
+      (plot) =>
+        plot.type === chipKeyTag.type || plot.type === chipValueTag.type,
+    );
+    if (!sub) {
+      return;
+    }
+
+    let chipIndex = -1;
+    let index = 0;
+    doc.iterate((node, nodePos) => {
+      if (node.type === chipType) {
+        if (nodePos === chip.before) {
+          chipIndex = index;
+        }
+        index += 1;
+        return false;
+      }
+      return undefined;
+    });
+
+    if (chipIndex === -1) {
+      return;
+    }
+
+    // `sub.before + 1` is the content start of the sub-node.
+    return { chipIndex, subType: sub.node.type, offset: pos - (sub.before + 1) };
+  };
+
+  /**
+   * Given a semantic caret location, resolve it to a concrete position in the
+   * (reparsed) document.
+   */
+  const resolveCaretInChip = (
+    doc: Plot.Doc,
+    location: { chipIndex: number; subType: Node.Type; offset: number },
+  ): number | undefined => {
+    let targetChipStart = -1;
+    let index = 0;
+    doc.iterate((node, nodePos) => {
+      if (node.type === chipType) {
+        if (index === location.chipIndex) {
+          targetChipStart = nodePos;
+        }
+        index += 1;
+        return false;
+      }
+      return undefined;
+    });
+
+    if (targetChipStart === -1) {
+      return;
+    }
+
+    const subPos = findNodeAt(targetChipStart, doc, location.subType);
+    if (subPos === -1) {
+      return;
+    }
+
+    const $sub = doc.resolve(subPos + 1);
+    const contentStart = subPos + 1;
+    const contentEnd = $sub.parent.node.length + subPos - 1;
+    return Math.min(contentStart + location.offset, contentEnd);
+  };
+
+  /**
    * Move the selection into the chip key when the previous edit implies the
    * user is now editing key content (e.g. they have just typed a polarity
    * character, or a trailing colon that should move them into the value).
@@ -175,16 +259,42 @@ export const createCqlPlugin = ({
     selection: GardSelection,
     prevDoc: Plot.Doc,
     cx: GardSelection.Context,
+    changes: ChangeSet,
   ): GardSelection => {
     const currentDoc = cx.doc;
-    const defaultPos = Math.min(selection.from, currentDoc.length - 2);
+
+    // If the caret was already inside a chip (e.g. `insertChip` placed it in
+    // the key or value), preserve that semantic location. Position mapping is
+    // unreliable here because `fit` can drop empty wrapper nodes, causing the
+    // reparse to rewrite the whole document.
+    if (selection.from === selection.to) {
+      const location = locateCaretInChip(prevDoc, selection.from);
+      if (location) {
+        const resolved = resolveCaretInChip(currentDoc, location);
+        if (resolved !== undefined) {
+          return GardSelection.near(cx, resolved, 1);
+        }
+      }
+    }
+
+    // `selection` is expressed in *previous document* coordinates. The reparse
+    // merge may insert or drop wrapper nodes (e.g. a leading empty `queryStr`),
+    // shifting every position, so map the caret through the merge changes
+    // before resolving it against the new document. Prev-doc lookups below
+    // (the typed-colon detection) keep using the original position.
+    const mappedFrom = changes.mapPos(selection.from, -1);
+    // The last selectable caret position lives *inside* the trailing
+    // `queryStr`, one position before the document boundary (`length - 1`).
+    // Clamping to `length - 2` lands on the trailing block's opening boundary,
+    // which resolves to the document node rather than into its content.
+    const defaultPos = Math.min(mappedFrom, currentDoc.length - 1);
     const defaultSelection = GardSelection.near(cx, Math.max(defaultPos, 0));
 
-    if (selection.from > currentDoc.length || selection.from !== selection.to) {
+    if (mappedFrom > currentDoc.length || selection.from !== selection.to) {
       return defaultSelection;
     }
 
-    const $from = currentDoc.resolve(selection.from);
+    const $from = currentDoc.resolve(mappedFrom);
     const charBeforeCaret = prevDoc.textContent({
       from: Math.max(selection.from - 1, 0),
       to: selection.from,
@@ -192,7 +302,35 @@ export const createCqlPlugin = ({
 
     let nodeTypeToMoveTo: Node.Type | undefined;
 
-    if ($from.parent.node.type === queryStrTag.type && charBeforeCaret === ":") {
+    // Detect a trailing colon typed in query-string context (i.e. the user is
+    // forming a new chip key). This must be checked against the *previous*
+    // document, because after the reparse merge the typed `:` has already been
+    // absorbed into a chip and the position now resolves inside the chipKey.
+    const $fromPrev = prevDoc.resolve(
+      Math.min(selection.from, prevDoc.length),
+    );
+
+    if (
+      $fromPrev.parent.node.type === queryStrTag.type &&
+      charBeforeCaret === ":"
+    ) {
+      // The typed colon just formed a chip from the preceding query text. The
+      // mapped caret lands *after* the new chip (in the trailing query string),
+      // so a forward search would miss the chip's value. Scan for the last
+      // `chipValue` at or before the mapped position instead.
+      let valuePos = -1;
+      currentDoc.iterate(
+        0,
+        Math.min(mappedFrom + 1, currentDoc.length),
+        (node, nodePos) => {
+          if (node.type === chipValueTag.type) {
+            valuePos = nodePos;
+          }
+        },
+      );
+      if (valuePos !== -1) {
+        return GardSelection.near(cx, valuePos + 1, 1);
+      }
       nodeTypeToMoveTo = chipValueTag.type;
     } else {
       const parentType = $from.parent.node.type;
@@ -203,7 +341,7 @@ export const createCqlPlugin = ({
     }
 
     if (nodeTypeToMoveTo) {
-      const nodePos = findNodeAt(selection.from, currentDoc, nodeTypeToMoveTo);
+      const nodePos = findNodeAt(mappedFrom, currentDoc, nodeTypeToMoveTo);
       if (nodePos !== -1) {
         return GardSelection.near(cx, nodePos + 1, 1);
       }
@@ -229,7 +367,8 @@ export const createCqlPlugin = ({
 
     return {
       ...mergeSpec,
-      selection: (cx) => moveSelectionIntoChipKey(prevSelection, prevDoc, cx),
+      selection: (cx, changes) =>
+        moveSelectionIntoChipKey(prevSelection, prevDoc, cx, changes),
       annotations: ACTION_NEW_STATE.of(pluginState),
     };
   };
@@ -278,26 +417,21 @@ export const createCqlPlugin = ({
         }
         const { proseMirrorTokens } = state.field(field);
         return RangeSet.create(
-          tokensToDecorations(proseMirrorTokens).flatMap(
-            ({ from, to, tokenType }): [number, number, Decoration.Range][] => [
-              [
-                from,
-                to,
-                Decoration.Range.attribute(
-                  "class",
-                  `CqlToken__${tokenType}`,
-                  { scope: "all" },
-                ),
-              ],
-              [
-                from,
-                to,
-                Decoration.Range.attribute(
-                  "data-testid",
-                  getTokenTestId(tokenType),
-                  { scope: "all" },
-                ),
-              ],
+          tokensToDecorations(proseMirrorTokens).map(
+            ({ from, to, tokenType }): [number, number, Decoration.Range] => [
+              from,
+              to,
+              // A single wrapper decoration carries both the syntax-highlight
+              // class and the test id. Two separate `attribute` decorations at
+              // the same range collide (only one applies), so the test id would
+              // otherwise be dropped.
+              Decoration.Range.wrapper("span", {
+                attributes: {
+                  class: `CqlToken__${tokenType}`,
+                  "data-testid": getTokenTestId(tokenType),
+                },
+                scope: "all",
+              }),
             ],
           ),
         );
@@ -449,7 +583,11 @@ export const createCqlPlugin = ({
         doc: tr.newDoc,
         config: tr.startState.config,
       };
-      return { selection: GardSelection.near(cx, tr.newSelection.from) };
+      // Redirect back to where the selection was before this transaction,
+      // rather than snapping to the nearest valid position around the invalid
+      // one (which would land the caret at the read-only chip key boundary).
+      const previousFrom = tr.changes.mapPos(tr.startState.selection.from);
+      return { selection: GardSelection.near(cx, previousFrom) };
     }
 
     return null;
@@ -556,6 +694,33 @@ export const createCqlPlugin = ({
         removeChipAtSelectionIfEmpty(wg, null) ||
         removeChipAdjacentToSelection(false)(wg, null),
     }),
+    // Chip removal must also work when a modifier is held (e.g. Cmd+Backspace
+    // to delete a whole word/chip). "Mod" maps to Cmd on macOS and Ctrl
+    // elsewhere; "Meta" matches the Cmd/Windows key directly.
+    KeyBinding.of({
+      key: "Mod-Delete",
+      run: (wg) =>
+        removeChipAtSelectionIfEmpty(wg, null) ||
+        removeChipAdjacentToSelection(true)(wg, null),
+    }),
+    KeyBinding.of({
+      key: "Mod-Backspace",
+      run: (wg) =>
+        removeChipAtSelectionIfEmpty(wg, null) ||
+        removeChipAdjacentToSelection(false)(wg, null),
+    }),
+    KeyBinding.of({
+      key: "Meta-Delete",
+      run: (wg) =>
+        removeChipAtSelectionIfEmpty(wg, null) ||
+        removeChipAdjacentToSelection(true)(wg, null),
+    }),
+    KeyBinding.of({
+      key: "Meta-Backspace",
+      run: (wg) =>
+        removeChipAtSelectionIfEmpty(wg, null) ||
+        removeChipAdjacentToSelection(false)(wg, null),
+    }),
     KeyBinding.of({
       key: "Enter",
       run: (wg) => {
@@ -606,13 +771,30 @@ export const createCqlPlugin = ({
 
   const applySuggestion =
     (wg: Wordgard) => (from: number, to: number, value: string) => {
+      // The mapped suggestion range can extend past the boundaries of the node
+      // it targets (a value suggestion's range starts on the chip's `:`
+      // separator and, for quoted values, ends past the closing quote). Unlike
+      // ProseMirror's `replaceRangeWith`, wordgard's `fit` will not fit text
+      // into a node when the replaced range spans that node's boundary, so we
+      // clamp the range to the content of the node the suggestion targets.
+      const { doc } = wg.state;
+      const probe = Math.min(Math.max(from + 1, 0), to);
+      const target = doc.resolve(probe).parent;
+      const insertFrom = Math.max(from, target.start);
+      const insertTo = Math.min(to, target.after - 1);
+
       wg.dispatch({
-        changes: { from, to, insert: [Leaf.text(value)], fit: true },
+        changes: {
+          from: insertFrom,
+          to: insertTo,
+          insert: [Leaf.text(value)],
+          fit: true,
+        },
       });
 
       const insertPos = getNextPositionAfterTypeaheadSelection(
         wg.state.doc,
-        from,
+        insertFrom,
       );
       if (insertPos !== undefined) {
         wg.dispatch({
@@ -651,34 +833,69 @@ export const createCqlPlugin = ({
     }
   };
 
-  const handlePaste = (wg: Wordgard, event: ClipboardEvent): boolean => {
+  const handlePaste = (
+    wg: Wordgard,
+    event: ClipboardEvent,
+    slice: Slice,
+  ): boolean => {
     const maybeContent = getContentFromClipboard(event);
-    if (!maybeContent || maybeContent.type === "HTML") {
+    if (!maybeContent) {
       return false;
     }
 
-    const { content } = maybeContent;
     const { from, to } = wg.state.selection;
     const fromNode = wg.state.doc.resolve(from).parent.node;
     const toNode = wg.state.doc.resolve(to).parent.node;
     const withinChipValue =
       fromNode.type === chipValueTag.type && fromNode === toNode;
 
+    // A selection at the document boundary (depth 0) is not a valid inline
+    // insertion point; move it inside the adjacent query string.
+    const clampIntoTextBlock = (pos: number) =>
+      wg.state.doc.resolve(pos).depth === 0
+        ? Math.min(pos + 1, Math.max(wg.state.doc.length - 1, 0))
+        : pos;
+
+    if (maybeContent.type === "HTML") {
+      // Native CQL markup: wordgard has already parsed the clipboard HTML into
+      // `slice`. Insert it directly, placing the caret at the end of the
+      // pasted content.
+      const insertFrom = clampIntoTextBlock(from);
+      const insertTo = clampIntoTextBlock(to);
+      wg.dispatch({
+        changes: { from: insertFrom, to: insertTo, insert: slice, fit: true },
+        selection: GardSelection.cursor(insertFrom + slice.length),
+      });
+      return true;
+    }
+
+    const { content } = maybeContent;
+
     if (withinChipValue) {
       wg.dispatch({
         changes: { from, to, insert: [Leaf.text(content)], fit: true },
+        // Place the caret at the end of the pasted text, rather than letting it
+        // map to the start of the insertion.
+        selection: GardSelection.cursor(from + content.length),
       });
       return true;
     }
 
     const docToInsert = queryToProseMirrorDoc(content, parser);
+    // The parsed document wraps the content in leading/trailing query strings;
+    // strip those wrappers before inserting into the existing document.
+    const insertSize = docToInsert.length - 2;
+    const insertFrom = clampIntoTextBlock(from);
+    const insertTo = clampIntoTextBlock(to);
     wg.dispatch({
       changes: {
-        from,
-        to,
+        from: insertFrom,
+        to: insertTo,
         insert: docToInsert.slice(1, docToInsert.length - 1),
         fit: true,
       },
+      // Place the caret at the end of the pasted content.
+      selection: GardSelection.cursor(insertFrom + insertSize),
     });
     return true;
   };
@@ -768,7 +985,7 @@ export const createCqlPlugin = ({
     chipViewExtensions,
     ...keyBindings,
     Wordgard.domEventHandler("blur", (_event, wg) => {
-      wg.dispatch({ selection: GardSelection.near(wg.state, 0) });
+      wg.dispatch({ selection: GardSelection.near(wg.state, 1) });
       return false;
     }),
     Wordgard.domEventHandler("dblclick", (event, wg) => {
@@ -780,8 +997,29 @@ export const createCqlPlugin = ({
       }
       return false;
     }),
+    // Mobile soft keyboards do not reliably fire keydown events, so the desktop
+    // `char` key bindings for "+"/"-" never run. Instead they surface the typed
+    // character through a `beforeinput` (insertText) event. Intercept it here to
+    // create the chip, mirroring the desktop path.
+    Wordgard.domEventHandler("beforeinput", (event, wg) => {
+      const inputEvent = event as InputEvent;
+      if (inputEvent.inputType !== "insertText") {
+        return false;
+      }
+      const polarity = inputEvent.data;
+      if (polarity !== "+" && polarity !== "-") {
+        return false;
+      }
+      const spec = maybeAddChipAtPolarityChar(polarity)(wg, null);
+      if (!spec) {
+        return false;
+      }
+      event.preventDefault();
+      wg.dispatch(spec);
+      return true;
+    }),
     Wordgard.clipboardTextSerializer.of((slice) => serializeSlice(slice)),
-    Wordgard.pasteHandler.of((wg, event) => handlePaste(wg, event)),
+    Wordgard.pasteHandler.of((wg, event, slice) => handlePaste(wg, event, slice)),
     cqlPlugin,
   ];
 };

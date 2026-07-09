@@ -33,7 +33,7 @@ export const createCqlInput = (
   config: CqlConfig = {
     syntaxHighlighting: true,
   },
-) => {
+): CustomElementConstructor => {
   class CqlInput extends HTMLElement {
     static observedAttributes = ["value", "placeholder"];
 
@@ -121,8 +121,6 @@ export const createCqlInput = (
         plugins: [plugin],
         parser: this.parseCqlStr,
       });
-
-      editorView.contentDOM.classList.add("Cql__ContentEditable");
 
       this.updateEditorView = updateEditorView;
       this.editorView = editorView;

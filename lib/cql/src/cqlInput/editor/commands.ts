@@ -121,11 +121,21 @@ export const insertChip =
         fit: true,
       },
       selection: (cx, changes) => {
-        const nodePos = findNodeAt(
-          changes.mapPos(initialFrom, -1),
-          cx.doc,
-          caretDestination,
-        );
+        // `fit: true` may split the surrounding textblock to make room for the
+        // block-level chip, so the old caret position can map to *after* the
+        // inserted chip rather than into it. The chip we just inserted has no
+        // pre-image in the old document, so instead of mapping `initialFrom` we
+        // take the start of the changed range (in the new document's
+        // coordinates) and search forward from there for the destination node.
+        let insertedFrom = -1;
+        changes.iterChangedRanges((_fromA, _toA, fromB) => {
+          if (insertedFrom === -1) {
+            insertedFrom = fromB;
+          }
+        });
+        const searchFrom =
+          insertedFrom === -1 ? changes.mapPos(initialFrom, -1) : insertedFrom;
+        const nodePos = findNodeAt(searchFrom, cx.doc, caretDestination);
 
         return nodePos === -1 ? null : GardSelection.near(cx, nodePos + 1);
       },

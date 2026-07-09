@@ -1,2 +1,11 @@
+# Bun ignores the JSX settings in tsconfig.json (it defaults to the React
+# automatic runtime, which — because React is present in the dependency tree —
+# compiles JSX into frozen React dev elements that Preact's renderer cannot
+# diff). Configure the classic Preact JSX transform here so `bun test` and
+# `bun run` produce real Preact vnodes, matching tsconfig.json.
+jsx = "react"
+jsxFactory = "h"
+jsxFragment = "Fragment"
+
 [test]
 preload = "./happydom.ts"

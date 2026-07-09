@@ -53,6 +53,11 @@ export const createEditorView = ({
       KeyBinding.of({ key: "Mod-z", run: undo }),
       KeyBinding.of({ key: "Mod-Shift-z", run: redo }),
       KeyBinding.of({ key: "Mod-a", run: maybeSelectValue }),
+      // Set the content class declaratively rather than mutating
+      // `contentDOM.classList` after construction: an attribute mutation on the
+      // root content element makes wordgard's DOMObserver resolve a position on
+      // the parent-less root tile, which throws.
+      Wordgard.contentAttributes.of({ class: "Cql__ContentEditable" }),
       history(),
     ],
   });

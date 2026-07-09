@@ -78,7 +78,9 @@ export const selectedMark = Mark.define("selected", {
 export const readOnlyMark = Mark.define("readOnly", {
   target: [chipKeyTag.type, chipValueTag.type],
   spanning: false,
-  shape: { attributes: { "data-readonly": "true" } },
+  shape: {
+    attributes: { "data-readonly": "true", contenteditable: "false" },
+  },
 });
 
 export const schema = Schema.define([

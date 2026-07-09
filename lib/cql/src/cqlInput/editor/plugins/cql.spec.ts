@@ -1007,6 +1007,7 @@ describe("cql plugin", () => {
       expect(editor.selection.to).toBe(1);
     });
 
+
     // The selection is correct immediately after handleDoubleClick fires, but is not correct in the assertion 🤔
     it.todo(
       "should select the whole document when the user double clicks on the input container",

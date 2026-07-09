@@ -43,6 +43,15 @@ export function findDiffStartForContent(
       for (let j = 0; childA.param[j] == childB.param[j]; j++) pos++;
       return pos;
     }
+    // ProseMirror's `findDiffStart` returns `pos` here when the two nodes have
+    // different markup (`!childA.sameMarkup(childB)`). We only care about the
+    // node *type* — attributes/marks are intentionally ignored — but the type
+    // guard is essential: without it, two nodes of different types (e.g. a
+    // `queryStr` and a `chip`) would be recursed into as if they were the same
+    // node, yielding a bogus diff position and a corrupted merge.
+    if (childA.type !== childB.type) {
+      return pos;
+    }
     const contentA = childContent(childA);
     const contentB = childContent(childB);
     if (contentA.length || contentB.length) {
@@ -87,6 +96,12 @@ export function findDiffEndForContent(
         posA--;
         posB--;
       }
+      return { a: posA, b: posB };
+    }
+    // Different node types mark the end boundary of the diff (see the matching
+    // comment in `findDiffStartForContent`). Only recurse into children when
+    // the nodes share a type.
+    if (childA.type !== childB.type) {
       return { a: posA, b: posB };
     }
     const contentA = childContent(childA);
