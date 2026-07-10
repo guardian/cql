@@ -38,7 +38,7 @@ export const createCqlInput = (
   config: CqlConfig = {
     syntaxHighlighting: true,
   },
-) => {
+): CustomElementConstructor => {
   class CqlInput extends HTMLElement {
     static observedAttributes = ["value", "placeholder"];
 
