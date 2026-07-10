@@ -991,13 +991,13 @@ describe("cql plugin", () => {
       await waitFor("1: 2:");
     });
 
-    it("should clear the selection when the user blurs the input", async () => {
+    it("should not clear the selection when the user blurs the input", async () => {
       const { editor } = createCqlEditor("+tag:example");
 
       await editor.selectText("all");
       document.body.focus();
 
-      expect(editor.selection.to).toBe(1);
+      expect(editor.selection.to).toBe(editor.doc.nodeSize - 2);
     });
 
     // The selection is correct immediately after handleDoubleClick fires, but is not correct in the assertion 🤔
