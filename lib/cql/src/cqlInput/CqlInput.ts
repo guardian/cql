@@ -351,7 +351,7 @@ export const createCqlInput = (
             overflow: hidden;
           }
 
-          .${CLASS_CHIP_SELECTED} {
+          .ProseMirror-focused .${CLASS_CHIP_SELECTED} {
             background-color: #334fa3;
           }
 

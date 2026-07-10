@@ -3,7 +3,6 @@ import {
   AllSelection,
   Plugin,
   PluginKey,
-  TextSelection,
   Transaction,
 } from "prosemirror-state";
 import { Mapping } from "prosemirror-transform";
@@ -386,15 +385,6 @@ export const createCqlPlugin = ({
             return maybeAddChipAtPolarityChar(text)(view);
         }
         return false;
-      },
-      handleDOMEvents: {
-        blur: (view) => {
-          view.dispatch(
-            view.state.tr.setSelection(
-              TextSelection.near(view.state.doc.resolve(0)),
-            ),
-          );
-        },
       },
       /**
        * Handle pasting text manually, to ensure that selection state is
