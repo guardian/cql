@@ -13,3 +13,4 @@ export {
   CqlStr,
   CqlField,
 } from "./lang/ast.ts";
+export type { CqlTheme } from './cqlInput/theme.ts';

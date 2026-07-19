@@ -4,33 +4,36 @@ import { mergeDeep } from "../utils/merge";
 export type CqlTheme = {
   baseFontSize: string;
   baseBorderRadius: string;
+  color: {
+    text: string;
+  };
   input: {
     layout: {
       padding: string;
     };
-  };
-  placeholder: {
-    color: {
-      text: string;
+    chipWrapper: {
+      color: {
+        background: string;
+      };
+      chipContent: {
+        layout: {
+          padding: string;
+        };
+        color: {
+          readonly: string;
+        };
+      };
+      chipHandle: {
+        color: {
+          background: string;
+          border: string;
+        };
+      };
     };
-  };
-  chipWrapper: {
-    color: {
-      background: string;
-    };
-  };
-  chipContent: {
-    layout: {
-      padding: string;
-    };
-    color: {
-      readonly: string;
-    };
-  };
-  chipHandle: {
-    color: {
-      background: string;
-      border: string;
+    placeholder: {
+      color: {
+        text: string;
+      };
     };
   };
   typeahead: {
@@ -68,33 +71,36 @@ export type CqlTheme = {
 const defaultTheme: CqlTheme = {
   baseFontSize: "28px",
   baseBorderRadius: "5px",
+  color: {
+    text: "#eee",
+  },
   input: {
     layout: {
       padding: "5px",
     },
-  },
-  placeholder: {
-    color: {
-      text: "#9d9d9d",
+    placeholder: {
+      color: {
+        text: "#9d9d9d",
+      },
     },
-  },
-  chipWrapper: {
-    color: {
-      background: "rgba(255,255,255,0.2)",
-    },
-  },
-  chipContent: {
-    layout: {
-      padding: "5px",
-    },
-    color: {
-      readonly: "#bbb",
-    },
-  },
-  chipHandle: {
-    color: {
-      background: "#3737378f",
-      border: "none",
+    chipWrapper: {
+      color: {
+        background: "rgba(255,255,255,0.2)",
+      },
+      chipContent: {
+        layout: {
+          padding: "5px",
+        },
+        color: {
+          readonly: "#bbb",
+        },
+      },
+      chipHandle: {
+        color: {
+          background: "#3737378f",
+          border: "none",
+        },
+      },
     },
   },
   typeahead: {
