@@ -47,16 +47,19 @@ describe("utils", () => {
    */
   const assertCqlStrPosFromDocPos = async (
     query: string,
-    expectedIndexForQuery: number,
     getPos: (node: Node) => number,
+    expectedIndexForQuery: number,
   ) => {
     const tokens = queryToProseMirrorTokens(query);
-    const mapping = createProseMirrorTokenToDocumentMapping(tokens);
+    const mapping = createProseMirrorTokenToDocumentMapping(tokens).invert();
     const node = tokensToDoc(tokens);
 
     node.check();
 
-    expect(mapping.map(expectedIndexForQuery)).toBe(getPos(node));
+    expect(
+      mapping.map(getPos(node)),
+      `Expected ProseMirror document position ${getPos(node)} to map to CQL position ${expectedIndexForQuery} ('${query[expectedIndexForQuery]}')`,
+    ).toBe(expectedIndexForQuery);
   };
 
   describe("tokensToDoc", () => {
@@ -170,9 +173,7 @@ describe("utils", () => {
     });
 
     it("should preserve whitespace within values that have whitespace", async () => {
-      const tokens = queryToProseMirrorTokens(
-        'example +key:"1 2" example',
-      );
+      const tokens = queryToProseMirrorTokens('example +key:"1 2" example');
       const node = tokensToDoc(tokens);
 
       const expected = doc(
@@ -279,7 +280,7 @@ describe("utils", () => {
       });
 
       it("with polarity symbols", async () => {
-        const text = await getTextFromTokenRanges('+example -example');
+        const text = await getTextFromTokenRanges("+example -example");
 
         expect(text).toEqual(["+", "example", "-", "example", ""]);
       });
@@ -323,11 +324,27 @@ describe("utils", () => {
       });
 
       it("with selection in an empty chip key", () => {
-        assertCqlStrPosFromDocPos("+:", 1, node => findNodeAt(0, node, schema.nodes.chipKey) + 1)
+        assertCqlStrPosFromDocPos(
+          "+:",
+          (node) => findNodeAt(0, node, schema.nodes.chipKey) + 1,
+          1,
+        );
       });
 
       it("with selection in an empty chip value", () => {
-        assertCqlStrPosFromDocPos("+a:", 2, node => findNodeAt(0, node, schema.nodes.chipValue) + 1)
+        assertCqlStrPosFromDocPos(
+          "+a:",
+          (node) => findNodeAt(0, node, schema.nodes.chipValue) + 1,
+          2,
+        );
+      });
+
+      it("with selection at the end of a chip value", () => {
+        assertCqlStrPosFromDocPos(
+          "+a:b",
+          (node) => findNodeAt(0, node, schema.nodes.chipValue) + 2,
+          4,
+        );
       });
     });
   });
