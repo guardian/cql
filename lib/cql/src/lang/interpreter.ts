@@ -1,5 +1,5 @@
 import { CqlBinary, CqlExpr, CqlField, CqlQuery } from "./ast";
-import { hasWhitespace, shouldQuoteFieldValue } from "./utils";
+import { shouldQuoteFieldValue } from "./utils";
 
 export const cqlQueryStrFromQueryAst = (query: CqlQuery): string => {
   const { content } = query;
@@ -17,7 +17,7 @@ const strFromExpr = (queryExpr: CqlExpr): string | undefined => {
   const renderedContent = (() => {
     switch (content.type) {
       case "CqlStr":
-        return hasWhitespace(content.searchExpr)
+        return shouldQuoteFieldValue(content.searchExpr)
           ? `"${content.searchExpr}"`
           : content.searchExpr;
       case "CqlGroup":
