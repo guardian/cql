@@ -25,8 +25,9 @@ Grammar:
 
 ```
 query                       -> query_binary?
-query_binary                -> query_expr (('AND' | 'OR')? query_binary)*
-query_expr                  -> [(MINUS | PLUS)] (query_group | query_str query_field)
+query_expr                  -> (MINUS | PLUS)? query_group | query_str | query_field | query_or
+query_or                    -> query_and ('OR' query_and)*
+query_and                   -> query_expr ('AND' query_expr)*
 query_group                 -> '(' query_binary ')'
 query_str                   -> query_quoted_str | query_plain_str
 query_quoted_str            -> '"' string '"'
