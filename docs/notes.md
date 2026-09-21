@@ -24,17 +24,19 @@ sausages
 Grammar:
 
 ```
-query                       -> query_binary?
-query_expr                  -> (MINUS | PLUS)? query_group | query_str | query_field | query_or
-query_or                    -> query_and ('OR' query_and)*
-query_and                   -> query_expr ('AND' query_expr)*
-query_group                 -> '(' query_binary ')'
-query_str                   -> query_quoted_str | query_plain_str
-query_quoted_str            -> '"' string '"'
-query_plain_str             -> /\w/
-query_field                 -> query_field_key ':' query_field_value
-query_field_key             -> query_str
-query_field_value           -> query_str
+query                 -> expr?
+expr                  -> logical_or
+logical_or            -> logical_and ('OR' logical_and)*
+logical_and           -> unary ('AND' unary)*
+unary                 -> ('-' | '+')? primary
+primary               -> group | str | quoted_str | plain_str | field |
+group                 -> '(' expr ')'
+str                   -> quoted_str | plain_str
+quoted_str            -> '"' `/\w/ '"'
+plain_str             -> /\w/
+field                 -> field_key ':' field_value
+field_key             -> /\w/
+field_value           -> /\w/
 ```
 
 How do we disambiguate search params from strings in the tokeniser?
