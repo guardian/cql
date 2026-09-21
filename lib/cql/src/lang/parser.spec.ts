@@ -1,12 +1,13 @@
 import { describe, expect, it } from "bun:test";
 import { ok, Result, ResultKind } from "../utils/result";
 import {
-  CqlBinary,
-  CqlExpr,
+  CqlLogicalOr,
+  CqlLogicalAnd,
   CqlField,
   CqlStr,
   CqlGroup,
   CqlQuery,
+  CqlUnary,
 } from "./ast";
 import {
   andToken,
@@ -24,7 +25,7 @@ import {
 } from "./testUtils";
 import { Parser } from "./parser";
 import { getPermutations } from "./utils";
-import { Token, TokenType } from "./token";
+import { Token } from "./token";
 
 describe("parser", () => {
   const assertFailure = (
@@ -91,20 +92,16 @@ describe("parser", () => {
       expect(result).toEqual(
         ok(
           new CqlQuery(
-            new CqlBinary(
-              new CqlExpr(
-                new CqlGroup(
-                  new CqlBinary(
-                    new CqlExpr(new CqlStr(unquotedStringToken("a", 1))),
-                    {
-                      operator: TokenType.OR,
-                      binary: new CqlBinary(
-                        new CqlExpr(new CqlStr(unquotedStringToken("b", 2))),
-                      ),
-                    },
-                  ),
-                ),
-              ),
+            new CqlLogicalOr(
+              new CqlLogicalAnd(
+                new CqlUnary(
+                  new CqlGroup(
+                    new CqlLogicalOr(
+                      new CqlLogicalAnd(new CqlUnary(new CqlStr(unquotedStringToken("a", 1)))),
+                      new CqlLogicalAnd(new CqlUnary(new CqlStr(unquotedStringToken("b", 2)))),
+                    ),
+                  ))
+              )
             ),
           ),
         ),
@@ -113,55 +110,51 @@ describe("parser", () => {
   });
 
   describe("CqlBinary", () => {
-    it.only("should bind OR on the left hand side", () => {
+    it("should bind OR on the left hand side", () => {
       const tokens = [unquotedStringToken("1"), orToken(7), unquotedStringToken("2", 10), andToken(11), unquotedStringToken("3", 14), eofToken(15)];
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
         ok(
-        new CqlQuery(
-          new CqlBinary(
-            new CqlExpr(
-              new CqlStr(unquotedStringToken("1")
+          new CqlQuery(
+            new CqlLogicalOr(
+              new CqlLogicalAnd(
+                new CqlUnary(new CqlStr(unquotedStringToken("1"))
+                )),
+              new CqlLogicalAnd(
+                new CqlUnary(new CqlStr(unquotedStringToken("2", 10))),
+                new CqlUnary(
+                  new CqlStr(unquotedStringToken("3", 14))
+                )
+              ),
             )
-          ), { operator: "OR", binary: new CqlBinary(
-            new CqlExpr(
-              new CqlStr(unquotedStringToken("2", 10))
-            ),
-            { operator: "AND", binary: new CqlBinary(
-              new CqlExpr(
-              new CqlStr(unquotedStringToken("3", 14))
-            )
-            )}
-          )}
+          )
         )
       )
-      ))
     });
 
-    it.only("should bind AND on the right hand side", () => {
+    it("should bind AND on the right hand side", () => {
       const tokens = [unquotedStringToken("1"), andToken(7), unquotedStringToken("2", 11), orToken(12), unquotedStringToken("3", 14), eofToken(15)];
       const result = new Parser(tokens).parse();
       console.log(result)
       expect(result).toEqual(
         ok(
-        new CqlQuery(
-          new CqlBinary(
-            new CqlExpr(
-              new CqlStr(unquotedStringToken("1")
+          new CqlQuery(
+            new CqlLogicalOr(
+              new CqlLogicalAnd(
+                new CqlUnary((new CqlStr(unquotedStringToken("1")))),
+                new CqlUnary((new CqlStr(unquotedStringToken("2", 11))))
+              ),
+              new CqlLogicalAnd(
+                new CqlUnary(
+                  (
+                    new CqlStr(unquotedStringToken("3", 14))
+                  )
+                )
+              ),
             )
-          ), { operator: "OR", binary: new CqlBinary(
-            new CqlExpr(
-              new CqlStr(unquotedStringToken("2", 10))
-            ),
-            { operator: "AND", binary: new CqlBinary(
-              new CqlExpr(
-              new CqlStr(unquotedStringToken("3", 14))
-            )
-            )}
-          )}
+          )
         )
-      )
-      ))
+      );
     });
 
     it("should handle an unbalanced boolean", () => {
@@ -201,8 +194,8 @@ describe("parser", () => {
       ];
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
-        ok(new CqlQuery(new CqlBinary(new CqlExpr(queryField("", undefined, 1))))),
-      );
+        ok(new CqlQuery(new CqlLogicalOr(new CqlLogicalAnd(new CqlUnary(queryField("", undefined, 1))))))
+      )
     });
 
     it("should handle a query field", () => {
@@ -213,7 +206,7 @@ describe("parser", () => {
       ];
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
-        ok(new CqlQuery(new CqlBinary(new CqlExpr(queryField("ta", ""))))),
+        ok(new CqlQuery(new CqlLogicalOr(new CqlLogicalAnd(new CqlUnary(queryField("ta", "")))))),
       );
     });
 
@@ -228,7 +221,7 @@ describe("parser", () => {
       expect(result).toEqual(
         ok(
           new CqlQuery(
-            new CqlBinary(new CqlExpr(queryField("ta", ""), "NEGATIVE")),
+            new CqlLogicalOr(new CqlLogicalAnd(new CqlUnary(queryField("ta", ""), "NEGATIVE"))),
           ),
         ),
       );
@@ -269,13 +262,10 @@ describe("parser", () => {
       expect(result).toEqual(
         ok(
           new CqlQuery(
-            new CqlBinary(new CqlExpr(new CqlStr(quotedStringToken("a"))), {
-              operator: TokenType.OR,
-              binary: new CqlBinary(
-                new CqlExpr(new CqlField(queryFieldKeyToken("", 2), undefined)),
-                undefined,
-              ),
-            }),
+            new CqlLogicalOr(
+              new CqlLogicalAnd(new CqlUnary(new CqlStr(quotedStringToken("a")))),
+              new CqlLogicalAnd(new CqlUnary(new CqlField(queryFieldKeyToken("", 2), undefined))),
+            ),
           ),
         ),
       );
@@ -287,7 +277,7 @@ describe("parser", () => {
         queryFieldValueToken("", 7),
       ];
       const result = new Parser(tokens).parse();
-      assertFailure(result, "unexpected `:`");
+      assertFailure(result, "I didn't expect to find a `:` after `\"example\"`");
     });
   });
 
@@ -297,6 +287,7 @@ describe("parser", () => {
       queryFieldValueToken("news"),
       andToken(1),
       leftParenToken(),
+      orToken(),
       quotedStringToken("sausages"),
       rightParenToken(1),
       unquotedStringToken("eggs"),

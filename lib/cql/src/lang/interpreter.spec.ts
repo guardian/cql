@@ -4,6 +4,17 @@ import { cqlQueryStrFromQueryAst } from "./interpreter";
 
 describe("interpreter", () => {
   const parser = createParser();
+
+  it("should handle simple queries", () => {
+    const firstQuery = parser(
+      `this AND that`,
+    ).queryAst!;
+
+    const firstStr = cqlQueryStrFromQueryAst(firstQuery);
+
+    expect(firstStr).toBe("this AND that");
+  })
+
   it("should normalise complex queries", () => {
     const firstQuery = parser(
       `  +: "marina" +section:commentisfree "Byline Title":"John Doe"`,
@@ -11,6 +22,8 @@ describe("interpreter", () => {
     const secondQuery = parser(
       `+: marina +section:"commentisfree" +"Byline Title":"John Doe"`,
     ).queryAst!;
+
+
 
     const firstStr = cqlQueryStrFromQueryAst(firstQuery);
     const secondStr = cqlQueryStrFromQueryAst(secondQuery);

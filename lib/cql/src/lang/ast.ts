@@ -2,33 +2,41 @@ import { Token } from "./token";
 
 export class CqlQuery {
   public readonly type = "CqlQuery";
-  constructor(public readonly content?: CqlBinary) {}
+  constructor(public readonly content?: CqlLogicalOr) { }
 }
 
-export class CqlBinary {
-  public readonly type = "CqlBinary";
+export class CqlLogicalOr {
+  public readonly type = "CqlLogicalOr";
   constructor(
-    public readonly left: CqlExpr,
-    public readonly right?: {
-      operator: "OR" | "AND";
-      binary: CqlBinary;
-    },
-  ) {}
+    public readonly left: CqlLogicalAnd,
+    public readonly right?: CqlLogicalAnd
+  ) { }
+}
+
+export class CqlLogicalAnd {
+  public readonly type = "CqlLogicalAnd";
+  constructor(
+    public readonly left: CqlUnary,
+    public readonly right?: CqlUnary
+  ) { }
+}
+
+// No need for a class, as a primary is a simple union
+export type CqlPrimary = CqlGroup | CqlStr | CqlField
+
+export class CqlUnary {
+  public readonly type = "CqlUnary"
+  constructor(
+    public readonly primary: CqlPrimary,
+    public readonly polarity: POLARITY = 'POSITIVE'
+  ) { }
 }
 
 export type POLARITY = "POSITIVE" | "NEGATIVE";
 
-export class CqlExpr {
-  public readonly type = "QueryExpr";
-  constructor(
-    public readonly content: CqlStr | CqlBinary | CqlGroup | CqlField,
-    public readonly polarity: POLARITY = "POSITIVE",
-  ) {}
-}
-
 export class CqlGroup {
   public readonly type = "CqlGroup";
-  constructor(public readonly content: CqlBinary) {}
+  constructor(public readonly content: CqlLogicalOr) { }
 }
 
 export class CqlStr {
@@ -44,5 +52,5 @@ export class CqlField {
   constructor(
     public readonly key: Token,
     public readonly value?: Token,
-  ) {}
+  ) { }
 }

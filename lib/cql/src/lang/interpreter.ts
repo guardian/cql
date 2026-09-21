@@ -1,4 +1,4 @@
-import { CqlBinary, CqlExpr, CqlField, CqlQuery } from "./ast";
+import { CqlField, CqlLogicalAnd, CqlLogicalOr, CqlPrimary, CqlQuery, CqlUnary } from "./ast";
 import { hasWhitespace, shouldQuoteFieldValue } from "./utils";
 
 export const cqlQueryStrFromQueryAst = (query: CqlQuery): string => {
@@ -8,39 +8,49 @@ export const cqlQueryStrFromQueryAst = (query: CqlQuery): string => {
     return "";
   }
 
-  return strFromBinary(content);
+  return strFromLogicalOr(content);
 };
 
-const strFromExpr = (queryExpr: CqlExpr): string | undefined => {
-  const { content, polarity } = queryExpr;
-  const polarityChar = polarity === "NEGATIVE" ? "-" : "";
-  const renderedContent = (() => {
-    switch (content.type) {
-      case "CqlStr":
-        return hasWhitespace(content.searchExpr)
-          ? `"${content.searchExpr}"`
-          : content.searchExpr;
-      case "CqlGroup":
-        return `(${strFromBinary(content.content).trim()})`;
-      case "CqlBinary":
-        return strFromBinary(content);
-      case "CqlField":
-        return strFromField(content);
-    }
-  })();
+const strFromLogicalOr = (logicalOr: CqlLogicalOr): string => {
+  const leftStr = strFromLogicalAnd(logicalOr.left);
 
-  return `${polarityChar}${renderedContent}`;
-};
-
-const strFromBinary = (queryBinary: CqlBinary): string => {
-  const leftStr = strFromExpr(queryBinary.left);
-
-  const rightStr = queryBinary.right
-    ? `${queryBinary.right.operator === "AND" ? "AND" : ""} ${strFromBinary(queryBinary.right.binary)}`
+  const rightStr = logicalOr.right
+    ? ` ${strFromLogicalAnd(logicalOr.right)}`
     : "";
 
   return (leftStr ?? "") + (rightStr ? ` ${rightStr.trim()}` : "");
 };
+
+const strFromLogicalAnd = (logicalAnd: CqlLogicalAnd): string => {
+  const leftStr = strFromUnary(logicalAnd.left);
+
+  const rightStr = logicalAnd.right
+    ? `AND ${strFromUnary(logicalAnd.right)}`
+    : "";
+
+  return (leftStr ?? "") + (rightStr ? ` ${rightStr.trim()}` : "");
+}
+
+const strFromUnary = (unary: CqlUnary): string => {
+  const { primary, polarity } = unary;
+  const polarityChar = polarity === "NEGATIVE" ? "-" : "";
+
+  return `${polarityChar}${strFromPrimary(primary)}`
+}
+
+const strFromPrimary = (primary: CqlPrimary) => {
+  switch (primary.type) {
+    case "CqlStr":
+      return hasWhitespace(primary.searchExpr)
+        ? `"${primary.searchExpr}"`
+        : primary.searchExpr;
+    case "CqlGroup":
+      return `(${strFromLogicalOr(primary.content).trim()})`;
+    case "CqlField":
+      return strFromField(primary);
+  }
+};
+
 
 const strFromField = (field: CqlField): string => {
   const keyLiteral = field.key.literal ?? "";
