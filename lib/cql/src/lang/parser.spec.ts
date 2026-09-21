@@ -13,6 +13,7 @@ import {
   eofToken,
   leftParenToken,
   minusToken,
+  orToken,
   plusToken,
   queryField,
   queryFieldKeyToken,
@@ -111,7 +112,58 @@ describe("parser", () => {
     });
   });
 
-  describe("QueryBoolean", () => {
+  describe("CqlBinary", () => {
+    it.only("should bind OR on the left hand side", () => {
+      const tokens = [unquotedStringToken("1"), orToken(7), unquotedStringToken("2", 10), andToken(11), unquotedStringToken("3", 14), eofToken(15)];
+      const result = new Parser(tokens).parse();
+      expect(result).toEqual(
+        ok(
+        new CqlQuery(
+          new CqlBinary(
+            new CqlExpr(
+              new CqlStr(unquotedStringToken("1")
+            )
+          ), { operator: "OR", binary: new CqlBinary(
+            new CqlExpr(
+              new CqlStr(unquotedStringToken("2", 10))
+            ),
+            { operator: "AND", binary: new CqlBinary(
+              new CqlExpr(
+              new CqlStr(unquotedStringToken("3", 14))
+            )
+            )}
+          )}
+        )
+      )
+      ))
+    });
+
+    it.only("should bind AND on the right hand side", () => {
+      const tokens = [unquotedStringToken("1"), andToken(7), unquotedStringToken("2", 11), orToken(12), unquotedStringToken("3", 14), eofToken(15)];
+      const result = new Parser(tokens).parse();
+      console.log(result)
+      expect(result).toEqual(
+        ok(
+        new CqlQuery(
+          new CqlBinary(
+            new CqlExpr(
+              new CqlStr(unquotedStringToken("1")
+            )
+          ), { operator: "OR", binary: new CqlBinary(
+            new CqlExpr(
+              new CqlStr(unquotedStringToken("2", 10))
+            ),
+            { operator: "AND", binary: new CqlBinary(
+              new CqlExpr(
+              new CqlStr(unquotedStringToken("3", 14))
+            )
+            )}
+          )}
+        )
+      )
+      ))
+    });
+
     it("should handle an unbalanced boolean", () => {
       const tokens = [quotedStringToken("example"), andToken(7), eofToken(0)];
       const result = new Parser(tokens).parse();
