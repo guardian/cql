@@ -1,13 +1,13 @@
 import { isChipKey, Token } from "./token";
 import {
   CqlQuery,
-  CqlLogicalAnd,
-  CqlLogicalOr,
+  CqlBinary,
   CqlField,
   CqlGroup,
   CqlStr,
   CqlUnary,
   CqlPrimary,
+  CqlExpr,
 } from "./ast";
 import { TokenType } from "./token";
 import { either, err, ok, Result, ResultKind } from "../utils/result";
@@ -48,7 +48,7 @@ export class Parser {
     return new CqlQuery(content);
   }
 
-  private logicalOr(isNested: boolean = false): CqlLogicalOr {
+  private logicalOr(isNested: boolean = false): CqlBinary {
     if (this.peek().tokenType === TokenType.CHIP_VALUE)
       throw new ParseError(
         this.peek().start,
@@ -71,20 +71,20 @@ export class Parser {
             `There must be a query following \`${tokenType}\`, e.g. \`this ${tokenType} that\`.`,
           );
         }
-        return new CqlLogicalOr(left,
+        return new CqlBinary(left,
           this.logicalAnd(isNested),
         );
       }
       case TokenType.EOF: {
-        return new CqlLogicalOr(left);
+        return new CqlBinary(left);
       }
       default: {
-        return new CqlLogicalOr(left, this.logicalAnd(isNested));
+        return new CqlBinary(left, this.logicalAnd(isNested));
       }
     }
   }
 
-  private logicalAnd(isNested: boolean = false): CqlLogicalAnd {
+  private logicalAnd(isNested: boolean = false): CqlExpr {
     const left = this.unary();
 
     if (isNested) {
@@ -101,12 +101,12 @@ export class Parser {
             `There must be a query following \`${tokenType}\`, e.g. \`this ${tokenType} that\`.`,
           );
         }
-        return new CqlLogicalAnd(left,
+        return new CqlBinary(left,
           this.unary(),
         );
       }
       default: {
-        return new CqlLogicalAnd(left);
+        return new CqlBinary(left);
       }
     }
   }

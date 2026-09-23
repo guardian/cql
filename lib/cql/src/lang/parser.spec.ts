@@ -1,7 +1,7 @@
 import { describe, expect, it } from "bun:test";
 import { ok, Result, ResultKind } from "../utils/result";
 import {
-  CqlLogicalOr,
+  CqlBinary,
   CqlLogicalAnd,
   CqlField,
   CqlStr,
@@ -92,11 +92,11 @@ describe("parser", () => {
       expect(result).toEqual(
         ok(
           new CqlQuery(
-            new CqlLogicalOr(
+            new CqlBinary(
               new CqlLogicalAnd(
                 new CqlUnary(
                   new CqlGroup(
-                    new CqlLogicalOr(
+                    new CqlBinary(
                       new CqlLogicalAnd(new CqlUnary(new CqlStr(unquotedStringToken("a", 1)))),
                       new CqlLogicalAnd(new CqlUnary(new CqlStr(unquotedStringToken("b", 2)))),
                     ),
@@ -116,7 +116,7 @@ describe("parser", () => {
       expect(result).toEqual(
         ok(
           new CqlQuery(
-            new CqlLogicalOr(
+            new CqlBinary(
               new CqlLogicalAnd(
                 new CqlUnary(new CqlStr(unquotedStringToken("1"))
                 )),
@@ -139,7 +139,7 @@ describe("parser", () => {
       expect(result).toEqual(
         ok(
           new CqlQuery(
-            new CqlLogicalOr(
+            new CqlBinary(
               new CqlLogicalAnd(
                 new CqlUnary((new CqlStr(unquotedStringToken("1")))),
                 new CqlUnary((new CqlStr(unquotedStringToken("2", 11))))
@@ -194,7 +194,7 @@ describe("parser", () => {
       ];
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
-        ok(new CqlQuery(new CqlLogicalOr(new CqlLogicalAnd(new CqlUnary(queryField("", undefined, 1))))))
+        ok(new CqlQuery(new CqlBinary(new CqlLogicalAnd(new CqlUnary(queryField("", undefined, 1))))))
       )
     });
 
@@ -206,7 +206,7 @@ describe("parser", () => {
       ];
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
-        ok(new CqlQuery(new CqlLogicalOr(new CqlLogicalAnd(new CqlUnary(queryField("ta", "")))))),
+        ok(new CqlQuery(new CqlBinary(new CqlLogicalAnd(new CqlUnary(queryField("ta", "")))))),
       );
     });
 
@@ -221,7 +221,7 @@ describe("parser", () => {
       expect(result).toEqual(
         ok(
           new CqlQuery(
-            new CqlLogicalOr(new CqlLogicalAnd(new CqlUnary(queryField("ta", ""), "NEGATIVE"))),
+            new CqlBinary(new CqlLogicalAnd(new CqlUnary(queryField("ta", ""), "NEGATIVE"))),
           ),
         ),
       );
@@ -262,7 +262,7 @@ describe("parser", () => {
       expect(result).toEqual(
         ok(
           new CqlQuery(
-            new CqlLogicalOr(
+            new CqlBinary(
               new CqlLogicalAnd(new CqlUnary(new CqlStr(quotedStringToken("a")))),
               new CqlLogicalAnd(new CqlUnary(new CqlField(queryFieldKeyToken("", 2), undefined))),
             ),

@@ -1,5 +1,5 @@
 import { err, ok, Result } from "../utils/result";
-import { CqlLogicalAnd, CqlLogicalOr, CqlPrimary, CqlQuery, CqlUnary } from "./ast";
+import { CqlLogicalAnd, CqlBinary, CqlPrimary, CqlQuery, CqlUnary } from "./ast";
 import { getCqlFieldsFromCqlBinary } from "./utils";
 
 class CapiCqlStringError extends Error {
@@ -100,7 +100,7 @@ const strFromPrimary = (primary: CqlPrimary): string => {
   }
 };
 
-const strFromLogicalOr = (logicalOr: CqlLogicalOr): string => {
+const strFromLogicalOr = (logicalOr: CqlBinary): string => {
   const leftStr = strFromLogicalAnd(logicalOr.left);
 
   const rightStr = logicalOr.right ? strFromLogicalAnd(logicalOr.right) : ""

@@ -2,22 +2,16 @@ import { Token } from "./token";
 
 export class CqlQuery {
   public readonly type = "CqlQuery";
-  constructor(public readonly content?: CqlLogicalOr) { }
+  constructor(public readonly content?: CqlExpr) { }
 }
 
-export class CqlLogicalOr {
+export type CqlExpr = CqlBinary | CqlUnary | CqlGroup | CqlPrimary;
+
+export class CqlBinary {
   public readonly type = "CqlLogicalOr";
   constructor(
-    public readonly left: CqlLogicalAnd,
-    public readonly right?: CqlLogicalAnd
-  ) { }
-}
-
-export class CqlLogicalAnd {
-  public readonly type = "CqlLogicalAnd";
-  constructor(
-    public readonly left: CqlUnary,
-    public readonly right?: CqlUnary
+    public readonly left: CqlExpr,
+    public readonly right?: CqlExpr
   ) { }
 }
 
@@ -36,7 +30,7 @@ export type POLARITY = "POSITIVE" | "NEGATIVE";
 
 export class CqlGroup {
   public readonly type = "CqlGroup";
-  constructor(public readonly content: CqlLogicalOr) { }
+  constructor(public readonly content: CqlExpr) { }
 }
 
 export class CqlStr {

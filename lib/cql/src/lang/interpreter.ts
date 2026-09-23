@@ -1,4 +1,4 @@
-import { CqlField, CqlLogicalAnd, CqlLogicalOr, CqlPrimary, CqlQuery, CqlUnary } from "./ast";
+import { CqlField, CqlLogicalAnd, CqlBinary, CqlPrimary, CqlQuery, CqlUnary } from "./ast";
 import { hasWhitespace, shouldQuoteFieldValue } from "./utils";
 
 export const cqlQueryStrFromQueryAst = (query: CqlQuery): string => {
@@ -11,7 +11,7 @@ export const cqlQueryStrFromQueryAst = (query: CqlQuery): string => {
   return strFromLogicalOr(content);
 };
 
-const strFromLogicalOr = (logicalOr: CqlLogicalOr): string => {
+const strFromLogicalOr = (logicalOr: CqlBinary): string => {
   const leftStr = strFromLogicalAnd(logicalOr.left);
 
   const rightStr = logicalOr.right
