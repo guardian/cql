@@ -8,8 +8,8 @@ export { TextSuggestionOption } from "./lang/types";
 export {
   CqlQuery,
   CqlBinary,
-  CqlExpr,
   CqlGroup,
   CqlStr,
   CqlField,
 } from "./lang/ast.ts";
+export type { CqlExpr } from './lang/ast.ts'

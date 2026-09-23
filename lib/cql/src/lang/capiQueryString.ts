@@ -1,5 +1,5 @@
 import { err, ok, Result } from "../utils/result";
-import { CqlLogicalAnd, CqlBinary, CqlPrimary, CqlQuery, CqlUnary } from "./ast";
+import { CqlBinary, CqlExpr, CqlPrimary, CqlQuery, CqlUnary } from "./ast";
 import { getCqlFieldsFromCqlBinary } from "./utils";
 
 class CapiCqlStringError extends Error {
@@ -51,7 +51,7 @@ export const queryStrFromQuery = (
     return ok("");
   }
 
-  const searchStrs = strFromLogicalOr(content);
+  const searchStrs = strFromBinary(content);
 
   try {
     const otherQueries = getCqlFieldsFromCqlBinary(content).flatMap((expr) => {
@@ -93,26 +93,26 @@ const strFromPrimary = (primary: CqlPrimary): string => {
     case "CqlStr":
       return primary.searchExpr;
     case "CqlGroup":
-      return `(${strFromLogicalOr(primary.content).trim()})`;
+      return `(${strFromExpr(primary.content).trim()})`;
     case "CqlField":
       // Fields are accumulated at the top of the tree
       return "";
   }
 };
 
-const strFromLogicalOr = (logicalOr: CqlBinary): string => {
-  const leftStr = strFromLogicalAnd(logicalOr.left);
-
-  const rightStr = logicalOr.right ? strFromLogicalAnd(logicalOr.right) : ""
-
-  return (leftStr ?? "") + (rightStr ? ` ${rightStr.trim()} ` : "");
-};
-
-
-const strFromLogicalAnd = (logicalAnd: CqlLogicalAnd): string => {
-  const leftStr = strFromUnary(logicalAnd.left);
-
-  const rightStr = logicalAnd.right ? strFromUnary(logicalAnd.right) : ""
-
-  return (leftStr ?? "") + (rightStr ? `AND ${rightStr.trim()} ` : "");
+const strFromExpr = (expr: CqlExpr): string => {
+  switch (expr.type) {
+    case "CqlUnary":
+      return strFromUnary(expr);
+    case "CqlBinary":
+      return strFromBinary(expr);
+  }
 }
+
+const strFromBinary = (binary: CqlBinary): string => {
+  const leftStr = strFromExpr(binary.left);
+
+  const rightStr = binary.right ? strFromExpr(binary.right.expr) : ""
+
+  return (leftStr ?? "") + (rightStr ? ` ${binary.right?.operator.tokenType} ${rightStr.trim()} ` : "");
+};

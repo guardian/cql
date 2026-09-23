@@ -122,11 +122,11 @@ describe("parser", () => {
               new CqlBinary(
                 new CqlUnary(new CqlStr(unquotedStringToken("1"))),
                 {
-                  operator: { tokenType: TokenType.OR, lexeme: "" },
+                  operator: { tokenType: TokenType.OR, lexeme: "OR" },
                   expr: new CqlBinary(
                     new CqlUnary(new CqlStr(unquotedStringToken("2", 10))),
                     {
-                      operator: { tokenType: TokenType.AND, lexeme: "" },
+                      operator: { tokenType: TokenType.AND, lexeme: "AND" },
                       expr: new CqlUnary(
                         new CqlStr(unquotedStringToken("3", 14))
                       )
@@ -151,11 +151,11 @@ describe("parser", () => {
                 new CqlBinary(
                   new CqlUnary(new CqlStr(unquotedStringToken("1"))),
                   {
-                    operator: { tokenType: TokenType.AND, lexeme: "" },
+                    operator: { tokenType: TokenType.AND, lexeme: "AND" },
                     expr: new CqlUnary(new CqlStr(unquotedStringToken("2", 11))),
                   }
                 ), {
-                operator: { tokenType: TokenType.OR, lexeme: "" },
+                operator: { tokenType: TokenType.OR, lexeme: "OR" },
                 expr: new CqlUnary(
                   new CqlStr(unquotedStringToken("3", 14))
                 )

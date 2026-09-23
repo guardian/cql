@@ -1,4 +1,4 @@
-import { CqlField, CqlLogicalAnd, CqlBinary, CqlPrimary, CqlQuery, CqlUnary } from "./ast";
+import { CqlField, CqlBinary, CqlPrimary, CqlQuery, CqlUnary, CqlExpr } from "./ast";
 import { hasWhitespace, shouldQuoteFieldValue } from "./utils";
 
 export const cqlQueryStrFromQueryAst = (query: CqlQuery): string => {
@@ -8,28 +8,30 @@ export const cqlQueryStrFromQueryAst = (query: CqlQuery): string => {
     return "";
   }
 
-  return strFromLogicalOr(content);
+  return strFromExpr(content);
 };
 
-const strFromLogicalOr = (logicalOr: CqlBinary): string => {
-  const leftStr = strFromLogicalAnd(logicalOr.left);
+const strFromExpr = (expr: CqlExpr) => {
+  switch(expr.type) {
+    case "CqlBinary":
+      return strFromBinary(expr);
+    case "CqlUnary":
+      return strFromUnary(expr);
+    default:
+      return strFromPrimary(expr);
+  }
+}
+
+const strFromBinary = (logicalOr: CqlBinary): string => {
+  const leftStr = strFromExpr(logicalOr.left);
 
   const rightStr = logicalOr.right
-    ? ` ${strFromLogicalAnd(logicalOr.right)}`
+    ? `${logicalOr.right.operator.lexeme} ${strFromExpr(logicalOr.right.expr)}`
     : "";
 
   return (leftStr ?? "") + (rightStr ? ` ${rightStr.trim()}` : "");
 };
 
-const strFromLogicalAnd = (logicalAnd: CqlLogicalAnd): string => {
-  const leftStr = strFromUnary(logicalAnd.left);
-
-  const rightStr = logicalAnd.right
-    ? `AND ${strFromUnary(logicalAnd.right)}`
-    : "";
-
-  return (leftStr ?? "") + (rightStr ? ` ${rightStr.trim()}` : "");
-}
 
 const strFromUnary = (unary: CqlUnary): string => {
   const { primary, polarity } = unary;
@@ -38,19 +40,18 @@ const strFromUnary = (unary: CqlUnary): string => {
   return `${polarityChar}${strFromPrimary(primary)}`
 }
 
-const strFromPrimary = (primary: CqlPrimary) => {
+const strFromPrimary = (primary: CqlPrimary): string => {
   switch (primary.type) {
     case "CqlStr":
       return hasWhitespace(primary.searchExpr)
         ? `"${primary.searchExpr}"`
         : primary.searchExpr;
     case "CqlGroup":
-      return `(${strFromLogicalOr(primary.content).trim()})`;
+      return `(${strFromExpr(primary.content).trim()})`;
     case "CqlField":
       return strFromField(primary);
   }
 };
-
 
 const strFromField = (field: CqlField): string => {
   const keyLiteral = field.key.literal ?? "";

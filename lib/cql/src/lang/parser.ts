@@ -48,7 +48,7 @@ export class Parser {
     return new CqlQuery(content);
   }
 
-  private logicalOr(isNested: boolean = false): CqlExpr {
+  private logicalOr(isNested: boolean = false): CqlBinary {
     if (isNested) {
       this.guardAgainstCqlField("within a group");
     }
@@ -76,7 +76,7 @@ export class Parser {
             );
           }
           left = new CqlBinary(left,
-            { operator: { tokenType: nextToken.tokenType, lexeme: '' }, expr: this.logicalAnd() },
+            { operator: { tokenType: nextToken.tokenType, lexeme: nextToken.lexeme }, expr: this.logicalAnd() },
           );
           break;
         }
@@ -98,7 +98,7 @@ export class Parser {
       }
     }
 
-    return left;
+    return left.type !== "CqlBinary" ? new CqlBinary(left) : left;
   }
 
   private logicalAnd(): CqlExpr {
@@ -115,7 +115,7 @@ export class Parser {
         );
       }
       left = new CqlBinary(left,
-        { operator: { tokenType: nextToken.tokenType, lexeme: '' }, expr: this.unary() }
+        { operator: { tokenType: nextToken.tokenType, lexeme: nextToken.lexeme }, expr: this.unary() }
       );
 
       nextToken = this.peek();
@@ -125,163 +125,163 @@ export class Parser {
   }
 
   private unary(): CqlExpr {
-  const maybeNegation = this.consumeMany([TokenType.MINUS, TokenType.PLUS]);
-  const polarity =
-    maybeNegation.kind === ResultKind.Ok &&
-      maybeNegation.value.tokenType === TokenType.MINUS
-      ? "NEGATIVE"
-      : "POSITIVE";
+    const maybeNegation = this.consumeMany([TokenType.MINUS, TokenType.PLUS]);
+    const polarity =
+      maybeNegation.kind === ResultKind.Ok &&
+        maybeNegation.value.tokenType === TokenType.MINUS
+        ? "NEGATIVE"
+        : "POSITIVE";
 
-  return new CqlUnary(this.primary(), polarity)
-}
+    return new CqlUnary(this.primary(), polarity)
+  }
 
   private primary(): CqlPrimary {
-  const tokenType = this.peek().tokenType;
+    const tokenType = this.peek().tokenType;
 
-  switch (tokenType) {
-    case TokenType.LEFT_BRACKET:
-      return this.group();
-    case TokenType.STRING:
-      return this.str();
-    case TokenType.CHIP_KEY: {
-      return this.field();
-    }
-    case TokenType.AND:
-    case TokenType.OR: {
-      throw this.error(
-        `An \`${tokenType.toString()}\` keyword must have a search term before and after it, e.g. \`this ${tokenType.toString()} that\`.`,
-      );
-    }
-    default: {
-      throw this.unexpectedTokenError();
+    switch (tokenType) {
+      case TokenType.LEFT_BRACKET:
+        return this.group();
+      case TokenType.STRING:
+        return this.str();
+      case TokenType.CHIP_KEY: {
+        return this.field();
+      }
+      case TokenType.AND:
+      case TokenType.OR: {
+        throw this.error(
+          `An \`${tokenType.toString()}\` keyword must have a search term before and after it, e.g. \`this ${tokenType.toString()} that\`.`,
+        );
+      }
+      default: {
+        throw this.unexpectedTokenError();
+      }
     }
   }
-}
 
   private group(): CqlGroup {
-  this.consume(
-    TokenType.LEFT_BRACKET,
-    "Groups should start with a left bracket",
-  );
-
-  if (this.isAtEnd() || this.peek().tokenType === TokenType.RIGHT_BRACKET) {
-    throw this.error(
-      "Groups can't be empty. Put a search term between the brackets!",
+    this.consume(
+      TokenType.LEFT_BRACKET,
+      "Groups should start with a left bracket",
     );
+
+    if (this.isAtEnd() || this.peek().tokenType === TokenType.RIGHT_BRACKET) {
+      throw this.error(
+        "Groups can't be empty. Put a search term between the brackets!",
+      );
+    }
+
+    this.guardAgainstCqlField(
+      "within a group. Try putting this search term outside of the brackets!",
+    );
+
+    const content = this.logicalOr(true);
+    this.consume(
+      TokenType.RIGHT_BRACKET,
+      "Groups must end with a right bracket.",
+    );
+
+    return new CqlGroup(content);
   }
 
-  this.guardAgainstCqlField(
-    "within a group. Try putting this search term outside of the brackets!",
-  );
-
-  const content = this.logicalOr(true);
-  this.consume(
-    TokenType.RIGHT_BRACKET,
-    "Groups must end with a right bracket.",
-  );
-
-  return new CqlGroup(content);
-}
-
   private str(): CqlStr {
-  const token = this.consume(TokenType.STRING, "Expected a string");
+    const token = this.consume(TokenType.STRING, "Expected a string");
 
-  return new CqlStr(token);
-}
+    return new CqlStr(token);
+  }
 
   private field(): CqlField {
-  const key = this.consume(
-    TokenType.CHIP_KEY,
-    "Expected a search key, e.g. `+tag`",
-  );
+    const key = this.consume(
+      TokenType.CHIP_KEY,
+      "Expected a search key, e.g. `+tag`",
+    );
 
-  const maybeValue = this.safeConsume(
-    TokenType.CHIP_VALUE,
-    "Expected a search value, e.g. `+tag:new`",
-  );
+    const maybeValue = this.safeConsume(
+      TokenType.CHIP_VALUE,
+      "Expected a search value, e.g. `+tag:new`",
+    );
 
-  return either(maybeValue)(
-    () => new CqlField(key, undefined),
-    (value: Token) => new CqlField(key, value),
-  );
-}
+    return either(maybeValue)(
+      () => new CqlField(key, undefined),
+      (value: Token) => new CqlField(key, value),
+    );
+  }
 
   /**
    * Throw a sensible parse error when a query field or output modifier is
    * found in the wrong place.
    */
   private guardAgainstCqlField = (errorLocation: string) => {
-  if (isChipKey(this.peek().tokenType)) {
-    const queryFieldNode = this.field();
-    throw this.error(
-      `You cannot query for the field \`${queryFieldNode.key.literal}\` ${errorLocation}`,
-    );
-  }
-};
+    if (isChipKey(this.peek().tokenType)) {
+      const queryFieldNode = this.field();
+      throw this.error(
+        `You cannot query for the field \`${queryFieldNode.key.literal}\` ${errorLocation}`,
+      );
+    }
+  };
 
   private check = (tokenType: TokenType) => {
-  if (this.isAtEnd()) {
-    return false;
-  } else {
-    return this.peek().tokenType == tokenType;
-  }
-};
+    if (this.isAtEnd()) {
+      return false;
+    } else {
+      return this.peek().tokenType == tokenType;
+    }
+  };
 
   private isAtEnd = () => this.peek()?.tokenType === TokenType.EOF;
 
   private peek = () => this.tokens[this.current];
 
   private advance = () => {
-  if (!this.isAtEnd()) {
-    const currentToken = this.tokens[this.current];
-    this.current = this.current + 1;
-    return currentToken;
-  } else {
-    return this.previous();
-  }
-};
+    if (!this.isAtEnd()) {
+      const currentToken = this.tokens[this.current];
+      this.current = this.current + 1;
+      return currentToken;
+    } else {
+      return this.previous();
+    }
+  };
 
   private consume = (tokenType: TokenType, message: string = ""): Token => {
-  if (this.check(tokenType)) {
-    return this.advance();
-  } else {
-    throw this.error(message);
-  }
-};
+    if (this.check(tokenType)) {
+      return this.advance();
+    } else {
+      throw this.error(message);
+    }
+  };
 
   private consumeMany = (
-  tokenTypes: TokenType[],
-  message: string = "",
-): Result<ParseError, Token> => {
-  if (tokenTypes.some((tokenType) => this.check(tokenType))) {
-    return ok(this.advance());
-  } else {
-    return err(this.error(message));
-  }
-};
+    tokenTypes: TokenType[],
+    message: string = "",
+  ): Result<ParseError, Token> => {
+    if (tokenTypes.some((tokenType) => this.check(tokenType))) {
+      return ok(this.advance());
+    } else {
+      return err(this.error(message));
+    }
+  };
 
   private safeConsume = (
-  tokenType: TokenType,
-  message: string = "",
-): Result<ParseError, Token> => {
-  try {
-    return ok(this.consume(tokenType, message));
-  } catch (e) {
-    if (e instanceof ParseError) {
-      return err(e);
+    tokenType: TokenType,
+    message: string = "",
+  ): Result<ParseError, Token> => {
+    try {
+      return ok(this.consume(tokenType, message));
+    } catch (e) {
+      if (e instanceof ParseError) {
+        return err(e);
+      }
+      throw e;
     }
-    throw e;
-  }
-};
+  };
 
   private previous = () => this.tokens[this.current - 1];
 
   private error = (message: string) =>
-  new ParseError(this.peek().start, message);
+    new ParseError(this.peek().start, message);
 
   private unexpectedTokenError = () => {
-  throw this.error(
-    `I didn't expect to find a \`${this.peek().lexeme}\` ${!this.previous() ? "here." : `after \`${this.previous()?.lexeme}\``}`,
-  );
-};
+    throw this.error(
+      `I didn't expect to find a \`${this.peek().lexeme}\` ${!this.previous() ? "here." : `after \`${this.previous()?.lexeme}\``}`,
+    );
+  };
 }

@@ -2,10 +2,10 @@ import { Token, TokenType } from "./token";
 
 export class CqlQuery {
   public readonly type = "CqlQuery";
-  constructor(public readonly content?: CqlExpr) { }
+  constructor(public readonly content?: CqlBinary) { }
 }
 
-export type CqlExpr = CqlBinary | CqlUnary | CqlGroup | CqlPrimary;
+export type CqlExpr = CqlBinary | CqlUnary;
 
 export class CqlBinary {
   public readonly type = "CqlBinary";
