@@ -119,19 +119,21 @@ describe("parser", () => {
         ok(
           new CqlQuery(
             new CqlBinary(
-              new CqlUnary(new CqlStr(unquotedStringToken("1"))),
-              {
-                operator: { tokenType: TokenType.OR, lexeme: "" },
-                expr: new CqlBinary(
-                  new CqlUnary(new CqlStr(unquotedStringToken("2", 10))),
-                  {
-                    operator: { tokenType: TokenType.OR, lexeme: "" },
-                    expr: new CqlUnary(
-                      new CqlStr(unquotedStringToken("3", 14))
-                    )
-                  }
-                ),
-              }
+              new CqlBinary(
+                new CqlUnary(new CqlStr(unquotedStringToken("1"))),
+                {
+                  operator: { tokenType: TokenType.OR, lexeme: "" },
+                  expr: new CqlBinary(
+                    new CqlUnary(new CqlStr(unquotedStringToken("2", 10))),
+                    {
+                      operator: { tokenType: TokenType.AND, lexeme: "" },
+                      expr: new CqlUnary(
+                        new CqlStr(unquotedStringToken("3", 14))
+                      )
+                    }
+                  ),
+                }
+              )
             )
           )
         )
@@ -141,26 +143,28 @@ describe("parser", () => {
     it("should bind AND on the right hand side", () => {
       const tokens = [unquotedStringToken("1"), andToken(7), unquotedStringToken("2", 11), orToken(12), unquotedStringToken("3", 14), eofToken(15)];
       const result = new Parser(tokens).parse();
-      console.log(result)
       expect(result).toEqual(
         ok(
           new CqlQuery(
             new CqlBinary(
-              new CqlLogicalAnd(
-                new CqlUnary((new CqlStr(unquotedStringToken("1")))),
-                new CqlUnary((new CqlStr(unquotedStringToken("2", 11))))
-              ),
-              new CqlLogicalAnd(
-                new CqlUnary(
-                  (
-                    new CqlStr(unquotedStringToken("3", 14))
-                  )
+              new CqlBinary(
+                new CqlBinary(
+                  new CqlUnary(new CqlStr(unquotedStringToken("1"))),
+                  {
+                    operator: { tokenType: TokenType.AND, lexeme: "" },
+                    expr: new CqlUnary(new CqlStr(unquotedStringToken("2", 11))),
+                  }
+                ), {
+                operator: { tokenType: TokenType.OR, lexeme: "" },
+                expr: new CqlUnary(
+                  new CqlStr(unquotedStringToken("3", 14))
                 )
-              ),
+              },
+              )
             )
           )
         )
-      );
+      )
     });
 
     it("should handle an unbalanced boolean", () => {
@@ -200,7 +204,7 @@ describe("parser", () => {
       ];
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
-        ok(new CqlQuery(new CqlBinary(new CqlLogicalAnd(new CqlUnary(queryField("", undefined, 1))))))
+        ok(new CqlQuery(new CqlBinary(new CqlUnary(queryField("", undefined, 1)))))
       )
     });
 
@@ -212,7 +216,7 @@ describe("parser", () => {
       ];
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
-        ok(new CqlQuery(new CqlBinary(new CqlLogicalAnd(new CqlUnary(queryField("ta", "")))))),
+        ok(new CqlQuery(new CqlBinary(new CqlUnary(queryField("ta", ""))))),
       );
     });
 
@@ -227,7 +231,7 @@ describe("parser", () => {
       expect(result).toEqual(
         ok(
           new CqlQuery(
-            new CqlBinary(new CqlLogicalAnd(new CqlUnary(queryField("ta", ""), "NEGATIVE"))),
+            new CqlBinary(new CqlUnary(queryField("ta", ""), "NEGATIVE")),
           ),
         ),
       );
@@ -269,10 +273,18 @@ describe("parser", () => {
         ok(
           new CqlQuery(
             new CqlBinary(
-              new CqlLogicalAnd(new CqlUnary(new CqlStr(quotedStringToken("a")))),
-              new CqlLogicalAnd(new CqlUnary(new CqlField(queryFieldKeyToken("", 2), undefined))),
+              new CqlBinary(
+                new CqlUnary(new CqlStr(quotedStringToken("a"))),
+                {
+                  operator: {
+                    tokenType: TokenType.OR,
+                    lexeme: ""
+                  },
+                  expr: new CqlUnary(new CqlField(queryFieldKeyToken("", 2), undefined))
+                },
+              ),
             ),
-          ),
+          )
         ),
       );
     });
