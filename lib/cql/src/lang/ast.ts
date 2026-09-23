@@ -1,4 +1,4 @@
-import { Token } from "./token";
+import { Token, TokenType } from "./token";
 
 export class CqlQuery {
   public readonly type = "CqlQuery";
@@ -8,10 +8,16 @@ export class CqlQuery {
 export type CqlExpr = CqlBinary | CqlUnary | CqlGroup | CqlPrimary;
 
 export class CqlBinary {
-  public readonly type = "CqlLogicalOr";
+  public readonly type = "CqlBinary";
   constructor(
     public readonly left: CqlExpr,
-    public readonly right?: CqlExpr
+    public readonly right?: {
+      operator: {
+        tokenType: TokenType,
+        lexeme: string
+      },
+      expr: CqlExpr
+    }
   ) { }
 }
 

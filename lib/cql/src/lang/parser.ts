@@ -48,70 +48,97 @@ export class Parser {
     return new CqlQuery(content);
   }
 
-  private logicalOr(isNested: boolean = false): CqlBinary {
+  private logicalOr(isNested: boolean = false): CqlExpr {
+    if (isNested) {
+      this.guardAgainstCqlField("within a group");
+    }
+
     if (this.peek().tokenType === TokenType.CHIP_VALUE)
       throw new ParseError(
         this.peek().start,
         "I found an unexpected `:`. Did you intend to search for a field, e.g. `tag:news`? If you would like to add a search phrase containing a `:` character, please surround it in double quotes.",
       );
 
-    const left = this.logicalAnd(isNested);
+    let left = this.logicalAnd();
 
-    if (isNested) {
-      this.guardAgainstCqlField("within a group");
-    }
-    const tokenType = this.peek().tokenType;
+    let nextToken: Token | undefined = undefined;
 
-    switch (tokenType) {
-      case TokenType.OR: {
-        this.consume(tokenType);
-        this.guardAgainstCqlField(`after \`${tokenType}\`.`);
-        if (this.isAtEnd()) {
-          throw this.error(
-            `There must be a query following \`${tokenType}\`, e.g. \`this ${tokenType} that\`.`,
+    while (nextToken?.tokenType !== TokenType.EOF && nextToken?.tokenType !== TokenType.RIGHT_BRACKET) {
+      nextToken = this.peek();
+
+      switch (nextToken.tokenType) {
+        case TokenType.OR: {
+          this.consume(nextToken.tokenType);
+          this.guardAgainstCqlField(`after \`${nextToken}\`.`);
+          if (this.isAtEnd()) {
+            throw this.error(
+              `There must be a query following \`${nextToken}\`, e.g. \`this ${nextToken} that\`.`,
+            );
+          }
+          left = new CqlBinary(left,
+            { operator: { tokenType: nextToken.tokenType, lexeme: '' }, expr: this.logicalAnd() },
           );
+          break;
         }
-        return new CqlBinary(left,
-          this.logicalAnd(isNested),
-        );
-      }
-      case TokenType.EOF: {
-        return new CqlBinary(left);
-      }
-      default: {
-        return new CqlBinary(left, this.logicalAnd(isNested));
+        case TokenType.EOF: {
+          left = new CqlBinary(left);
+          break;
+        }
+        case TokenType.RIGHT_BRACKET: {
+          break;
+        }
+        // OR is implicit when two expressions are adjacent
+        default: {
+          left = new CqlBinary(left, {
+            operator: { tokenType: TokenType.OR, lexeme: '' },
+            expr: this.logicalAnd()
+          });
+          break;
+        }
       }
     }
+
+    return left;
   }
 
-  private logicalAnd(isNested: boolean = false): CqlExpr {
-    const left = this.unary();
+  private logicalAnd(): CqlExpr {
+    let left = this.unary();
 
-    if (isNested) {
-      this.guardAgainstCqlField("within a group");
-    }
-    const tokenType = this.peek().tokenType;
+    let nextToken: Token | undefined = undefined;
 
-    switch (tokenType) {
-      case TokenType.AND: {
-        this.consume(tokenType);
-        this.guardAgainstCqlField(`after \`${tokenType}\`.`);
-        if (this.isAtEnd()) {
+    while (nextToken?.tokenType === TokenType.AND) {
+      nextToken = this.peek();
+
+      switch (nextToken.tokenType) {
+        case TokenType.AND: {
+          this.consume(nextToken.tokenType);
+          this.guardAgainstCqlField(`after \`${nextToken.tokenType}\`.`);
+          if (this.isAtEnd()) {
+            throw this.error(
+              `There must be a query following \`${nextToken.tokenType}\`, e.g. \`this ${nextToken} that\`.`,
+            );
+          }
+          left = new CqlBinary(left,
+            { operator: { tokenType: nextToken.tokenType, lexeme: '' }, expr: this.unary() }
+          );
+          break;
+        }
+        case TokenType.EOF: {
+          left = new CqlBinary(left);
+          break;
+        }
+        default: {
           throw this.error(
-            `There must be a query following \`${tokenType}\`, e.g. \`this ${tokenType} that\`.`,
+            `There must be a query following \`${nextToken.lexeme}\`, e.g. \`this ${nextToken.lexeme} that\`.`,
           );
         }
-        return new CqlBinary(left,
-          this.unary(),
-        );
-      }
-      default: {
-        return new CqlBinary(left);
       }
     }
+
+    return left;
   }
 
-  private unary(): CqlUnary {
+  private unary(): CqlExpr {
     const maybeNegation = this.consumeMany([TokenType.MINUS, TokenType.PLUS]);
     const polarity =
       maybeNegation.kind === ResultKind.Ok &&

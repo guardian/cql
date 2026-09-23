@@ -2,7 +2,6 @@ import { describe, expect, it } from "bun:test";
 import { ok, Result, ResultKind } from "../utils/result";
 import {
   CqlBinary,
-  CqlLogicalAnd,
   CqlField,
   CqlStr,
   CqlGroup,
@@ -25,7 +24,7 @@ import {
 } from "./testUtils";
 import { Parser } from "./parser";
 import { getPermutations } from "./utils";
-import { Token } from "./token";
+import { Token, TokenType } from "./token";
 
 describe("parser", () => {
   const assertFailure = (
@@ -88,23 +87,26 @@ describe("parser", () => {
         rightParenToken(3),
         eofToken(4),
       ];
+
       const result = new Parser(tokens).parse();
       expect(result).toEqual(
         ok(
           new CqlQuery(
             new CqlBinary(
-              new CqlLogicalAnd(
-                new CqlUnary(
-                  new CqlGroup(
-                    new CqlBinary(
-                      new CqlLogicalAnd(new CqlUnary(new CqlStr(unquotedStringToken("a", 1)))),
-                      new CqlLogicalAnd(new CqlUnary(new CqlStr(unquotedStringToken("b", 2)))),
-                    ),
-                  ))
-              )
-            ),
-          ),
-        ),
+              new CqlUnary(
+                new CqlGroup(
+                  new CqlBinary(
+                    new CqlUnary(new CqlStr(unquotedStringToken("a", 1))),
+                    {
+                      operator: { tokenType: TokenType.OR, lexeme: "" },
+                      expr: new CqlUnary(new CqlStr(unquotedStringToken("b", 2)))
+                    }
+                  )
+
+                )
+              ))
+          )
+        )
       );
     });
   });
@@ -117,15 +119,19 @@ describe("parser", () => {
         ok(
           new CqlQuery(
             new CqlBinary(
-              new CqlLogicalAnd(
-                new CqlUnary(new CqlStr(unquotedStringToken("1"))
-                )),
-              new CqlLogicalAnd(
-                new CqlUnary(new CqlStr(unquotedStringToken("2", 10))),
-                new CqlUnary(
-                  new CqlStr(unquotedStringToken("3", 14))
-                )
-              ),
+              new CqlUnary(new CqlStr(unquotedStringToken("1"))),
+              {
+                operator: { tokenType: TokenType.OR, lexeme: "" },
+                expr: new CqlBinary(
+                  new CqlUnary(new CqlStr(unquotedStringToken("2", 10))),
+                  {
+                    operator: { tokenType: TokenType.OR, lexeme: "" },
+                    expr: new CqlUnary(
+                      new CqlStr(unquotedStringToken("3", 14))
+                    )
+                  }
+                ),
+              }
             )
           )
         )
