@@ -70,11 +70,7 @@ export class Parser {
         case TokenType.OR: {
           this.consume(nextToken.tokenType);
           this.guardAgainstCqlField(`after \`${nextToken}\`.`);
-          if (this.isAtEnd()) {
-            throw this.error(
-              `There must be a query following \`${nextToken}\`, e.g. \`this ${nextToken} that\`.`,
-            );
-          }
+          this.guardAgainstEof(nextToken);
           left = new CqlBinary(left,
             { operator: { tokenType: nextToken.tokenType, lexeme: nextToken.lexeme }, expr: this.logicalAnd() },
           );
@@ -106,11 +102,7 @@ export class Parser {
     while (nextToken?.tokenType === TokenType.AND) {
       this.consume(nextToken.tokenType);
       this.guardAgainstCqlField(`after \`${nextToken.tokenType}\`.`);
-      if (this.isAtEnd()) {
-        throw this.error(
-          `There must be a query following \`${nextToken.tokenType}\`, e.g. \`this ${nextToken} that\`.`,
-        );
-      }
+      this.guardAgainstEof(nextToken);
       left = new CqlBinary(left,
         { operator: { tokenType: nextToken.tokenType, lexeme: nextToken.lexeme }, expr: this.unary() }
       );
@@ -215,6 +207,14 @@ export class Parser {
       );
     }
   };
+
+  private guardAgainstEof = (previousToken: Token) => {
+    if (this.isAtEnd()) {
+      throw this.error(
+        `I expected something else after \`${previousToken.lexeme}\``,
+      );
+    }
+  }
 
   private check = (tokenType: TokenType) => {
     if (this.isAtEnd()) {
