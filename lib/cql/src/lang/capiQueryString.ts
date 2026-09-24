@@ -111,8 +111,8 @@ const strFromExpr = (expr: CqlExpr): string => {
 
 const strFromBinary = (binary: CqlBinary): string => {
   const leftStr = strFromExpr(binary.left);
-
   const rightStr = binary.right ? strFromExpr(binary.right.expr) : ""
+  const operator = leftStr && rightStr ? binary.right?.operator.tokenType : '';
 
-  return (leftStr ?? "") + (rightStr ? ` ${binary.right?.operator.tokenType} ${rightStr.trim()} ` : "");
+  return (leftStr ?? "") + (rightStr ? ` ${operator} ${rightStr.trim()} ` : "");
 };
