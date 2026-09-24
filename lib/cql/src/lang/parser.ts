@@ -2,10 +2,12 @@ import { isChipKey, Token } from "./token";
 import {
   CqlQuery,
   CqlBinary,
-  CqlExpr,
   CqlField,
   CqlGroup,
   CqlStr,
+  CqlUnary,
+  CqlPrimary,
+  CqlExpr,
 } from "./ast";
 import { TokenType } from "./token";
 import { either, err, ok, Result, ResultKind } from "../utils/result";
@@ -22,7 +24,7 @@ class ParseError extends Error {
 export class Parser {
   private current: number = 0;
 
-  constructor(private tokens: Token[]) {}
+  constructor(private tokens: Token[]) { }
 
   public parse(): Result<ParseError, CqlQuery> {
     try {
@@ -37,7 +39,7 @@ export class Parser {
 
   private query(): CqlQuery {
     const content =
-      this.peek().tokenType === TokenType.EOF ? undefined : this.binary();
+      this.peek().tokenType === TokenType.EOF ? undefined : this.logicalOr();
 
     if (this.peek().tokenType !== TokenType.EOF) {
       throw this.unexpectedTokenError();
@@ -46,64 +48,95 @@ export class Parser {
     return new CqlQuery(content);
   }
 
-  private binary(isNested: boolean = false): CqlBinary {
+  private logicalOr(isNested: boolean = false): CqlBinary {
+    if (isNested) {
+      this.guardAgainstCqlField("within a group");
+    }
+
     if (this.peek().tokenType === TokenType.CHIP_VALUE)
       throw new ParseError(
         this.peek().start,
         "I found an unexpected `:`. Did you intend to search for a field, e.g. `tag:news`? If you would like to add a search phrase containing a `:` character, please surround it in double quotes.",
       );
 
-    const left = this.expr();
+    let left = this.logicalAnd();
 
-    if (isNested) {
-      this.guardAgainstCqlField("within a group");
-    }
-    const tokenType = this.peek().tokenType;
+    let nextToken: Token | undefined = undefined;
 
-    switch (tokenType) {
-      case TokenType.OR:
-      case TokenType.AND: {
-        this.consume(tokenType);
-        this.guardAgainstCqlField(`after \`${tokenType}\`.`);
-        if (this.isAtEnd()) {
-          throw this.error(
-            `There must be a query following \`${tokenType}\`, e.g. \`this ${tokenType} that\`.`,
+    while (nextToken?.tokenType !== TokenType.EOF && nextToken?.tokenType !== TokenType.RIGHT_BRACKET) {
+      nextToken = this.peek();
+      if (isNested) {
+        this.guardAgainstCqlField("within a group");
+      }
+
+      switch (nextToken.tokenType) {
+        case TokenType.OR: {
+          this.consume(nextToken.tokenType);
+          this.guardAgainstCqlField(`after \`${nextToken.tokenType}\`.`);
+          this.guardAgainstEof(nextToken);
+          left = new CqlBinary(left,
+            { operator: { tokenType: nextToken.tokenType, lexeme: nextToken.lexeme }, expr: this.logicalAnd() },
           );
+          break;
         }
-        return new CqlBinary(left, {
-          operator: tokenType,
-          binary: this.binary(isNested),
-        });
-      }
-      case TokenType.RIGHT_BRACKET:
-      case TokenType.EOF: {
-        return new CqlBinary(left);
-      }
-      default: {
-        return new CqlBinary(left, {
-          operator: TokenType.OR,
-          binary: this.binary(isNested),
-        });
+        case TokenType.EOF:
+        case TokenType.RIGHT_BRACKET: {
+          break;
+        }
+        // OR is implicit when two expressions are adjacent
+        default: {
+          left = new CqlBinary(left, {
+            operator: { tokenType: TokenType.OR, lexeme: '' },
+            expr: this.logicalAnd()
+          });
+          break;
+        }
       }
     }
+
+    return left.type !== "CqlBinary" ? new CqlBinary(left) : left;
   }
 
-  private expr(): CqlExpr {
+  private logicalAnd(): CqlExpr {
+    let left = this.unary();
+
+    let nextToken: Token | undefined = this.peek();
+
+    while (nextToken?.tokenType === TokenType.AND) {
+      this.consume(nextToken.tokenType);
+      this.guardAgainstCqlField(`after \`${nextToken.tokenType}\`.`);
+      this.guardAgainstEof(nextToken);
+      left = new CqlBinary(left,
+        { operator: { tokenType: nextToken.tokenType, lexeme: nextToken.lexeme }, expr: this.unary() }
+      );
+
+      nextToken = this.peek();
+    }
+
+    return left;
+  }
+
+  private unary(): CqlExpr {
     const maybeNegation = this.consumeMany([TokenType.MINUS, TokenType.PLUS]);
     const polarity =
       maybeNegation.kind === ResultKind.Ok &&
-      maybeNegation.value.tokenType === TokenType.MINUS
+        maybeNegation.value.tokenType === TokenType.MINUS
         ? "NEGATIVE"
         : "POSITIVE";
+
+    return new CqlUnary(this.primary(), polarity)
+  }
+
+  private primary(): CqlPrimary {
     const tokenType = this.peek().tokenType;
 
     switch (tokenType) {
       case TokenType.LEFT_BRACKET:
-        return new CqlExpr(this.group(), polarity);
+        return this.group();
       case TokenType.STRING:
-        return new CqlExpr(this.str(), polarity);
+        return this.str();
       case TokenType.CHIP_KEY: {
-        return new CqlExpr(this.field(), polarity);
+        return this.field();
       }
       case TokenType.AND:
       case TokenType.OR: {
@@ -133,13 +166,13 @@ export class Parser {
       "within a group. Try putting this search term outside of the brackets!",
     );
 
-    const binary = this.binary(true);
+    const content = this.logicalOr(true);
     this.consume(
       TokenType.RIGHT_BRACKET,
       "Groups must end with a right bracket.",
     );
 
-    return new CqlGroup(binary);
+    return new CqlGroup(content);
   }
 
   private str(): CqlStr {
@@ -173,10 +206,18 @@ export class Parser {
     if (isChipKey(this.peek().tokenType)) {
       const queryFieldNode = this.field();
       throw this.error(
-        `You cannot query for the field \`${queryFieldNode.key.literal}\` ${errorLocation}`,
+        `You cannot query for the field \`${queryFieldNode.key.literal}\` ${errorLocation}. Try putting this search term outside of the brackets!`,
       );
     }
   };
+
+  private guardAgainstEof = (previousToken: Token) => {
+    if (this.isAtEnd()) {
+      throw this.error(
+        `I expected something else after \`${previousToken.lexeme}\``,
+      );
+    }
+  }
 
   private check = (tokenType: TokenType) => {
     if (this.isAtEnd()) {

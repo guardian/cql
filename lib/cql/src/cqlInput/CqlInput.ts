@@ -249,6 +249,10 @@ export const createCqlInput = (
             padding-right: 5px;
           }
 
+          query-str, chip-key, chip-value {
+            white-space: nowrap;
+          }
+
           ${Object.entries(tokens.color)
             .map(([token, color]) => `.CqlToken__${token} { color: ${color}; }`)
             .join("\n")}
