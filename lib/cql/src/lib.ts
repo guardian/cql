@@ -11,5 +11,6 @@ export {
   CqlGroup,
   CqlStr,
   CqlField,
+  CqlUnary
 } from "./lang/ast.ts";
-export type { CqlExpr } from './lang/ast.ts'
+export type { CqlExpr, CqlPrimary } from './lang/ast.ts'

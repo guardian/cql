@@ -72,7 +72,7 @@ export class Parser {
       switch (nextToken.tokenType) {
         case TokenType.OR: {
           this.consume(nextToken.tokenType);
-          this.guardAgainstCqlField(`after \`${nextToken}\`.`);
+          this.guardAgainstCqlField(`after \`${nextToken.tokenType}\`.`);
           this.guardAgainstEof(nextToken);
           left = new CqlBinary(left,
             { operator: { tokenType: nextToken.tokenType, lexeme: nextToken.lexeme }, expr: this.logicalAnd() },
