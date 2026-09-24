@@ -79,6 +79,18 @@ describe("parser", () => {
       assertFailure(result, "Groups can't be empty");
     });
 
+    it("should disallow fields in groups", () => {
+      const tokens = [leftParenToken(), queryFieldKeyToken("ta", 1), queryFieldValueToken("", 2), rightParenToken(6), eofToken(7)];
+      const result = new Parser(tokens).parse();
+      assertFailure(result, "You cannot query for the field `ta` within a group. Try putting this search term outside of the brackets!");
+    });
+
+    it("should disallow fields in groups after previous terms", () => {
+      const tokens = [leftParenToken(), unquotedStringToken("1", 1), queryFieldKeyToken("ta", 2), queryFieldValueToken("", 5), rightParenToken(7), eofToken(8)];
+      const result = new Parser(tokens).parse();
+      assertFailure(result, "You cannot query for the field `ta` within a group. Try putting this search term outside of the brackets!");
+    });
+
     it("should handle groups with consecutive string tokens", () => {
       const tokens = [
         leftParenToken(),
@@ -165,7 +177,7 @@ describe("parser", () => {
     it("should handle an unbalanced boolean", () => {
       const tokens = [quotedStringToken("example"), andToken(7), eofToken(0)];
       const result = new Parser(tokens).parse();
-      assertFailure(result, "There must be a query following `AND`");
+      assertFailure(result, "I expected something else after `AND`");
     });
 
     it("should handle an unbalanced binary within parenthesis", () => {

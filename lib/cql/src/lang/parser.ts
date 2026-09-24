@@ -65,6 +65,9 @@ export class Parser {
 
     while (nextToken?.tokenType !== TokenType.EOF && nextToken?.tokenType !== TokenType.RIGHT_BRACKET) {
       nextToken = this.peek();
+      if (isNested) {
+        this.guardAgainstCqlField("within a group");
+      }
 
       switch (nextToken.tokenType) {
         case TokenType.OR: {
@@ -203,7 +206,7 @@ export class Parser {
     if (isChipKey(this.peek().tokenType)) {
       const queryFieldNode = this.field();
       throw this.error(
-        `You cannot query for the field \`${queryFieldNode.key.literal}\` ${errorLocation}`,
+        `You cannot query for the field \`${queryFieldNode.key.literal}\` ${errorLocation}. Try putting this search term outside of the brackets!`,
       );
     }
   };
