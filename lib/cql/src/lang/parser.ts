@@ -80,10 +80,7 @@ export class Parser {
           );
           break;
         }
-        case TokenType.EOF: {
-          left = new CqlBinary(left);
-          break;
-        }
+        case TokenType.EOF:
         case TokenType.RIGHT_BRACKET: {
           break;
         }
