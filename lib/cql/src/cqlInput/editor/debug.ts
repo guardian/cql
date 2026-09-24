@@ -8,6 +8,7 @@ import {
   CqlField,
   CqlGroup,
   CqlStr,
+  CqlUnary,
 } from "../../lang/ast";
 import { IS_READ_ONLY } from "./schema";
 import { Selection } from "prosemirror-state";
@@ -25,8 +26,7 @@ export const logNode = (doc: Node) => {
     const content =
       node.type.name === "text" ? `'${node.textContent}'` : undefined;
     console.log(
-      `${" ".repeat(indent)} ${node.type.name} ${node.attrs[IS_READ_ONLY] ? "(readonly)" : ""} ${pos}-${pos + node.nodeSize} ${
-        content ? content : ""
+      `${" ".repeat(indent)} ${node.type.name} ${node.attrs[IS_READ_ONLY] ? "(readonly)" : ""} ${pos}-${pos + node.nodeSize} ${content ? content : ""
       }`,
     );
   });
@@ -58,40 +58,33 @@ export const getDebugTokenHTML = (tokens: Token[], selection: Selection, mapping
         return `
         <div class="CqlDebug__queryBox">
           <div class="CqlDebug__queryIndex">${globalIndex}</div>
-          ${
-            mappedFrom === globalIndex
-              ? `<div class="CqlDebug__selection">^</div>`
-              : ""
+          ${mappedFrom === globalIndex
+            ? `<div class="CqlDebug__selection">^</div>`
+            : ""
           }
-          ${
-            mappedTo === globalIndex ? `<div class="CqlDebug__selection">$</div>` : ""
+          ${mappedTo === globalIndex ? `<div class="CqlDebug__selection">$</div>` : ""
           }
-          ${
-            lexemeChar !== undefined
-              ? `<div class="CqlDebug__queryChar">${lexemeChar}</div>`
-              : ""
+          ${lexemeChar !== undefined
+            ? `<div class="CqlDebug__queryChar">${lexemeChar}</div>`
+            : ""
           }
-              ${
-                literalChar !== undefined
-                  ? `<div class="CqlDebug__queryChar CqlDebug__queryCharAlt">${literalChar}</div>`
-                  : ""
-              }
-          ${
-            index === 0
-              ? `<div class="CqlDebug__tokenLabel">${token.tokenType}</div>`
-              : ""
+              ${literalChar !== undefined
+            ? `<div class="CqlDebug__queryChar CqlDebug__queryCharAlt">${literalChar}</div>`
+            : ""
+          }
+          ${index === 0
+            ? `<div class="CqlDebug__tokenLabel">${token.tokenType}</div>`
+            : ""
           }
         </div>`;
       })
       .join("")}
-      ${
-        tokens[index + 1]?.start > token.end + 1 &&
+      ${tokens[index + 1]?.start > token.end + 1 &&
         tokens[index + 1]?.tokenType !== "EOF" &&
         token.tokenType !== "EOF"
-          ? `<div class="CqlDebug__queryBox"><div class="CqlDebug__queryIndex">${
-              token.end + 1
-            }</div></div>`
-          : ""
+        ? `<div class="CqlDebug__queryBox"><div class="CqlDebug__queryIndex">${token.end + 1
+        }</div></div>`
+        : ""
       }`;
   });
   html += "</div></div>";
@@ -103,15 +96,15 @@ export const getOriginalQueryHTML = (query: string) => `
   <div class="CqlDebug__queryDiagram">
     <div class="CqlDebug__queryDiagramContent">
     ${query
-      .split("")
-      .map(
-        (char, index) => `
+    .split("")
+    .map(
+      (char, index) => `
             <div class="CqlDebug__queryBox">
                 <div class="CqlDebug__queryIndex">${index}</div>
                 <div class="CqlDebug__queryChar">${char}</div>
             </div>`,
-      )
-      .join("")}
+    )
+    .join("")}
       </div>
   </div>`;
 
@@ -161,9 +154,9 @@ export const getDebugMappingHTML = (
       ?.split("")
       .forEach(
         (char, index) =>
-          (posMap[index + pos + 1] = posMap[index + pos + 1]
-            ? { char, ...posMap[index + pos + 1] }
-            : { char }),
+        (posMap[index + pos + 1] = posMap[index + pos + 1]
+          ? { char, ...posMap[index + pos + 1] }
+          : { char }),
       );
   });
 
@@ -174,23 +167,20 @@ export const getDebugMappingHTML = (
                 <div class="CqlDebug__queryBox CqlDebug__queryBox--offset" data-pos="${pos}">
                     <div class="CqlDebug__queryIndex">${pos}</div>
                     ${(queryPosMap[pos] ?? []).map(
-                      ({ char }) =>
-                        `<div class="CqlDebug__originalChar">${char}</div>`,
-                    ).join(" ")}
+          ({ char }) =>
+            `<div class="CqlDebug__originalChar">${char}</div>`,
+        ).join(" ")}
 
 
-                    ${
-                      char?.length === 1
-                        ? `<div class="CqlDebug__nodeChar">${char}</div>`
-                        : ""
-                    }
-                    ${
-                      node?.length
-                        ? `<div class="CqlDebug__nodeLabel ${
-                            node === "text" ? "CqlDebug__textNode" : ""
-                          }">${node}</div>`
-                        : ""
-                    }
+                    ${char?.length === 1
+          ? `<div class="CqlDebug__nodeChar">${char}</div>`
+          : ""
+        }
+                    ${node?.length
+          ? `<div class="CqlDebug__nodeLabel ${node === "text" ? "CqlDebug__textNode" : ""
+          }">${node}</div>`
+          : ""
+        }
                 </div>`,
     )
     .join("");
@@ -211,45 +201,53 @@ export const getDebugASTHTML = (query: CqlQuery) => {
   </div>`;
 };
 
-const getContentHTML = (query: CqlExpr) => {
-  const html = (() => {
-    switch (query.content.type) {
-      case "CqlBinary":
-        return getBinaryHTML(query.content);
+const getExprHtml = (query: CqlExpr): string => {
+  switch (query.type) {
+    case "CqlBinary":
+      return getBinaryHTML(query);
+    case "CqlUnary":
+      return getUnaryHTML(query);
+  }
+};
+
+const getUnaryHTML = (unary: CqlUnary) => {
+  const primaryHtml = (() => {
+    switch (unary.primary.type) {
       case "CqlField":
-        return getFieldHTML(query.content);
+        return getFieldHTML(unary.primary);
       case "CqlGroup":
-        return getGroupHTML(query.content);
+        return getGroupHTML(unary.primary);
       case "CqlStr":
-        return getStrHTML(query.content);
+        return getStrHTML(unary.primary);
+
     }
-  })();
+  })()
 
   return `
     <ul>
       <li>
-        <span>${getNodeHTML(query)}<span class="node-content">${query.polarity}</span></span>
+        <span>${getNodeHTML(unary)}<span class="node-content">${unary.polarity}</span></span>
 
-        ${html}
+        ${primaryHtml}
       </li>
     </ul>`;
-};
+}
 
 const getBinaryHTML = (query: CqlBinary): string => {
-  const maybeBinary = query.right?.binary;
+  const maybeBinary = query.right?.expr;
 
   const binaryContent = maybeBinary
     ? `
      <ul>
-        <li>${getContentHTML(query.left)}</li>
-        <li>${getBinaryHTML(maybeBinary)}</li>
+        <li>${getExprHtml(query.left)}</li>
+        <li>${getExprHtml(maybeBinary)}</li>
       </ul>`
-    : getContentHTML(query.left);
+    : getExprHtml(query.left);
 
   return `
     <ul class="tree">
       <li>
-        <span>${getNodeHTML(query)}</span>
+        <span>${getNodeHTML(query)}<span class="node-content">${query.right?.operator.tokenType}</span></span>
         ${binaryContent}
       </li>
     </ul>
@@ -283,7 +281,7 @@ const getGroupHTML = (group: CqlGroup) => {
     <ul>
       <li>
         ${getNodeHTML(group)}
-        ${getBinaryHTML(group.content)}
+        ${getExprHtml(group.content)}
       </li>
     </ul>
   `;
