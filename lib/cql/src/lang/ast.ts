@@ -13,7 +13,7 @@ export class CqlBinary {
     public readonly left: CqlExpr,
     public readonly right?: {
       operator: {
-        tokenType: TokenType,
+        tokenType: typeof TokenType.AND | typeof TokenType.OR,
         lexeme: string
       },
       expr: CqlExpr
