@@ -48,4 +48,13 @@ describe("interpreter", () => {
 
     expect(str).toBe(queryStr);
   });
+
+  it("should preserve explicit and implicit ORs", () => {
+    const queryStr = `1 2 OR 3`;
+    const query = parser(queryStr).queryAst!;
+
+    const str = cqlQueryStrFromQueryAst(query);
+
+    expect(str).toBe(queryStr);
+  });
 });
