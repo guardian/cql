@@ -17,24 +17,10 @@ case class CqlResult(
 ) derives Encoder.AsObject
 
 class Cql(typeahead: Typeahead):
-  private given ExecutionContext = ExecutionContext.global
-
-  def run(program: String): Future[CqlResult] =
-    val scanner = new Scanner(program)
-    val tokens = scanner.scanTokens
+  def run(program: String)(using ExecutionContext): Future[CqlResult] =
+    val tokens = Scanner(program).scanTokens
 
     Parser.parse(tokens) match
-      case Right(expr) =>
-        typeahead.getSuggestions(expr).map { suggestions =>
-          val capiCqlStr = CapiCqlString.build(expr)
-          CqlResult(
-            tokens,
-            Some(expr),
-            capiCqlStr.toOption,
-            suggestions,
-            capiCqlStr.left.toOption.map(e => CqlError(e.message))
-          )
-        }
       case Left(ParseError(position, message)) =>
         Future.successful(
           CqlResult(
@@ -45,3 +31,10 @@ class Cql(typeahead: Typeahead):
             Some(CqlError(message, Some(position)))
           )
         )
+      case Right(query) =>
+        val (queryResult, error) = CapiCqlString
+          .build(query)
+          .fold(e => (None, Some(CqlError(e.message))), str => (Some(str), None))
+
+        for suggestions <- typeahead.getSuggestions(query)
+        yield CqlResult(tokens, Some(query), queryResult, suggestions, error)
