@@ -1,6 +1,9 @@
 package cql.lang
 
+import scala.annotation.tailrec
+
 import CqlUtils.{hasReservedChar, hasWhitespace, unescapeQuotes}
+import scala.annotation.tailrec
 
 case class ScannerSettings(
     groups: Boolean = true,
@@ -9,180 +12,144 @@ case class ScannerSettings(
 )
 
 class Scanner(program: String, settings: ScannerSettings = ScannerSettings()):
-  private var tokens: List[Token] = List.empty
-  private var start = 0
-  private var currentIndex = 0
-  private var line = 1
-
   settings.shortcuts.keys.foreach { shortcut =>
-    if (hasReservedChar(shortcut))
-      throw new IllegalArgumentException(
-        s"The character '$shortcut' is reserved, and cannot be used as a shortcut"
-      )
-    if (shortcut.length > 1)
-      throw new IllegalArgumentException(
-        s"The shortcut '$shortcut' is too long: shortcuts can only be a single character"
-      )
+    require(
+      !hasReservedChar(shortcut),
+      s"The character '$shortcut' is reserved, and cannot be used as a shortcut"
+    )
+    require(
+      shortcut.length <= 1,
+      s"The shortcut '$shortcut' is too long: shortcuts can only be a single character"
+    )
   }
 
+  /** The index after the scanned lexeme, and the tokens it produced. */
+  private type Scanned = (Int, List[Token])
+
   def scanTokens: List[Token] =
-    while (!isAtEnd()) {
-      // We are at the beginning of the next lexeme.
-      nextToken()
-      scanToken()
-    }
+    @tailrec
+    def loop(pos: Int, acc: Vector[Token]): List[Token] =
+      if pos >= program.length then
+        (acc :+ Token(TokenType.EOF, "", None, pos, pos)).toList
+      else
+        val (next, tokens) = scanToken(pos)
+        loop(next, acc :++ tokens)
 
-    tokens :+ Token(TokenType.EOF, "", None, currentIndex, currentIndex)
+    loop(0, Vector.empty)
 
-  private def nextToken() =
-    start = currentIndex
+  private def scanToken(start: Int): Scanned =
+    val next = start + 1
+    def single(tokenType: TokenType, literal: Option[String] = None) =
+      (next, List(token(tokenType, start, next, literal)))
 
-  private def scanToken(): Unit =
-    advance() match {
-      case '+' =>
-        addToken(TokenType.PLUS, Some("+"))
-      case '-' =>
-        addToken(TokenType.MINUS, Some("-"))
-      case ':' =>
-        addToken(TokenType.CHIP_KEY, Some(""))
-      case '(' =>
-        if (settings.groups) addToken(TokenType.LEFT_BRACKET)
-        else handleUnquotedString()
-      case ')' =>
-        if (settings.groups) addToken(TokenType.RIGHT_BRACKET)
-        else handleUnquotedString()
-      case ' ' => ()
-      case '\r' | '\t' | '"' =>
-        handleQuotedString()
-      case _ =>
-        val currentChar = current().toString
-        settings.shortcuts.get(currentChar) match {
-          case Some(shortcut) => addShortcut(shortcut)
-          case None           => handleUnquotedString()
-        }
-    }
+    program(start) match
+      case '+'                    => single(TokenType.PLUS, Some("+"))
+      case '-'                    => single(TokenType.MINUS, Some("-"))
+      case ':'                    => single(TokenType.CHIP_KEY, Some(""))
+      case '(' if settings.groups => single(TokenType.LEFT_BRACKET)
+      case ')' if settings.groups => single(TokenType.RIGHT_BRACKET)
+      case ' '                    => (next, Nil)
+      case '\r' | '\t' | '"'      => quotedString(start)
+      case char =>
+        settings.shortcuts
+          .get(char.toString)
+          .fold(unquotedString(start))(shortcut(start, _))
 
   /** Unquoted chars could be a reserved word, a field key (if followed by ':'),
     * or an unquoted string.
     */
-  private def handleUnquotedString(): Unit =
-    while (
-      !(hasReservedChar(peek()) && !peekIsEscaped()) &&
-      !hasWhitespace(peek()) &&
-      !isAtEnd()
-    )
-      advance()
-
-    val literal = program.substring(start, currentIndex)
-    val maybeReservedWord = Token.reservedWords.get(literal)
-
-    if (maybeReservedWord.isDefined && settings.operators)
-      return addToken(maybeReservedWord.get)
-
-    if (peek() == ':')
-      return addChip(literal)
-
-    while (
-      // Consume whitespace up until the last whitespace char
-      (!hasWhitespace(peek()) || hasWhitespace(peek(1)) || isAtEnd(1)) &&
-      peek() != ')' &&
-      !isAtEnd()
-    )
-      advance()
-
-    addToken(TokenType.STRING, Some(program.substring(start, currentIndex)))
-
-  /** Add a chip. Use after consuming the chip literal. */
-  private def addChip(literal: String): Unit =
-    advance()
-    addToken(TokenType.CHIP_KEY, Some(literal))
-    nextToken()
-    maybeAddChipValue()
-
-  private def maybeAddChipValue(): Unit =
-    if (peek() == '"') {
-      advance()
-      val literal = consumeQuotedRange()
-      addToken(
-        TokenType.CHIP_VALUE,
-        if (literal == "") None else Some(literal)
-      )
-      return
+  private def unquotedString(start: Int): Scanned =
+    val wordEnd = advanceWhile(start + 1) { i =>
+      !(hasReservedChar(program(i)) && !isEscaped(i)) && !isWhitespaceAt(i)
     }
+    val literal = program.substring(start, wordEnd)
 
-    while (!hasWhitespace(peek()) && !isAtEnd())
-      advance()
+    Token.reservedWords.get(literal).filter(_ => settings.operators) match
+      case Some(tokenType) => (wordEnd, List(token(tokenType, start, wordEnd)))
+      case None if charAt(wordEnd).contains(':') =>
+        chip(literal, start, wordEnd)
+      case None =>
+        // Consume whitespace up until the last whitespace char
+        val end = advanceWhile(wordEnd) { i =>
+          (!isWhitespaceAt(i) || isWhitespaceAt(i + 1) || i + 1 == program.length) &&
+          program(i) != ')'
+        }
+        val str = program.substring(start, end)
+        (end, List(token(TokenType.STRING, start, end, Some(str))))
 
-    if (currentIndex - start == 0) {
-      // No content - add nothing
-    } else {
-      val value = unescapeQuotes(program.substring(start, currentIndex))
-      addToken(TokenType.CHIP_VALUE, if (value == "") None else Some(value))
-    }
+  private def chip(literal: String, start: Int, colon: Int): Scanned =
+    val afterColon = colon + 1
+    val key = token(TokenType.CHIP_KEY, start, afterColon, Some(literal))
+    val (end, value) = chipValue(afterColon)
+    (end, key :: value)
 
-  private def addShortcut(shortcut: String): Unit =
-    addToken(TokenType.CHIP_KEY, Some(shortcut))
-    if (!isAtEnd() && !hasWhitespace(peek())) {
-      nextToken()
-      maybeAddChipValue()
-    }
-
-  private def handleQuotedString(): Unit =
-    val literal = consumeQuotedRange()
-
-    if (peek() == ':')
-      return addChip(literal)
-
-    addToken(TokenType.STRING, Some(literal))
-
-  /** Consumes a quoted range, returning the literal value it encloses. */
-  private def consumeQuotedRange(): String =
-    while ((peek() != '"' || peek(-1) == '\\') && !isAtEnd())
-      advance()
-
-    if (isAtEnd())
-      error(
-        line,
-        "I expected to encounter a closing double-quote (\") before the query ended"
-      )
+  private def chipValue(start: Int): Scanned =
+    if charAt(start).contains('"') then
+      val (end, literal) = quotedRange(start)
+      val value = Some(literal).filter(_.nonEmpty)
+      (end, List(token(TokenType.CHIP_VALUE, start, end, value)))
     else
-      advance()
+      val end = advanceWhile(start)(i => !isWhitespaceAt(i))
+      val value = Some(unescapeQuotes(program.substring(start, end)))
+        .filter(_.nonEmpty)
+      val tokens =
+        if end == start then Nil
+        else List(token(TokenType.CHIP_VALUE, start, end, value))
+      (end, tokens)
 
-    program.substring(start + 1, currentIndex - 1)
+  private def shortcut(start: Int, shortcut: String): Scanned =
+    val afterKey = start + 1
+    val key = token(TokenType.CHIP_KEY, start, afterKey, Some(shortcut))
+    if afterKey < program.length && !isWhitespaceAt(afterKey) then
+      val (end, value) = chipValue(afterKey)
+      (end, key :: value)
+    else (afterKey, List(key))
 
-  private def addToken(
+  private def quotedString(start: Int): Scanned =
+    val (end, literal) = quotedRange(start)
+    if charAt(end).contains(':') then chip(literal, start, end)
+    else (end, List(token(TokenType.STRING, start, end, Some(literal))))
+
+  /** Consumes a range opened at `start`, returning the index after the closing
+    * quote and the literal value it encloses.
+    */
+  private def quotedRange(start: Int): (Int, String) =
+    val closing = advanceWhile(start + 1)(i => program(i) != '"' || isEscaped(i))
+    val end =
+      if closing == program.length then
+        report(
+          "I expected to encounter a closing double-quote (\") before the query ended"
+        )
+        closing
+      else closing + 1
+
+    (end, program.substring(start + 1, math.max(start + 1, end - 1)))
+
+  private def token(
       tokenType: TokenType,
+      start: Int,
+      end: Int,
       literal: Option[String] = None
-  ): Unit =
-    val lexeme = program.substring(start, currentIndex)
-    tokens = tokens :+ Token(
+  ): Token =
+    Token(
       tokenType,
-      lexeme,
+      program.substring(start, end),
       literal,
       start,
-      math.max(start, currentIndex - 1)
+      math.max(start, end - 1)
     )
 
-  private def advance(): Char =
-    val previous = currentIndex
-    currentIndex = currentIndex + 1
-    program(previous)
+  /** The first index from `from` at which `p` fails, or the end of the program. */
+  private def advanceWhile(from: Int)(p: Int => Boolean): Int =
+    (from until program.length).find(i => !p(i)).getOrElse(program.length)
 
-  private def peekIsEscaped(offset: Int = 0): Boolean =
-    peek(offset - 1) == '\\'
+  private def charAt(index: Int): Option[Char] = program.lift(index)
 
-  private def current(): Char = peek(-1)
+  private def isEscaped(index: Int): Boolean = charAt(index - 1).contains('\\')
 
-  private def peek(offset: Int = 0): Char =
-    val index = currentIndex + offset
-    if (index < 0 || index >= program.length) '\u0000' else program(index)
+  private def isWhitespaceAt(index: Int): Boolean =
+    charAt(index).exists(hasWhitespace)
 
-  private def isAtEnd(offset: Int = 0): Boolean =
-    currentIndex + offset == program.length
-
-  private def error(line: Int, message: String): Unit =
-    report(line, "", message)
-
-  private def report(line: Int, where: String, message: String): Unit =
-    println(s"[line ${line}] Error${where}: ${message}")
+  private def report(message: String): Unit =
+    println(s"[line 1] Error: $message")
 

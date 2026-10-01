@@ -1,48 +1,49 @@
 package cql.lang
 
-import scala.util.{Failure, Success, Try}
 import org.scalatest.compatible.Assertion
 
 import TokenType.*
 
 class ParserTest extends BaseTest {
-  def assertFailure(result: Try[CqlQuery], strContains: String): Assertion =
+  def assertFailure(
+      result: Either[ParseError, CqlQuery],
+      strContains: String
+  ): Assertion =
     result match
-      case Failure(exception) =>
-        exception.getMessage should include(strContains)
-      case Success(value) => fail("This should not parse")
+      case Left(error) => error.message should include(strContains)
+      case Right(_)    => fail("This should not parse")
 
   describe("CqlQuery") {
     it("should handle an empty token list") {
       val tokens = List(eofToken(0))
-      val result = new Parser(tokens).parse()
-      result shouldBe Success(CqlQuery(None))
+      val result = Parser.parse(tokens)
+      result shouldBe Right(CqlQuery(None))
     }
   }
 
   describe("CqlGroup") {
     it("should handle unmatched parenthesis - lhs") {
       val tokens = List(leftParenToken(), eofToken(2))
-      val result = new Parser(tokens).parse()
+      val result = Parser.parse(tokens)
       assertFailure(result, "Groups can't be empty")
     }
 
     it("should handle unmatched parenthesis - rhs, first token") {
       val tokens = List(rightParenToken(), eofToken(2))
-      val result = new Parser(tokens).parse()
+      val result = Parser.parse(tokens)
       assertFailure(result, "I didn't expect to find a `)` here.")
     }
 
     it("should handle unmatched parenthesis - rhs, subsequent tokens") {
       val tokens =
         List(unquotedStringToken("a"), rightParenToken(1), eofToken(2))
-      val result = new Parser(tokens).parse()
+      val result = Parser.parse(tokens)
       assertFailure(result, "I didn't expect to find a `)` after `a`")
     }
 
     it("should handle empty groups") {
       val tokens = List(leftParenToken(), rightParenToken(1))
-      val result = new Parser(tokens).parse()
+      val result = Parser.parse(tokens)
       assertFailure(result, "Groups can't be empty")
     }
 
@@ -54,8 +55,8 @@ class ParserTest extends BaseTest {
         rightParenToken(3),
         eofToken(4)
       )
-      val result = new Parser(tokens).parse()
-      result shouldBe Success(
+      val result = Parser.parse(tokens)
+      result shouldBe Right(
         CqlQuery(
           Some(
             CqlBinary(
@@ -83,7 +84,7 @@ class ParserTest extends BaseTest {
     it("should handle an unbalanced boolean") {
       val tokens =
         List(quotedStringToken("example"), andToken(7), eofToken(0))
-      val result = new Parser(tokens).parse()
+      val result = Parser.parse(tokens)
       assertFailure(result, "I expected something else after `AND`")
     }
 
@@ -95,13 +96,13 @@ class ParserTest extends BaseTest {
         rightParenToken(9),
         eofToken(10)
       )
-      val result = new Parser(tokens).parse()
+      val result = Parser.parse(tokens)
       assertFailure(result, "I didn't expect to find a `)` after `AND`")
     }
 
     it("should handle a solo boolean operator") {
       val tokens = List(andToken())
-      val result = new Parser(tokens).parse()
+      val result = Parser.parse(tokens)
       assertFailure(
         result,
         "An `AND` keyword must have a search term before and after it, e.g. `this AND that`"
@@ -113,8 +114,8 @@ class ParserTest extends BaseTest {
     it("should handle a query field without a value") {
       val tokens =
         List(plusToken(0), queryFieldKeyToken("", 1), eofToken(4))
-      val result = new Parser(tokens).parse()
-      result shouldBe Success(
+      val result = Parser.parse(tokens)
+      result shouldBe Right(
         CqlQuery(Some(CqlBinary(CqlUnary(queryField("", None, 1)))))
       )
     }
@@ -122,8 +123,8 @@ class ParserTest extends BaseTest {
     it("should handle a query field") {
       val tokens =
         List(queryFieldKeyToken("ta"), queryValueToken("", 3), eofToken(4))
-      val result = new Parser(tokens).parse()
-      result shouldBe Success(
+      val result = Parser.parse(tokens)
+      result shouldBe Right(
         CqlQuery(Some(CqlBinary(CqlUnary(queryField("ta", Some(""))))))
       )
     }
@@ -135,8 +136,8 @@ class ParserTest extends BaseTest {
         queryValueToken("", 3),
         eofToken(4)
       )
-      val result = new Parser(tokens).parse()
-      result shouldBe Success(
+      val result = Parser.parse(tokens)
+      result shouldBe Right(
         CqlQuery(
           Some(
             CqlBinary(
@@ -150,7 +151,7 @@ class ParserTest extends BaseTest {
     it("should handle a query field incorrectly nested in parentheses") {
       val tokens =
         List(leftParenToken(), queryFieldKeyToken("tag", 1), eofToken(5))
-      val result = new Parser(tokens).parse()
+      val result = Parser.parse(tokens)
       assertFailure(
         result,
         "You cannot query for the field `tag` within a group"
@@ -165,7 +166,7 @@ class ParserTest extends BaseTest {
         queryValueToken("b", 8),
         eofToken(10)
       )
-      val result = new Parser(tokens).parse()
+      val result = Parser.parse(tokens)
       assertFailure(result, "You cannot query for the field `tag` after `AND`")
     }
 
@@ -175,8 +176,8 @@ class ParserTest extends BaseTest {
         queryFieldKeyToken("", 2),
         eofToken(5)
       )
-      val result = new Parser(tokens).parse()
-      result shouldBe Success(
+      val result = Parser.parse(tokens)
+      result shouldBe Right(
         CqlQuery(
           Some(
             CqlBinary(
@@ -195,7 +196,7 @@ class ParserTest extends BaseTest {
 
     it("should handle a query value with no query key") {
       val tokens = List(queryValueToken("", 7), eofToken(8))
-      val result = new Parser(tokens).parse()
+      val result = Parser.parse(tokens)
       assertFailure(result, "I found an unexpected `:`")
     }
   }
@@ -212,10 +213,6 @@ class ParserTest extends BaseTest {
       eofToken(14)
     ).permutations.take(1000).toList
 
-    tokenPermutations.foreach { tokens =>
-      Try { new Parser(tokens).parse() }
-    }
-
-    assert(true)
+    noException should be thrownBy tokenPermutations.foreach(Parser.parse)
   }
 }

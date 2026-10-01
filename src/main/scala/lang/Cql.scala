@@ -1,6 +1,5 @@
 package cql.lang
 
-import scala.util.{Failure, Success}
 import scala.concurrent.{ExecutionContext, Future}
 import io.circe.Encoder
 
@@ -23,10 +22,9 @@ class Cql(typeahead: Typeahead):
   def run(program: String): Future[CqlResult] =
     val scanner = new Scanner(program)
     val tokens = scanner.scanTokens
-    val parser = new Parser(tokens)
 
-    parser.parse() match
-      case Success(expr) =>
+    Parser.parse(tokens) match
+      case Right(expr) =>
         typeahead.getSuggestions(expr).map { suggestions =>
           val capiCqlStr = CapiCqlString.build(expr)
           CqlResult(
@@ -37,18 +35,13 @@ class Cql(typeahead: Typeahead):
             capiCqlStr.left.toOption.map(e => CqlError(e.message))
           )
         }
-      case Failure(e) =>
-        val error = e match
-          case ParseError(position, message) =>
-            CqlError(message, Some(position))
-          case e => CqlError(e.getMessage)
-
+      case Left(ParseError(position, message)) =>
         Future.successful(
           CqlResult(
             tokens,
             None,
             None,
             List.empty,
-            Some(error)
+            Some(CqlError(message, Some(position)))
           )
         )
