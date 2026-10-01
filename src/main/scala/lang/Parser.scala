@@ -1,196 +1,211 @@
 package cql.lang
 
 import scala.util.Try
-import scala.util.Success
 
 import TokenType.*
 
 case class ParseError(position: Int, message: String) extends Error(message)
 
 class Parser(tokens: List[Token]):
-  var current: Int = 0;
-  val skipTypes = List()
+  private var current: Int = 0
 
-  def parse(): Try[QueryList] =
-    Try { queryList }
+  def parse(): Try[CqlQuery] =
+    Try { query() }
 
-  // program    -> statement* EOF
-  private def queryList =
-    var queries = List.empty[CqlBinary | CqlField | QueryOutputModifier]
-    while (peek().tokenType != EOF) {
-      queries = queries :+ query
-    }
-    QueryList(queries)
+  // query -> expr?
+  private def query(): CqlQuery =
+    val content =
+      if (peek().tokenType == EOF) None else Some(logicalOr())
 
-  val startOfCqlField = List(TokenType.CHIP_KEY, TokenType.PLUS)
-  val startOfQueryOutputModifier =
-    List(TokenType.QUERY_OUTPUT_MODIFIER_KEY, TokenType.AT)
-  val startOfQueryValue =
-    List(TokenType.CHIP_VALUE, TokenType.COLON)
+    if (peek().tokenType != EOF)
+      throw unexpectedTokenError()
 
-  private def query: CqlBinary | CqlField | QueryOutputModifier =
-    if (startOfCqlField.contains(peek().tokenType)) queryField
-    else if (startOfQueryOutputModifier.contains(peek().tokenType))
-      queryOutputModifier
-    else if (startOfQueryValue.contains(peek().tokenType))
+    CqlQuery(content)
+
+  // logical_or -> logical_and ('OR'? logical_and)*
+  private def logicalOr(isNested: Boolean = false): CqlBinary =
+    if (isNested)
+      guardAgainstCqlField("within a group")
+
+    if (peek().tokenType == CHIP_VALUE)
       throw ParseError(
         peek().start,
-        "I found an unexpected ':'. Did you intend to search for a tag, section or similar, e.g. tag:news? If you would like to add a search phrase containing a ':' character, please surround it in double quotes."
+        "I found an unexpected `:`. Did you intend to search for a field, e.g. `tag:news`? If you would like to add a search phrase containing a `:` character, please surround it in double quotes."
       )
-    else queryBinary
 
-  private def queryBinary: CqlBinary =
-    val left = queryContent
+    var left: CqlExpr = logicalAnd()
+    var nextToken: Option[Token] = None
 
-    peek().tokenType match {
-      case TokenType.AND =>
-        val andToken = consume(TokenType.AND)
-        guardAgainstCqlField("after 'AND'.")
-        if (isAtEnd) {
-          throw error(
-            "There must be a query following 'AND', e.g. this AND that."
+    while (
+      !nextToken.map(_.tokenType).contains(EOF) &&
+      !nextToken.map(_.tokenType).contains(RIGHT_BRACKET)
+    ) {
+      val token = peek()
+      nextToken = Some(token)
+
+      if (isNested)
+        guardAgainstCqlField("within a group")
+
+      token.tokenType match {
+        case OR =>
+          consume(OR)
+          guardAgainstCqlField(s"after `${token.tokenType}`.")
+          guardAgainstEof(token)
+          left = CqlBinary(
+            left,
+            Some(
+              CqlBinaryRight(
+                CqlBinaryOperator(token.tokenType, token.lexeme),
+                logicalAnd()
+              )
+            )
           )
-        }
-        CqlBinary(left, Some((andToken), queryBinary))
-      case TokenType.OR =>
-        val orToken = consume(TokenType.OR)
-        guardAgainstCqlField("after 'OR'.")
-        if (isAtEnd) {
-          error(
-            "There must be a query following 'OR', e.g. this OR that."
+        case EOF | RIGHT_BRACKET =>
+          ()
+        // OR is implicit when two expressions are adjacent
+        case _ =>
+          left = CqlBinary(
+            left,
+            Some(CqlBinaryRight(CqlBinaryOperator(OR, ""), logicalAnd()))
           )
-        }
-        CqlBinary(left, Some((orToken, queryBinary)))
-      case _ => CqlBinary(left)
+      }
     }
 
-  private def queryContent: QueryExpr =
-    val content: CqlGroup | CqlStr | CqlBinary = peek().tokenType match
-      case TokenType.LEFT_BRACKET => queryGroup
-      case TokenType.STRING       => queryStr
-      case token if List(TokenType.AND, TokenType.OR).contains(token) =>
+    left match {
+      case binary: CqlBinary => binary
+      case other             => CqlBinary(other)
+    }
+
+  // logical_and -> unary ('AND' unary)*
+  private def logicalAnd(): CqlExpr =
+    var left: CqlExpr = unary()
+    var nextToken = peek()
+
+    while (nextToken.tokenType == AND) {
+      consume(AND)
+      guardAgainstCqlField(s"after `${nextToken.tokenType}`.")
+      guardAgainstEof(nextToken)
+      left = CqlBinary(
+        left,
+        Some(
+          CqlBinaryRight(
+            CqlBinaryOperator(nextToken.tokenType, nextToken.lexeme),
+            unary()
+          )
+        )
+      )
+      nextToken = peek()
+    }
+
+    left
+
+  // unary -> ('-' | '+')? primary
+  private def unary(): CqlExpr =
+    val maybeNegation = consumeMany(List(MINUS, PLUS))
+    val polarity =
+      maybeNegation match {
+        case Some(token) if token.tokenType == MINUS => Polarity.NEGATIVE
+        case _                                       => Polarity.POSITIVE
+      }
+
+    CqlUnary(primary(), polarity)
+
+  // primary -> group | str | field
+  private def primary(): CqlPrimary =
+    peek().tokenType match {
+      case LEFT_BRACKET => group()
+      case STRING       => str()
+      case CHIP_KEY     => field()
+      case tokenType @ (AND | OR) =>
         throw error(
-          s"An ${token.toString()} keyword must have a search term before and after it, e.g. this ${token.toString} that."
+          s"An `${tokenType.toString}` keyword must have a search term before and after it, e.g. `this ${tokenType.toString} that`."
         )
       case _ =>
-        throw error(s"I didn't expect what I found after '${previous().lexeme}'")
-
-    QueryExpr(content)
-
-  private def queryGroup: CqlGroup =
-    consume(TokenType.LEFT_BRACKET, "Groups should start with a left bracket")
-
-    if (isAtEnd || peek().tokenType == TokenType.RIGHT_BRACKET) {
-      throw error(
-        "Groups must contain some content. Put a search term between the brackets!"
-      )
+        throw unexpectedTokenError()
     }
 
+  private def group(): CqlGroup =
+    consume(LEFT_BRACKET, "Groups should start with a left bracket")
+
+    if (isAtEnd || peek().tokenType == RIGHT_BRACKET)
+      throw error(
+        "Groups can't be empty. Put a search term between the brackets!"
+      )
+
     guardAgainstCqlField(
-      "within a group. Try putting this query outside of the brackets!"
+      "within a group. Try putting this search term outside of the brackets!"
     )
 
-    val binary = queryBinary
-    consume(TokenType.RIGHT_BRACKET, "Groups must end with a right bracket.")
+    val content = logicalOr(true)
+    consume(RIGHT_BRACKET, "Groups must end with a right bracket.")
 
-    CqlGroup(binary)
+    CqlGroup(content)
 
-  private def queryStr: CqlStr =
-    val token = consume(TokenType.STRING, "Expected a string")
-    CqlStr(token.literal.getOrElse(""))
+  private def str(): CqlStr =
+    CqlStr(consume(STRING, "Expected a string"))
 
-  private def queryField: CqlField =
-    val key = Try {
-      consume(TokenType.CHIP_KEY, "Expected a search key, e.g. +tag")
-    }.recover { _ =>
-      consume(TokenType.PLUS, "Expected at least a +")
-    }.get
-
-    val value = Try {
-      consume(TokenType.CHIP_VALUE, s"Expected a search value, e.g. +tag:news")
-    }.recoverWith { _ =>
-      Try {
-        consume(TokenType.COLON, "Expected at least a :")
-      }
-    }.toOption
+  private def field(): CqlField =
+    val key = consume(TokenType.CHIP_KEY, "Expected a search key, e.g. `+tag`")
+    val value = safeConsume(
+      TokenType.CHIP_VALUE,
+      "Expected a search value, e.g. `+tag:new`"
+    )
 
     CqlField(key, value)
 
-  private def queryOutputModifier: QueryOutputModifier =
-    val key = Try {
-      consume(
-        TokenType.QUERY_OUTPUT_MODIFIER_KEY,
-        "Expected a query modifier key, e.g. @show-fields"
-      )
-    }.recover { _ =>
-      consume(TokenType.AT, "Expected at least an @")
-    }.get
-
-    val value = Try {
-      consume(
-        TokenType.CHIP_VALUE,
-        "Expected a value for the query modifier, e.g. @show-fields:all"
-      )
-    }.recoverWith { _ =>
-      Try {
-        consume(TokenType.COLON, "Expected at least a :")
-      }
-    }.toOption
-
-    QueryOutputModifier(key, value)
-
-  private def matchTokens(tokens: TokenType*) =
-    tokens.exists(token =>
-      if (check(token)) {
-        advance()
-        true
-      } else false
-    )
-
-  /** Throw a sensible parse error when a query field or output modifier is
-    * found in the wrong place.
+  /** Throw a sensible parse error when a query field is found in the wrong
+    * place.
     */
-  private def guardAgainstCqlField(errorLocation: String) =
-    peek().tokenType match {
-      case TokenType.AT =>
-        throw error(
-          s"You cannot put output modifiers (e.g. @show-fields:all) ${errorLocation}"
-        )
-      case TokenType.PLUS =>
-        throw error(
-          s"You cannot put queries for tags, sections etc. ${errorLocation}"
-        )
-      case TokenType.CHIP_KEY =>
-        val queryFieldNode = queryField
-        throw error(
-          s"You cannot query for ${queryFieldNode.key.literal.getOrElse("")}s ${errorLocation}"
-        )
-      case TokenType.QUERY_OUTPUT_MODIFIER_KEY =>
-        val queryFieldNode = queryOutputModifier
-        throw error(
-          s"You cannot add an output modifier for ${queryFieldNode.key.literal
-              .getOrElse("")}s ${errorLocation}"
-        )
-      case _ => ()
+  private def guardAgainstCqlField(errorLocation: String): Unit =
+    if (peek().tokenType == CHIP_KEY) {
+      val queryFieldNode = field()
+      throw error(
+        s"You cannot query for the field `${queryFieldNode.key.literal
+            .getOrElse("")}` ${errorLocation}. Try putting this search term outside of the brackets!"
+      )
     }
 
-  private def check(tokenType: TokenType) =
+  private def guardAgainstEof(previousToken: Token): Unit =
+    if (isAtEnd)
+      throw error(
+        s"I expected something else after `${previousToken.lexeme}`"
+      )
+
+  private def check(tokenType: TokenType): Boolean =
     if (isAtEnd) false else peek().tokenType == tokenType
 
-  private def isAtEnd = peek().tokenType == EOF
+  private def isAtEnd: Boolean = peek().tokenType == EOF
 
-  private def peek() = tokens(current)
+  private def peek(): Token = tokens(current)
 
-  private def advance() =
-    if (!isAtEnd) current = current + 1
-    previous()
+  private def advance(): Token =
+    if (!isAtEnd) {
+      val currentToken = tokens(current)
+      current = current + 1
+      currentToken
+    } else previous()
 
-  private def consume(tokenType: TokenType, message: String = "") = {
+  private def consume(tokenType: TokenType, message: String = ""): Token =
     if (check(tokenType)) advance()
     else throw error(message)
-  }
 
-  private def previous() = tokens(current - 1)
+  private def consumeMany(tokenTypes: List[TokenType]): Option[Token] =
+    if (tokenTypes.exists(check)) Some(advance()) else None
 
-  private def error(message: String) =
-    new ParseError(peek().start, message)
+  private def safeConsume(
+      tokenType: TokenType,
+      message: String = ""
+  ): Option[Token] =
+    if (check(tokenType)) Some(advance()) else None
+
+  private def previous(): Token = tokens(current - 1)
+
+  private def error(message: String): ParseError =
+    ParseError(peek().start, message)
+
+  private def unexpectedTokenError(): ParseError =
+    val location =
+      if (current == 0) "here."
+      else s"after `${previous().lexeme}`"
+    error(s"I didn't expect to find a `${peek().lexeme}` ${location}")
+

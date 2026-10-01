@@ -1,6 +1,5 @@
 package cql.lang
 
-import scala.concurrent.Future
 import scala.concurrent.ExecutionContext.Implicits.global
 
 class TypeaheadTest extends BaseTest {
@@ -12,60 +11,46 @@ class TypeaheadTest extends BaseTest {
         typeaheadQueryClient.outputModifierResolvers
       )
 
+    def queryFor(field: CqlField): CqlQuery =
+      CqlQuery(Some(CqlBinary(CqlUnary(field))))
+
     it("should give no typeahead where none is warranted") {
-      typeahead.getSuggestions(QueryList(List.empty)).map { result =>
-        result shouldBe Map.empty
+      typeahead.getSuggestions(CqlQuery(None)).map { result =>
+        result shouldBe List.empty
       }
 
-      typeahead
-        .getSuggestions(
-          QueryList(List(queryField("example", None)))
-        )
-        .map { result =>
+      typeahead.getSuggestions(queryFor(queryField("example", None))).map {
+        result =>
           result shouldBe List.empty
-        }
+      }
     }
 
     it("should give typeahead suggestions for query meta keys") {
-      typeahead.getSuggestions(QueryList(List.empty)).map { result =>
-        result shouldBe Map.empty
-      }
-
-      typeahead
-        .getSuggestions(
-          QueryList(List(queryField("ta", None)))
-        )
-        .map { result =>
-          result shouldBe List(
-            TypeaheadSuggestion(
-              0,
-              2,
-              ":",
-              TextSuggestion(
-                List(
-                  TextSuggestionOption(
-                    "Tag",
-                    "tag",
-                    Some("Search by content tags, e.g. sport/football")
-                  )
+      typeahead.getSuggestions(queryFor(queryField("ta", None))).map { result =>
+        result shouldBe List(
+          TypeaheadSuggestion(
+            0,
+            2,
+            ":",
+            TextSuggestion(
+              List(
+                TextSuggestionOption(
+                  "Tag",
+                  "tag",
+                  Some("Search by content tags, e.g. sport/football")
                 )
               )
             )
           )
-        }
+        )
+      }
     }
 
     it(
       "should give typeahead suggestions for both query meta keys and values"
     ) {
-      typeahead.getSuggestions(QueryList(List.empty)).map { result =>
-        result shouldBe Map.empty
-      }
-
       typeahead
-        .getSuggestions(
-          QueryList(List(queryField("tag", Some("tags-are-magi"))))
-        )
+        .getSuggestions(queryFor(queryField("tag", Some("tags-are-magi"))))
         .map { result =>
           result shouldBe List(
             TypeaheadSuggestion(
@@ -83,8 +68,8 @@ class TypeaheadTest extends BaseTest {
               )
             ),
             TypeaheadSuggestion(
-              5,
-              18,
+              4,
+              17,
               " ",
               TextSuggestion(
                 List(
@@ -100,18 +85,9 @@ class TypeaheadTest extends BaseTest {
         }
     }
 
-    it(
-      "should give value suggestions for an empty string"
-    ) {
-      typeahead.getSuggestions(QueryList(List.empty)).map { result =>
-        result shouldBe Map.empty
-      }
-
-      typeahead
-        .getSuggestions(
-          QueryList(List(queryField("tag", Some(""))))
-        )
-        .map { result =>
+    it("should give value suggestions for an empty string") {
+      typeahead.getSuggestions(queryFor(queryField("tag", Some("")))).map {
+        result =>
           result shouldBe List(
             TypeaheadSuggestion(
               0,
@@ -128,8 +104,8 @@ class TypeaheadTest extends BaseTest {
               )
             ),
             TypeaheadSuggestion(
-              5,
-              5,
+              4,
+              4,
               " ",
               TextSuggestion(
                 List(
@@ -142,17 +118,12 @@ class TypeaheadTest extends BaseTest {
               )
             )
           )
-        }
+      }
     }
 
-    it(
-      "should give a suggestion of type DATE given e.g. 'from-date'"
-    ) {
-      typeahead
-        .getSuggestions(
-          QueryList(List(queryOutputModifier("from-date", Some(""))))
-        )
-        .map { result =>
+    it("should give a suggestion of type DATE given e.g. 'from-date'") {
+      typeahead.getSuggestions(queryFor(queryField("from-date", Some("")))).map {
+        result =>
           result shouldBe List(
             TypeaheadSuggestion(
               0,
@@ -169,13 +140,13 @@ class TypeaheadTest extends BaseTest {
               )
             ),
             TypeaheadSuggestion(
-              0,
-              9,
-              ":",
-              TextSuggestion(List.empty)
+              10,
+              10,
+              " ",
+              DateSuggestion(None, None)
             )
           )
-        }
+      }
     }
   }
 }

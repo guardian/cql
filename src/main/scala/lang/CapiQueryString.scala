@@ -1,58 +1,96 @@
 package cql.lang
 
-import TokenType.*
-import cql.lang.*
+import CqlUtils.{encodeURI, getCqlFieldsFromCqlBinary}
 
-import java.net.{URI, URLEncoder}
-import java.nio.charset.Charset
-import scala.collection.mutable.Map
-import scala.collection.mutable.ListBuffer
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import scala.util.Try
 
-case class CapiCqlStringError(message: String) extends Error(message)
+case class CapiCqlStringError(message: String)
 
-object CapiCqlString {
-  def build(
-      program: QueryList
-  ): String =
-    val (searchStrs, otherQueries) = program.exprs.partitionMap {
-      case q: CqlBinary => Left(strFromBinary(q))
-      case CqlField(key, Some(value)) =>
-        Right(s"${key.literal.getOrElse("")}=${value.literal.getOrElse("")}")
-      case CqlField(key, None) =>
-        throw new CapiCqlStringError(
-          s"The field '+$key' needs a value after it (e.g. +$key:tone/news)"
+object CapiCqlString:
+  private val dateFields = Set("from-date", "to-date")
+  private val relativeDateR =
+    """(?<polarity>[-+])(?<quantity>\d+)(?<unit>[dmyw])""".r
+
+  def build(query: CqlQuery): Either[CapiCqlStringError, String] =
+    query.content match
+      case None => Right("")
+      case Some(content) =>
+        val (errors, fieldParams) =
+          getCqlFieldsFromCqlBinary(content).partitionMap(fieldToParam)
+
+        errors.headOption.toLeft {
+          val searchStr = strFromBinary(content).trim
+          val queryParam =
+            Option.when(searchStr.nonEmpty)(s"q=${encodeURI(searchStr)}")
+          (queryParam.toList ++ fieldParams).mkString("&")
+        }
+
+  private def fieldToParam(field: CqlField): Either[CapiCqlStringError, String] =
+    val key = field.key.literal.getOrElse("")
+    for
+      literal <- field.value
+        .flatMap(_.literal)
+        .filter(_.nonEmpty)
+        .toRight(
+          CapiCqlStringError(
+            s"The field '$key' needs a value after it (e.g. '$key:tone/news')"
+          )
         )
-      case QueryOutputModifier(key, Some(value)) =>
-        Right(s"${key.literal.getOrElse("")}=${value.literal.getOrElse("")}")
-      case QueryOutputModifier(key, None) =>
-        throw new CapiCqlStringError(
-          s"The output modifier '@$key' needs a value after it (e.g. +$key:all)"
+      value <-
+        if dateFields.contains(key) then parseDateValue(key, literal)
+        else Right(literal)
+    yield s"$key=$value"
+
+  private def parseDateValue(
+      key: String,
+      value: String
+  ): Either[CapiCqlStringError, String] =
+    relativeDateR.findFirstMatchIn(value) match
+      case None => Right(value)
+      case Some(matched) =>
+        // Quantities can overflow, and dates can fall outside LocalDate's range
+        Try {
+          val quantity = matched.group("quantity").toLong
+          val signed =
+            if matched.group("polarity") == "+" then quantity else -quantity
+          val now = LocalDate.now()
+          val date = matched.group("unit") match
+            case "y" => now.plusYears(signed)
+            case "m" => now.plusMonths(signed)
+            case "w" => now.plusWeeks(signed)
+            case _   => now.plusDays(signed)
+          date.format(DateTimeFormatter.ISO_LOCAL_DATE)
+        }.toEither.left.map(_ =>
+          CapiCqlStringError(s"'$value' is not a valid date for '$key'")
         )
-    }
 
-    val maybeSearchStr = searchStrs match {
-      case Nil => None
-      case strs =>
-        val encodedString =
-          new URI(null, null, strs.mkString(" "), null).toASCIIString
-        Some(s"q=$encodedString")
-    }
+  private def strFromUnary(unary: CqlUnary): String =
+    val prefix = if unary.polarity == Polarity.NEGATIVE then "-" else ""
+    prefix + strFromPrimary(unary.primary)
 
-    List(maybeSearchStr, otherQueries).flatten.mkString("&")
+  private def strFromPrimary(primary: CqlPrimary): String =
+    primary match
+      case str: CqlStr     => str.searchExpr
+      case group: CqlGroup => s"(${strFromExpr(group.content).trim})"
+      // Fields are accumulated at the top of the tree
+      case _: CqlField => ""
 
-  private def strFromContent(queryContent: QueryExpr): String =
-    queryContent.content match {
-      case CqlStr(str)       => str
-      case CqlGroup(content) => s"(${strFromBinary(content)})"
-      case q: CqlBinary      => strFromBinary(q)
-    }
+  private def strFromExpr(expr: CqlExpr): String =
+    expr match
+      case unary: CqlUnary   => strFromUnary(unary)
+      case binary: CqlBinary => strFromBinary(binary)
 
-  private def strFromBinary(queryBinary: CqlBinary): String =
-    val leftStr = strFromContent(queryBinary.left)
-    val rightStr = queryBinary.right
-      .map { case (op, content) =>
-        s" ${op.tokenType.toString} ${strFromBinary(content)}"
-      }
-      .getOrElse("")
-    leftStr + rightStr
-}
+  private def strFromBinary(binary: CqlBinary): String =
+    val leftStr = strFromExpr(binary.left)
+    binary.right match
+      case Some(CqlBinaryRight(operator, expr)) =>
+        val rightStr = strFromExpr(expr)
+        if rightStr.isEmpty then leftStr
+        else
+          val operatorStr =
+            if leftStr.nonEmpty then operator.tokenType.toString else ""
+          s"$leftStr $operatorStr ${rightStr.trim} "
+      case None => leftStr
+

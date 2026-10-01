@@ -26,7 +26,7 @@ class HandlerTest extends AnyFunSpec with should.Matchers {
       assertIO(
         "this AND",
         200,
-        "There must be a query following 'AND', e.g. this AND that."
+        "I expected something else after `AND`"
       )
     }
   }

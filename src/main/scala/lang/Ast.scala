@@ -4,90 +4,108 @@ import io.circe.Encoder
 import io.circe.syntax._
 import io.circe.Json
 
-trait Query
+enum Polarity:
+  case POSITIVE, NEGATIVE
 
-object QueryList {
-  implicit val encoder: Encoder[QueryList] = Encoder.instance { list =>
-    val arr = list.exprs.map {
-      case q: CqlBinary         => q.asJson
-      case q: CqlField          => q.asJson
-      case q: QueryOutputModifier => q.asJson
-    }
-    Json.obj("type" -> "QueryList".asJson, "content" -> Json.arr(arr*))
-  }
-}
-case class QueryList(
-    exprs: List[CqlBinary | CqlField | QueryOutputModifier]
-) extends Query
+object Polarity:
+  given Encoder[Polarity] = Encoder.encodeString.contramap(_.toString)
 
-object CqlBinary {
-  implicit val encoder: Encoder[CqlBinary] = Encoder.instance { queryBinary =>
+type CqlExpr = CqlBinary | CqlUnary
+
+type CqlPrimary = CqlGroup | CqlStr | CqlField
+
+case class CqlBinaryOperator(tokenType: TokenType, lexeme: String)
+
+object CqlBinaryOperator:
+  given Encoder[CqlBinaryOperator] = Encoder.instance { op =>
     Json.obj(
-      "type" -> "CqlBinary".asJson,
-      ("left", queryBinary.left.asJson),
-      ("right", queryBinary.right.asJson)
+      "tokenType" -> op.tokenType.toString.asJson,
+      "lexeme" -> op.lexeme.asJson
     )
   }
-}
-case class CqlBinary(
-    left: QueryExpr,
-    right: Option[(Token, CqlBinary)] = None
+
+case class CqlBinaryRight(operator: CqlBinaryOperator, expr: CqlExpr)
+
+object CqlBinaryRight:
+  given Encoder[CqlBinaryRight] = Encoder.instance { right =>
+    Json.obj(
+      "operator" -> right.operator.asJson,
+      "expr" -> right.expr.asJson
+    )
+  }
+
+case class CqlBinary(left: CqlExpr, right: Option[CqlBinaryRight] = None)
+
+case class CqlUnary(
+    primary: CqlPrimary,
+    polarity: Polarity = Polarity.POSITIVE
 )
 
-object QueryExpr {
-  implicit val encoder: Encoder[QueryExpr] = Encoder.instance {
-    queryContent =>
-      val content = queryContent.content match {
-        case q: CqlStr    => q.asJson
-        case q: CqlBinary => q.asJson
-        case q: CqlGroup  => q.asJson
-      }
+case class CqlGroup(content: CqlExpr)
 
-      content.deepMerge(Json.obj("type" -> "QueryExpr".asJson))
-  }
-}
+case class CqlStr(token: Token):
+  val searchExpr: String = token.literal.getOrElse("")
 
-case class QueryExpr(content: CqlStr | CqlBinary | CqlGroup)
-
-object CqlGroup {
-  implicit val encoder: Encoder[CqlGroup] = Encoder.instance { group =>
-    group.content.asJson.deepMerge(Json.obj("type" -> "CqlGroup".asJson))
-  }
-}
-
-case class CqlGroup(content: CqlBinary)
-
-object CqlStr {
-  implicit val encoder: Encoder[CqlStr] = Encoder.instance { queryStr =>
+object CqlStr:
+  given Encoder[CqlStr] = Encoder.instance { str =>
     Json.obj(
       "type" -> "CqlStr".asJson,
-      "searchExpr" -> queryStr.searchExpr.asJson
+      "searchExpr" -> str.searchExpr.asJson
     )
   }
-}
 
-case class CqlStr(searchExpr: String) extends Query
-object CqlField {
-  implicit val encoder: Encoder[CqlField] = Encoder.instance { queryField =>
+case class CqlField(key: Token, value: Option[Token] = None)
+
+object CqlField:
+  given Encoder[CqlField] = Encoder.instance { field =>
     Json.obj(
       "type" -> "CqlField".asJson,
-      "key" -> queryField.key.asJson,
-      "value" -> queryField.value.asJson
+      "key" -> field.key.asJson,
+      "value" -> field.value.asJson
     )
   }
+
+case class CqlQuery(content: Option[CqlBinary] = None)
+
+// Encoders for the mutually-recursive AST nodes, defined together as lazy
+// givens so the cross-references between them resolve safely.
+given exprEncoder: Encoder[CqlExpr] = Encoder.instance {
+  case b: CqlBinary => binaryEncoder(b)
+  case u: CqlUnary  => unaryEncoder(u)
 }
 
-case class CqlField(key: Token, value: Option[Token]) extends Query
-
-object QueryOutputModifier {
-  implicit val encoder: Encoder[QueryOutputModifier] =
-    Encoder.instance { queryField =>
-      Json.obj(
-        "type" -> "QueryOutputModifier".asJson,
-        "key" -> queryField.key.asJson,
-        "value" -> queryField.value.asJson
-      )
-    }
+given primaryEncoder: Encoder[CqlPrimary] = Encoder.instance {
+  case g: CqlGroup => groupEncoder(g)
+  case s: CqlStr   => s.asJson
+  case f: CqlField => f.asJson
 }
 
-case class QueryOutputModifier(key: Token, value: Option[Token]) extends Query
+given binaryEncoder: Encoder[CqlBinary] = Encoder.instance { binary =>
+  Json.obj(
+    "type" -> "CqlBinary".asJson,
+    "left" -> binary.left.asJson,
+    "right" -> binary.right.asJson
+  )
+}
+
+given unaryEncoder: Encoder[CqlUnary] = Encoder.instance { unary =>
+  Json.obj(
+    "type" -> "CqlUnary".asJson,
+    "primary" -> unary.primary.asJson,
+    "polarity" -> unary.polarity.asJson
+  )
+}
+
+given groupEncoder: Encoder[CqlGroup] = Encoder.instance { group =>
+  Json.obj(
+    "type" -> "CqlGroup".asJson,
+    "content" -> group.content.asJson
+  )
+}
+
+given queryEncoder: Encoder[CqlQuery] = Encoder.instance { query =>
+  Json.obj(
+    "type" -> "CqlQuery".asJson,
+    "content" -> query.content.asJson
+  )
+}

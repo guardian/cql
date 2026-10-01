@@ -23,9 +23,16 @@ class TestTypeaheadHelpers {
       "from-date",
       "From date",
       "The date to search from",
-      List.empty
+      List.empty,
+      TypeaheadType.DATE
     ),
-    TypeaheadField("to-date", "To date", "The date to search to", List.empty)
+    TypeaheadField(
+      "to-date",
+      "To date",
+      "The date to search to",
+      List.empty,
+      TypeaheadType.DATE
+    )
   )
 
   private def getTags(str: String): Future[List[TextSuggestionOption]] =

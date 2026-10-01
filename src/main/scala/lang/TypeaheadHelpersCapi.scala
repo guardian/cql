@@ -4,7 +4,7 @@ import scala.concurrent.Future
 import com.gu.contentapi.client.{ContentApiClient, GuardianContentClient}
 import scala.concurrent.ExecutionContext.Implicits.global
 
-class TypeaheadHelpersCapi(client: GuardianContentClient) {
+class TypeaheadHelpersCapi(client: GuardianContentClient):
 
   val typeaheadFields = List(
     TypeaheadField(
@@ -23,13 +23,13 @@ class TypeaheadHelpersCapi(client: GuardianContentClient) {
       "from-date",
       "From date",
       "The date to search from",
-      suggestionType = "DATE"
+      suggestionType = TypeaheadType.DATE
     ),
     TypeaheadField(
       "to-date",
       "To date",
       "The date to search to",
-      suggestionType = "DATE"
+      suggestionType = TypeaheadType.DATE
     ),
     TypeaheadField(
       "format",
@@ -194,4 +194,3 @@ class TypeaheadHelpersCapi(client: GuardianContentClient) {
         TextSuggestionOption(section.webTitle, section.id, Some(section.webTitle))
       }.toList
     }
-}

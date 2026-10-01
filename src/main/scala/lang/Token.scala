@@ -6,10 +6,10 @@ import io.circe.syntax._
 
 enum TokenType:
   // Single-character tokens.
-  case PLUS, COLON, AT, LEFT_BRACKET, RIGHT_BRACKET,
+  case LEFT_BRACKET, RIGHT_BRACKET, MINUS, PLUS,
 
     // Literals.
-    STRING, NUMBER, QUERY_OUTPUT_MODIFIER_KEY, CHIP_KEY, CHIP_VALUE,
+    STRING, CHIP_KEY, CHIP_VALUE,
 
     // Keywords.
     AND, OR, EOF
@@ -29,7 +29,7 @@ object Token:
     "OR" -> TokenType.OR
   )
 
-  implicit val tokenEncoder: Encoder[Token] = Encoder.instance { token =>
+  given Encoder[Token] = Encoder.instance { token =>
     Json.obj(
       "type" -> "Token".asJson,
       "tokenType" -> token.tokenType.toString.asJson,
