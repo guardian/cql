@@ -18,7 +18,7 @@ case class CqlResult(
 
 class Cql(typeahead: Typeahead):
   def run(program: String)(using ExecutionContext): Future[CqlResult] =
-    val tokens = Scanner(program).scanTokens
+    val tokens = Scanner.scanTokens(program)
 
     Parser.parse(tokens) match
       case Left(ParseError(position, message)) =>
