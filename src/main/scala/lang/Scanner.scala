@@ -14,7 +14,7 @@ object Scanner:
   /** The index after the scanned lexeme, and the tokens it produced. */
   private type Scanned = (Int, List[Token])
 
-  def scanTokens(program: String, settings: ScannerSettings = ScannerSettings()): List[Token] =
+  def scan(program: String, settings: ScannerSettings = ScannerSettings()): List[Token] =
     given String = program
     given ScannerSettings = settings
 
