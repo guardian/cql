@@ -8,7 +8,7 @@ class ScannerTest extends BaseTest {
       expected: List[Token],
       settings: ScannerSettings = ScannerSettings()
   ) =
-    val tokens = new Scanner(query, settings).scanTokens
+    val tokens = Scanner.scanTokens(query, settings)
     tokens shouldBe (expected :+ eofToken(query.length))
 
   def keyValuePair(
@@ -426,7 +426,7 @@ class ScannerTest extends BaseTest {
         "should throw an error when a shortcut conflicts with a reserved character"
       ) {
         assertThrows[IllegalArgumentException] {
-          new Scanner("", ScannerSettings(shortcuts = Map("(" -> "invalid")))
+          Scanner.scanTokens("", ScannerSettings(shortcuts = Map("(" -> "invalid")))
         }
       }
 
@@ -434,7 +434,7 @@ class ScannerTest extends BaseTest {
         "should throw an error when a shortcut is more than a single character long"
       ) {
         assertThrows[IllegalArgumentException] {
-          new Scanner("", ScannerSettings(shortcuts = Map("aa" -> "invalid")))
+          Scanner.scanTokens("", ScannerSettings(shortcuts = Map("aa" -> "invalid")))
         }
       }
 
