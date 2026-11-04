@@ -867,10 +867,10 @@ export const getContentFromClipboard = (
 ): { type: "TEXT"; content: string } | { type: "HTML" } | undefined => {
   const maybeHtml = event.clipboardData?.getData("text/html");
   if (maybeHtml) {
-    const element = document.createElement("div");
+    const element = document.createElement("template");
     element.innerHTML = maybeHtml;
     const isNativeProseMirrorContent =
-      !!element.querySelector("query-str") || !!element.querySelector("chip");
+      !!element.content.querySelector("query-str, chip");
     if (isNativeProseMirrorContent) {
       return { type: "HTML" };
     }
