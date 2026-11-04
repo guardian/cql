@@ -1,5 +1,14 @@
 # @guardian/cql
 
+## 1.8.7
+
+### Patch Changes
+
+- 670fed9: Do not reset selection state on blur, fixing https://github.com/guardian/cql/issues/122
+- 670fed9: Add CustomElementConstructor return type to createCqlInput, fixing https://github.com/guardian/cql/issues/119
+- 670fed9: Make description optional, https://github.com/guardian/cql/issues/120
+- 49dc556: Inspect pasted HTML in an inert template to prevent resource loading and custom element activation during clipboard detection.
+
 ## 1.8.6
 
 ### Patch Changes
