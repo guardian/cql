@@ -7,6 +7,8 @@ export const rightParenToken = (start: number = 0) =>
   new Token(TokenType.RIGHT_BRACKET, ")", ")", start, start + 1);
 export const andToken = (start: number = 0) =>
   new Token(TokenType.AND, "AND", "AND", start, start + 3);
+export const orToken = (start: number = 0) =>
+  new Token(TokenType.OR, "OR", "OR", start, start + 2);
 export const eofToken = (start: number) =>
   new Token(TokenType.EOF, "", undefined, start, start);
 export const unquotedStringToken = (

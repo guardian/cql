@@ -1,5 +1,5 @@
 import { err, ok, Result } from "../utils/result";
-import { CqlQuery, CqlBinary, CqlExpr } from "./ast";
+import { CqlBinary, CqlExpr, CqlPrimary, CqlQuery, CqlUnary } from "./ast";
 import { getCqlFieldsFromCqlBinary } from "./utils";
 
 class CapiCqlStringError extends Error {
@@ -43,7 +43,7 @@ const parseDateValue = (value: string): string => {
   return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, "0")}-${date.getDate().toString().padStart(2, "0")}`;
 };
 
-export const queryStrFromQueryList = (
+export const queryStrFromQuery = (
   query: CqlQuery,
 ): Result<Error, string> => {
   const { content } = query;
@@ -84,30 +84,35 @@ export const queryStrFromQueryList = (
   }
 };
 
-const strFromContent = (queryContent: CqlExpr): string | undefined => {
-  const { content } = queryContent;
-  switch (content.type) {
+const strFromUnary = (unary: CqlUnary): string => {
+  return `${unary.polarity === "NEGATIVE" ? "-" : ""}${strFromPrimary(unary.primary)}`
+}
+
+const strFromPrimary = (primary: CqlPrimary): string => {
+  switch (primary.type) {
     case "CqlStr":
-      return content.searchExpr;
+      return primary.searchExpr;
     case "CqlGroup":
-      return `(${strFromBinary(content.content).trim()})`;
-    case "CqlBinary":
-      return strFromBinary(content);
-    default:
-      // Ignore fields
-      return;
+      return `(${strFromExpr(primary.content).trim()})`;
+    case "CqlField":
+      // Fields are accumulated at the top of the tree
+      return "";
   }
 };
 
-const strFromBinary = (queryBinary: CqlBinary): string => {
-  const leftStr = strFromContent(queryBinary.left);
+const strFromExpr = (expr: CqlExpr): string => {
+  switch (expr.type) {
+    case "CqlUnary":
+      return strFromUnary(expr);
+    case "CqlBinary":
+      return strFromBinary(expr);
+  }
+}
 
-  const rightStr =
-    queryBinary.right &&
-    // Something of a hack — don't include
-    queryBinary.right.binary.left.content.type !== "CqlField"
-      ? `${queryBinary.right.operator} ${strFromBinary(queryBinary.right.binary)}`
-      : "";
+const strFromBinary = (binary: CqlBinary): string => {
+  const leftStr = strFromExpr(binary.left);
+  const rightStr = binary.right ? strFromExpr(binary.right.expr) : ""
+  const operator = leftStr && rightStr ? binary.right?.operator.tokenType : '';
 
-  return (leftStr ?? "") + (rightStr ? ` ${rightStr.trim()} ` : "");
+  return (leftStr ?? "") + (rightStr ? ` ${operator} ${rightStr.trim()} ` : "");
 };

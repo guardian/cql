@@ -4,6 +4,17 @@ import { cqlQueryStrFromQueryAst } from "./interpreter";
 
 describe("interpreter", () => {
   const parser = createParser();
+
+  it("should handle simple queries", () => {
+    const firstQuery = parser(
+      `this AND that`,
+    ).queryAst!;
+
+    const firstStr = cqlQueryStrFromQueryAst(firstQuery);
+
+    expect(firstStr).toBe("this AND that");
+  })
+
   it("should normalise complex queries", () => {
     const firstQuery = parser(
       `  +: "marina" +section:commentisfree "Byline Title":"John Doe"`,
@@ -11,6 +22,8 @@ describe("interpreter", () => {
     const secondQuery = parser(
       `+: marina +section:"commentisfree" +"Byline Title":"John Doe"`,
     ).queryAst!;
+
+
 
     const firstStr = cqlQueryStrFromQueryAst(firstQuery);
     const secondStr = cqlQueryStrFromQueryAst(secondQuery);
@@ -29,6 +42,15 @@ describe("interpreter", () => {
 
   it("should escape reserved characters in chip keys and values", () => {
     const queryStr = `key:"\\"value\\""`;
+    const query = parser(queryStr).queryAst!;
+
+    const str = cqlQueryStrFromQueryAst(query);
+
+    expect(str).toBe(queryStr);
+  });
+
+  it("should preserve explicit and implicit ORs", () => {
+    const queryStr = `1 2 OR 3`;
     const query = parser(queryStr).queryAst!;
 
     const str = cqlQueryStrFromQueryAst(query);

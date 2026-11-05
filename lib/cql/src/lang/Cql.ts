@@ -1,6 +1,6 @@
 import { either, Result } from "../utils/result";
 import { CqlQuery } from "./ast";
-import { queryStrFromQueryList } from "./capiQueryString";
+import { queryStrFromQuery } from "./capiQueryString";
 import { Parser } from "./parser";
 import { Scanner, ScannerSettings } from "./scanner";
 import { Token } from "./token";
@@ -34,7 +34,7 @@ export const createParser =
         new CqlResultEnvelope(tokens, queryStr, undefined, undefined, error),
       (query) => {
         const queryStringResult: Result<Error, string> =
-          queryStrFromQueryList(query);
+          queryStrFromQuery(query);
 
         return either(queryStringResult)(
           (error) =>

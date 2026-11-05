@@ -47,14 +47,20 @@ export function* getPermutations<T>(
 export const getCqlFieldsFromCqlBinary = (queryBinary: CqlBinary): CqlField[] =>
   getCqlFieldsFromQueryExpr(queryBinary.left).concat(
     queryBinary.right
-      ? getCqlFieldsFromCqlBinary(queryBinary.right.binary)
+      ? getCqlFieldsFromQueryExpr(queryBinary.right.expr)
       : [],
   );
 
 const getCqlFieldsFromQueryExpr = (queryContent: CqlExpr): CqlField[] => {
-  switch (queryContent.content.type) {
-    case "CqlField":
-      return [queryContent.content];
+  switch (queryContent.type) {
+    case "CqlBinary":
+      return getCqlFieldsFromCqlBinary(queryContent);
+    case "CqlUnary":
+      switch (queryContent.primary.type) {
+        case "CqlField":
+          return [queryContent.primary];
+      }
+      return [];
     default:
       return [];
   }
