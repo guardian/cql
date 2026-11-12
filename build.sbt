@@ -32,6 +32,8 @@ val PekkoVersion = "1.0.1"
 val PekkoHttpVersion = "1.0.0"
 val circeVersion = "0.14.16"
 
+dependencyOverrides += "org.apache.thrift" % "libthrift" % "0.24.0"
+
 lazy val cql = project.in(file("."))
   .enablePlugins(RiffRaffArtifact)
   .settings(
