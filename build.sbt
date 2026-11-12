@@ -34,6 +34,10 @@ val circeVersion = "0.14.16"
 
 dependencyOverrides += "org.apache.thrift" % "libthrift" % "0.24.0"
 
+dependencyOverrides ++= Seq(
+  "com.squareup.okhttp3" % "okhttp" % "4.9.2",
+)
+
 lazy val cql = project.in(file("."))
   .enablePlugins(RiffRaffArtifact)
   .settings(
