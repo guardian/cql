@@ -35,6 +35,13 @@ val circeVersion = "0.14.16"
 dependencyOverrides += "org.apache.thrift" % "libthrift" % "0.24.0"
 dependencyOverrides += "org.jsoup" % "jsoup" % "1.23.2"
 
+dependencyOverrides ++= Seq(
+  "jline-reader",
+  "jline-terminal",
+  "jline-terminal-jna",
+  "jline-native"
+).map("org.jline" % _ % "3.30.15")
+
 val jacksonVersion = "2.18.11"
 dependencyOverrides ++= Seq(
   "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
