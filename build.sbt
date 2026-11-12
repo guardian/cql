@@ -33,6 +33,7 @@ val PekkoHttpVersion = "1.0.0"
 val circeVersion = "0.14.16"
 
 dependencyOverrides += "org.apache.thrift" % "libthrift" % "0.24.0"
+dependencyOverrides += "org.jsoup" % "jsoup" % "1.23.2"
 
 val jacksonVersion = "2.18.11"
 dependencyOverrides ++= Seq(
