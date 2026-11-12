@@ -36,6 +36,8 @@ dependencyOverrides += "org.apache.thrift" % "libthrift" % "0.24.0"
 
 dependencyOverrides ++= Seq(
   "com.squareup.okhttp3" % "okhttp" % "4.9.2",
+  "com.squareup.okio" % "okio" % "3.4.0",
+  "com.squareup.okio" % "okio-jvm" % "3.4.0"
 )
 
 lazy val cql = project.in(file("."))
