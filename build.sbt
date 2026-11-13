@@ -30,7 +30,38 @@ initialize := {
 
 val PekkoVersion = "1.0.1"
 val PekkoHttpVersion = "1.0.0"
-val circeVersion = "0.14.4"
+val circeVersion = "0.14.16"
+
+dependencyOverrides += "org.apache.thrift" % "libthrift" % "0.24.0"
+dependencyOverrides += "org.jsoup" % "jsoup" % "1.23.2"
+
+dependencyOverrides ++= Seq(
+  "jline-reader",
+  "jline-terminal",
+  "jline-terminal-jna",
+  "jline-native"
+).map("org.jline" % _ % "3.30.15")
+
+val jacksonVersion = "2.18.11"
+dependencyOverrides ++= Seq(
+  "com.fasterxml.jackson.core" % "jackson-core" % jacksonVersion,
+  "com.fasterxml.jackson.core" % "jackson-databind" % jacksonVersion,
+  "com.fasterxml.jackson.core" % "jackson-annotations" % jacksonVersion,
+  "com.fasterxml.jackson.dataformat" % "jackson-dataformat-yaml" % jacksonVersion,
+  "com.fasterxml.jackson.datatype" % "jackson-datatype-jsr310" % jacksonVersion
+)
+
+dependencyOverrides ++= Seq(
+  "org.apache.httpcomponents.client5" % "httpclient5" % "5.6.3",
+  "org.apache.httpcomponents.core5" % "httpcore5" % "5.4.3",
+  "org.apache.httpcomponents.core5" % "httpcore5-h2" % "5.4.3"
+)
+
+dependencyOverrides ++= Seq(
+  "com.squareup.okhttp3" % "okhttp" % "4.9.2",
+  "com.squareup.okio" % "okio" % "3.4.0",
+  "com.squareup.okio" % "okio-jvm" % "3.4.0"
+)
 
 lazy val cql = project.in(file("."))
   .enablePlugins(RiffRaffArtifact)
@@ -48,7 +79,7 @@ lazy val cql = project.in(file("."))
       "com.gu" % "content-api-client-default_2.13" % "20.0.2",
       "com.amazonaws" % "aws-lambda-java-core" % "1.2.3",
       "com.amazonaws" % "aws-lambda-java-events" % "3.11.4",
-      "ch.qos.logback" % "logback-classic" % "1.4.7",
+      "ch.qos.logback" % "logback-classic" % "1.5.34",
       "com.typesafe.scala-logging" %% "scala-logging" % "3.9.5",
     )
   )

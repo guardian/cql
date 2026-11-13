@@ -22,6 +22,10 @@ object TypeaheadSuggestion {
 
 sealed trait Suggestions
 
+object Suggestions {
+  implicit val encoder: Encoder[Suggestions] = deriveEncoder[Suggestions]
+}
+
 case class TextSuggestion(suggestions: List[TextSuggestionOption])
     extends Suggestions
 
