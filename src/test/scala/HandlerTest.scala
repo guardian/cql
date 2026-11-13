@@ -15,14 +15,15 @@ class HandlerTest extends AnyFunSpec with should.Matchers {
 
     val response = handler.handleRequest(request, null)
 
+    response.getStatusCode shouldBe status
     response.getBody.contains(output) shouldBe true
 
   describe("a program") {
     it("should give a 200 for a valid query") {
-      assertIO("+section:commentisfree", 200, "section=commentisfree")
+      assertIO("+format:json", 200, "format=json")
     }
 
-    it("should give a 400 for an invalid query") {
+    it("should return a parse error for an invalid query") {
       assertIO(
         "this AND",
         200,
