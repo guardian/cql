@@ -187,15 +187,16 @@ export const createCqlInput = (
 
     public createTemplate(partialTheme: DeepPartial<CqlTheme>) {
       const {
-        input,
+        color: baseColor,
+        input: {
+          layout: inputLayout,
+          chipWrapper: { color: chipWrapperColor, chipContent, chipHandle },
+          placeholder,
+        },
         tokens,
-        chipWrapper,
         baseBorderRadius,
         baseFontSize,
-        chipContent,
-        chipHandle,
         typeahead,
-        placeholder
       } = applyPartialTheme(partialTheme);
       const template = document.createElement("template");
       template.innerHTML = `
@@ -212,6 +213,7 @@ export const createCqlInput = (
             /* Hide scrollbars to emulate input scroll */
             -ms-overflow-style: none;  /* Internet Explorer 10+ */
             scrollbar-width: none;  /* Firefox, Safari 18.2+, Chromium 121+ */
+            color: ${baseColor.text};
           }
 
           .container::-webkit-scrollbar {
@@ -230,7 +232,7 @@ export const createCqlInput = (
           chip-wrapper {
             display: inline-flex;
             flex-shrink: 0;
-            background-color: ${chipWrapper.color.background};
+            background-color: ${chipWrapperColor.background};
             margin: 0 5px;
             border-radius: ${baseBorderRadius};
           }
@@ -262,7 +264,7 @@ export const createCqlInput = (
 
           .Cql__ContentEditable {
             width: 100%;
-            padding: ${input.layout.padding};
+            padding: ${inputLayout.padding};
             border-radius: ${baseBorderRadius};
           }
 
@@ -394,6 +396,7 @@ export const createCqlInput = (
           }
 
           .Cql__TypeaheadPopoverContainer, .Cql__ErrorPopover {
+            color: ${baseColor.text};
             position: absolute;
             min-width: ${typeahead.layout.minWidth};
             margin: 0;
@@ -410,7 +413,6 @@ export const createCqlInput = (
             padding: ${typeahead.layout.padding};
             font-size: ${baseFontSize};
             border-radius: ${typeahead.layout.borderRadius};
-            color: #eee;
             background-color: ${typeahead.color.background};
             border: 1px solid grey;
             overflow: hidden;
@@ -477,7 +479,7 @@ export const createCqlInput = (
             width: 100%;
             left: 0;
             top: 0;
-            padding: calc(${input.layout.padding} + ${chipContent.layout.padding});
+            padding: calc(${inputLayout.padding} + ${chipContent.layout.padding});
             white-space: nowrap;
             overflow-x: hidden;
             text-overflow: ellipsis;
