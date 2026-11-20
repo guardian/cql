@@ -98,7 +98,7 @@ const defaultTheme: CqlTheme = {
       chipHandle: {
         color: {
           background: "#3737378f",
-          border: "none",
+          border: "",
         },
       },
     },
